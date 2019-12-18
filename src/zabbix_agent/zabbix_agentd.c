@@ -80,6 +80,18 @@ char	*CONFIG_TLS_KEY_FILE		= NULL;
 char	*CONFIG_TLS_PSK_IDENTITY	= NULL;
 char	*CONFIG_TLS_PSK_FILE		= NULL;
 
+#if defined(HAVE_DBMON)
+#if defined(HAVE_MYSQL)
+char	*CONFIG_MYSQL_USER			= NULL;
+char	*CONFIG_MYSQL_PASSWORD		= NULL;
+#endif
+#if defined(HAVE_ORACLE)
+char	*CONFIG_ORACLE_USER = NULL;
+char	*CONFIG_ORACLE_PASSWORD = NULL;
+char	*CONFIG_ORACLE_INSTANCE = NULL;
+#endif
+#endif
+
 #ifndef _WINDOWS
 #	include "../libs/zbxnix/control.h"
 #	include "zbxmodules.h"
@@ -811,6 +823,22 @@ static void	zbx_load_config(int requirement, ZBX_TASK_EX *task)
 			PARM_OPT,	0,			0},
 		{"TLSPSKFile",			&CONFIG_TLS_PSK_FILE,			TYPE_STRING,
 			PARM_OPT,	0,			0},
+#if defined(HAVE_DBMON)
+#if defined(HAVE_MYSQL)
+		{"MySQLUser",			&CONFIG_MYSQL_USER,	TYPE_STRING,
+			PARM_OPT,   0,          0},
+		{"MySQLPassword",		&CONFIG_MYSQL_PASSWORD,	TYPE_STRING,
+			PARM_OPT,   0,          0},
+#endif
+#if defined(HAVE_ORACLE)
+		{ "OracleUser",			&CONFIG_ORACLE_USER,	TYPE_STRING,
+			PARM_OPT,   0,          0 },
+		{ "OraclePassword",		&CONFIG_ORACLE_PASSWORD,	TYPE_STRING,
+			PARM_OPT,   0,          0 },
+		{ "OracleInstance",		&CONFIG_ORACLE_INSTANCE,	TYPE_STRING,
+			PARM_OPT,   0,          0 },
+#endif
+#endif
 		{NULL}
 	};
 

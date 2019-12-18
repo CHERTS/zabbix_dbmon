@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.645
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zabbix_agent", "zabbix_agent\zabbix_agent.vcxproj", "{CF0C802C-D347-4585-A3CC-4151ED7373AE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zabbix_get", "zabbix_get\zabbix_get.vcxproj", "{CF0C802C-D347-4585-A3CC-4451ED7373AE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zabbix_sender", "zabbix_sender\zabbix_sender.vcxproj", "{CF0C802C-D347-4585-A3CC-4451ED1371AE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CF0C802C-D347-4585-A3CC-4151ED7373AE}.Release|x64.ActiveCfg = Release|x64
+		{CF0C802C-D347-4585-A3CC-4151ED7373AE}.Release|x64.Build.0 = Release|x64
+		{CF0C802C-D347-4585-A3CC-4151ED7373AE}.Release|x86.ActiveCfg = Release|x64
+		{CF0C802C-D347-4585-A3CC-4151ED7373AE}.Release|x86.Build.0 = Release|x64
+		{CF0C802C-D347-4585-A3CC-4451ED7373AE}.Release|x64.ActiveCfg = Release|x64
+		{CF0C802C-D347-4585-A3CC-4451ED7373AE}.Release|x64.Build.0 = Release|x64
+		{CF0C802C-D347-4585-A3CC-4451ED7373AE}.Release|x86.ActiveCfg = Release|x64
+		{CF0C802C-D347-4585-A3CC-4451ED7373AE}.Release|x86.Build.0 = Release|x64
+		{CF0C802C-D347-4585-A3CC-4451ED1371AE}.Release|x64.ActiveCfg = Release|x64
+		{CF0C802C-D347-4585-A3CC-4451ED1371AE}.Release|x64.Build.0 = Release|x64
+		{CF0C802C-D347-4585-A3CC-4451ED1371AE}.Release|x86.ActiveCfg = Release|x64
+		{CF0C802C-D347-4585-A3CC-4451ED1371AE}.Release|x86.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {31CBEE13-A14B-4A28-A1B7-0F114B4B38D3}
+	EndGlobalSection
+EndGlobal

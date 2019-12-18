@@ -42,6 +42,18 @@
 #	include "specsysinfo.h"
 #endif
 
+#ifdef HAVE_DBMON
+#ifdef HAVE_MYSQL
+#	include "dbmon/mysql_info.h"
+#endif
+#ifdef HAVE_POSTGRESQL
+#	include "dbmon/pgsql_info.h"
+#endif
+#ifdef HAVE_ORACLE
+#	include "dbmon/oracle_info.h"
+#endif
+#endif
+
 #ifdef WITH_HOSTNAME_METRIC
 extern ZBX_METRIC	parameter_hostname;
 #endif
@@ -218,6 +230,39 @@ void	init_metrics(void)
 		zabbix_log(LOG_LEVEL_CRIT, "cannot add item key: %s", error);
 		exit(EXIT_FAILURE);
 	}
+#endif
+
+#ifdef HAVE_DBMON
+#ifdef HAVE_MYSQL
+	for (i = 0; NULL != parameters_dbmon_mysql[i].key; i++)
+	{
+		if (SUCCEED != add_metric(&parameters_dbmon_mysql[i], error, sizeof(error)))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "cannot add item key: %s", error);
+			exit(EXIT_FAILURE);
+		}
+	}
+#endif
+#ifdef HAVE_POSTGRESQL
+	for (i = 0; NULL != parameters_dbmon_pgsql[i].key; i++)
+	{
+		if (SUCCEED != add_metric(&parameters_dbmon_pgsql[i], error, sizeof(error)))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "cannot add item key: %s", error);
+			exit(EXIT_FAILURE);
+		}
+	}
+#endif
+#ifdef HAVE_ORACLE
+	for (i = 0; NULL != parameters_dbmon_oracle[i].key; i++)
+	{
+		if (SUCCEED != add_metric(&parameters_dbmon_oracle[i], error, sizeof(error)))
+		{
+			zabbix_log(LOG_LEVEL_CRIT, "cannot add item key: %s", error);
+			exit(EXIT_FAILURE);
+		}
+	}
+#endif
 #endif
 }
 

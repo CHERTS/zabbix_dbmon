@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\libs\zbxalgo\algodefs.c" />
+    <ClCompile Include="..\..\src\libs\zbxalgo\vector.c" />
+    <ClCompile Include="..\..\src\libs\zbxcommon\comms.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)zbxcommon_comms.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)zbxcommon_comms.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\iprange.c" />
+    <ClCompile Include="..\..\src\libs\zbxcommon\misc.c" />
+    <ClCompile Include="..\..\src\libs\zbxcommon\str.c" />
+    <ClCompile Include="..\..\src\libs\zbxcommon\variant.c" />
+    <ClCompile Include="..\..\src\libs\zbxcommon\xml.c" />
+    <ClCompile Include="..\..\src\libs\zbxcommon\zbxgetopt.c" />
+    <ClCompile Include="..\..\src\libs\zbxcomms\comms.c">
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)zbxcomms_comms.obj</ObjectFileName>
+      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)zbxcomms_comms.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcompress\compress.c" />
+    <ClCompile Include="..\..\src\libs\zbxconf\cfg.c" />
+    <ClCompile Include="..\..\src\libs\zbxcrypto\base64.c" />
+    <ClCompile Include="..\..\src\libs\zbxcrypto\md5.c" />
+    <ClCompile Include="..\..\src\libs\zbxcrypto\tls.c" />
+    <ClCompile Include="..\..\src\libs\zbxjson\json.c" />
+    <ClCompile Include="..\..\src\libs\zbxjson\jsonpath.c" />
+    <ClCompile Include="..\..\src\libs\zbxjson\json_parser.c" />
+    <ClCompile Include="..\..\src\libs\zbxlog\log.c" />
+    <ClCompile Include="..\..\src\libs\zbxregexp\zbxregexp.c" />
+    <ClCompile Include="..\..\src\libs\zbxsys\mutexs.c" />
+    <ClCompile Include="..\..\src\libs\zbxsys\symbols.c" />
+    <ClCompile Include="..\..\src\libs\zbxsys\threads.c" />
+    <ClCompile Include="..\..\src\libs\zbxwin32\fatal.c" />
+    <ClCompile Include="..\..\src\zabbix_sender\zabbix_sender.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{CF0C802C-D347-4585-A3CC-4451ED1371AE}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>zabbixsender</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\zabbix.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\zabbix.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\zabbix.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\zabbix.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\openssl\include;$(ProjectDir)..\pcre\include;$(ProjectDir)..\..\build\win32\include;$(ProjectDir)..\..\src\libs\zbxcrypto;$(ProjectDir)..\..\include;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <ExtensionsToDeleteOnClean>*.log;$(ExtensionsToDeleteOnClean)</ExtensionsToDeleteOnClean>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\openssl\include;$(ProjectDir)..\pcre\include;$(ProjectDir)..\..\build\win32\include;$(ProjectDir)..\..\src\libs\zbxcrypto;$(ProjectDir)..\..\include;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <ExtensionsToDeleteOnClean>*.log;$(ExtensionsToDeleteOnClean)</ExtensionsToDeleteOnClean>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;ZABBIX_SENDER;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <CompileAs>CompileAsC</CompileAs>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <LanguageStandard>
+      </LanguageStandard>
+      <UseFullPaths>false</UseFullPaths>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <StringPooling>true</StringPooling>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x86;$(ProjectDir)..\openssl\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;pcre.lib;libssl.lib;libcrypto.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableUAC>true</EnableUAC>
+      <TargetMachine>NotSet</TargetMachine>
+      <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+    </Link>
+    <PreBuildEvent>
+      <Command>del /F /Q $(ProjectDir)\messages.h
+del /F /Q $(ProjectDir)\MSG00001.bin
+del /F /Q $(ProjectDir)\messages.rc
+mc.exe -U -h ".\\" -r ".\\" $(ProjectDir)..\..\build\win32\project\messages.mc
+copy $(ProjectDir)\messages.h $(ProjectDir)..\..\build\win32\include\ /Y
+copy $(ProjectDir)\MSG00001.bin $(ProjectDir)..\..\build\win32\include\ /Y
+copy $(ProjectDir)\messages.rc $(ProjectDir)..\..\build\win32\include\ /Y
+copy $(ProjectDir)\MSG00001.bin $(ProjectDir)..\..\build\win32\project\ /Y</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
+copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)..\bin\win32 /Y
+copy $(SolutionDir)openssl\bin\x86\libcrypto-1_1.dll $(SolutionDir)..\bin\win32 /Y
+copy $(SolutionDir)openssl\bin\x86\libssl-1_1.dll $(SolutionDir)..\bin\win32 /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <SDLCheck>false</SDLCheck>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0502;ZABBIX_SENDER;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <CompileAs>CompileAsC</CompileAs>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <RemoveUnreferencedCodeData>false</RemoveUnreferencedCodeData>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <LanguageStandard>
+      </LanguageStandard>
+      <UseFullPaths>false</UseFullPaths>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <StringPooling>true</StringPooling>
+      <MinimalRebuild>false</MinimalRebuild>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x64;$(ProjectDir)..\openssl\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;pcre.lib;libssl.lib;libcrypto.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableUAC>true</EnableUAC>
+      <TargetMachine>NotSet</TargetMachine>
+      <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+    </Link>
+    <PreBuildEvent>
+      <Command>del /F /Q $(ProjectDir)\messages.h
+del /F /Q $(ProjectDir)\MSG00001.bin
+del /F /Q $(ProjectDir)\messages.rc
+mc.exe -U -h ".\\" -r ".\\" $(ProjectDir)..\..\build\win32\project\messages.mc
+copy $(ProjectDir)\messages.h $(ProjectDir)..\..\build\win32\include\ /Y
+copy $(ProjectDir)\MSG00001.bin $(ProjectDir)..\..\build\win32\include\ /Y
+copy $(ProjectDir)\messages.rc $(ProjectDir)..\..\build\win32\include\ /Y
+copy $(ProjectDir)\MSG00001.bin $(ProjectDir)..\..\build\win32\project\ /Y</Command>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
+copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)..\bin\win64 /Y
+copy $(SolutionDir)\openssl\bin\x64\libcrypto-1_1-x64.dll $(SolutionDir)..\bin\win64 /Y
+copy $(SolutionDir)\openssl\bin\x64\libssl-1_1-x64.dll $(SolutionDir)..\bin\win64 /Y</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

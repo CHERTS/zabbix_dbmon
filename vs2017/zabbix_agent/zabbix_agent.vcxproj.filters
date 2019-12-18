@@ -1,0 +1,350 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Исходные файлы">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Файлы заголовков">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxcomms">
+      <UniqueIdentifier>{c4b8f19f-9cbb-4b1b-b7a7-75c76cfbefb0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxcompress">
+      <UniqueIdentifier>{f85dd4bd-173b-4e12-b3b8-603a9fcce6c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxcommon">
+      <UniqueIdentifier>{56680095-2387-49e4-9b18-49406b6aca93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxconf">
+      <UniqueIdentifier>{e7fd58e4-f4c2-46c0-ae1a-833e3bb2e477}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxcrypto">
+      <UniqueIdentifier>{60045858-8a97-49cc-a9c4-912d864836c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxjson">
+      <UniqueIdentifier>{effef52f-9f3e-41e3-86fd-7f48e4c28c7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxlog">
+      <UniqueIdentifier>{d0fda2a6-3bd0-4dd9-9054-a48ab7d025fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxsys">
+      <UniqueIdentifier>{6ce3ff05-f4a2-4d53-86b8-0e3c9f10f612}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxwin32">
+      <UniqueIdentifier>{f54f81df-de7c-4cbb-9a8f-5dcab80afc08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxalgo">
+      <UniqueIdentifier>{361f14b6-3142-4c2a-9691-7f4abedeaaad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxregexp">
+      <UniqueIdentifier>{839fb68f-00f4-41ab-a7d1-d0c742d1be9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxhttp">
+      <UniqueIdentifier>{a203357c-bd13-457d-a80e-836a6559dfec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxsysinfo">
+      <UniqueIdentifier>{d4e8ad33-d91c-42cb-9c14-36f255d691a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxsysinfo\common">
+      <UniqueIdentifier>{d3c49255-dfd1-4c49-8577-98b3b22398b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxsysinfo\agent">
+      <UniqueIdentifier>{8c421e38-50e4-49ea-8e1b-8f9ab0eb89f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxsysinfo\simple">
+      <UniqueIdentifier>{d52c6790-3aea-401a-9f37-30932a6e8df4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxsysinfo\win32">
+      <UniqueIdentifier>{215831a4-4128-4ff6-988c-d021b83a184b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxexec">
+      <UniqueIdentifier>{3a84d9a6-38e8-4ffd-98bf-c2c2ce48cdf7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxdbmon">
+      <UniqueIdentifier>{0bfafeef-fecf-4bce-86b5-5a6e9e172df2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\zbxsysinfo\dbmon">
+      <UniqueIdentifier>{48a43915-b86f-40cb-b9f3-295ce38313f6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\libs\zbxcomms\comms.c">
+      <Filter>Исходные файлы\zbxcomms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcompress\compress.c">
+      <Filter>Исходные файлы\zbxcompress</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\iprange.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\misc.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\str.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\variant.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\xml.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\zabbix_agentd.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\zbxgetopt.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxconf\cfg.c">
+      <Filter>Исходные файлы\zbxconf</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcrypto\base64.c">
+      <Filter>Исходные файлы\zbxcrypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcrypto\md5.c">
+      <Filter>Исходные файлы\zbxcrypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcrypto\tls.c">
+      <Filter>Исходные файлы\zbxcrypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxjson\json.c">
+      <Filter>Исходные файлы\zbxjson</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxjson\json_parser.c">
+      <Filter>Исходные файлы\zbxjson</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxjson\jsonpath.c">
+      <Filter>Исходные файлы\zbxjson</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxlog\log.c">
+      <Filter>Исходные файлы\zbxlog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsys\mutexs.c">
+      <Filter>Исходные файлы\zbxsys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsys\symbols.c">
+      <Filter>Исходные файлы\zbxsys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsys\threads.c">
+      <Filter>Исходные файлы\zbxsys</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxwin32\fatal.c">
+      <Filter>Исходные файлы\zbxwin32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxalgo\algodefs.c">
+      <Filter>Исходные файлы\zbxalgo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxalgo\vector.c">
+      <Filter>Исходные файлы\zbxalgo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxregexp\zbxregexp.c">
+      <Filter>Исходные файлы\zbxregexp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\comms.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcomms\telnet.c">
+      <Filter>Исходные файлы\zbxcomms</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxhttp\http.c">
+      <Filter>Исходные файлы\zbxhttp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxhttp\punycode.c">
+      <Filter>Исходные файлы\zbxhttp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxhttp\urlencode.c">
+      <Filter>Исходные файлы\zbxhttp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\cpu.c">
+      <Filter>Исходные файлы\zbxsysinfo\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\dir.c">
+      <Filter>Исходные файлы\zbxsysinfo\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\net.c">
+      <Filter>Исходные файлы\zbxsysinfo\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\system.c">
+      <Filter>Исходные файлы\zbxsysinfo\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\agent\agent.c">
+      <Filter>Исходные файлы\zbxsysinfo\agent</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\zabbix_stats.c">
+      <Filter>Исходные файлы\zbxsysinfo\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\sysinfo.c">
+      <Filter>Исходные файлы\zbxsysinfo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\simple\ntp.c">
+      <Filter>Исходные файлы\zbxsysinfo\simple</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\simple\simple.c">
+      <Filter>Исходные файлы\zbxsysinfo\simple</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\diskio.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\diskspace.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\hostname.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\memory.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\pdhmon.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\proc.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\services.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\software.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\swap.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\uptime.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\win32.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\wmi.cpp">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxwin32\disk.c">
+      <Filter>Исходные файлы\zbxwin32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxwin32\perfmon.c">
+      <Filter>Исходные файлы\zbxwin32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxwin32\service.c">
+      <Filter>Исходные файлы\zbxwin32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\zbxconf.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\vmstats.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\stats.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\perfstat.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\listener.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\eventlog.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\diskdevices.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\cpustat.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\active.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxexec\execute.c">
+      <Filter>Исходные файлы\zbxexec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\file.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\alias.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\file.c">
+      <Filter>Исходные файлы\zbxsysinfo\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\http.c">
+      <Filter>Исходные файлы\zbxsysinfo\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\common.c">
+      <Filter>Исходные файлы\zbxsysinfo\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\cpu.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\net.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\system.c">
+      <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\zabbix_agent\logfiles\logfiles.c">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon.c">
+      <Filter>Исходные файлы\zbxdbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\gmtime_r.c">
+      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\strptime.c">
+      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\timelocal.c">
+      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_mysql.c">
+      <Filter>Исходные файлы\zbxdbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_pgsql.c">
+      <Filter>Исходные файлы\zbxdbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_oracle.c">
+      <Filter>Исходные файлы\zbxdbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\dbmon_common.c">
+      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\mysql_info.c">
+      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\pgsql_info.c">
+      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\oracle_info.c">
+      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\resource.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\zbxdbmon.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\common.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\threads.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="resource.rc">
+      <Filter>Файлы ресурсов</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
+  </ItemGroup>
+</Project>

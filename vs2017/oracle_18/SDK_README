@@ -1,0 +1,19 @@
+SDK Package Information 
+======================= 
+Tue Feb 26 20:58:23 MST 2019
+Client Shared Library 64-bit - 18.5.0.0.0
+
+Windows NT Version V6.2  
+ORACLE_HOME =  C:\ADE\rpingte_w1803\oracle
+Node name           : SLC15SGA
+CPU                 : 2 - type 8664, 2 Physical Cores
+Process Affinity    : 0x0x0000000000000000
+Memory (Avail/Total): Ph:11668M/14999M, Ph+PgF:13478M/17
+
+TIMEZONE INFORMATION
+--------------------
+Operating in ORACLE_HOME environment.
+
+Small timezone file = timezone_31.dat
+Large timezone file = timezlrg_31.dat
+

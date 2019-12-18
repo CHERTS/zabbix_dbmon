@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="UserMacros">
+    <CERT_THUMBPRINT>d8f24d6742e114f9800a419d066433e9636137ff</CERT_THUMBPRINT>
+    <CERT_TIMESTAMP_SERVER>http://time.certum.pl</CERT_TIMESTAMP_SERVER>
+    <ORACLE_VER>18</ORACLE_VER>
+    <PG_VER>12</PG_VER>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <BuildMacro Include="CERT_THUMBPRINT">
+      <Value>$(CERT_THUMBPRINT)</Value>
+    </BuildMacro>
+    <BuildMacro Include="CERT_TIMESTAMP_SERVER">
+      <Value>$(CERT_TIMESTAMP_SERVER)</Value>
+    </BuildMacro>
+    <BuildMacro Include="ORACLE_VER">
+      <Value>$(ORACLE_VER)</Value>
+    </BuildMacro>
+    <BuildMacro Include="PG_VER">
+      <Value>$(PG_VER)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
