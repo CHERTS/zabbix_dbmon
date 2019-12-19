@@ -83,16 +83,24 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Rows: %u, Cols: %u", __func__, request->key, db_result.nb_rows, db_result.nb_columns);
 
-	for (col = 0; col < db_result.nb_columns; col++)
+	if (0 == db_result.nb_rows)
 	{
-		zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): ColNum: %u, ColName: %s", __func__, request->key, col, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value));
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "The request returned a null result."));
+		ret = SYSINFO_RET_FAIL;
 	}
-	for (row = 0; row < db_result.nb_rows; row++)
+	else
 	{
 		for (col = 0; col < db_result.nb_columns; col++)
 		{
-			switch (db_result.data[row][col].type)
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): ColNum: %u, ColName: %s", __func__, request->key, col, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value));
+		}
+
+		for (row = 0; row < db_result.nb_rows; row++)
+		{
+			for (col = 0; col < db_result.nb_columns; col++)
 			{
+				switch (db_result.data[row][col].type)
+				{
 				case ZBX_COL_TYPE_INT:
 					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(INT): %d, Value: %I64u", __func__, request->key, row, col, ((struct zbx_db_type_int *)db_result.data[row][col].t_data)->value);
 					SET_UI64_RESULT(result, ((struct zbx_db_type_int *)db_result.data[row][col].t_data)->value);
@@ -124,6 +132,7 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 					SET_STR_RESULT(result, zbx_strdup(NULL, "[NULL]"));
 					ret = SYSINFO_RET_OK;
 					break;
+				}
 			}
 		}
 	}
@@ -140,25 +149,34 @@ char *get_str_one_result(AGENT_REQUEST *request, AGENT_RESULT *result, const uns
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Rows: %u, Cols: %u", __func__, request->key, db_result.nb_rows, db_result.nb_columns);
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): ColNum: %u, ColName: %s", __func__, request->key, col, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value));
 
-	if (row < db_result.nb_rows && col < db_result.nb_columns)
+	if (0 == db_result.nb_rows)
 	{
-		switch (db_result.data[row][col].type)
-		{
-			case ZBX_COL_TYPE_TEXT:
-				zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(TEXT): %d, Value: %s", __func__, request->key, row, col, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value);
-				ret = zbx_strdup(NULL, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value);
-				break;
-			default:
-				zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col: %d, Value: Not text", __func__, request->key, row, col);
-				ret = NULL;
-				break;
-		}
+		ret = NULL;
 	}
 	else
 	{
-		ret = NULL;
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): ColNum: %u, ColName: %s", __func__, request->key, col, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value));
+
+		if (row < db_result.nb_rows && col < db_result.nb_columns)
+		{
+			switch (db_result.data[row][col].type)
+			{
+				case ZBX_COL_TYPE_TEXT:
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(TEXT): %d, Value: %s", __func__, request->key, row, col, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value);
+					ret = zbx_strdup(NULL, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value);
+					break;
+				default:
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col: %d, Value: Not text", __func__, request->key, row, col);
+					ret = NULL;
+					break;
+			}
+		}
+		else
+		{
+			ret = NULL;
+		}
+
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);

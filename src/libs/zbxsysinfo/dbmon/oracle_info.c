@@ -178,7 +178,7 @@ static int	ORACLE_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_db_close_db(oracle_conn);
 	zbx_db_clean_connection(oracle_conn);
 
-	return SYSINFO_RET_OK;
+	return ret;
 }
 
 int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
@@ -325,12 +325,12 @@ static int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 	oracle_str_mode = get_rparam(request, 3);
 	oracle_dbname = get_rparam(request, 4);
 
-	zabbix_log(LOG_LEVEL_CRIT, "Is %s(%s): request->nparam = %d", __func__, request->key, request->nparam);
-	zabbix_log(LOG_LEVEL_CRIT, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_host);
-	zabbix_log(LOG_LEVEL_CRIT, "Is %s(%s): nparam[1] = %s", __func__, request->key, oracle_str_port);
-	zabbix_log(LOG_LEVEL_CRIT, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_instance);
-	zabbix_log(LOG_LEVEL_CRIT, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_str_mode);
-	zabbix_log(LOG_LEVEL_CRIT, "Is %s(%s): nparam[4] = %s", __func__, request->key, oracle_dbname);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): request->nparam = %d", __func__, request->key, request->nparam);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_host);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[1] = %s", __func__, request->key, oracle_str_port);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_instance);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_str_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[4] = %s", __func__, request->key, oracle_dbname);
 
 	if (NULL == oracle_instance || '\0' == *oracle_instance)
 	{
@@ -383,7 +383,7 @@ static int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_db_close_db(oracle_conn);
 	zbx_db_clean_connection(oracle_conn);
 
-	return SYSINFO_RET_OK;
+	return ret;
 }
 
 #endif
