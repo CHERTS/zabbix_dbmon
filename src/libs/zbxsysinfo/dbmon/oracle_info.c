@@ -40,7 +40,7 @@ SELECT i.instance_name AS INSTANCE, \
     d.name AS DBNAME \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
-	AND dname = '%s'"
+	AND d.name = '%s'"
 
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */

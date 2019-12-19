@@ -463,6 +463,13 @@ int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx
 	{
 		result = zbx_db_select_oracle(conn, fmt, args);
 
+		if (NULL == result)
+		{
+			pthread_mutex_unlock(&(((struct zbx_db_oracle *)conn->connection)->lock));
+
+			return ZBX_DB_ERROR_QUERY;
+		}
+
 		o_result->nb_rows = 0;
 		o_result->nb_columns = result->ncolumn;
 		o_result->fields = NULL;
