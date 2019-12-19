@@ -142,6 +142,97 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 	return ret;
 }
 
+int make_onerow_json_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_result db_result)
+{
+	int				ret = SYSINFO_RET_FAIL;
+	unsigned int	col, row;
+	char			date_buf[64];
+	struct			zbx_json json;
+	char			buffer[MAX_STRING_LEN];
+	char			*c = NULL;
+	char			*value_str;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Rows: %u, Cols: %u", __func__, request->key, db_result.nb_rows, db_result.nb_columns);
+
+	if (0 == db_result.nb_rows)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "The request returned a null result."));
+		ret = SYSINFO_RET_FAIL;
+	}
+	else if (1 < db_result.nb_rows)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "The query returned more than one row of the result."));
+		ret = SYSINFO_RET_FAIL;
+	}
+	else
+	{
+		for (col = 0; col < db_result.nb_columns; col++)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): ColNum: %u, ColName: %s", __func__, request->key, col, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value));
+		}
+
+		zbx_json_init(&json, ZBX_JSON_STAT_BUF_LEN);
+
+		for (row = 0; row < db_result.nb_rows; row++)
+		{
+			//zbx_json_addobject(&json, NULL);
+
+			for (col = 0; col < db_result.nb_columns; col++)
+			{
+				zbx_snprintf(buffer, sizeof(buffer), "{#%s}", zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value)));
+
+				for (c = &buffer[0]; *c; c++)
+					*c = toupper(*c);
+
+				switch (db_result.data[row][col].type)
+				{
+				case ZBX_COL_TYPE_INT:
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(INT): %d, Value: %I64u", __func__, request->key, row, col, ((struct zbx_db_type_int *)db_result.data[row][col].t_data)->value);
+					value_str = zbx_dsprintf(NULL, ZBX_FS_UI64, (((struct zbx_db_type_int *)db_result.data[row][col].t_data)->value));
+					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, value_str), ZBX_JSON_TYPE_STRING);
+					break;
+				case ZBX_COL_TYPE_DOUBLE:
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(DOUBLE): %d, Value: %f", __func__, request->key, row, col, ((struct zbx_db_type_double *)db_result.data[row][col].t_data)->value);
+					value_str = zbx_dsprintf(NULL, ZBX_FS_DBL, (((struct zbx_db_type_double *)db_result.data[row][col].t_data)->value));
+					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, value_str), ZBX_JSON_TYPE_STRING);
+					break;
+				case ZBX_COL_TYPE_TEXT:
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(TEXT): %d, Value: %s", __func__, request->key, row, col, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value);
+					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value)), ZBX_JSON_TYPE_STRING);
+					break;
+				case ZBX_COL_TYPE_DATE:
+					strftime(date_buf, 64, "%Y-%m-%d %H:%M:%S", &((struct zbx_db_type_datetime *)db_result.data[row][col].t_data)->value);
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(DATE): %d, Value: %s", __func__, request->key, row, col, date_buf);
+					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, date_buf), ZBX_JSON_TYPE_STRING);
+					break;
+				case ZBX_COL_TYPE_BLOB:
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(BLOB): %d, Value: [BLOB]", __func__, request->key, row, col);
+					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "[BLOB]"), ZBX_JSON_TYPE_STRING);
+					break;
+				case ZBX_COL_TYPE_NULL:
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(NULL): %d, Value: [NULL]", __func__, request->key, row, col);
+					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "[NULL]"), ZBX_JSON_TYPE_STRING);
+					break;
+				}
+			}
+
+			//zbx_json_close(&json);
+		}
+
+		zbx_json_close(&json);
+		SET_STR_RESULT(result, strdup(json.buffer));
+		zbx_json_free(&json);
+
+		ret = SYSINFO_RET_OK;
+
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
+
+	return ret;
+}
+
 char *get_str_one_result(AGENT_REQUEST *request, AGENT_RESULT *result, const unsigned int row,
 						const unsigned int col, struct zbx_db_result db_result)
  {

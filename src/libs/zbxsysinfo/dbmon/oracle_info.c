@@ -367,7 +367,7 @@ static int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 	{
 		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_V11_DB_INFO_DBS, oracle_dbname))
 		{
-			ret = make_result(request, result, ora_result);
+			ret = make_onerow_json_result(request, result, ora_result);
 			zbx_db_clean_result(&ora_result);
 		}
 		else
