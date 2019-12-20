@@ -95,7 +95,7 @@ $new_template_table = (new CTable())
 	->addRow([
 		(new CMultiSelect([
 			'name' => 'linked_templates[]',
-			'object_name' => 'linked_templates',
+			'object_name' => 'templates',
 			'data' => $data['linked_templates'],
 			'popup' => [
 				'parameters' => [

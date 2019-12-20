@@ -2,9 +2,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 4.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-17 01:42+0200\n"
-"PO-Revision-Date: 2017-03-19 02:15+0300\n"
-"Last-Translator: Silviu <silviubv@gmail.com>\n"
+"POT-Creation-Date: 2019-12-15 01:44+0200\n"
+"PO-Revision-Date: 2019-12-09 09:46+0300\n"
+"Last-Translator: Anonymous Pootle User\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
@@ -13,7 +13,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < 20)) ? 1 : 2);;\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1489882541.000000\n"
+"X-POOTLE-MTIME: 1575877604.000000\n"
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -68,7 +68,7 @@ msgstr[0] "%1$d zi"
 msgstr[1] "%1$d zile"
 msgstr[2] "%1$d zile"
 
-#: jsLoader.php:253
+#: jsLoader.php:254
 #, c-format
 msgctxt "screen reader"
 msgid "%1$d matches for %2$s found"
@@ -141,8 +141,8 @@ msgstr[2] ""
 #: include/classes/widgets/CWidgetConfig.php:162
 #: include/classes/widgets/CWidgetConfig.php:163
 #: include/classes/widgets/CWidgetConfig.php:164
-#: include/classes/widgets/CWidgetConfig.php:165 jsLoader.php:294
-#: jsLoader.php:295 jsLoader.php:296 jsLoader.php:297
+#: include/classes/widgets/CWidgetConfig.php:165 jsLoader.php:295
+#: jsLoader.php:296 jsLoader.php:297 jsLoader.php:298
 #, c-format
 msgid "%1$s minute"
 msgid_plural "%1$s minutes"
@@ -150,7 +150,7 @@ msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
 
-#: include/classes/helpers/CMapHelper.php:312
+#: include/classes/helpers/CMapHelper.php:313
 #, c-format
 msgid "%1$s of %2$s element in problem state"
 msgid_plural "%1$s of %2$s elements in problem state"
@@ -158,7 +158,7 @@ msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
 
-#: jsLoader.php:254
+#: jsLoader.php:255
 #, c-format
 msgctxt "screen reader"
 msgid "%1$s preselected, use down,up arrow keys and enter to select"
@@ -172,7 +172,7 @@ msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
 
-#: include/classes/helpers/CMapHelper.php:315
+#: include/classes/helpers/CMapHelper.php:316
 #, c-format
 msgid "%1$s problem in total"
 msgid_plural "%1$s problems in total"
@@ -192,8 +192,8 @@ msgstr[2] ""
 
 #: app/views/administration.user.edit.php:365
 #: include/classes/widgets/CWidgetConfig.php:160
-#: include/classes/widgets/CWidgetConfig.php:161 jsLoader.php:292
-#: jsLoader.php:293
+#: include/classes/widgets/CWidgetConfig.php:161 jsLoader.php:293
+#: jsLoader.php:294
 #, c-format
 msgid "%1$s second"
 msgid_plural "%1$s seconds"
@@ -201,7 +201,7 @@ msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
 
-#: jsLoader.php:235
+#: jsLoader.php:236
 #, c-format
 msgid "%1$s symbols remaining"
 msgstr ""
@@ -219,13 +219,13 @@ msgctxt "screen reader"
 msgid "%1$s, Severity, %2$s"
 msgstr ""
 
-#: jsLoader.php:248
+#: jsLoader.php:249
 #, c-format
 msgctxt "screen reader"
 msgid "%1$s, read only"
 msgstr ""
 
-#: jsLoader.php:298
+#: jsLoader.php:299
 #, c-format
 msgctxt "screen reader"
 msgid "%1$s, selected"
@@ -345,7 +345,7 @@ msgstr ""
 #: include/views/configuration.item.massupdate.php:240
 #: include/views/configuration.item.prototype.edit.php:503
 #: include/views/configuration.item.prototype.massupdate.php:236
-#: include/views/js/configuration.discovery.edit.js.php:134
+#: include/views/js/configuration.discovery.edit.js.php:133
 msgid "AES"
 msgstr "AES"
 
@@ -377,7 +377,7 @@ msgstr[1] ""
 msgstr[2] ""
 
 #: app/views/monitoring.widget.problems.view.php:64
-#: include/actions.inc.php:157 include/blocks.inc.php:743
+#: include/actions.inc.php:157 include/blocks.inc.php:741
 #: include/classes/screens/CScreenHostTriggers.php:223
 #: include/classes/screens/CScreenProblem.php:910
 #: include/classes/screens/CScreenProblem.php:935
@@ -387,7 +387,7 @@ msgstr[2] ""
 msgid "Ack"
 msgstr "Cnf"
 
-#: app/views/monitoring.acknowledge.edit.php:72 jsLoader.php:258
+#: app/views/monitoring.acknowledge.edit.php:72 jsLoader.php:259
 msgid "Acknowledge"
 msgstr "Confirmare"
 
@@ -535,7 +535,7 @@ msgid "Action updated"
 msgstr "Acțiune actualizată"
 
 #: app/views/monitoring.dashboard.view.php:86
-#: app/views/monitoring.widget.problems.view.php:65 include/blocks.inc.php:744
+#: app/views/monitoring.widget.problems.view.php:65 include/blocks.inc.php:742
 #: include/classes/screens/CScreenHostTriggers.php:223
 #: include/classes/screens/CScreenProblem.php:911
 #: include/classes/screens/CScreenProblem.php:936
@@ -546,7 +546,7 @@ msgstr "Acțiune actualizată"
 #: include/views/configuration.action.list.php:23
 #: include/views/monitoring.screen.list.php:81
 #: include/views/monitoring.slideconf.list.php:66
-#: include/views/monitoring.sysmap.list.php:61 jsLoader.php:257
+#: include/views/monitoring.sysmap.list.php:61 jsLoader.php:258
 #: tr_events.php:187
 msgid "Actions"
 msgstr "Acțiuni"
@@ -703,8 +703,8 @@ msgstr "Activ până la"
 #: include/views/js/configuration.action.edit.js.php:268
 #: include/views/js/configuration.action.edit.js.php:654
 #: include/views/js/configuration.correlation.edit.js.php:47
-#: include/views/js/configuration.discovery.edit.js.php:147
-#: include/views/js/configuration.discovery.edit.js.php:749
+#: include/views/js/configuration.discovery.edit.js.php:146
+#: include/views/js/configuration.discovery.edit.js.php:748
 #: include/views/js/monitoring.screen.edit.js.php:83
 #: include/views/js/monitoring.slideconf.edit.js.php:99
 #: include/views/js/monitoring.sysmap.edit.js.php:101
@@ -725,12 +725,12 @@ msgstr "Activ până la"
 #: include/views/monitoring.sysmap.edit.php:274
 #: include/views/monitoring.sysmap.edit.php:294
 #: include/views/monitoring.sysmap.edit.php:330
-#: include/views/monitoring.sysmap.edit.php:398 jsLoader.php:116
-#: jsLoader.php:310
+#: include/views/monitoring.sysmap.edit.php:398 jsLoader.php:117
+#: jsLoader.php:311
 msgid "Add"
 msgstr "Adaugă"
 
-#: jsLoader.php:124
+#: jsLoader.php:125
 msgid "Add a new widget"
 msgstr ""
 
@@ -738,7 +738,7 @@ msgstr ""
 msgid "Add child"
 msgstr ""
 
-#: jsLoader.php:312
+#: jsLoader.php:313
 msgid "Add child element"
 msgstr ""
 
@@ -746,7 +746,7 @@ msgstr ""
 msgid "Add host"
 msgstr "Adaugă server"
 
-#: jsLoader.php:313
+#: jsLoader.php:314
 msgid "Add multiple maps"
 msgstr ""
 
@@ -780,7 +780,7 @@ msgstr "Adaugă la grupul de servere"
 msgid "Add to host groups"
 msgstr "Adaugă la grupurile de servere"
 
-#: app/views/monitoring.dashboard.view.php:97 jsLoader.php:114
+#: app/views/monitoring.dashboard.view.php:97 jsLoader.php:115
 msgid "Add widget"
 msgstr ""
 
@@ -788,13 +788,13 @@ msgstr ""
 msgid "Added"
 msgstr "Adăugat"
 
-#: jsLoader.php:246
+#: jsLoader.php:247
 #, c-format
 msgctxt "screen reader"
 msgid "Added, %1$s"
 msgstr ""
 
-#: jsLoader.php:127
+#: jsLoader.php:128
 msgid "Adjust widget refresh interval"
 msgstr ""
 
@@ -825,7 +825,7 @@ msgstr "Vechime mai mică decât"
 msgid "Age less than %s"
 msgstr "Vechime mai mică decât %s"
 
-#: app/views/administration.script.list.php:78 app/views/popup.generic.php:593
+#: app/views/administration.script.list.php:78 app/views/popup.generic.php:598
 #: include/items.inc.php:347 include/views/configuration.httpconf.edit.php:100
 msgid "Agent"
 msgstr "Agent"
@@ -917,7 +917,7 @@ msgstr ""
 msgid "All hosts"
 msgstr ""
 
-#: jsLoader.php:203
+#: jsLoader.php:204
 msgid "All links should have \"Name\" and \"URL\" specified"
 msgstr "Toate linkurile trebuie sa aibă \"Nume\" și \"URL\" specificat"
 
@@ -1101,8 +1101,8 @@ msgstr "Aplicații"
 #: include/views/js/monitoring.sysmaps.js.php:414
 #: include/views/js/monitoring.sysmaps.js.php:534
 #: include/views/js/monitoring.sysmaps.js.php:629
-#: include/views/js/monitoring.sysmaps.js.php:729 jsLoader.php:115
-#: jsLoader.php:237 jsLoader.php:309
+#: include/views/js/monitoring.sysmaps.js.php:729 jsLoader.php:116
+#: jsLoader.php:238 jsLoader.php:310
 msgid "Apply"
 msgstr "Aplică"
 
@@ -1121,7 +1121,7 @@ msgid "Apr"
 msgstr "Apr"
 
 #: include/forms.inc.php:2186 include/func.inc.php:119
-#: include/func.inc.php:256 jsLoader.php:155
+#: include/func.inc.php:256 jsLoader.php:156
 msgid "April"
 msgstr "Aprilie"
 
@@ -1129,11 +1129,11 @@ msgstr "Aprilie"
 msgid "Are you sure you want perform this action?"
 msgstr "Sunteti sigur că vreți sa efectuați această acțiune?"
 
-#: include/views/js/administration.general.macros.edit.js.php:58
+#: include/views/js/administration.general.macros.edit.js.php:73
 msgid "Are you sure you want to delete"
 msgstr "Sunteți sigur că doriți să ștergeți"
 
-#: jsLoader.php:121
+#: jsLoader.php:122
 msgid "Are you sure, you want to leave this page?"
 msgstr ""
 
@@ -1272,7 +1272,7 @@ msgid "Aug"
 msgstr "Aug"
 
 #: include/forms.inc.php:2173 include/func.inc.php:123
-#: include/func.inc.php:260 jsLoader.php:159
+#: include/func.inc.php:260 jsLoader.php:160
 msgid "August"
 msgstr "August"
 
@@ -1315,7 +1315,7 @@ msgstr ""
 #: include/views/configuration.item.massupdate.php:227
 #: include/views/configuration.item.prototype.edit.php:495
 #: include/views/configuration.item.prototype.massupdate.php:223
-#: include/views/js/configuration.discovery.edit.js.php:124
+#: include/views/js/configuration.discovery.edit.js.php:123
 msgid "Authentication passphrase"
 msgstr "Frază de acces pentru autentificare"
 
@@ -1324,7 +1324,7 @@ msgstr "Frază de acces pentru autentificare"
 #: include/views/configuration.item.massupdate.php:215
 #: include/views/configuration.item.prototype.edit.php:488
 #: include/views/configuration.item.prototype.massupdate.php:211
-#: include/views/js/configuration.discovery.edit.js.php:116
+#: include/views/js/configuration.discovery.edit.js.php:115
 msgid "Authentication protocol"
 msgstr "Protocol de autentificare"
 
@@ -1405,7 +1405,7 @@ msgid "Available"
 msgstr "Disponibil"
 
 #: adm.triggerseverities.php:37 adm.triggerseverities.php:38
-#: include/views/administration.general.triggerSeverity.edit.php:62
+#: include/views/administration.general.trigseverity.edit.php:62
 msgid "Average"
 msgstr "Mediu"
 
@@ -1526,11 +1526,11 @@ msgstr ""
 msgid "Bottom"
 msgstr "Jos"
 
-#: jsLoader.php:195
+#: jsLoader.php:196
 msgid "Bring forward"
 msgstr ""
 
-#: jsLoader.php:194
+#: jsLoader.php:195
 msgid "Bring to front"
 msgstr ""
 
@@ -1595,7 +1595,7 @@ msgstr "Calculul SLA, SLA acceptabil (în %)"
 msgid "Calculated"
 msgstr "Calculat"
 
-#: jsLoader.php:151
+#: jsLoader.php:152
 msgid "Calendar"
 msgstr ""
 
@@ -1603,7 +1603,7 @@ msgstr ""
 msgid "Callback"
 msgstr "Apelare inversă"
 
-#: jsLoader.php:249
+#: jsLoader.php:250
 msgctxt "screen reader"
 msgid "Can not be removed"
 msgstr ""
@@ -1624,18 +1624,18 @@ msgstr ""
 #: include/views/configuration.action.edit.php:2331
 #: include/views/configuration.maintenance.edit.php:147
 #: include/views/configuration.services.parent.list.php:85
-#: include/views/conf.import.php:121
+#: include/views/conf.import.php:127
 #: include/views/js/administration.general.housekeeper.edit.js.php:40
 #: include/views/js/administration.general.trigger.options.js.php:21
-#: include/views/js/administration.general.triggerSeverity.js.php:13
+#: include/views/js/administration.general.trigseverity.js.php:13
 #: include/views/js/configuration.action.edit.js.php:76
-#: include/views/js/configuration.discovery.edit.js.php:148
-#: include/views/js/configuration.discovery.edit.js.php:608
-#: include/views/js/configuration.discovery.edit.js.php:679
-#: include/views/js/configuration.discovery.edit.js.php:709
+#: include/views/js/configuration.discovery.edit.js.php:147
+#: include/views/js/configuration.discovery.edit.js.php:607
+#: include/views/js/configuration.discovery.edit.js.php:678
+#: include/views/js/configuration.discovery.edit.js.php:708
 #: include/views/js/conf.import.js.php:16
-#: include/views/monitoring.slideconf.edit.php:277 jsLoader.php:118
-#: jsLoader.php:136 jsLoader.php:238 jsLoader.php:311 jsLoader.php:323
+#: include/views/monitoring.slideconf.edit.php:277 jsLoader.php:119
+#: jsLoader.php:137 jsLoader.php:239 jsLoader.php:312 jsLoader.php:324
 msgid "Cancel"
 msgstr "Anulează"
 
@@ -1826,11 +1826,11 @@ msgstr "Nu se poate adăuga valoarea mapată"
 msgid "Cannot add web scenario"
 msgstr "Nu se pate adăuga scenariul web"
 
-#: jsLoader.php:133
+#: jsLoader.php:134
 msgid "Cannot add widget: not enough free space on the dashboard."
 msgstr ""
 
-#: jsLoader.php:122
+#: jsLoader.php:123
 msgid "Cannot add widgets in kiosk mode"
 msgstr ""
 
@@ -2372,7 +2372,7 @@ msgstr[2] "Nu se pot activa scenariile web"
 msgid "Cannot execute script"
 msgstr ""
 
-#: jsLoader.php:206
+#: jsLoader.php:207
 msgid "Cannot expand macros."
 msgstr ""
 
@@ -2406,7 +2406,7 @@ msgstr "Nu se poate găsi serverul \"%1$s\" folosit în harta \"%2$s\"."
 msgid "Cannot find host \"%1$s\" used in screen \"%2$s\"."
 msgstr "Nu se poate găsi serverul \"%1$s\" folosit în ecranul \"%2$s\"."
 
-#: include/classes/import/CConfigurationImport.php:1152
+#: include/classes/import/CConfigurationImport.php:1153
 #, c-format
 msgid "Cannot find host group \"%1$s\" for host prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 msgstr "Nu se poate gasi grupul server \"%1$s\" pentru serverul prototip \"%2$s\" a regulii de detecție \"%3$s\" pe \"%4$s\"."
@@ -2429,32 +2429,32 @@ msgstr "Nu se poate găsi icon-ul \"%1$s\" folosit în harta \"%2$s\"."
 msgid "Cannot find icon map \"%1$s\" used in map \"%2$s\"."
 msgstr "Nu se poate găsi maparea icon-ului \"%1$s\" folosit în harta \"%2$s\"."
 
-#: include/classes/import/CConfigurationImport.php:1536
+#: include/classes/import/CConfigurationImport.php:1537
 #, c-format
 msgid "Cannot find item \"%1$s\" on \"%2$s\" used as the Y axis MAX value for graph \"%3$s\"."
 msgstr "Nu se poate găsi elementul \"%1$s\" pe \"%2$s\" folosit ca și axă Y valoarea MAX pentru graficul \"%3$s\"."
 
-#: include/classes/import/CConfigurationImport.php:1305
+#: include/classes/import/CConfigurationImport.php:1306
 #, c-format
 msgid "Cannot find item \"%1$s\" on \"%2$s\" used as the Y axis MAX value for graph prototype \"%3$s\" of discovery rule \"%4$s\" on \"%5$s\"."
 msgstr "Nu se poate găsi elementul  \"%1$s\" pe \"%2$s\" folosit ca și axă Y valoarea MAX pentru prototipul grafic \"%3$s\" a regulii de detecție \"%4$s\" pe \"%5$s\"."
 
-#: include/classes/import/CConfigurationImport.php:1520
+#: include/classes/import/CConfigurationImport.php:1521
 #, c-format
 msgid "Cannot find item \"%1$s\" on \"%2$s\" used as the Y axis MIN value for graph \"%3$s\"."
 msgstr "Nu se poate găsi elementul \"%1$s\" pe \"%2$s\" folosit ca și axă Y valoarea MIN pentru graficul \"%3$s\"."
 
-#: include/classes/import/CConfigurationImport.php:1285
+#: include/classes/import/CConfigurationImport.php:1286
 #, c-format
 msgid "Cannot find item \"%1$s\" on \"%2$s\" used as the Y axis MIN value for graph prototype \"%3$s\" of discovery rule \"%4$s\" on \"%5$s\"."
 msgstr "Nu se poate găsi elementul  \"%1$s\" pe \"%2$s\" used as the Y axis MIN value for graph prototype \"%3$s\" of discovery rule \"%4$s\" on \"%5$s\"."
 
-#: include/classes/import/CConfigurationImport.php:1554
+#: include/classes/import/CConfigurationImport.php:1555
 #, c-format
 msgid "Cannot find item \"%1$s\" on \"%2$s\" used in graph \"%3$s\"."
 msgstr ""
 
-#: include/classes/import/CConfigurationImport.php:1325
+#: include/classes/import/CConfigurationImport.php:1326
 #, c-format
 msgid "Cannot find item \"%1$s\" on \"%2$s\" used in graph prototype \"%3$s\" of discovery rule \"%4$s\" on \"%5$s\"."
 msgstr ""
@@ -2474,7 +2474,7 @@ msgstr "Nu se poate găsi harta \"%1$s\" folosită în harta \"%2$s\"."
 msgid "Cannot find map \"%1$s\" used in screen \"%2$s\"."
 msgstr "Nu se poate găsi harta \"%1$s\" folosită în ecranul \"%2$s\"."
 
-#: include/classes/import/CConfigurationImport.php:1175
+#: include/classes/import/CConfigurationImport.php:1176
 #, c-format
 msgid "Cannot find template \"%1$s\" for host prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 msgstr "Nu se poate gasi șablonul \"%1$s\" pentru serverul prototip \"%2$s\" a regulii de detecție \"%3$s\" pe \"%4$s\"."
@@ -2485,12 +2485,12 @@ msgstr "Nu se poate gasi șablonul \"%1$s\" pentru serverul prototip \"%2$s\" a 
 msgid "Cannot find trigger \"%1$s\" used in map \"%2$s\"."
 msgstr "Nu se poate găsi trigger-ul \"%1$s\" folosit în harta \"%2$s\"."
 
-#: include/classes/import/CConfigurationImport.php:746
+#: include/classes/import/CConfigurationImport.php:747
 #, c-format
 msgid "Cannot find value map \"%1$s\" used for item \"%2$s\" on \"%3$s\"."
 msgstr "Nu se poate găsi harta valorilor \"%1$s\" folosită pentru elementul \"%2$s\" pe \"%3$s\"."
 
-#: include/classes/import/CConfigurationImport.php:1074
+#: include/classes/import/CConfigurationImport.php:1075
 #, c-format
 msgid "Cannot find value map \"%1$s\" used for item prototype \"%2$s\" of discovery rule \"%3$s\" on \"%4$s\"."
 msgstr "Nu se poate gasi harta valorilor \"%1$s\" folosită pentru prototipul item  \"%2$s\" a regulii de detecție \"%3$s\" pe \"%4$s\"."
@@ -2503,11 +2503,11 @@ msgstr "Nu se poate formata arborele. Verificați structura logică în legătur
 msgid "Cannot format tree."
 msgstr "Nu se poate formata arborele."
 
-#: include/classes/api/services/CTemplate.php:841
+#: include/classes/api/services/CTemplate.php:842
 msgid "Cannot have empty visible template name."
 msgstr ""
 
-#: include/classes/import/importers/CTemplateImporter.php:123
+#: include/classes/import/importers/CTemplateImporter.php:169
 #, c-format
 msgid "Cannot import template \"%1$s\", linked template \"%2$s\" does not exist."
 msgid_plural "Cannot import template \"%1$s\", linked templates \"%2$s\" do not exist."
@@ -2533,8 +2533,8 @@ msgstr "Nu se poate introduce expresia trigger"
 msgid "Cannot link template"
 msgstr "Nu se poate asocia șablonul"
 
-#: include/classes/api/services/CTemplate.php:928
-#: include/classes/api/services/CTemplate.php:942
+#: include/classes/api/services/CTemplate.php:929
+#: include/classes/api/services/CTemplate.php:943
 msgid "Cannot link template."
 msgstr ""
 
@@ -2546,7 +2546,7 @@ msgstr "Nu se poate face deconectarea."
 msgid "Cannot mass update host name."
 msgstr "Nu se poate face actualizare în masă a numelui serverului."
 
-#: include/classes/api/services/CTemplate.php:1066
+#: include/classes/api/services/CTemplate.php:1067
 msgid "Cannot mass update template name."
 msgstr ""
 
@@ -2554,7 +2554,7 @@ msgstr ""
 msgid "Cannot mass update visible host name."
 msgstr "Nu se poate face actualizare în masă a numelui vizibil al serverului."
 
-#: include/classes/api/services/CTemplate.php:1031
+#: include/classes/api/services/CTemplate.php:1032
 msgid "Cannot mass update visible template name."
 msgstr ""
 
@@ -2671,7 +2671,7 @@ msgstr ""
 msgid "Cannot set \"templateid\" field for application prototype in item prototype \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:434
+#: include/classes/api/services/CScreen.php:435
 #, c-format
 msgid "Cannot set \"templateid\" for screen \"%1$s\"."
 msgstr "Nu se poate seta \"templateid\" pentru ecranul \"%1$s\"."
@@ -2719,8 +2719,8 @@ msgstr "Nu se pot deconecta și șterge regulile de detecție"
 msgid "Cannot unlink template"
 msgstr "Nu se poate deconecta șablonul"
 
-#: include/classes/api/services/CTemplate.php:893
-#: include/classes/api/services/CTemplate.php:916
+#: include/classes/api/services/CTemplate.php:894
+#: include/classes/api/services/CTemplate.php:917
 msgid "Cannot unlink template."
 msgstr ""
 
@@ -2792,7 +2792,7 @@ msgstr ""
 msgid "Cannot update \"imagetype\" for image \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:753
+#: include/classes/api/services/CScreen.php:754
 #, c-format
 msgid "Cannot update \"templateid\" for screen \"%1$s\"."
 msgstr "Nu se poate actualiza \"templateid\" pentru ecranul \"%1$s\"."
@@ -3002,8 +3002,8 @@ msgstr "Nu se pot actualiza aplicațiile bazate pe un șablon."
 msgid "Cannot update templates"
 msgstr ""
 
-#: include/classes/api/services/CTemplate.php:792
-#: include/classes/api/services/CTemplate.php:1127
+#: include/classes/api/services/CTemplate.php:793
+#: include/classes/api/services/CTemplate.php:1128
 #, c-format
 msgid "Cannot update templates on discovered host \"%1$s\"."
 msgstr "Nu se poate actualiza șablonul pentru serverul detectat \"%1$s\"."
@@ -3050,7 +3050,7 @@ msgstr "Nu se poate actualiza valoarea mapată"
 msgid "Cannot update web scenario"
 msgstr "Nu se poate actualiza scenariul web"
 
-#: include/views/js/configuration.discovery.edit.js.php:675
+#: include/views/js/configuration.discovery.edit.js.php:674
 msgid "Cannot validate discovery check: invalid request or connection to Zabbix server failed."
 msgstr "Nu se poate valida verificarea de detecție: cerere invalidă sau conexiune cazută cu serverul Zabbix. "
 
@@ -3101,7 +3101,7 @@ msgstr ""
 #: include/classes/screens/CScreenBuilder.php:499
 #: include/classes/screens/CScreenMap.php:45
 #: include/views/configuration.services.edit.php:62
-#: include/views/hostmacros.php:127 include/views/js/hostmacros.js.php:113
+#: include/views/hostmacros.php:127 include/views/js/hostmacros.js.php:128
 msgctxt "verb"
 msgid "Change"
 msgstr ""
@@ -3149,7 +3149,7 @@ msgstr "Șasiu"
 msgid "Chassis information. Returns string"
 msgstr ""
 
-#: include/views/js/configuration.discovery.edit.js.php:605
+#: include/views/js/configuration.discovery.edit.js.php:604
 msgid "Check already exists."
 msgstr "Verificarea există deja."
 
@@ -3188,7 +3188,7 @@ msgstr ""
 msgid "Check the key, please. Default example was passed."
 msgstr "Vă rugăm să verificați cheia. A fost folosit exemplul implicit."
 
-#: include/views/js/configuration.discovery.edit.js.php:61
+#: include/views/js/configuration.discovery.edit.js.php:60
 msgid "Check type"
 msgstr "Verificați tipul"
 
@@ -3262,7 +3262,7 @@ msgstr "Chineză (zh_CN)"
 msgid "Chinese (zh_TW)"
 msgstr "Chineză (zh_TW)"
 
-#: include/classes/import/importers/CTemplateImporter.php:155
+#: include/classes/import/importers/CTemplateImporter.php:201
 #, c-format
 msgid "Circular reference in templates: %1$s."
 msgstr "Refefință circulară în șabloanele: %1$s."
@@ -3272,7 +3272,7 @@ msgstr "Refefință circulară în șabloanele: %1$s."
 msgid "Circular template linkage is not allowed."
 msgstr "Legătura circulară în șabloane nu este permisă."
 
-#: jsLoader.php:215
+#: jsLoader.php:216
 msgid "Clear"
 msgstr "Șterge"
 
@@ -3291,11 +3291,11 @@ msgstr "Șterge istoric și tendințe"
 msgid "Clear when unlinking"
 msgstr "Șterge la deconectare"
 
-#: jsLoader.php:126
+#: jsLoader.php:127
 msgid "Click and drag to desired size."
 msgstr ""
 
-#: jsLoader.php:236
+#: jsLoader.php:237
 msgid "Click to view or edit"
 msgstr ""
 
@@ -3327,7 +3327,7 @@ msgstr "Ceas"
 #: include/views/configuration.triggers.edit.php:629
 #: include/views/monitoring.screen.edit.php:222
 #: include/views/monitoring.slideconf.edit.php:275
-#: include/views/monitoring.sysmap.edit.php:389 jsLoader.php:260
+#: include/views/monitoring.sysmap.edit.php:389 jsLoader.php:261
 msgid "Clone"
 msgstr "Clonă"
 
@@ -3335,8 +3335,8 @@ msgstr "Clonă"
 #: include/views/js/monitoring.sysmaps.js.php:421
 #: include/views/js/monitoring.sysmaps.js.php:541
 #: include/views/js/monitoring.sysmaps.js.php:636
-#: include/views/js/monitoring.sysmaps.js.php:733 jsLoader.php:137
-#: jsLoader.php:232 jsLoader.php:316
+#: include/views/js/monitoring.sysmaps.js.php:733 jsLoader.php:138
+#: jsLoader.php:233 jsLoader.php:317
 msgid "Close"
 msgstr "Închide"
 
@@ -3360,8 +3360,8 @@ msgid "Close problem"
 msgstr ""
 
 #: include/classes/html/CCollapsibleUiWidget.php:55
-#: include/classes/widgets/CWidgetHelper.php:946 jsLoader.php:226
-#: jsLoader.php:231
+#: include/classes/widgets/CWidgetHelper.php:946 jsLoader.php:227
+#: jsLoader.php:232
 msgid "Collapse"
 msgstr ""
 
@@ -3374,7 +3374,7 @@ msgid "Colour"
 msgstr "Culoare"
 
 #: include/classes/validators/CColorValidator.php:32
-#: include/validate.inc.php:208 jsLoader.php:208
+#: include/validate.inc.php:208 jsLoader.php:209
 #, c-format
 msgid "Colour \"%1$s\" is not correct: expecting hexadecimal colour code (6 symbols)."
 msgstr "Culoarea \"%1$s\" nu este corectă: trebuie un cod hexadecimal (6 simboluri)."
@@ -3485,7 +3485,7 @@ msgid "Conditions duplicates for correlation \"%1$s\"."
 msgstr ""
 
 #: include/menu.inc.php:177 include/views/inventory.host.view.php:181
-#: jsLoader.php:259
+#: jsLoader.php:260
 msgid "Configuration"
 msgstr "Configurare"
 
@@ -3803,7 +3803,7 @@ msgstr ""
 #: include/views/administration.general.regularexpressions.edit.php:33
 #: include/views/administration.general.regularexpressions.list.php:32
 #: include/views/administration.general.trigger.options.edit.php:33
-#: include/views/administration.general.triggerSeverity.edit.php:33
+#: include/views/administration.general.trigseverity.edit.php:33
 #: include/views/administration.general.valuemapping.edit.php:33
 #: include/views/administration.general.valuemapping.list.php:35
 #: include/views/administration.general.workingtime.edit.php:31
@@ -3848,7 +3848,7 @@ msgstr ""
 #: include/views/configuration.item.massupdate.php:190
 #: include/views/configuration.item.prototype.edit.php:463
 #: include/views/configuration.item.prototype.massupdate.php:186
-#: include/views/js/configuration.discovery.edit.js.php:94
+#: include/views/js/configuration.discovery.edit.js.php:93
 msgid "Context name"
 msgstr "Nume context"
 
@@ -3869,7 +3869,7 @@ msgstr "Coordonate"
 #: include/views/configuration.copy.elements.php:73
 #: include/views/configuration.graph.list.php:150
 #: include/views/configuration.item.list.php:248
-#: include/views/configuration.triggers.list.php:335 jsLoader.php:200
+#: include/views/configuration.triggers.list.php:335 jsLoader.php:201
 msgid "Copy"
 msgstr "Copiază"
 
@@ -3974,11 +3974,11 @@ msgstr ""
 msgid "Create dashboard"
 msgstr ""
 
-#: jsLoader.php:264
+#: jsLoader.php:265
 msgid "Create dependent discovery rule"
 msgstr ""
 
-#: jsLoader.php:263
+#: jsLoader.php:264
 msgid "Create dependent item"
 msgstr ""
 
@@ -4079,7 +4079,7 @@ msgstr "Creează hartă"
 msgid "Create media type"
 msgstr "Creează tip media"
 
-#: include/views/conf.import.php:25 jsLoader.php:261
+#: include/views/conf.import.php:25 jsLoader.php:262
 msgid "Create new"
 msgstr ""
 
@@ -4103,7 +4103,7 @@ msgstr "Creează slide show"
 msgid "Create template"
 msgstr "Creează șablon"
 
-#: include/views/configuration.triggers.list.php:168 jsLoader.php:262
+#: include/views/configuration.triggers.list.php:168 jsLoader.php:263
 msgid "Create trigger"
 msgstr "Creează trigger"
 
@@ -4211,7 +4211,7 @@ msgstr "Script personalizat"
 msgid "Custom scripts"
 msgstr ""
 
-#: include/views/administration.general.triggerSeverity.edit.php:87
+#: include/views/administration.general.trigseverity.edit.php:87
 msgid "Custom severity names affect all locales and require manual translation!"
 msgstr "Numele de severitate personalizată afectează toate localizările și necesită traducere manuală!"
 
@@ -4238,7 +4238,7 @@ msgstr ""
 #: include/views/configuration.item.massupdate.php:239
 #: include/views/configuration.item.prototype.edit.php:502
 #: include/views/configuration.item.prototype.massupdate.php:235
-#: include/views/js/configuration.discovery.edit.js.php:133
+#: include/views/js/configuration.discovery.edit.js.php:132
 msgid "DES"
 msgstr "DES"
 
@@ -4335,7 +4335,7 @@ msgstr "Date"
 msgid "Data cache statistics. Cache - one of values (modes: all, float, uint, str, log, text), history (modes: pfree, total, used, free), trend (modes: pfree, total, used, free), text (modes: pfree, total, used, free)."
 msgstr "Date statistice cache. Cache - una din valorile (moduri: all, float, uint, str, log, text), istoric (modes: pfree, total, used, free), trend (modes: pfree, total, used, free), text (modes: pfree, total, used, free)."
 
-#: include/classes/graphdraw/CLineGraphDraw.php:2686
+#: include/classes/graphdraw/CLineGraphDraw.php:2735
 #: include/classes/graphdraw/CPieGraphDraw.php:808
 #, c-format
 msgid "Data from %1$s. Generated in %2$s sec."
@@ -4464,7 +4464,7 @@ msgid "Dec"
 msgstr "Dec"
 
 #: include/forms.inc.php:2205 include/func.inc.php:127
-#: include/func.inc.php:264 jsLoader.php:163
+#: include/func.inc.php:264 jsLoader.php:164
 msgid "December"
 msgstr "Decembrie"
 
@@ -4477,7 +4477,7 @@ msgstr "Decembrie"
 #: include/views/inventory.host.view.php:75
 #: include/views/js/monitoring.sysmaps.js.php:118
 #: include/views/js/monitoring.sysmaps.js.php:219
-#: include/views/js/monitoring.sysmaps.js.php:588 jsLoader.php:189
+#: include/views/js/monitoring.sysmaps.js.php:588 jsLoader.php:190
 msgid "Default"
 msgstr "Implicit"
 
@@ -4575,8 +4575,8 @@ msgstr "Întârziat de către"
 #: include/views/configuration.triggers.list.php:337
 #: include/views/monitoring.screen.list.php:126
 #: include/views/monitoring.slideconf.list.php:97
-#: include/views/monitoring.sysmap.list.php:99 jsLoader.php:119
-#: jsLoader.php:265
+#: include/views/monitoring.sysmap.list.php:99 jsLoader.php:120
+#: jsLoader.php:266
 msgid "Delete"
 msgstr "Șterge"
 
@@ -4609,7 +4609,7 @@ msgstr "Ștergere acțiune curentă?"
 msgid "Delete current correlation?"
 msgstr ""
 
-#: jsLoader.php:266
+#: jsLoader.php:267
 msgid "Delete dashboard?"
 msgstr ""
 
@@ -4653,7 +4653,7 @@ msgstr "Ștergere prototip de element?"
 msgid "Delete item?"
 msgstr "Ștergere element?"
 
-#: jsLoader.php:205
+#: jsLoader.php:206
 msgid "Delete links between selected elements?"
 msgstr "Ștergere legătura între elementele selectate?"
 
@@ -4706,7 +4706,7 @@ msgstr ""
 msgid "Delete selected discovery rules?"
 msgstr "Ștergere regulă de detecție selectată?"
 
-#: jsLoader.php:192
+#: jsLoader.php:193
 msgid "Delete selected elements?"
 msgstr "Ștergere elemente selectate?"
 
@@ -4791,7 +4791,7 @@ msgstr "Ștergere ecrane selectate?"
 msgid "Delete selected scripts?"
 msgstr "Ștergere scripturi selectate?"
 
-#: jsLoader.php:193
+#: jsLoader.php:194
 msgid "Delete selected shapes?"
 msgstr ""
 
@@ -4878,7 +4878,7 @@ msgstr "Ștergere: Server \"%1$s\"."
 msgid "Deleted: Host prototype \"%1$s\" on \"%2$s\"."
 msgstr "Creat: Prototip server \"%1$s\" pe \"%2$s\"."
 
-#: include/classes/api/services/CTemplate.php:722
+#: include/classes/api/services/CTemplate.php:723
 #, c-format
 msgid "Deleted: Template \"%1$s\"."
 msgstr "Ștergere: Șablon \"%1$s\"."
@@ -4911,7 +4911,7 @@ msgstr "Dependenţă"
 msgid "Dependent item"
 msgstr ""
 
-#: app/views/popup.generic.php:289 include/triggers.inc.php:2741
+#: app/views/popup.generic.php:294 include/triggers.inc.php:2741
 #: include/views/configuration.services.edit.php:152
 #: include/views/configuration.trigger.prototype.list.php:82
 #: include/views/configuration.triggers.list.php:241
@@ -4947,7 +4947,7 @@ msgstr "Stare de implementare"
 msgid "Description"
 msgstr "Descriere"
 
-#: app/views/administration.mediatype.list.php:69 include/blocks.inc.php:617
+#: app/views/administration.mediatype.list.php:69 include/blocks.inc.php:615
 #: include/func.inc.php:1854
 #: include/views/administration.auditlogs.list.php:77
 #: include/views/configuration.action.edit.php:435
@@ -5100,7 +5100,7 @@ msgid "Disabled"
 msgstr "Dezactivat"
 
 #: adm.triggerseverities.php:41 adm.triggerseverities.php:42
-#: include/views/administration.general.triggerSeverity.edit.php:78
+#: include/views/administration.general.trigseverity.edit.php:78
 msgid "Disaster"
 msgstr "Dezastru"
 
@@ -5158,9 +5158,9 @@ msgstr "Detectat de către proxy"
 msgid "Discovery check"
 msgstr "Verificare de detectare"
 
-#: include/views/js/configuration.discovery.edit.js.php:604
-#: include/views/js/configuration.discovery.edit.js.php:673
-#: include/views/js/configuration.discovery.edit.js.php:705
+#: include/views/js/configuration.discovery.edit.js.php:603
+#: include/views/js/configuration.discovery.edit.js.php:672
+#: include/views/js/configuration.discovery.edit.js.php:704
 msgid "Discovery check error"
 msgstr "Eroare la verificarea de detectare"
 
@@ -5292,7 +5292,7 @@ msgstr ""
 
 #: app/views/search.php:124 app/views/search.php:180 app/views/search.php:254
 #: include/actions.inc.php:1775 include/actions.inc.php:1847
-#: include/actions.inc.php:1938 include/func.inc.php:1658 jsLoader.php:319
+#: include/actions.inc.php:1938 include/func.inc.php:1658 jsLoader.php:320
 #: queue.php:302
 #, c-format
 msgid "Displaying %1$s of %2$s found"
@@ -5325,7 +5325,7 @@ msgstr ""
 msgid "Do not keep trends"
 msgstr ""
 
-#: jsLoader.php:145 jsLoader.php:267
+#: jsLoader.php:146 jsLoader.php:268
 msgid "Do you wish to replace the conditional expression?"
 msgstr "Doreşti să înlocuiești expresia condițională?"
 
@@ -5410,8 +5410,8 @@ msgstr ""
 msgid "Duplicate \"name\" value \"%1$s\" for map."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:446
-#: include/classes/api/services/CScreen.php:779
+#: include/classes/api/services/CScreen.php:447
+#: include/classes/api/services/CScreen.php:780
 #, c-format
 msgid "Duplicate \"name\" value \"%1$s\" for screen."
 msgstr ""
@@ -5459,8 +5459,8 @@ msgstr ""
 msgid "Duplicate userid \"%1$s\" in users for map \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:541
-#: include/classes/api/services/CScreen.php:881
+#: include/classes/api/services/CScreen.php:542
+#: include/classes/api/services/CScreen.php:882
 #, c-format
 msgid "Duplicate userid \"%1$s\" in users for screen \"%2$s\"."
 msgstr ""
@@ -5471,13 +5471,13 @@ msgstr ""
 msgid "Duplicate usrgrpid \"%1$s\" in user groups for map \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:616
-#: include/classes/api/services/CScreen.php:955
+#: include/classes/api/services/CScreen.php:617
+#: include/classes/api/services/CScreen.php:956
 #, c-format
 msgid "Duplicate usrgrpid \"%1$s\" in user groups for screen \"%2$s\"."
 msgstr ""
 
-#: app/views/monitoring.widget.problems.view.php:63 include/blocks.inc.php:742
+#: app/views/monitoring.widget.problems.view.php:63 include/blocks.inc.php:740
 #: include/classes/screens/CScreenProblem.php:909
 #: include/classes/screens/CScreenProblem.php:934
 #: include/classes/screens/CScreenProblem.php:1189 include/events.inc.php:258
@@ -5500,7 +5500,7 @@ msgstr "Item dinamic"
 msgid "Dynamic items"
 msgstr ""
 
-#: jsLoader.php:204
+#: jsLoader.php:205
 msgid "Each URL should have a unique name. Please make sure there is only one URL named"
 msgstr "Fiecare URL trebuie să aibă un nume unic. Vă rugăm să vă asigurați că există un singur URL cu numele"
 
@@ -5520,8 +5520,8 @@ msgstr ""
 #: include/views/configuration.triggers.edit.php:335
 #: include/views/js/configuration.discovery.edit.js.php:7
 #: include/views/js/monitoring.sysmaps.js.php:750
-#: include/views/js/monitoring.sysmaps.js.php:765 jsLoader.php:117
-#: jsLoader.php:305
+#: include/views/js/monitoring.sysmaps.js.php:765 jsLoader.php:118
+#: jsLoader.php:306
 msgid "Edit"
 msgstr "Editare"
 
@@ -5541,15 +5541,15 @@ msgstr ""
 msgid "Edit slide show"
 msgstr ""
 
-#: jsLoader.php:308
+#: jsLoader.php:309
 msgid "Edit tree element"
 msgstr ""
 
-#: jsLoader.php:268
+#: jsLoader.php:269
 msgid "Edit trigger"
 msgstr "Editare trigger"
 
-#: jsLoader.php:113
+#: jsLoader.php:114
 msgid "Edit widget"
 msgstr ""
 
@@ -5673,14 +5673,14 @@ msgstr ""
 #: include/classes/api/services/CMap.php:1022
 #: include/classes/api/services/CMediatype.php:174
 #: include/classes/api/services/CMediatype.php:440
-#: include/classes/api/services/CScreen.php:416
-#: include/classes/api/services/CScreen.php:722
-#: include/classes/api/services/CScreen.php:1196
+#: include/classes/api/services/CScreen.php:417
+#: include/classes/api/services/CScreen.php:723
+#: include/classes/api/services/CScreen.php:1197
 #: include/classes/api/services/CService.php:333
 #: include/classes/api/services/CService.php:366
 #: include/classes/api/services/CService.php:430
 #: include/classes/api/services/CService.php:498
-#: include/classes/api/services/CTemplate.php:587
+#: include/classes/api/services/CTemplate.php:588
 #: include/classes/api/services/CTrigger.php:678
 #: include/classes/api/services/CTrigger.php:802
 #: include/classes/api/services/CUserMacro.php:602
@@ -5707,7 +5707,7 @@ msgstr "Golire nume."
 msgid "Empty parameters"
 msgstr "Golire parametri"
 
-#: include/classes/api/services/CScreen.php:995
+#: include/classes/api/services/CScreen.php:996
 msgid "Empty screen ID for screen."
 msgstr "ID ecran gol pentru ecran."
 
@@ -5715,7 +5715,7 @@ msgstr "ID ecran gol pentru ecran."
 msgid "Empty screen ID for template screen."
 msgstr "ID ecran gol pentru șablon ecran."
 
-#: include/classes/api/services/CScreen.php:730
+#: include/classes/api/services/CScreen.php:731
 msgid "Empty screen ID."
 msgstr ""
 
@@ -5918,7 +5918,7 @@ msgstr "Eroare"
 msgid "Error in search request for table \"%1$s\"."
 msgstr "Eroare in cererea de căutare pentru tabelul \"%1$s\"."
 
-#: include/func.inc.php:1893 jsLoader.php:147
+#: include/func.inc.php:1893 jsLoader.php:148
 msgid "Error message"
 msgstr ""
 
@@ -6008,7 +6008,7 @@ msgstr "Exclude"
 msgid "Exclude host groups"
 msgstr ""
 
-#: jsLoader.php:138
+#: jsLoader.php:139
 msgid "Execute"
 msgstr "Execută"
 
@@ -6047,13 +6047,13 @@ msgstr ""
 msgid "Executed script"
 msgstr "Script executat"
 
-#: jsLoader.php:139
+#: jsLoader.php:140
 msgid "Execution confirmation"
 msgstr "Confirmare de executare"
 
 #: include/classes/html/CCollapsibleUiWidget.php:60
-#: include/classes/widgets/CWidgetHelper.php:946 jsLoader.php:227
-#: jsLoader.php:230
+#: include/classes/widgets/CWidgetHelper.php:946 jsLoader.php:228
+#: jsLoader.php:231
 msgid "Expand"
 msgstr ""
 
@@ -6076,7 +6076,7 @@ msgctxt "maintenance status"
 msgid "Expired"
 msgstr "Expirat"
 
-#: app/views/popup.generic.php:504 include/graphs.inc.php:27
+#: app/views/popup.generic.php:509 include/graphs.inc.php:27
 msgid "Exploded"
 msgstr "Explodat"
 
@@ -6151,7 +6151,7 @@ msgstr "Expresii"
 msgid "External check"
 msgstr "Verificare externă"
 
-#: jsLoader.php:175
+#: jsLoader.php:176
 msgctxt "Friday short"
 msgid "F"
 msgstr "F"
@@ -6162,7 +6162,7 @@ msgid "FALSE"
 msgstr "FALS"
 
 #: include/discovery.inc.php:50
-#: include/views/js/configuration.discovery.edit.js.php:204
+#: include/views/js/configuration.discovery.edit.js.php:203
 msgid "FTP"
 msgstr "FTP"
 
@@ -6188,7 +6188,7 @@ msgstr ""
 msgid "Failed to update dashboard"
 msgstr ""
 
-#: include/classes/api/services/CTemplate.php:536
+#: include/classes/api/services/CTemplate.php:537
 msgid "Failed to update template."
 msgstr ""
 
@@ -6217,7 +6217,7 @@ msgid "Feb"
 msgstr "Feb"
 
 #: include/forms.inc.php:2170 include/func.inc.php:117
-#: include/func.inc.php:254 jsLoader.php:153
+#: include/func.inc.php:254 jsLoader.php:154
 msgid "February"
 msgstr "Februarie"
 
@@ -6238,7 +6238,7 @@ msgstr "Câmpul \"%1$s\" nu poate fi pus NULL."
 #: include/classes/api/services/CDRule.php:531
 #: include/classes/api/services/CHostGroup.php:954
 #: include/classes/api/services/CHost.php:850
-#: include/classes/api/services/CTemplate.php:820
+#: include/classes/api/services/CTemplate.php:821
 #: include/classes/api/services/CTriggerGeneral.php:237
 #: include/classes/validators/CNewValidator.php:256
 #: include/validate.inc.php:300
@@ -6258,7 +6258,7 @@ msgstr ""
 msgid "Field \"%1$s\" is missing a value for media type \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:591
+#: include/classes/api/services/CScreen.php:592
 #, c-format
 msgid "Field \"%1$s\" is missing a value for screen \"%2$s\"."
 msgstr ""
@@ -6472,7 +6472,7 @@ msgid "Fri"
 msgstr "Fri"
 
 #: include/forms.inc.php:2138 include/forms.inc.php:2253
-#: include/func.inc.php:139 include/func.inc.php:229 jsLoader.php:168
+#: include/func.inc.php:139 include/func.inc.php:229 jsLoader.php:169
 msgid "Friday"
 msgstr "Vineri"
 
@@ -6590,12 +6590,12 @@ msgstr "Scripturi globale"
 msgid "Global value"
 msgstr ""
 
-#: include/classes/html/CDashboardWidgetMap.php:223
+#: include/classes/html/CDashboardWidgetMap.php:241
 #, c-format
 msgid "Go back to %1$s"
 msgstr ""
 
-#: jsLoader.php:273
+#: jsLoader.php:274
 msgid "Go to"
 msgstr "Mergi la"
 
@@ -6804,7 +6804,7 @@ msgstr "Există grafic cu același nume dar de alt tip."
 #: include/views/conf.import.php:37 include/views/inventory.host.view.php:141
 #: include/views/inventory.host.view.php:165
 #: include/views/inventory.host.view.php:176
-#: include/views/monitoring.charts.php:63 jsLoader.php:274
+#: include/views/monitoring.charts.php:63 jsLoader.php:275
 msgid "Graphs"
 msgstr "Grafice"
 
@@ -6860,12 +6860,12 @@ msgstr "Grupul \"%1$s\" nu poate fi șters, pentru că este utilizat de un serve
 msgid "Group \"%1$s\" cannot be deleted, because it is used in a correlation condition."
 msgstr ""
 
-#: include/classes/import/importers/CTemplateImporter.php:251
+#: include/classes/import/importers/CTemplateImporter.php:297
 #, c-format
 msgid "Group \"%1$s\" does not exist."
 msgstr "Grupul \"%1$s\" nu există."
 
-#: include/classes/import/importers/CHostImporter.php:161
+#: include/classes/import/importers/CHostImporter.php:202
 #, c-format
 msgid "Group \"%1$s\" for host \"%2$s\" does not exist."
 msgstr "Grupul \"%1$s\" pentru serverul \"%2$s\" nu există."
@@ -6927,8 +6927,8 @@ msgstr "Grupuri"
 msgid "H:i"
 msgstr "H:m"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1414
 #: include/classes/graphdraw/CLineGraphDraw.php:1421
+#: include/classes/graphdraw/CLineGraphDraw.php:1428
 #: include/translateDefines.inc.php:34
 msgid "H:i:s"
 msgstr "H:m:s"
@@ -6938,7 +6938,7 @@ msgid "HTML"
 msgstr ""
 
 #: include/discovery.inc.php:51
-#: include/views/js/configuration.discovery.edit.js.php:205
+#: include/views/js/configuration.discovery.edit.js.php:204
 msgid "HTTP"
 msgstr "HTTP"
 
@@ -6970,7 +6970,7 @@ msgid "HTTP settings"
 msgstr ""
 
 #: include/discovery.inc.php:62
-#: include/views/js/configuration.discovery.edit.js.php:206
+#: include/views/js/configuration.discovery.edit.js.php:205
 msgid "HTTPS"
 msgstr "HTTPS"
 
@@ -7027,7 +7027,7 @@ msgstr "Ajutor"
 msgid "Hexadecimal to decimal"
 msgstr ""
 
-#: include/views/monitoring.sysmap.constructor.php:54 jsLoader.php:182
+#: include/views/monitoring.sysmap.constructor.php:54 jsLoader.php:183
 msgid "Hidden"
 msgstr "Ascuns"
 
@@ -7052,7 +7052,7 @@ msgid "Hierarchy"
 msgstr ""
 
 #: adm.triggerseverities.php:39 adm.triggerseverities.php:40
-#: include/views/administration.general.triggerSeverity.edit.php:70
+#: include/views/administration.general.trigseverity.edit.php:70
 msgid "High"
 msgstr "Ridicat"
 
@@ -7078,7 +7078,7 @@ msgstr ""
 #: include/views/administration.general.housekeeper.edit.php:117
 #: include/views/configuration.item.list.php:66
 #: include/views/configuration.item.prototype.list.php:55 items.php:312
-#: jsLoader.php:275 latest.php:408 latest.php:545 latest.php:702
+#: jsLoader.php:276 latest.php:408 latest.php:545 latest.php:702
 msgid "History"
 msgstr "Istoric"
 
@@ -7134,7 +7134,7 @@ msgstr "Aliniere orizontală"
 #: app/views/popup.generic.php:53 app/views/popup.generic.php:98
 #: app/views/popup.generic.php:137 app/views/search.php:26 httpconf.php:189
 #: httpconf.php:497 include/actions.inc.php:50 include/audit.inc.php:27
-#: include/blocks.inc.php:739 include/classes/screens/CScreenEvents.php:32
+#: include/blocks.inc.php:737 include/classes/screens/CScreenEvents.php:32
 #: include/classes/screens/CScreenHostgroupTriggers.php:135
 #: include/classes/screens/CScreenHostTriggers.php:67
 #: include/classes/screens/CScreenHostTriggers.php:135
@@ -7171,7 +7171,7 @@ msgstr "Aliniere orizontală"
 #: include/views/monitoring.screen.php:78
 #: include/views/monitoring.slides.php:75
 #: include/views/reports.toptriggers.php:80 items.php:997 items.php:1412
-#: jsLoader.php:184 latest.php:405 latest.php:422 queue.php:265
+#: jsLoader.php:185 latest.php:405 latest.php:422 queue.php:265
 #: report2.php:432 report2.php:455
 #, fuzzy
 msgid "Host"
@@ -7182,7 +7182,7 @@ msgstr[2] "Server"
 
 #: include/classes/api/services/CHost.php:954
 #: include/classes/api/services/CTemplate.php:458
-#: include/classes/import/importers/CHostImporter.php:62
+#: include/classes/import/importers/CHostImporter.php:67
 #, c-format
 msgid "Host \"%1$s\" already exists."
 msgstr "Serverul \"%1$s\" există deja."
@@ -7263,7 +7263,7 @@ msgstr[2] "Servere activate"
 #: include/views/js/configuration.action.edit.js.php:200
 #: include/views/js/monitoring.sysmaps.js.php:71
 #: include/views/js/monitoring.sysmaps.js.php:77
-#: include/views/js/monitoring.sysmaps.js.php:125 jsLoader.php:187
+#: include/views/js/monitoring.sysmaps.js.php:125 jsLoader.php:188
 #: report2.php:393 report2.php:431
 msgid "Host group"
 msgstr "Grup server"
@@ -7344,7 +7344,7 @@ msgstr "Interfață server"
 #: app/views/monitoring.problem.view.php:282 hostinventories.php:26
 #: include/views/common.filter.trigger.php:123
 #: include/views/inventory.host.list.php:23
-#: include/views/inventory.host.view.php:223 jsLoader.php:276
+#: include/views/inventory.host.view.php:223 jsLoader.php:277
 msgid "Host inventory"
 msgstr "Inventar server"
 
@@ -7439,7 +7439,7 @@ msgstr "Prototipuri de servere șterse"
 msgid "Host router"
 msgstr "Router gazdă"
 
-#: host_screen.php:27 jsLoader.php:277
+#: host_screen.php:27 jsLoader.php:278
 msgid "Host screens"
 msgstr "Ecrane server"
 
@@ -7465,7 +7465,7 @@ msgstr "Server actualizat"
 msgid "Host with ID \"%1$s\" is not available."
 msgstr ""
 
-#: include/classes/api/services/CTemplate.php:1092
+#: include/classes/api/services/CTemplate.php:1093
 #, c-format
 msgid "Host with the same name \"%1$s\" already exists."
 msgstr "Server cu același nume \"%1$s\" există deja."
@@ -7477,7 +7477,7 @@ msgid "Host with the same name \"%s\" already exists."
 msgstr "Server cu același nume \"%s\" există deja."
 
 #: include/classes/api/services/CTemplate.php:484
-#: include/classes/api/services/CTemplate.php:1057
+#: include/classes/api/services/CTemplate.php:1058
 #, c-format
 msgid "Host with the same visible name \"%1$s\" already exists."
 msgstr "Server cu același nume vizibil \"%1$s\" există deja."
@@ -7547,7 +7547,7 @@ msgid "Hungarian (hu_HU)"
 msgstr "Maghiară (hu_HU)"
 
 #: include/discovery.inc.php:60
-#: include/views/js/configuration.discovery.edit.js.php:207
+#: include/views/js/configuration.discovery.edit.js.php:206
 msgid "ICMP ping"
 msgstr "ping ICMP"
 
@@ -7556,7 +7556,7 @@ msgid "ID"
 msgstr "ID"
 
 #: include/discovery.inc.php:54
-#: include/views/js/configuration.discovery.edit.js.php:208
+#: include/views/js/configuration.discovery.edit.js.php:207
 msgid "IMAP"
 msgstr "IMAP"
 
@@ -7708,11 +7708,11 @@ msgid "If you think this message is wrong, please consult your administrators ab
 msgstr "Dacă crezi ca acest mesaj este greșit, te rog să consulți administratorii pentru obținerea permisiunilor necesare."
 
 #: image.php:26 include/audit.inc.php:40
-#: include/classes/helpers/CMapHelper.php:223 include/maps.inc.php:28
+#: include/classes/helpers/CMapHelper.php:224 include/maps.inc.php:28
 #: include/maps.inc.php:622
 #: include/views/administration.general.image.edit.php:56
 #: include/views/administration.general.image.edit.php:62
-#: include/views/js/monitoring.sysmaps.js.php:72 jsLoader.php:188
+#: include/views/js/monitoring.sysmaps.js.php:72 jsLoader.php:189
 msgid "Image"
 msgstr "Imagine"
 
@@ -7770,8 +7770,8 @@ msgstr "Imediat"
 #: include/views/administration.general.valuemapping.list.php:30
 #: include/views/configuration.host.list.php:43
 #: include/views/configuration.template.list.php:122
-#: include/views/conf.import.php:116 include/views/conf.import.php:120
-#: include/views/conf.import.php:131
+#: include/views/conf.import.php:122 include/views/conf.import.php:126
+#: include/views/conf.import.php:137
 #: include/views/monitoring.screen.list.php:41
 #: include/views/monitoring.sysmap.list.php:30
 msgid "Import"
@@ -7781,7 +7781,7 @@ msgstr "Import"
 msgid "Import failed"
 msgstr "Import eșuat"
 
-#: include/views/conf.import.php:107
+#: include/views/conf.import.php:113
 msgid "Import file"
 msgstr "Fișier import"
 
@@ -7898,8 +7898,8 @@ msgstr ""
 msgid "Incorrect \"permission\" value \"%1$s\" in user groups for map \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:601
-#: include/classes/api/services/CScreen.php:941
+#: include/classes/api/services/CScreen.php:602
+#: include/classes/api/services/CScreen.php:942
 #, c-format
 msgid "Incorrect \"permission\" value \"%1$s\" in user groups for screen \"%2$s\"."
 msgstr ""
@@ -7910,8 +7910,8 @@ msgstr ""
 msgid "Incorrect \"permission\" value \"%1$s\" in users for map \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:526
-#: include/classes/api/services/CScreen.php:867
+#: include/classes/api/services/CScreen.php:527
+#: include/classes/api/services/CScreen.php:868
 #, c-format
 msgid "Incorrect \"permission\" value \"%1$s\" in users for screen \"%2$s\"."
 msgstr ""
@@ -7922,8 +7922,8 @@ msgstr ""
 msgid "Incorrect \"private\" value \"%1$s\" for map \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:486
-#: include/classes/api/services/CScreen.php:828
+#: include/classes/api/services/CScreen.php:487
+#: include/classes/api/services/CScreen.php:829
 #, c-format
 msgid "Incorrect \"private\" value \"%1$s\" for screen \"%2$s\"."
 msgstr ""
@@ -7957,12 +7957,12 @@ msgid "Incorrect API \"%1$s\"."
 msgstr ""
 
 #: include/classes/api/services/CDRule.php:571
-#: include/views/js/configuration.discovery.edit.js.php:642
+#: include/views/js/configuration.discovery.edit.js.php:641
 msgid "Incorrect SNMP OID."
 msgstr "SNMP OID incorect."
 
 #: include/classes/api/services/CDRule.php:565
-#: include/views/js/configuration.discovery.edit.js.php:638
+#: include/views/js/configuration.discovery.edit.js.php:637
 msgid "Incorrect SNMP community."
 msgstr "Comunitate SNMP incorectă."
 
@@ -8154,11 +8154,11 @@ msgstr "Argumente incorecte trimise funcției"
 #: include/classes/api/services/CMap.php:1448
 #: include/classes/api/services/CMediatype.php:181
 #: include/classes/api/services/CMediatype.php:477
-#: include/classes/api/services/CScreen.php:496
-#: include/classes/api/services/CScreen.php:570
-#: include/classes/api/services/CScreen.php:761
-#: include/classes/api/services/CScreen.php:837
-#: include/classes/api/services/CScreen.php:910
+#: include/classes/api/services/CScreen.php:497
+#: include/classes/api/services/CScreen.php:571
+#: include/classes/api/services/CScreen.php:762
+#: include/classes/api/services/CScreen.php:838
+#: include/classes/api/services/CScreen.php:911
 msgid "Incorrect arguments passed to function."
 msgstr "Argumente incorecte trimise funcției."
 
@@ -8194,7 +8194,7 @@ msgid "Incorrect characters used for proxy name \"%1$s\"."
 msgstr "Caractere incorecte folosite pentru nume proxy \"%1$s\"."
 
 #: include/classes/api/services/CTemplate.php:436
-#: include/classes/api/services/CTemplate.php:1102
+#: include/classes/api/services/CTemplate.php:1103
 #, c-format
 msgid "Incorrect characters used for template name \"%1$s\"."
 msgstr "Caractere incorecte folosite pentru șablonul nume \"%1$s\"."
@@ -8346,9 +8346,9 @@ msgstr "Index imagine incorect."
 #: include/classes/api/services/CProxy.php:683
 #: include/classes/api/services/CProxy.php:727
 #: include/classes/api/services/CProxy.php:749
-#: include/classes/api/services/CScreen.php:425
+#: include/classes/api/services/CScreen.php:426
 #: include/classes/api/services/CTemplate.php:431
-#: include/classes/api/services/CTemplate.php:567
+#: include/classes/api/services/CTemplate.php:568
 #: include/classes/api/services/CTemplateScreen.php:596
 msgid "Incorrect input parameters."
 msgstr "Parametrii de intrare incorecți."
@@ -8528,8 +8528,8 @@ msgstr "Răspuns incorect primit de la serverul Zabbix \"%1$s\"."
 msgid "Incorrect screen ID \"%1$s\" provided for screen element."
 msgstr "ID ecran \"%1$s\" incorect prevăzut pentru elementul ecran. "
 
-#: include/classes/api/services/CScreen.php:731
-#: include/classes/api/services/CScreen.php:996
+#: include/classes/api/services/CScreen.php:732
+#: include/classes/api/services/CScreen.php:997
 msgid "Incorrect screen ID."
 msgstr "ID ecran incorect."
 
@@ -8644,8 +8644,8 @@ msgstr ""
 msgid "Incorrect user ID specified for map \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:562
-#: include/classes/api/services/CScreen.php:902
+#: include/classes/api/services/CScreen.php:563
+#: include/classes/api/services/CScreen.php:903
 #, c-format
 msgid "Incorrect user ID specified for screen \"%1$s\"."
 msgstr ""
@@ -8656,8 +8656,8 @@ msgstr ""
 msgid "Incorrect user group ID specified for map \"%1$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:633
-#: include/classes/api/services/CScreen.php:972
+#: include/classes/api/services/CScreen.php:634
+#: include/classes/api/services/CScreen.php:973
 #, c-format
 msgid "Incorrect user group ID specified for screen \"%1$s\"."
 msgstr ""
@@ -8752,7 +8752,7 @@ msgstr ""
 msgid "Incorrect value \"%1$s\" in field \"%2$s\" for media type \"%3$s\"."
 msgstr ""
 
-#: app/controllers/CControllerPopupPreprocTestSend.php:219
+#: app/controllers/CControllerPopupPreprocTestSend.php:229
 #: include/classes/validators/CNewValidator.php:117
 #: include/classes/validators/CNewValidator.php:130
 #: include/classes/validators/CNewValidator.php:143
@@ -8776,10 +8776,9 @@ msgstr ""
 #: app/controllers/CControllerPopupPreprocTestSend.php:96
 #: app/controllers/CControllerPopupPreprocTestSend.php:101
 #: app/controllers/CControllerPopupTriggerWizard.php:134
-#: app/controllers/CControllerUserUpdateGeneral.php:98
-#: app/controllers/CControllerWidgetNavTreeItemUpdate.php:41
-#: correlation.php:227 correlation.php:237 correlation.php:243
-#: correlation.php:263 correlation.php:267 correlation.php:280
+#: app/controllers/CControllerUserUpdateGeneral.php:98 correlation.php:227
+#: correlation.php:237 correlation.php:243 correlation.php:263
+#: correlation.php:267 correlation.php:280
 #: include/classes/api/services/CAction.php:1747
 #: include/classes/api/services/CAction.php:1921
 #: include/classes/api/services/CAction.php:1997
@@ -8915,8 +8914,8 @@ msgstr ""
 #: include/classes/api/services/CProxy.php:669
 #: include/classes/api/services/CProxy.php:785
 #: include/classes/api/services/CProxy.php:793
-#: include/classes/api/services/CScreen.php:393
-#: include/classes/api/services/CScreen.php:399
+#: include/classes/api/services/CScreen.php:394
+#: include/classes/api/services/CScreen.php:400
 #: include/classes/api/services/CTriggerGeneral.php:242
 #: include/classes/api/services/CTriggerGeneral.php:248
 #: include/classes/api/services/CTriggerGeneral.php:258
@@ -8936,32 +8935,32 @@ msgstr ""
 #: include/classes/api/services/CTriggerGeneral.php:833
 #: include/classes/api/services/CUserGroup.php:463
 #: include/classes/api/services/CUser.php:533
-#: include/classes/graphdraw/CLineGraphDraw.php:113
-#: include/classes/graphdraw/CLineGraphDraw.php:241
-#: include/classes/graphdraw/CLineGraphDraw.php:251
+#: include/classes/graphdraw/CLineGraphDraw.php:118
+#: include/classes/graphdraw/CLineGraphDraw.php:246
+#: include/classes/graphdraw/CLineGraphDraw.php:256
 #: include/classes/graphdraw/CPieGraphDraw.php:203
 #: include/classes/graphdraw/CPieGraphDraw.php:213
 #: include/classes/helpers/CSvgGraphHelper.php:373
 #: include/classes/helpers/CSvgGraphHelper.php:385
-#: include/classes/import/CConfigurationImport.php:758
-#: include/classes/import/CConfigurationImport.php:843
-#: include/classes/import/CConfigurationImport.php:881
-#: include/classes/import/CConfigurationImport.php:969
-#: include/classes/import/CConfigurationImport.php:1087
-#: include/classes/import/CConfigurationImport.php:2591
-#: include/classes/import/CConfigurationImport.php:2695
-#: include/classes/import/CConfigurationImport.php:2705
-#: include/classes/import/CConfigurationImport.php:2733
-#: include/classes/import/CConfigurationImport.php:2747
-#: include/classes/import/CConfigurationImport.php:2756
-#: include/classes/import/CConfigurationImport.php:2762
+#: include/classes/import/CConfigurationImport.php:759
+#: include/classes/import/CConfigurationImport.php:844
+#: include/classes/import/CConfigurationImport.php:882
+#: include/classes/import/CConfigurationImport.php:970
+#: include/classes/import/CConfigurationImport.php:1088
+#: include/classes/import/CConfigurationImport.php:2592
+#: include/classes/import/CConfigurationImport.php:2696
+#: include/classes/import/CConfigurationImport.php:2706
+#: include/classes/import/CConfigurationImport.php:2734
+#: include/classes/import/CConfigurationImport.php:2748
+#: include/classes/import/CConfigurationImport.php:2757
+#: include/classes/import/CConfigurationImport.php:2763
 #: include/classes/validators/CNewValidator.php:91
 #: include/classes/validators/CNewValidator.php:101
 #: include/classes/validators/CNewValidator.php:267
 #: include/classes/validators/CNewValidator.php:279
 #: include/screens.inc.php:300 include/screens.inc.php:314
 #: include/screens.inc.php:429 include/screens.inc.php:443
-#: include/sounds.inc.php:112 include/validate.inc.php:346 usergrps.php:318
+#: include/sounds.inc.php:113 include/validate.inc.php:346 usergrps.php:318
 #: usergrps.php:358 usergrps.php:361
 #, c-format
 msgid "Incorrect value for field \"%1$s\": %2$s."
@@ -8984,7 +8983,7 @@ msgstr "Indoneză (id_ID)"
 #: app/views/monitoring.widget.actionlog.view.php:35
 #: app/views/monitoring.widget.problems.view.php:55
 #: include/actions.inc.php:1887 include/actions.inc.php:1971
-#: include/blocks.inc.php:738 include/classes/screens/CScreenActions.php:117
+#: include/blocks.inc.php:736 include/classes/screens/CScreenActions.php:117
 #: include/classes/screens/CScreenHostTriggers.php:223
 #: include/classes/screens/CScreenProblem.php:904
 #: include/classes/screens/CScreenProblem.php:928
@@ -9005,7 +9004,7 @@ msgstr "Info"
 
 #: adm.triggerseverities.php:33 adm.triggerseverities.php:34
 #: include/items.inc.php:31
-#: include/views/administration.general.triggerSeverity.edit.php:46
+#: include/views/administration.general.trigseverity.edit.php:46
 msgid "Information"
 msgstr "Informaţie"
 
@@ -9039,7 +9038,7 @@ msgid "Insert"
 msgstr "Inserează"
 
 #: include/views/configuration.trigger.prototype.edit.php:121
-#: include/views/configuration.triggers.edit.php:146 jsLoader.php:269
+#: include/views/configuration.triggers.edit.php:146 jsLoader.php:270
 msgid "Insert expression"
 msgstr ""
 
@@ -9576,7 +9575,7 @@ msgstr "Itemul \"%1$s\" nu există pe șablonul \"%2$s\"."
 msgid "Item \"%1$s\" does not exist or you have no access to this item"
 msgstr ""
 
-#: include/classes/import/CConfigurationImport.php:729
+#: include/classes/import/CConfigurationImport.php:730
 #, c-format
 msgid "Item \"%1$s\" on \"%2$s\": application \"%3$s\" does not exist."
 msgstr "Itemul \"%1$s\" pe \"%2$s\": aplicația \"%3$s\" nu există."
@@ -9865,7 +9864,7 @@ msgid "Jan"
 msgstr "Ian"
 
 #: include/forms.inc.php:2162 include/func.inc.php:116
-#: include/func.inc.php:253 jsLoader.php:152
+#: include/func.inc.php:253 jsLoader.php:153
 msgid "January"
 msgstr "Ianuarie"
 
@@ -9883,7 +9882,7 @@ msgid "Jul"
 msgstr "Iul"
 
 #: include/forms.inc.php:2165 include/func.inc.php:122
-#: include/func.inc.php:259 jsLoader.php:158
+#: include/func.inc.php:259 jsLoader.php:159
 msgid "July"
 msgstr "Iulie"
 
@@ -9892,7 +9891,7 @@ msgid "Jun"
 msgstr "Iun"
 
 #: include/forms.inc.php:2202 include/func.inc.php:121
-#: include/func.inc.php:258 jsLoader.php:157
+#: include/func.inc.php:258 jsLoader.php:158
 msgid "June"
 msgstr "Iunie"
 
@@ -9917,7 +9916,7 @@ msgstr ""
 #: include/views/configuration.item.list.php:64
 #: include/views/configuration.item.prototype.edit.php:92
 #: include/views/configuration.item.prototype.list.php:53
-#: include/views/js/configuration.discovery.edit.js.php:79 items.php:49
+#: include/views/js/configuration.discovery.edit.js.php:78 items.php:49
 msgid "Key"
 msgstr "Cheie"
 
@@ -9947,7 +9946,7 @@ msgstr "Coreeană (ko_KR)"
 
 #: app/views/administration.authentication.edit.php:30
 #: include/discovery.inc.php:48 include/users.inc.php:85
-#: include/views/js/configuration.discovery.edit.js.php:210
+#: include/views/js/configuration.discovery.edit.js.php:209
 msgid "LDAP"
 msgstr "LDAP"
 
@@ -10090,11 +10089,11 @@ msgstr "Ultima schimbare (descendent)"
 msgid "Last check"
 msgstr "Ultima verificare"
 
-#: jsLoader.php:280
+#: jsLoader.php:281
 msgid "Last hour graph"
 msgstr "Graficul ultimei ore"
 
-#: jsLoader.php:281
+#: jsLoader.php:282
 msgid "Last month graph"
 msgstr "Graficul ultimei luni"
 
@@ -10117,18 +10116,18 @@ msgstr "Ultima dată vazut (vârstă)"
 msgid "Last value"
 msgstr "Ultima valoare"
 
-#: jsLoader.php:282
+#: jsLoader.php:283
 msgid "Last week graph"
 msgstr "Graficul ultimei săptămâni"
 
 #: app/views/search.php:29 app/views/search.php:100 app/views/search.php:130
 #: app/views/search.php:162 include/menu.inc.php:68
-#: include/views/inventory.host.view.php:127 jsLoader.php:278 latest.php:26
+#: include/views/inventory.host.view.php:127 jsLoader.php:279 latest.php:26
 #: latest.php:307
 msgid "Latest data"
 msgstr "Cele mai recente date"
 
-#: jsLoader.php:279
+#: jsLoader.php:280
 msgid "Latest values"
 msgstr "Cele mai recente valori"
 
@@ -10385,11 +10384,11 @@ msgstr "Pierdut"
 msgid "Low-level discovery rule in \"not supported\" state"
 msgstr "Nivel scăzut al regulii de detecție în stare \"nu este acceptată\""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1382
+#: include/classes/graphdraw/CLineGraphDraw.php:1389
 msgid "M"
 msgstr ""
 
-#: jsLoader.php:171
+#: jsLoader.php:172
 msgctxt "Monday short"
 msgid "M"
 msgstr "M"
@@ -10417,7 +10416,7 @@ msgstr "MD2"
 #: include/views/configuration.item.massupdate.php:219
 #: include/views/configuration.item.prototype.edit.php:490
 #: include/views/configuration.item.prototype.massupdate.php:215
-#: include/views/js/configuration.discovery.edit.js.php:118
+#: include/views/js/configuration.discovery.edit.js.php:117
 msgid "MD5"
 msgstr "MD5"
 
@@ -10576,7 +10575,7 @@ msgstr ""
 #: include/screens.inc.php:34 include/views/js/monitoring.sysmaps.js.php:69
 #: include/views/js/monitoring.sysmaps.js.php:181
 #: include/views/monitoring.screen.constructor.edit.php:368
-#: include/views/monitoring.sysmap.edit.php:287 jsLoader.php:185 map.php:25
+#: include/views/monitoring.sysmap.edit.php:287 jsLoader.php:186 map.php:25
 msgid "Map"
 msgstr "Hartă"
 
@@ -10671,7 +10670,7 @@ msgid "Mar"
 msgstr "Mar"
 
 #: include/forms.inc.php:2178 include/func.inc.php:118
-#: include/func.inc.php:255 jsLoader.php:154
+#: include/func.inc.php:255 jsLoader.php:155
 msgid "March"
 msgstr "Martie"
 
@@ -10772,7 +10771,7 @@ msgid "Maximum total length of email address exceeded for media type with ID \"%
 msgstr ""
 
 #: include/forms.inc.php:2194 include/func.inc.php:120
-#: include/func.inc.php:257 jsLoader.php:156
+#: include/func.inc.php:257 jsLoader.php:157
 msgid "May"
 msgstr "Mai"
 
@@ -11051,7 +11050,7 @@ msgid "Mon"
 msgstr "Lun"
 
 #: include/forms.inc.php:2118 include/forms.inc.php:2233
-#: include/func.inc.php:135 include/func.inc.php:225 jsLoader.php:164
+#: include/func.inc.php:135 include/func.inc.php:225 jsLoader.php:165
 msgid "Monday"
 msgstr "Luni"
 
@@ -11086,11 +11085,11 @@ msgstr "Lună"
 msgid "Monthly"
 msgstr "Lunar"
 
-#: include/classes/html/CMultiSelect.php:76 jsLoader.php:242
+#: include/classes/html/CMultiSelect.php:76 jsLoader.php:243
 msgid "More matches found..."
 msgstr "Mai multe potriviri găsite..."
 
-#: jsLoader.php:252
+#: jsLoader.php:253
 #, c-format
 msgctxt "screen reader"
 msgid "More than %1$d matches for %2$s found"
@@ -11118,12 +11117,12 @@ msgstr ""
 msgid "Multiple PROBLEM events"
 msgstr "Evenimente PROBLEME multiple"
 
-#: jsLoader.php:213
+#: jsLoader.php:214
 msgid "Mute"
 msgstr "Mut"
 
 #: include/discovery.inc.php:53
-#: include/views/js/configuration.discovery.edit.js.php:211
+#: include/views/js/configuration.discovery.edit.js.php:210
 msgid "NNTP"
 msgstr "NNTP"
 
@@ -11156,9 +11155,8 @@ msgstr ""
 #: app/controllers/CControllerPopupGeneric.php:307
 #: app/controllers/CControllerPopupGeneric.php:319
 #: app/controllers/CControllerPopupTriggerWizard.php:134
-#: app/controllers/CControllerWidgetNavTreeItemEdit.php:64
-#: app/controllers/CControllerWidgetNavTreeItemUpdate.php:41
-#: applications.php:37 app/views/administration.mediatype.edit.php:44
+#: app/controllers/CControllerWidgetNavTreeItemEdit.php:64 applications.php:37
+#: app/views/administration.mediatype.edit.php:44
 #: app/views/administration.mediatype.edit.php:145
 #: app/views/administration.mediatype.list.php:39
 #: app/views/administration.mediatype.list.php:65
@@ -11358,7 +11356,7 @@ msgstr "Condiție nouă"
 msgid "New dashboard"
 msgstr ""
 
-#: jsLoader.php:199
+#: jsLoader.php:200
 msgid "New element"
 msgstr "Element nou"
 
@@ -11367,8 +11365,7 @@ msgid "New event host group"
 msgstr ""
 
 #: include/correlation.inc.php:50 include/correlation.inc.php:202
-#: include/correlation.inc.php:226
-msgid "New event tag"
+msgid "New event tag name"
 msgstr ""
 
 #: include/correlation.inc.php:54
@@ -11391,7 +11388,7 @@ msgstr "Timp service nou"
 msgid "New triggers"
 msgstr ""
 
-#: jsLoader.php:129
+#: jsLoader.php:130
 msgid "Next page"
 msgstr ""
 
@@ -11404,8 +11401,8 @@ msgstr ""
 #: app/views/administration.user.list.php:111
 #: app/views/administration.user.list.php:115
 #: app/views/monitoring.widget.problems.view.php:261
-#: include/actions.inc.php:33 include/blocks.inc.php:624
-#: include/blocks.inc.php:849
+#: include/actions.inc.php:33 include/blocks.inc.php:622
+#: include/blocks.inc.php:847
 #: include/classes/screens/CScreenHostTriggers.php:273
 #: include/classes/screens/CScreenProblem.php:1134
 #: include/classes/screens/CScreenProblem.php:1270 include/events.inc.php:183
@@ -11467,8 +11464,8 @@ msgstr ""
 msgid "No \"%1$s\" given for media type."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:729
-#: include/classes/api/services/CScreen.php:994
+#: include/classes/api/services/CScreen.php:730
+#: include/classes/api/services/CScreen.php:995
 #, c-format
 msgid "No \"%1$s\" given for screen."
 msgstr "Niciun \"%1$s\" dat pentru ecran."
@@ -11682,7 +11679,7 @@ msgstr "Nicio imagine"
 #: include/views/configuration.item.massupdate.php:77
 #: include/views/configuration.item.prototype.edit.php:443
 #: include/views/configuration.item.prototype.massupdate.php:74
-#: jsLoader.php:302
+#: jsLoader.php:303
 msgid "No interface found"
 msgstr "Nicio interfață găsită"
 
@@ -11736,7 +11733,7 @@ msgstr "Nicio hartă ID prevăzută pentru elementul ecran."
 msgid "No maps added."
 msgstr "Nicio hartă adaugată."
 
-#: include/classes/html/CMultiSelect.php:75 jsLoader.php:241
+#: include/classes/html/CMultiSelect.php:75 jsLoader.php:242
 msgid "No matches found"
 msgstr "Nicio potrivire găsită"
 
@@ -11757,7 +11754,7 @@ msgstr "Nicio permisiune de acces la sistem."
 #: app/controllers/CControllerDashboardShareUpdate.php:92
 #: app/controllers/CControllerDashboardView.php:195
 #: app/controllers/CControllerDashboardView.php:231
-#: app/controllers/CControllerExportXml.php:134
+#: app/controllers/CControllerExportXml.php:109
 #: app/controllers/CControllerMenuPopup.php:76
 #: app/controllers/CControllerMenuPopup.php:106
 #: app/controllers/CControllerMenuPopup.php:190
@@ -11872,8 +11869,8 @@ msgstr "Nicio permisiune de acces la sistem."
 #: include/classes/api/services/CProxy.php:816
 #: include/classes/api/services/CScreenItem.php:395
 #: include/classes/api/services/CScreenItem.php:442
-#: include/classes/api/services/CScreen.php:741
-#: include/classes/api/services/CScreen.php:1209
+#: include/classes/api/services/CScreen.php:742
+#: include/classes/api/services/CScreen.php:1210
 #: include/classes/api/services/CScript.php:345
 #: include/classes/api/services/CScript.php:572
 #: include/classes/api/services/CScript.php:617
@@ -11881,8 +11878,8 @@ msgstr "Nicio permisiune de acces la sistem."
 #: include/classes/api/services/CService.php:988
 #: include/classes/api/services/CService.php:1012
 #: include/classes/api/services/CTask.php:136
-#: include/classes/api/services/CTemplate.php:760
-#: include/classes/api/services/CTemplate.php:782
+#: include/classes/api/services/CTemplate.php:761
+#: include/classes/api/services/CTemplate.php:783
 #: include/classes/api/services/CTemplateScreen.php:631
 #: include/classes/api/services/CTemplateScreen.php:682
 #: include/classes/api/services/CTemplateScreen.php:745
@@ -11904,7 +11901,7 @@ msgstr "Nicio permisiune de acces la sistem."
 #: include/classes/api/services/CUser.php:979
 #: include/classes/api/services/CValueMap.php:240
 #: include/classes/api/services/CValueMap.php:340
-#: include/classes/helpers/CMapHelper.php:81
+#: include/classes/helpers/CMapHelper.php:82
 #: include/classes/screens/CScreenHistory.php:139
 #: include/classes/screens/CScreenHttpTestDetails.php:46
 #: include/func.inc.php:1758 items.php:1541 items.php:1756 services.php:84
@@ -11937,7 +11934,7 @@ msgstr "Nu a fost specificat nici un fișier cu cheie publică."
 msgid "No recipients for action operation message."
 msgstr "Niciun destinatar pentru mesajul de acțiune a operațiunii."
 
-#: include/classes/widgets/CWidgetConfig.php:159 jsLoader.php:291
+#: include/classes/widgets/CWidgetConfig.php:159 jsLoader.php:292
 msgid "No refresh"
 msgstr ""
 
@@ -12011,7 +12008,7 @@ msgstr ""
 msgid "None"
 msgstr "Niciunul"
 
-#: app/views/popup.generic.php:507 include/graphs.inc.php:24
+#: app/views/popup.generic.php:512 include/graphs.inc.php:24
 #: include/items.inc.php:158 include/triggers.inc.php:1282
 #: include/views/configuration.triggers.list.php:71
 #: include/views/monitoring.history.php:224
@@ -12054,7 +12051,7 @@ msgid "Not available"
 msgstr "Indisponibil"
 
 #: adm.triggerseverities.php:31 adm.triggerseverities.php:32
-#: include/views/administration.general.triggerSeverity.edit.php:37
+#: include/views/administration.general.trigseverity.edit.php:37
 msgid "Not classified"
 msgstr "Neclasificate"
 
@@ -12103,7 +12100,7 @@ msgid "Nov"
 msgstr "Noi"
 
 #: include/forms.inc.php:2197 include/func.inc.php:126
-#: include/func.inc.php:263 jsLoader.php:162
+#: include/func.inc.php:263 jsLoader.php:163
 msgid "November"
 msgstr "Noiembrie"
 
@@ -12116,11 +12113,11 @@ msgstr ""
 msgid "Number of enabled items on the host."
 msgstr ""
 
-#: include/blocks.inc.php:628
+#: include/blocks.inc.php:626
 msgid "Number of hosts (enabled/disabled/templates)"
 msgstr ""
 
-#: include/blocks.inc.php:638
+#: include/blocks.inc.php:636
 msgid "Number of items (enabled/disabled/not supported)"
 msgstr ""
 
@@ -12188,7 +12185,7 @@ msgstr "Numărul schimbărilor de status"
 msgid "Number of steps"
 msgstr "Număr de pași"
 
-#: include/blocks.inc.php:649
+#: include/blocks.inc.php:647
 msgid "Number of triggers (enabled/disabled [problem/ok])"
 msgstr ""
 
@@ -12204,7 +12201,7 @@ msgstr "Numărul itemilor nesuportați în baza de date Zabbix."
 msgid "Number of unsupported items on the host."
 msgstr ""
 
-#: include/blocks.inc.php:661
+#: include/blocks.inc.php:659
 msgid "Number of users (online)"
 msgstr "Numărul de utilizatori (online)"
 
@@ -12337,13 +12334,13 @@ msgid "Octal to decimal"
 msgstr ""
 
 #: include/forms.inc.php:2189 include/func.inc.php:125
-#: include/func.inc.php:262 jsLoader.php:161
+#: include/func.inc.php:262 jsLoader.php:162
 msgid "October"
 msgstr "Octombrie"
 
 #: app/views/administration.proxy.list.php:145
 #: include/views/monitoring.sysmap.constructor.php:48
-#: include/views/monitoring.sysmap.constructor.php:58 jsLoader.php:181
+#: include/views/monitoring.sysmap.constructor.php:58 jsLoader.php:182
 msgid "Off"
 msgstr "Oprit"
 
@@ -12360,8 +12357,7 @@ msgid "Ok"
 msgstr "Ok"
 
 #: include/correlation.inc.php:49 include/correlation.inc.php:197
-#: include/correlation.inc.php:212 include/correlation.inc.php:219
-msgid "Old event tag"
+msgid "Old event tag name"
 msgstr ""
 
 #: include/correlation.inc.php:53
@@ -12370,7 +12366,7 @@ msgstr ""
 
 #: app/views/administration.proxy.list.php:144
 #: include/views/monitoring.sysmap.constructor.php:48
-#: include/views/monitoring.sysmap.constructor.php:58 jsLoader.php:180
+#: include/views/monitoring.sysmap.constructor.php:58 jsLoader.php:181
 msgid "On"
 msgstr "Pornit"
 
@@ -12437,8 +12433,8 @@ msgstr ""
 msgid "Only administrators can set map owner."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:478
-#: include/classes/api/services/CScreen.php:817
+#: include/classes/api/services/CScreen.php:479
+#: include/classes/api/services/CScreen.php:818
 msgid "Only administrators can set screen owner."
 msgstr ""
 
@@ -12446,7 +12442,7 @@ msgstr ""
 msgid "Only administrators can set slide show owner."
 msgstr ""
 
-#: include/blocks.inc.php:639
+#: include/blocks.inc.php:637
 msgid "Only items assigned to enabled hosts are counted"
 msgstr "Numai itemii desemnați să activeze servere sunt numărați"
 
@@ -12503,7 +12499,7 @@ msgstr ""
 msgid "Only the last 20%% of the indicator is displayed."
 msgstr "Numai ultimii 20%% din indicatori sunt afișați."
 
-#: include/blocks.inc.php:650
+#: include/blocks.inc.php:648
 msgid "Only triggers assigned to enabled hosts and depending on enabled items are counted"
 msgstr "Numai triggerii atribuiți să activeze servere și care depind de itemi activați sunt contorizați"
 
@@ -12551,7 +12547,7 @@ msgstr "Operațiunea nu are șablon de operare."
 msgid "Operation type"
 msgstr "Tipul operațiunii"
 
-#: app/views/monitoring.widget.problems.view.php:62 include/blocks.inc.php:741
+#: app/views/monitoring.widget.problems.view.php:62 include/blocks.inc.php:739
 #: include/classes/screens/CScreenProblem.php:932
 #: include/classes/screens/CScreenProblem.php:1188 include/events.inc.php:170
 #: include/views/configuration.trigger.prototype.edit.php:68
@@ -12918,7 +12914,7 @@ msgid "PHP xmlwriter extension missing."
 msgstr "Extensie xmlwriter PHP lipsă."
 
 #: include/discovery.inc.php:52
-#: include/views/js/configuration.discovery.edit.js.php:212
+#: include/views/js/configuration.discovery.edit.js.php:211
 msgid "POP"
 msgstr "POP"
 
@@ -12980,7 +12976,7 @@ msgstr ""
 msgid "Page received incorrect data"
 msgstr "Pagina a primit date incorecte"
 
-#: app/views/administration.mediatype.edit.php:93 include/blocks.inc.php:617
+#: app/views/administration.mediatype.edit.php:93 include/blocks.inc.php:615
 msgid "Parameter"
 msgstr "Parametru"
 
@@ -13089,11 +13085,11 @@ msgstr "Parolă (din nou)"
 msgid "Password is not mandatory for non internal authentication type."
 msgstr ""
 
-#: jsLoader.php:201
+#: jsLoader.php:202
 msgid "Paste"
 msgstr ""
 
-#: jsLoader.php:202
+#: jsLoader.php:203
 msgid "Paste without external links"
 msgstr ""
 
@@ -13171,7 +13167,7 @@ msgstr "Persmisiunea poate fi atribuită doar grupurilor de utilizatori."
 msgid "Persian (fa_IR)"
 msgstr "Persian (fa_IR)"
 
-#: app/views/popup.generic.php:501 include/graphs.inc.php:26
+#: app/views/popup.generic.php:506 include/graphs.inc.php:26
 msgid "Pie"
 msgstr "Diagramă circulară"
 
@@ -13207,7 +13203,7 @@ msgstr ""
 msgid "Please enter the host name or host IP address and port number of the Zabbix server, as well as the name of the installation (optional)."
 msgstr ""
 
-#: jsLoader.php:190
+#: jsLoader.php:191
 msgid "Please select two elements"
 msgstr "Va rog selectați două elemente"
 
@@ -13265,7 +13261,7 @@ msgstr "Port"
 msgid "Port cannot be empty for host interface."
 msgstr "Portul nu pot fi nul pentru interfața serverului."
 
-#: include/views/js/configuration.discovery.edit.js.php:65
+#: include/views/js/configuration.discovery.edit.js.php:64
 msgid "Port range"
 msgstr "Interval port"
 
@@ -13327,11 +13323,11 @@ msgstr "Previzualizare"
 msgid "Previous month"
 msgstr ""
 
-#: jsLoader.php:128
+#: jsLoader.php:129
 msgid "Previous page"
 msgstr ""
 
-#: app/controllers/CControllerPopupPreprocTestSend.php:219
+#: app/controllers/CControllerPopupPreprocTestSend.php:229
 #: app/views/popup.preproctestedit.view.php:102
 msgid "Previous value"
 msgstr ""
@@ -13377,7 +13373,7 @@ msgstr "Nume ecran inițial POC"
 #: include/views/configuration.item.massupdate.php:248
 #: include/views/configuration.item.prototype.edit.php:507
 #: include/views/configuration.item.prototype.massupdate.php:243
-#: include/views/js/configuration.discovery.edit.js.php:139
+#: include/views/js/configuration.discovery.edit.js.php:138
 msgid "Privacy passphrase"
 msgstr "Frază de acces de confidențialitate"
 
@@ -13386,7 +13382,7 @@ msgstr "Frază de acces de confidențialitate"
 #: include/views/configuration.item.massupdate.php:235
 #: include/views/configuration.item.prototype.edit.php:500
 #: include/views/configuration.item.prototype.massupdate.php:231
-#: include/views/js/configuration.discovery.edit.js.php:131
+#: include/views/js/configuration.discovery.edit.js.php:130
 msgid "Privacy protocol"
 msgstr "Ptotocol confidențial"
 
@@ -13415,7 +13411,7 @@ msgid "Privilege level"
 msgstr "Nivel privilegiat"
 
 #: app/views/monitoring.problem.view.php:163
-#: app/views/monitoring.widget.problems.view.php:58 include/blocks.inc.php:740
+#: app/views/monitoring.widget.problems.view.php:58 include/blocks.inc.php:738
 #: include/classes/screens/CScreenProblem.php:907
 #: include/classes/screens/CScreenProblem.php:930
 #: include/classes/screens/CScreenProblem.php:1101
@@ -13462,7 +13458,7 @@ msgstr ""
 msgid "Problem is suppressed"
 msgstr ""
 
-#: jsLoader.php:211
+#: jsLoader.php:212
 msgid "Problem on"
 msgstr "Problemă pe"
 
@@ -13496,7 +13492,7 @@ msgstr "Problemă, dacă cel puțin un copil are o problemă"
 #: include/maps.inc.php:389 include/maps.inc.php:470 include/maps.inc.php:482
 #: include/maps.inc.php:558 include/maps.inc.php:570 include/menu.inc.php:52
 #: include/views/common.filter.trigger.php:42
-#: include/views/inventory.host.view.php:135 jsLoader.php:283 report2.php:455
+#: include/views/inventory.host.view.php:135 jsLoader.php:284 report2.php:455
 msgid "Problems"
 msgstr "Probleme"
 
@@ -13556,7 +13552,7 @@ msgstr "Proxy-uri"
 msgid "Proxy"
 msgstr "Proxy"
 
-#: include/classes/import/importers/CHostImporter.php:173
+#: include/classes/import/importers/CHostImporter.php:214
 #, c-format
 msgid "Proxy \"%1$s\" for host \"%2$s\" does not exist."
 msgstr "Proxy \"%1$s\" pentru serverul \"%2$s\" nu există."
@@ -13796,11 +13792,11 @@ msgid "Refresh"
 msgstr ""
 
 #: include/classes/widgets/forms/CWidgetForm.php:53 include/html.inc.php:192
-#: jsLoader.php:284
+#: jsLoader.php:285
 msgid "Refresh interval"
 msgstr ""
 
-#: jsLoader.php:285
+#: jsLoader.php:286
 msgid "Refresh interval multiplier"
 msgstr ""
 
@@ -13860,7 +13856,7 @@ msgstr "Expresii uzuale"
 msgid "Regular items"
 msgstr ""
 
-#: jsLoader.php:125
+#: jsLoader.php:126
 msgid "Release to create a new widget."
 msgstr ""
 
@@ -13972,7 +13968,7 @@ msgstr "Comandă de la distanță"
 #: include/views/js/configuration.template.list.js.php:14
 #: include/views/js/configuration.triggers.list.js.php:14
 #: include/views/js/hostmacros.js.php:19 include/views/js/hostmacros.js.php:75
-#: include/views/js/hostmacros.js.php:124
+#: include/views/js/hostmacros.js.php:139
 #: include/views/js/item.preprocessing.js.php:28
 #: include/views/js/monitoring.screen.edit.js.php:24
 #: include/views/js/monitoring.screen.edit.js.php:58
@@ -13994,8 +13990,8 @@ msgstr "Comandă de la distanță"
 #: include/views/monitoring.sysmap.constructor.php:37
 #: include/views/monitoring.sysmap.constructor.php:43
 #: include/views/monitoring.sysmap.edit.php:242
-#: include/views/monitoring.sysmap.edit.php:260 jsLoader.php:198
-#: jsLoader.php:306
+#: include/views/monitoring.sysmap.edit.php:260 jsLoader.php:199
+#: jsLoader.php:307
 msgid "Remove"
 msgstr "Șterge"
 
@@ -14027,7 +14023,7 @@ msgctxt "screen reader"
 msgid "Remove, %1$s"
 msgstr ""
 
-#: jsLoader.php:247
+#: jsLoader.php:248
 #, c-format
 msgctxt "screen reader"
 msgid "Removed, %1$s"
@@ -14103,7 +14099,7 @@ msgstr "Performanță necesară (vps)"
 msgid "Required performance of the Zabbix server, in new values per second expected."
 msgstr "Performanță necesară a serverului Zabbix, în noile valori pe secundă așteptate."
 
-#: include/blocks.inc.php:665
+#: include/blocks.inc.php:663
 msgid "Required server performance, new values per second"
 msgstr "Performanță server necesară, noi valori pe secundă"
 
@@ -14124,26 +14120,26 @@ msgstr "Resetează"
 
 #: include/views/js/administration.general.housekeeper.edit.js.php:37
 #: include/views/js/administration.general.trigger.options.js.php:18
-#: include/views/js/administration.general.triggerSeverity.js.php:10
+#: include/views/js/administration.general.trigseverity.js.php:10
 msgid "Reset all fields to default values?"
 msgstr "Resetează toate câmpurile la valorile implicite?"
 
 #: include/views/js/administration.general.housekeeper.edit.js.php:36
 #: include/views/js/administration.general.trigger.options.js.php:17
-#: include/views/js/administration.general.triggerSeverity.js.php:9
+#: include/views/js/administration.general.trigseverity.js.php:9
 msgid "Reset confirmation"
 msgstr "Confirmare de resetare"
 
 #: include/views/administration.general.housekeeper.edit.php:157
 #: include/views/administration.general.trigger.options.edit.php:102
-#: include/views/administration.general.triggerSeverity.edit.php:96
+#: include/views/administration.general.trigseverity.edit.php:96
 #: include/views/js/administration.general.housekeeper.edit.js.php:46
 #: include/views/js/administration.general.trigger.options.js.php:27
-#: include/views/js/administration.general.triggerSeverity.js.php:19
+#: include/views/js/administration.general.trigseverity.js.php:19
 msgid "Reset defaults"
 msgstr "Resetează implicite"
 
-#: jsLoader.php:212
+#: jsLoader.php:213
 msgid "Resolved"
 msgstr "Rezolvat"
 
@@ -14215,7 +14211,7 @@ msgstr ""
 msgid "Result"
 msgstr "Rezultat"
 
-#: app/controllers/CControllerPopupPreprocTestSend.php:224
+#: app/controllers/CControllerPopupPreprocTestSend.php:234
 #, c-format
 msgid "Result converted to %1$s"
 msgstr ""
@@ -14339,7 +14335,7 @@ msgstr "Rânduri"
 msgid "Rows per page"
 msgstr "Rânduri pe pagină"
 
-#: include/views/conf.import.php:113
+#: include/views/conf.import.php:119
 msgid "Rules"
 msgstr "Reguli"
 
@@ -14390,12 +14386,12 @@ msgstr ""
 msgid "Russian (ru_RU)"
 msgstr "Rusă (ru_RU)"
 
-#: jsLoader.php:176
+#: jsLoader.php:177
 msgctxt "Saturday short"
 msgid "S"
 msgstr "S"
 
-#: jsLoader.php:177
+#: jsLoader.php:178
 msgctxt "Sunday short"
 msgid "S"
 msgstr "S"
@@ -14406,7 +14402,7 @@ msgstr "S"
 #: include/views/configuration.item.massupdate.php:220
 #: include/views/configuration.item.prototype.edit.php:491
 #: include/views/configuration.item.prototype.massupdate.php:216
-#: include/views/js/configuration.discovery.edit.js.php:119
+#: include/views/js/configuration.discovery.edit.js.php:118
 msgid "SHA"
 msgstr "SHA"
 
@@ -14421,7 +14417,7 @@ msgid "SMS"
 msgstr "SMS"
 
 #: include/discovery.inc.php:49
-#: include/views/js/configuration.discovery.edit.js.php:216
+#: include/views/js/configuration.discovery.edit.js.php:215
 msgid "SMTP"
 msgstr "SMTP"
 
@@ -14454,7 +14450,7 @@ msgstr "SNMP"
 #: include/views/configuration.host.discovery.edit.php:412
 #: include/views/configuration.item.edit.php:477
 #: include/views/configuration.item.prototype.edit.php:456
-#: include/views/js/configuration.discovery.edit.js.php:86 items.php:130
+#: include/views/js/configuration.discovery.edit.js.php:85 items.php:130
 msgid "SNMP OID"
 msgstr "SNMP OID"
 
@@ -14464,7 +14460,7 @@ msgstr "SNMP OID"
 #: include/views/configuration.item.massupdate.php:183
 #: include/views/configuration.item.prototype.edit.php:468
 #: include/views/configuration.item.prototype.massupdate.php:179
-#: include/views/js/configuration.discovery.edit.js.php:72 items.php:123
+#: include/views/js/configuration.discovery.edit.js.php:71 items.php:123
 msgid "SNMP community"
 msgstr "Comunitate SNMP"
 
@@ -14484,17 +14480,17 @@ msgid "SNMP trap key is invalid."
 msgstr "Cheie SNMP trap invalidă."
 
 #: include/discovery.inc.php:57 include/items.inc.php:89
-#: include/views/js/configuration.discovery.edit.js.php:213
+#: include/views/js/configuration.discovery.edit.js.php:212
 msgid "SNMPv1 agent"
 msgstr "agent SNMPv1"
 
 #: include/discovery.inc.php:58 include/items.inc.php:90
-#: include/views/js/configuration.discovery.edit.js.php:214
+#: include/views/js/configuration.discovery.edit.js.php:213
 msgid "SNMPv2 agent"
 msgstr "agent SNMPv2"
 
 #: include/discovery.inc.php:59 include/items.inc.php:91
-#: include/views/js/configuration.discovery.edit.js.php:215
+#: include/views/js/configuration.discovery.edit.js.php:214
 msgid "SNMPv3 agent"
 msgstr "agent SNMPv3"
 
@@ -14525,7 +14521,7 @@ msgstr "Execuție declarație SQL eșuată \"%1$s\"."
 #: include/views/configuration.action.edit.php:924
 #: include/views/configuration.action.edit.php:1682
 #: include/views/configuration.action.edit.php:2160
-#: include/views/js/configuration.discovery.edit.js.php:217
+#: include/views/js/configuration.discovery.edit.js.php:216
 msgid "SSH"
 msgstr "SSH"
 
@@ -14591,7 +14587,7 @@ msgid "Sat"
 msgstr "Sâm"
 
 #: include/forms.inc.php:2143 include/forms.inc.php:2258
-#: include/func.inc.php:140 include/func.inc.php:230 jsLoader.php:169
+#: include/func.inc.php:140 include/func.inc.php:230 jsLoader.php:170
 msgid "Saturday"
 msgstr "Sâmbătă"
 
@@ -14642,8 +14638,8 @@ msgstr "Ecran"
 msgid "Screen \"%1$s\" already exists on template \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:459
-#: include/classes/api/services/CScreen.php:795
+#: include/classes/api/services/CScreen.php:460
+#: include/classes/api/services/CScreen.php:796
 #, c-format
 msgid "Screen \"%1$s\" already exists."
 msgstr "Ecranul \"%1$s\" există deja."
@@ -14663,10 +14659,10 @@ msgstr "Ecranul \"%1$s\" deschidere coloană în celula X - %2$s Y - %3$s este i
 msgid "Screen \"%1$s\" column span in cell X - %2$s Y - %3$s is too big."
 msgstr "Ecranul \"%1$s\" deschidere coloană în celula X - %2$s Y - %3$s este prea mare."
 
-#: include/classes/api/services/CScreen.php:535
-#: include/classes/api/services/CScreen.php:610
-#: include/classes/api/services/CScreen.php:875
-#: include/classes/api/services/CScreen.php:949
+#: include/classes/api/services/CScreen.php:536
+#: include/classes/api/services/CScreen.php:611
+#: include/classes/api/services/CScreen.php:876
+#: include/classes/api/services/CScreen.php:950
 #, c-format
 msgid "Screen \"%1$s\" is public and read-only sharing is disallowed."
 msgstr ""
@@ -14689,12 +14685,12 @@ msgstr "Ecran adăugat"
 msgid "Screen deleted"
 msgstr "Ecran șters"
 
-#: include/classes/api/services/CScreen.php:764
+#: include/classes/api/services/CScreen.php:765
 msgid "Screen name cannot be empty."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:474
-#: include/classes/api/services/CScreen.php:813
+#: include/classes/api/services/CScreen.php:475
+#: include/classes/api/services/CScreen.php:814
 msgid "Screen owner cannot be empty."
 msgstr ""
 
@@ -14785,7 +14781,7 @@ msgstr "Script actualizat"
 #: app/controllers/CControllerPopupScriptExec.php:58
 #: app/views/administration.script.edit.php:25
 #: app/views/administration.script.list.php:27 include/menu.inc.php:288
-#: jsLoader.php:286
+#: jsLoader.php:287
 msgid "Scripts"
 msgstr "Scripturi"
 
@@ -14835,7 +14831,7 @@ msgstr "Nume ecran POC secundar"
 #: include/views/configuration.item.massupdate.php:204
 #: include/views/configuration.item.prototype.edit.php:480
 #: include/views/configuration.item.prototype.massupdate.php:200
-#: include/views/js/configuration.discovery.edit.js.php:107
+#: include/views/js/configuration.discovery.edit.js.php:106
 msgid "Security level"
 msgstr "Nivel de securitate"
 
@@ -14845,12 +14841,12 @@ msgstr "Nivel de securitate"
 #: include/views/configuration.item.massupdate.php:197
 #: include/views/configuration.item.prototype.edit.php:474
 #: include/views/configuration.item.prototype.massupdate.php:193
-#: include/views/js/configuration.discovery.edit.js.php:100
+#: include/views/js/configuration.discovery.edit.js.php:99
 msgid "Security name"
 msgstr "Nume securitate"
 
 #: app/controllers/CControllerWidgetNavTreeItemEdit.php:97
-#: app/views/monitoring.problem.view.php:132 app/views/popup.generic.php:621
+#: app/views/monitoring.problem.view.php:132 app/views/popup.generic.php:626
 #: app/views/popup.services.php:128 app/views/popup.triggerexpr.php:65
 #: include/classes/html/CMultiSelect.php:79
 #: include/classes/widgets/CWidgetHelper.php:333
@@ -14875,7 +14871,7 @@ msgstr "Nume securitate"
 #: include/views/monitoring.screen.constructor.edit.php:298
 #: include/views/monitoring.screen.constructor.edit.php:315
 #: include/views/monitoring.screen.constructor.edit.php:373
-#: include/views/monitoring.screen.constructor.edit.php:634 jsLoader.php:245
+#: include/views/monitoring.screen.constructor.edit.php:634 jsLoader.php:246
 #: latest.php:358
 msgid "Select"
 msgstr "Selectează"
@@ -14917,19 +14913,19 @@ msgstr "Elementele selectate"
 msgid "Selected items only"
 msgstr ""
 
-#: jsLoader.php:250
+#: jsLoader.php:251
 #, c-format
 msgctxt "screen reader"
 msgid "Selected, %1$s in position %2$d of %3$d"
 msgstr ""
 
-#: jsLoader.php:251
+#: jsLoader.php:252
 #, c-format
 msgctxt "screen reader"
 msgid "Selected, %1$s, read only, in position %2$d of %3$d"
 msgstr ""
 
-#: jsLoader.php:196
+#: jsLoader.php:197
 msgid "Send backward"
 msgstr ""
 
@@ -14968,7 +14964,7 @@ msgstr "Trimite la grupurile Utilizatorului"
 msgid "Send to Users"
 msgstr "Trimis la Utilizatori"
 
-#: jsLoader.php:197
+#: jsLoader.php:198
 msgid "Send to back"
 msgstr ""
 
@@ -14994,7 +14990,7 @@ msgid "Separately"
 msgstr ""
 
 #: include/forms.inc.php:2181 include/func.inc.php:124
-#: include/func.inc.php:261 jsLoader.php:160
+#: include/func.inc.php:261 jsLoader.php:161
 msgid "September"
 msgstr "Septembrie"
 
@@ -15011,13 +15007,13 @@ msgid "Serif"
 msgstr ""
 
 #: app/controllers/CControllerWidgetClockView.php:85
-#: app/views/administration.script.list.php:81 app/views/popup.generic.php:596
+#: app/views/administration.script.list.php:81 app/views/popup.generic.php:601
 #: include/classes/screens/CScreenClock.php:83
 #: include/views/configuration.host.list.php:137 queue.php:167
 msgid "Server"
 msgstr "Server"
 
-#: app/views/administration.script.list.php:84 app/views/popup.generic.php:599
+#: app/views/administration.script.list.php:84 app/views/popup.generic.php:604
 msgid "Server (proxy)"
 msgstr ""
 
@@ -15131,7 +15127,7 @@ msgstr "Sesiune terminată, relogare, va rog."
 msgid "Set custom time period"
 msgstr ""
 
-#: app/controllers/CControllerPopupPreprocTestSend.php:231
+#: app/controllers/CControllerPopupPreprocTestSend.php:241
 #: app/views/popup.preproctestedit.view.js.php:159 include/forms.inc.php:1423
 #: include/views/js/item.preprocessing.js.php:39
 msgid "Set error to"
@@ -15219,7 +15215,7 @@ msgstr ""
 
 #: include/views/monitoring.screen.edit.php:215
 #: include/views/monitoring.slideconf.edit.php:268
-#: include/views/monitoring.sysmap.edit.php:382 jsLoader.php:270
+#: include/views/monitoring.sysmap.edit.php:382 jsLoader.php:271
 msgid "Sharing"
 msgstr ""
 
@@ -15230,9 +15226,9 @@ msgstr ""
 msgid "Sharing option \"%1$s\" is missing a value for map \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:516
-#: include/classes/api/services/CScreen.php:857
-#: include/classes/api/services/CScreen.php:931
+#: include/classes/api/services/CScreen.php:517
+#: include/classes/api/services/CScreen.php:858
+#: include/classes/api/services/CScreen.php:932
 #, c-format
 msgid "Sharing option \"%1$s\" is missing a value for screen \"%2$s\"."
 msgstr ""
@@ -15360,7 +15356,7 @@ msgstr "Arată avertizare dacă serverul Zabbix este căzut"
 msgid "Show working time"
 msgstr "Arată timpul de lucru"
 
-#: include/views/monitoring.sysmap.constructor.php:54 jsLoader.php:183
+#: include/views/monitoring.sysmap.constructor.php:54 jsLoader.php:184
 msgid "Shown"
 msgstr "Afișat"
 
@@ -15515,7 +15511,7 @@ msgstr "Slides"
 msgid "Slovak (sk_SK)"
 msgstr "Slovacă (sk_SK)"
 
-#: jsLoader.php:216
+#: jsLoader.php:217
 msgid "Snooze"
 msgstr "Amânare"
 
@@ -15601,7 +15597,7 @@ msgstr ""
 msgid "Speed"
 msgstr "Viteză"
 
-#: app/views/popup.generic.php:498 include/graphs.inc.php:25
+#: app/views/popup.generic.php:503 include/graphs.inc.php:25
 #: include/views/monitoring.history.php:225
 msgid "Stacked"
 msgstr "Stivuit"
@@ -15703,11 +15699,11 @@ msgstr "Algoritm calcul stare"
 msgid "Status codes"
 msgstr "Coduri stare"
 
-#: include/classes/helpers/CMapHelper.php:287
+#: include/classes/helpers/CMapHelper.php:288
 msgid "Status disabled"
 msgstr ""
 
-#: include/classes/helpers/CMapHelper.php:283
+#: include/classes/helpers/CMapHelper.php:284
 msgid "Status maintenance"
 msgstr ""
 
@@ -15716,7 +15712,7 @@ msgstr ""
 msgid "Status of discovery"
 msgstr "Stare de detecție"
 
-#: include/classes/helpers/CMapHelper.php:279
+#: include/classes/helpers/CMapHelper.php:280
 msgid "Status ok"
 msgstr ""
 
@@ -15724,7 +15720,7 @@ msgstr ""
 msgid "Status only"
 msgstr "Doar stare"
 
-#: include/classes/helpers/CMapHelper.php:275
+#: include/classes/helpers/CMapHelper.php:276
 msgid "Status problem"
 msgstr ""
 
@@ -15813,7 +15809,7 @@ msgctxt "encryption certificate"
 msgid "Subject"
 msgstr ""
 
-#: jsLoader.php:287
+#: jsLoader.php:288
 msgid "Submap"
 msgstr "Subhartă"
 
@@ -15821,7 +15817,7 @@ msgstr "Subhartă"
 msgid "Success Audit"
 msgstr "Verificare reușită"
 
-#: include/func.inc.php:1893 jsLoader.php:146
+#: include/func.inc.php:1893 jsLoader.php:147
 msgid "Success message"
 msgstr ""
 
@@ -15835,7 +15831,7 @@ msgid "Sun"
 msgstr "Dum"
 
 #: include/forms.inc.php:2148 include/forms.inc.php:2263
-#: include/func.inc.php:142 include/func.inc.php:224 jsLoader.php:170
+#: include/func.inc.php:142 include/func.inc.php:224 jsLoader.php:171
 msgid "Sunday"
 msgstr "Duminică"
 
@@ -15923,18 +15919,18 @@ msgstr ""
 msgid "System uptime in seconds. Returns integer"
 msgstr ""
 
-#: jsLoader.php:174
+#: jsLoader.php:175
 msgctxt "Thursday short"
 msgid "T"
 msgstr "T"
 
-#: jsLoader.php:172
+#: jsLoader.php:173
 msgctxt "Tuesday short"
 msgid "T"
 msgstr "T"
 
 #: include/discovery.inc.php:55
-#: include/views/js/configuration.discovery.edit.js.php:209
+#: include/views/js/configuration.discovery.edit.js.php:208
 msgid "TCP"
 msgstr "TCP"
 
@@ -15961,7 +15957,6 @@ msgstr "Tabelul \"%1$s\" nu există."
 msgid "Table \"%1$s\" doesn't have a field named \"%2$s\"."
 msgstr "Tabelul \"%1$s\" nu are un câmp numit \"%2$s\"."
 
-#: include/actions.inc.php:66 include/actions.inc.php:333
 #: include/hosts.inc.php:144 include/views/inventory.host.list.php:70
 #: usergrps.php:361
 msgid "Tag"
@@ -15986,7 +15981,7 @@ msgstr ""
 msgid "Tag for matching"
 msgstr ""
 
-#: app/views/monitoring.problem.view.php:272
+#: app/views/monitoring.problem.view.php:272 include/actions.inc.php:66
 #: include/classes/widgets/forms/CWidgetFormProblems.php:136
 msgid "Tag name"
 msgstr ""
@@ -15996,7 +15991,7 @@ msgid "Tag value"
 msgstr ""
 
 #: app/views/monitoring.problem.view.php:283
-#: app/views/monitoring.widget.problems.view.php:66 include/blocks.inc.php:745
+#: app/views/monitoring.widget.problems.view.php:66 include/blocks.inc.php:743
 #: include/classes/screens/CScreenProblem.php:881
 #: include/classes/screens/CScreenProblem.php:937
 #: include/classes/screens/CScreenProblem.php:1192
@@ -16055,7 +16050,7 @@ msgstr "Tip țintă"
 #: include/views/configuration.action.edit.php:925
 #: include/views/configuration.action.edit.php:1683
 #: include/views/configuration.action.edit.php:2161
-#: include/views/js/configuration.discovery.edit.js.php:218
+#: include/views/js/configuration.discovery.edit.js.php:217
 msgid "Telnet"
 msgstr "Telnet"
 
@@ -16069,19 +16064,19 @@ msgstr "Șablon"
 
 #: include/classes/api/services/CHost.php:965
 #: include/classes/api/services/CTemplate.php:448
-#: include/classes/import/importers/CTemplateImporter.php:72
+#: include/classes/import/importers/CTemplateImporter.php:78
 #, c-format
 msgid "Template \"%1$s\" already exists."
 msgstr "Șablonul \"%1$s\" există deja."
 
 #: include/classes/api/services/CHostGroup.php:1505
 #: include/classes/api/services/CTemplate.php:391
-#: include/classes/api/services/CTemplate.php:1024
+#: include/classes/api/services/CTemplate.php:1025
 #, c-format
 msgid "Template \"%1$s\" cannot be without host group."
 msgstr ""
 
-#: include/classes/import/importers/CHostImporter.php:47
+#: include/classes/import/importers/CHostImporter.php:52
 #, c-format
 msgid "Template \"%1$s\" for host \"%2$s\" does not exist."
 msgstr "Șablonul \"%1$s\" pentru serverul \"%2$s\" nu există."
@@ -16089,6 +16084,10 @@ msgstr "Șablonul \"%1$s\" pentru serverul \"%2$s\" nu există."
 #: templates.php:388
 msgid "Template added"
 msgstr "Șablon adăugat"
+
+#: include/views/conf.import.php:98
+msgid "Template and host properties that are inherited through template linkage will be unlinked and cleared."
+msgstr ""
 
 #: include/classes/api/services/CHostBase.php:260
 msgid "Template cannot be linked to another template more than once even through other templates."
@@ -16136,7 +16135,7 @@ msgstr "Șablon actualizat"
 msgid "Template value"
 msgstr ""
 
-#: include/classes/api/services/CTemplate.php:1079
+#: include/classes/api/services/CTemplate.php:1080
 #, c-format
 msgid "Template with the same name \"%1$s\" already exists."
 msgstr "Șablon cu același nume \"%1$s\" există deja."
@@ -16148,7 +16147,7 @@ msgid "Template with the same name \"%s\" already exists."
 msgstr "Șablon cu același nume \"%s\" există deja."
 
 #: include/classes/api/services/CTemplate.php:471
-#: include/classes/api/services/CTemplate.php:1044
+#: include/classes/api/services/CTemplate.php:1045
 #, c-format
 msgid "Template with the same visible name \"%1$s\" already exists."
 msgstr "Șablon cu același nume vizibil \"%1$s\" există deja."
@@ -16410,7 +16409,7 @@ msgid "Thu"
 msgstr "Joi"
 
 #: include/forms.inc.php:2133 include/forms.inc.php:2248
-#: include/func.inc.php:138 include/func.inc.php:228 jsLoader.php:167
+#: include/func.inc.php:138 include/func.inc.php:228 jsLoader.php:168
 msgid "Thursday"
 msgstr "Joi"
 
@@ -16429,7 +16428,7 @@ msgstr "Până când"
 #: app/views/popup.triggerexpr.php:128 app/views/popup.triggerexpr.php:132
 #: include/actions.inc.php:1752 include/actions.inc.php:1806
 #: include/actions.inc.php:1887 include/actions.inc.php:1971
-#: include/actions.inc.php:2021 include/blocks.inc.php:720
+#: include/actions.inc.php:2021 include/blocks.inc.php:718
 #: include/classes/screens/CScreenActions.php:111
 #: include/classes/screens/CScreenEvents.php:32
 #: include/classes/screens/CScreenProblem.php:858
@@ -16515,7 +16514,7 @@ msgstr "Dată"
 msgid "To"
 msgstr "Către"
 
-#: jsLoader.php:301
+#: jsLoader.php:302
 msgid "To set a host interface select a single item type for all items"
 msgstr "Pentru setarea unei interfețe server selectează un singur tip de item pentru toți itemii"
 
@@ -16636,7 +16635,7 @@ msgstr "Tendințe"
 #: app/controllers/CControllerPopupTriggerWizard.php:221
 #: app/controllers/CControllerPopupTriggerWizard.php:293
 #: app/views/popup.services.php:44 include/actions.inc.php:46
-#: include/audit.inc.php:35 include/classes/graphdraw/CLineGraphDraw.php:481
+#: include/audit.inc.php:35 include/classes/graphdraw/CLineGraphDraw.php:488
 #: include/events.inc.php:236 include/maps.inc.php:26
 #: include/triggers.inc.php:1254
 #: include/views/configuration.services.edit.php:87
@@ -16646,7 +16645,7 @@ msgstr "Tendințe"
 #: include/views/configuration.triggers.massupdate.php:159
 #: include/views/js/monitoring.sysmaps.js.php:70
 #: include/views/js/monitoring.sysmaps.js.php:706
-#: include/views/reports.toptriggers.php:80 jsLoader.php:186 jsLoader.php:288
+#: include/views/reports.toptriggers.php:80 jsLoader.php:187 jsLoader.php:289
 #: services.php:357
 msgid "Trigger"
 msgstr "Trigger"
@@ -16661,7 +16660,7 @@ msgstr "Trigger \"%1$s\" există deja pe \"%2$s\"."
 msgid "Trigger \"%1$s\" belongs to templates with different linkages."
 msgstr ""
 
-#: include/classes/import/CConfigurationImport.php:1674
+#: include/classes/import/CConfigurationImport.php:1675
 #, c-format
 msgid "Trigger \"%1$s\" depends on trigger \"%2$s\", which does not exist."
 msgstr "Triggerul \"%1$s\" depinde de trigger \"%2$s\", care nu există."
@@ -16783,7 +16782,7 @@ msgstr ""
 msgid "Trigger prototype \"%1$s\" contains item prototypes from multiple discovery rules."
 msgstr "Prototipul grafic \"%1$s\" conține prototipi item pentru reguli de detecție multiple."
 
-#: include/classes/import/CConfigurationImport.php:1398
+#: include/classes/import/CConfigurationImport.php:1399
 #, c-format
 msgid "Trigger prototype \"%1$s\" depends on trigger \"%2$s\", which does not exist."
 msgstr ""
@@ -16836,8 +16835,8 @@ msgid "Trigger recovery expression must contain at least one host:key reference.
 msgstr ""
 
 #: include/html.inc.php:776
-#: include/views/administration.general.triggerSeverity.edit.php:25
-#: include/views/administration.general.triggerSeverity.edit.php:93
+#: include/views/administration.general.trigseverity.edit.php:25
+#: include/views/administration.general.trigseverity.edit.php:93
 msgid "Trigger severities"
 msgstr "Severități trigger"
 
@@ -16845,11 +16844,11 @@ msgstr "Severități trigger"
 msgid "Trigger severity"
 msgstr "Severitate trigger"
 
-#: jsLoader.php:271
+#: jsLoader.php:272
 msgid "Trigger status \"OK\""
 msgstr ""
 
-#: jsLoader.php:272
+#: jsLoader.php:273
 msgid "Trigger status \"Problem\""
 msgstr ""
 
@@ -16909,7 +16908,7 @@ msgid "Tue"
 msgstr "Mar"
 
 #: include/forms.inc.php:2123 include/forms.inc.php:2238
-#: include/func.inc.php:136 include/func.inc.php:226 jsLoader.php:165
+#: include/func.inc.php:136 include/func.inc.php:226 jsLoader.php:166
 msgid "Tuesday"
 msgstr "Marți"
 
@@ -16922,7 +16921,7 @@ msgstr "Turcă (tr_TR)"
 msgid "Two items (\"%1$s\" and \"%2$s\") cannot populate one host inventory field \"%3$s\", this would lead to a conflict."
 msgstr "Doi itemi (\"%1$s\" și \"%2$s\") nu pot popula un câmp inventar al unui server \"%3$s\", aceasta ar duce la un conflict. "
 
-#: jsLoader.php:191
+#: jsLoader.php:192
 msgid "Two map elements should be selected"
 msgstr ""
 
@@ -17041,7 +17040,7 @@ msgstr "NECUNOSCUT"
 #: include/views/configuration.triggers.edit.php:542
 #: include/views/js/monitoring.sysmaps.js.php:253
 #: include/views/monitoring.screen.constructor.edit.php:777
-#: include/views/monitoring.sysmap.edit.php:230 items.php:210 jsLoader.php:289
+#: include/views/monitoring.sysmap.edit.php:230 items.php:210 jsLoader.php:290
 msgid "URL"
 msgstr "URL"
 
@@ -17087,7 +17086,7 @@ msgid "URL should have both \"name\" and \"url\" fields for map \"%1$s\"."
 msgstr ""
 
 #: include/views/js/monitoring.sysmaps.js.php:250
-#: include/views/monitoring.sysmap.edit.php:281 jsLoader.php:290
+#: include/views/monitoring.sysmap.edit.php:281 jsLoader.php:291
 msgid "URLs"
 msgstr "URL-uri"
 
@@ -17169,7 +17168,7 @@ msgstr "Unități"
 #: include/users.inc.php:66 include/users.inc.php:89
 #: include/views/configuration.action.edit.php:493
 #: include/views/configuration.triggers.list.php:72
-#: include/views/js/configuration.discovery.edit.js.php:227
+#: include/views/js/configuration.discovery.edit.js.php:226
 msgid "Unknown"
 msgstr "Necunoscut"
 
@@ -17271,7 +17270,7 @@ msgstr "Dezlegat: Prototip item \"%1$s\" pe \"%2$s\"."
 msgid "Unlinked: Web scenario \"%1$s\" on \"%2$s\"."
 msgstr "Dezlegat: Scenariu web \"%1$s\" pe \"%2$s\"."
 
-#: jsLoader.php:214
+#: jsLoader.php:215
 msgid "Unmute"
 msgstr "Pornire sunet"
 
@@ -17335,7 +17334,7 @@ msgstr "Sus"
 #: include/views/administration.general.other.edit.php:73
 #: include/views/administration.general.regularexpressions.edit.php:144
 #: include/views/administration.general.trigger.options.edit.php:101
-#: include/views/administration.general.triggerSeverity.edit.php:95
+#: include/views/administration.general.trigseverity.edit.php:95
 #: include/views/administration.general.valuemapping.edit.php:105
 #: include/views/administration.general.workingtime.edit.php:44
 #: include/views/administration.usergroups.edit.php:278
@@ -17366,7 +17365,7 @@ msgstr "Sus"
 #: include/views/configuration.trigger.prototype.massupdate.php:189
 #: include/views/configuration.triggers.edit.php:628
 #: include/views/configuration.triggers.massupdate.php:169
-#: include/views/js/configuration.discovery.edit.js.php:420
+#: include/views/js/configuration.discovery.edit.js.php:419
 #: include/views/monitoring.screen.constructor.edit.php:868
 #: include/views/monitoring.screen.edit.php:220
 #: include/views/monitoring.slideconf.edit.php:273
@@ -17603,8 +17602,8 @@ msgstr "Grup utilizator pentru mesaje cădere bază de date \"%1$s\"."
 msgid "User group sharing is missing parameters: %1$s for map \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:582
-#: include/classes/api/services/CScreen.php:922
+#: include/classes/api/services/CScreen.php:583
+#: include/classes/api/services/CScreen.php:923
 #, c-format
 msgid "User group sharing is missing parameters: %1$s for screen \"%2$s\"."
 msgstr ""
@@ -17683,8 +17682,8 @@ msgstr "Sesiuni utilizator"
 msgid "User sharing is missing parameters: %1$s for map \"%2$s\"."
 msgstr ""
 
-#: include/classes/api/services/CScreen.php:507
-#: include/classes/api/services/CScreen.php:848
+#: include/classes/api/services/CScreen.php:508
+#: include/classes/api/services/CScreen.php:849
 #, c-format
 msgid "User sharing is missing parameters: %1$s for screen \"%2$s\"."
 msgstr ""
@@ -17968,7 +17967,7 @@ msgstr ""
 #: app/views/popup.httpstep.php:65 app/views/popup.httpstep.php:91
 #: app/views/popup.httpstep.php:115 app/views/popup.httpstep.php:134
 #: app/views/popup.preproctestedit.view.php:89
-#: app/views/popup.testtriggerexpr.php:30 include/blocks.inc.php:617
+#: app/views/popup.testtriggerexpr.php:30 include/blocks.inc.php:615
 #: include/classes/graphdraw/CPieGraphDraw.php:346
 #: include/classes/screens/CScreenEvents.php:32
 #: include/classes/screens/CScreenHistory.php:263
@@ -18097,6 +18096,18 @@ msgstr ""
 msgid "Value of any Windows performance counter. Returns integer, float, string or text (depending on the request)"
 msgstr ""
 
+#: include/correlation.inc.php:227
+msgid "Value of new event tag"
+msgstr ""
+
+#: include/correlation.inc.php:212 include/correlation.inc.php:220
+msgid "Value of old event tag"
+msgstr ""
+
+#: include/actions.inc.php:333
+msgid "Value of tag"
+msgstr ""
+
 #: include/classes/graphdraw/CPieGraphDraw.php:357
 msgid "Value: no data"
 msgstr "Valoare: fără date"
@@ -18174,14 +18185,14 @@ msgstr "Nume vizibil"
 msgid "Visible name cannot be empty if host name is missing."
 msgstr "Numele vizibil nu poate fi gol dacă lipsește numele serverului."
 
-#: jsLoader.php:173
+#: jsLoader.php:174
 msgctxt "Wednesday short"
 msgid "W"
 msgstr "M"
 
 #: adm.triggerseverities.php:35 adm.triggerseverities.php:36
 #: include/items.inc.php:33
-#: include/views/administration.general.triggerSeverity.edit.php:54
+#: include/views/administration.general.trigseverity.edit.php:54
 #: include/views/general.warning.php:21
 msgid "Warning"
 msgstr "Avertisment"
@@ -18191,11 +18202,11 @@ msgctxt "setup"
 msgid "Warning"
 msgstr "Avertisment"
 
-#: jsLoader.php:148
+#: jsLoader.php:149
 msgid "Warning message"
 msgstr ""
 
-#: jsLoader.php:219
+#: jsLoader.php:220
 msgid "We are sorry, the maximum possible number of elements to remember has been reached."
 msgstr "Ne pare rău, a fost atins numărul maxim posibil de elemente de amintit. "
 
@@ -18236,7 +18247,7 @@ msgstr "Scenariul web \"%1$s\" deja există pe serverul \"%2$s\"."
 msgid "Web scenario \"%1$s\" already exists."
 msgstr "Scenariul web \"%1$s\" există deja."
 
-#: include/classes/import/CConfigurationImport.php:1448
+#: include/classes/import/CConfigurationImport.php:1449
 #, c-format
 msgid "Web scenario \"%1$s\" on \"%2$s\": application \"%3$s\" does not exist."
 msgstr ""
@@ -18286,7 +18297,7 @@ msgid "Wed"
 msgstr "Mie"
 
 #: include/forms.inc.php:2128 include/forms.inc.php:2243
-#: include/func.inc.php:137 include/func.inc.php:227 jsLoader.php:166
+#: include/func.inc.php:137 include/func.inc.php:227 jsLoader.php:167
 msgid "Wednesday"
 msgstr "Miercuri"
 
@@ -18308,7 +18319,7 @@ msgstr ""
 msgid "When active"
 msgstr "Când e activ"
 
-#: jsLoader.php:131
+#: jsLoader.php:132
 msgid "Widget is too small for the specified number of columns and rows."
 msgstr ""
 
@@ -18502,7 +18513,7 @@ msgid "Y axis MAX value must be greater than Y axis MIN value"
 msgstr ""
 
 #: include/classes/api/services/CGraphGeneral.php:314
-#: include/classes/graphdraw/CLineGraphDraw.php:709
+#: include/classes/graphdraw/CLineGraphDraw.php:716
 msgid "Y axis MAX value must be greater than Y axis MIN value."
 msgstr "Valoarea MAX a axei Y trebuie să fie mai mare decât valoarea MIN a axei Y."
 
@@ -18571,8 +18582,8 @@ msgstr "Anual"
 
 #: app/views/administration.user.list.php:109
 #: app/views/monitoring.widget.problems.view.php:261
-#: include/actions.inc.php:32 include/blocks.inc.php:624
-#: include/blocks.inc.php:849
+#: include/actions.inc.php:32 include/blocks.inc.php:622
+#: include/blocks.inc.php:847
 #: include/classes/screens/CScreenHostTriggers.php:273
 #: include/classes/screens/CScreenProblem.php:1134
 #: include/classes/screens/CScreenProblem.php:1270 include/events.inc.php:183
@@ -18643,10 +18654,10 @@ msgstr "Nu ați specificat ținte pentru scriptul global al operațiunii de acț
 #: include/classes/api/services/CScript.php:555
 #: include/classes/api/services/CTask.php:104
 #: include/classes/api/services/CTemplate.php:411
-#: include/classes/api/services/CTemplate.php:562
-#: include/classes/api/services/CTemplate.php:599
-#: include/classes/api/services/CTemplate.php:1016
-#: include/classes/api/services/CTemplate.php:1122
+#: include/classes/api/services/CTemplate.php:563
+#: include/classes/api/services/CTemplate.php:600
+#: include/classes/api/services/CTemplate.php:1017
+#: include/classes/api/services/CTemplate.php:1123
 #: include/classes/api/services/CUserMacro.php:266
 #: include/classes/api/services/CUserMacro.php:351
 #: include/classes/api/services/CUserMacro.php:445
@@ -18657,7 +18668,7 @@ msgstr "Nu vă este permis să efectuați această operație."
 msgid "You do not have permissions to create users."
 msgstr " Nu aveți permisiunea să creați utilizatori."
 
-#: jsLoader.php:123
+#: jsLoader.php:124
 msgid "You do not have permissions to edit dashboard"
 msgstr ""
 
@@ -18665,7 +18676,7 @@ msgstr ""
 msgid "You have no permissions to access this page."
 msgstr "Nu aveți permisiunea să accesați această pagină."
 
-#: jsLoader.php:120
+#: jsLoader.php:121
 msgid "You have unsaved changes."
 msgstr ""
 
@@ -18713,7 +18724,7 @@ msgstr "Utilizator Zabbix"
 #: include/views/configuration.action.edit.php:940
 #: include/views/configuration.action.edit.php:1716
 #: include/views/configuration.action.edit.php:2186
-#: include/views/js/configuration.discovery.edit.js.php:219
+#: include/views/js/configuration.discovery.edit.js.php:218
 msgid "Zabbix agent"
 msgstr "Agent Zabbix"
 
@@ -18776,7 +18787,7 @@ msgstr ""
 msgid "Zabbix server is not running: the information displayed may not be current."
 msgstr "Serverul Zabbix nu funcționează: informația afișată poate să nu fie corectă."
 
-#: include/blocks.inc.php:623
+#: include/blocks.inc.php:621
 msgid "Zabbix server is running"
 msgstr "Serverul Zabbix rulează"
 
@@ -18854,7 +18865,7 @@ msgstr ""
 #: include/classes/api/services/CItemGeneral.php:1325
 #: include/classes/api/services/CItemGeneral.php:1399
 #: include/classes/api/services/CItemGeneral.php:1409
-#: include/classes/api/services/CScreen.php:393
+#: include/classes/api/services/CScreen.php:394
 msgid "a numeric value is expected"
 msgstr ""
 
@@ -18900,9 +18911,9 @@ msgstr ""
 msgid "agent"
 msgstr "agent"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1871
+#: include/classes/graphdraw/CLineGraphDraw.php:1862
 #: include/classes/html/CSeverity.php:80
-#: include/classes/pagefilter/CPageFilter.php:767
+#: include/classes/pagefilter/CPageFilter.php:772
 #: include/classes/screens/CScreenHostgroupTriggers.php:109
 #: include/classes/screens/CScreenHostgroupTriggers.php:110
 #: include/classes/screens/CScreenHostTriggers.php:109
@@ -19007,8 +19018,8 @@ msgstr "autoînregistrare"
 msgid "auto-registered host"
 msgstr "server autoînregistrare"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1853
-#: include/classes/graphdraw/CLineGraphDraw.php:1875
+#: include/classes/graphdraw/CLineGraphDraw.php:1844
+#: include/classes/graphdraw/CLineGraphDraw.php:1866
 #: include/classes/graphdraw/CPieGraphDraw.php:338 include/graphs.inc.php:85
 #: include/graphs.inc.php:98
 #: include/views/js/configuration.graph.edit.js.php:50
@@ -19050,10 +19061,9 @@ msgstr ""
 #: app/controllers/CControllerPopupMedia.php:99
 #: app/controllers/CControllerPopupMedia.php:110
 #: app/controllers/CControllerPopupTriggerWizard.php:134
-#: app/controllers/CControllerUserUpdateGeneral.php:98
-#: app/controllers/CControllerWidgetNavTreeItemUpdate.php:41
-#: correlation.php:227 correlation.php:237 correlation.php:243
-#: correlation.php:263 correlation.php:267 correlation.php:280
+#: app/controllers/CControllerUserUpdateGeneral.php:98 correlation.php:227
+#: correlation.php:237 correlation.php:243 correlation.php:263
+#: correlation.php:267 correlation.php:280
 #: include/classes/api/services/CAction.php:1921
 #: include/classes/api/services/CAutoregistration.php:151
 #: include/classes/api/services/CCorrelation.php:1045
@@ -19104,10 +19114,10 @@ msgstr ""
 #: include/classes/api/services/CUserGroup.php:463
 #: include/classes/api/services/CUser.php:533
 #: include/classes/api/services/CUser.php:672
-#: include/classes/import/CConfigurationImport.php:759
-#: include/classes/import/CConfigurationImport.php:970
-#: include/classes/import/CConfigurationImport.php:1088
-#: include/classes/import/CConfigurationImport.php:2734
+#: include/classes/import/CConfigurationImport.php:760
+#: include/classes/import/CConfigurationImport.php:971
+#: include/classes/import/CConfigurationImport.php:1089
+#: include/classes/import/CConfigurationImport.php:2735
 #: include/classes/validators/CApiInputValidator.php:264
 #: include/classes/validators/CApiInputValidator.php:399
 #: include/classes/validators/CApiInputValidator.php:531
@@ -19144,11 +19154,11 @@ msgid "check expression starting from \"%1$s\""
 msgstr ""
 
 #: include/classes/api/services/CItemGeneral.php:1980
-#: include/classes/import/CConfigurationImport.php:2748
+#: include/classes/import/CConfigurationImport.php:2749
 msgid "circular item dependency is not allowed"
 msgstr ""
 
-#: jsLoader.php:222
+#: jsLoader.php:223
 msgid "colour"
 msgstr ""
 
@@ -19174,7 +19184,7 @@ msgstr ""
 msgid "count() - Number of successfully retrieved values V (which fulfill operator O) for period T"
 msgstr ""
 
-#: include/func.inc.php:622 jsLoader.php:142
+#: include/func.inc.php:622 jsLoader.php:143
 msgctxt "day short"
 msgid "d"
 msgstr "z"
@@ -19200,7 +19210,7 @@ msgstr ""
 msgid "days"
 msgstr "zile"
 
-#: include/classes/pagefilter/CPageFilter.php:654
+#: include/classes/pagefilter/CPageFilter.php:659
 #: include/classes/setup/CSetupWizard.php:306
 #: include/classes/widgets/CWidgetHelper.php:61
 #: include/views/js/monitoring.slideconf.edit.js.php:14
@@ -19319,7 +19329,7 @@ msgctxt "item_form"
 msgid "global housekeeping settings"
 msgstr "setări interne globale"
 
-#: include/func.inc.php:623 jsLoader.php:143
+#: include/func.inc.php:623 jsLoader.php:144
 msgctxt "hour short"
 msgid "h"
 msgstr "h"
@@ -19411,11 +19421,11 @@ msgid "invalid byte sequence in UTF-8"
 msgstr ""
 
 #: include/classes/api/services/CItemGeneral.php:336
-#: include/classes/graphdraw/CLineGraphDraw.php:113
+#: include/classes/graphdraw/CLineGraphDraw.php:118
 msgid "invalid delay"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:242
+#: include/classes/graphdraw/CLineGraphDraw.php:247
 #: include/classes/graphdraw/CPieGraphDraw.php:204
 #: include/classes/helpers/CSvgGraphHelper.php:374
 msgid "invalid history storage period"
@@ -19433,7 +19443,7 @@ msgstr ""
 msgid "invalid regular expression"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:252
+#: include/classes/graphdraw/CLineGraphDraw.php:257
 #: include/classes/graphdraw/CPieGraphDraw.php:214
 #: include/classes/helpers/CSvgGraphHelper.php:386
 msgid "invalid trend storage period"
@@ -19472,7 +19482,7 @@ msgstr ""
 msgid "key is empty"
 msgstr "cheia este goală"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1851
+#: include/classes/graphdraw/CLineGraphDraw.php:1842
 #: include/classes/graphdraw/CPieGraphDraw.php:333 include/forms.inc.php:2228
 #: include/graphs.inc.php:82 include/graphs.inc.php:106
 #: include/maintenances.inc.php:115
@@ -19484,7 +19494,7 @@ msgstr "ultima"
 msgid "last() - Last (most recent) T value"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1988
+#: include/classes/graphdraw/CLineGraphDraw.php:1979
 msgid "left"
 msgstr ""
 
@@ -19508,19 +19518,19 @@ msgstr ""
 msgid "low-level discovery rule"
 msgstr "regulă de detecție de nivel inferior"
 
-#: include/func.inc.php:624 jsLoader.php:110 jsLoader.php:144 jsLoader.php:320
+#: include/func.inc.php:624 jsLoader.php:111 jsLoader.php:145 jsLoader.php:321
 msgctxt "minute short"
 msgid "m"
 msgstr "m"
 
-#: include/func.inc.php:621 jsLoader.php:141
+#: include/func.inc.php:621 jsLoader.php:142
 msgctxt "month short"
 msgid "m"
 msgstr "l"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1382
-#: include/classes/graphdraw/CLineGraphDraw.php:1390
+#: include/classes/graphdraw/CLineGraphDraw.php:1389
 #: include/classes/graphdraw/CLineGraphDraw.php:1397
+#: include/classes/graphdraw/CLineGraphDraw.php:1404
 msgid "m-d"
 msgstr ""
 
@@ -19532,7 +19542,7 @@ msgstr ""
 msgid "macro is empty"
 msgstr ""
 
-#: include/views/js/administration.general.macros.edit.js.php:58
+#: include/views/js/administration.general.macros.edit.js.php:73
 msgid "macro(s)"
 msgstr "macro(uri)"
 
@@ -19548,8 +19558,8 @@ msgid "matches"
 msgstr ""
 
 #: include/classes/api/services/CItemGeneral.php:1417
-#: include/classes/graphdraw/CLineGraphDraw.php:1854
-#: include/classes/graphdraw/CLineGraphDraw.php:1868
+#: include/classes/graphdraw/CLineGraphDraw.php:1845
+#: include/classes/graphdraw/CLineGraphDraw.php:1859
 #: include/classes/graphdraw/CPieGraphDraw.php:329 include/forms.inc.php:1327
 #: include/graphs.inc.php:80 include/graphs.inc.php:96
 #: include/views/js/configuration.graph.edit.js.php:51
@@ -19567,14 +19577,14 @@ msgid "maximum dependent items count reached"
 msgstr ""
 
 #: include/classes/api/services/CItemGeneral.php:2060
-#: include/classes/import/CConfigurationImport.php:2696
-#: include/classes/import/CConfigurationImport.php:2763
+#: include/classes/import/CConfigurationImport.php:2697
+#: include/classes/import/CConfigurationImport.php:2764
 msgid "maximum number of dependency levels reached"
 msgstr ""
 
 #: include/classes/api/services/CItemGeneral.php:1417
-#: include/classes/graphdraw/CLineGraphDraw.php:1852
-#: include/classes/graphdraw/CLineGraphDraw.php:1865
+#: include/classes/graphdraw/CLineGraphDraw.php:1843
+#: include/classes/graphdraw/CLineGraphDraw.php:1856
 #: include/classes/graphdraw/CPieGraphDraw.php:325 include/forms.inc.php:1326
 #: include/graphs.inc.php:78 include/graphs.inc.php:94
 #: include/views/js/configuration.graph.edit.js.php:49
@@ -19616,7 +19626,7 @@ msgstr "trebuie să fie un utilizator valid LDAP"
 #: include/classes/api/services/CMediatype.php:730
 #: include/classes/api/services/CMediatype.php:749
 #: include/classes/api/services/CMediatype.php:755
-#: include/classes/api/services/CScreen.php:400
+#: include/classes/api/services/CScreen.php:401
 #, c-format
 msgid "must be between \"%1$s\" and \"%2$s\""
 msgstr ""
@@ -19636,7 +19646,7 @@ msgstr ""
 msgid "name"
 msgstr ""
 
-#: include/classes/html/CMultiSelect.php:78 jsLoader.php:244
+#: include/classes/html/CMultiSelect.php:78 jsLoader.php:245
 msgid "new"
 msgstr "nou"
 
@@ -19646,12 +19656,11 @@ msgctxt "new element in multiselect"
 msgid "new"
 msgstr "nou"
 
-#: include/correlation.inc.php:214
 #: include/views/configuration.correlation.edit.php:142
-msgid "new event tag"
+msgid "new event tag name"
 msgstr ""
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1946
+#: include/classes/graphdraw/CLineGraphDraw.php:1937
 #: include/classes/graphdraw/CPieGraphDraw.php:359
 msgid "no data"
 msgstr "fără date"
@@ -19675,8 +19684,8 @@ msgstr "nu este în"
 
 #: app/controllers/CControllerDashboardView.php:134
 #: hostinventoriesoverview.php:75
-#: include/classes/pagefilter/CPageFilter.php:713
-#: include/classes/pagefilter/CPageFilter.php:767 include/forms.inc.php:980
+#: include/classes/pagefilter/CPageFilter.php:718
+#: include/classes/pagefilter/CPageFilter.php:772 include/forms.inc.php:980
 #: include/views/monitoring.screen.php:63 slides.php:191
 msgid "not selected"
 msgstr "neselectat"
@@ -19690,7 +19699,7 @@ msgid "number"
 msgstr ""
 
 #: app/views/monitoring.widget.problemhosts.view.php:116
-#: include/blocks.inc.php:410 include/blocks.inc.php:596
+#: include/blocks.inc.php:410 include/blocks.inc.php:594
 msgid "of"
 msgstr "al"
 
@@ -19719,7 +19728,7 @@ msgid "off"
 msgstr "închis"
 
 #: include/views/configuration.correlation.edit.php:145
-msgid "old event tag"
+msgid "old event tag name"
 msgstr ""
 
 #: app/views/administration.user.edit.php:249
@@ -19791,7 +19800,7 @@ msgstr ""
 msgid "remember selected"
 msgstr "amintire selecție"
 
-#: include/classes/graphdraw/CLineGraphDraw.php:1988
+#: include/classes/graphdraw/CLineGraphDraw.php:1979
 msgid "right"
 msgstr ""
 
@@ -19802,7 +19811,7 @@ msgstr ""
 #: include/views/configuration.services.parent.list.php:42
 #: include/views/configuration.services.parent.list.php:45
 #: include/views/configuration.services.parent.list.php:47
-#: include/views/configuration.services.parent.list.php:48 jsLoader.php:307
+#: include/views/configuration.services.parent.list.php:48 jsLoader.php:308
 msgid "root"
 msgstr "rădăcină"
 
@@ -19967,7 +19976,7 @@ msgstr ""
 msgid "third parameter is expected"
 msgstr ""
 
-#: jsLoader.php:223
+#: jsLoader.php:224
 msgid "time shift"
 msgstr ""
 
@@ -20005,7 +20014,7 @@ msgid "trigger with linkages cannot be moved to another template or host"
 msgstr ""
 
 #: app/views/layout.htmlpage.menu.php:32
-#: include/classes/html/CMultiSelect.php:77 jsLoader.php:243
+#: include/classes/html/CMultiSelect.php:77 jsLoader.php:244
 msgid "type here to search"
 msgstr "scrie aici pentru căutare"
 
@@ -20130,11 +20139,11 @@ msgstr "valoare"
 msgid "value \"%1$s\" already exists"
 msgstr ""
 
-#: include/classes/import/CConfigurationImport.php:844
-#: include/classes/import/CConfigurationImport.php:882
-#: include/classes/import/CConfigurationImport.php:2592
-#: include/classes/import/CConfigurationImport.php:2706
-#: include/classes/import/CConfigurationImport.php:2757
+#: include/classes/import/CConfigurationImport.php:845
+#: include/classes/import/CConfigurationImport.php:883
+#: include/classes/import/CConfigurationImport.php:2593
+#: include/classes/import/CConfigurationImport.php:2707
+#: include/classes/import/CConfigurationImport.php:2758
 #, c-format
 msgid "value \"%1$s\" not found"
 msgstr ""
@@ -20180,6 +20189,10 @@ msgstr ""
 msgid "value of first parameter is too long"
 msgstr ""
 
+#: include/correlation.inc.php:215
+msgid "value of new event tag"
+msgstr ""
+
 #: include/classes/api/services/CItemGeneral.php:1580
 msgid "value of second parameter is too long"
 msgstr ""
@@ -20202,7 +20215,7 @@ msgstr ""
 msgid "wrong item type"
 msgstr ""
 
-#: include/func.inc.php:620 jsLoader.php:140
+#: include/func.inc.php:620 jsLoader.php:141
 msgctxt "year short"
 msgid "y"
 msgstr "a"

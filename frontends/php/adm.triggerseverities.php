@@ -108,7 +108,7 @@ else {
 	];
 }
 
-$view = new CView('administration.general.triggerSeverity.edit', $data);
+$view = new CView('administration.general.trigseverity.edit', $data);
 $view->render();
 $view->show();
 

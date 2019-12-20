@@ -200,7 +200,7 @@ jQuery(function($) {
 	 * Event handler for the preloader elements destroy.
 	 */
 	function menuPopupPreloaderCloseHandler(event) {
-		overlayPreloaderDestroy(event.data.id, event.data.xhr);
+		overlayPreloaderDestroy(event.data.id);
 	}
 
 	/**
@@ -262,7 +262,7 @@ jQuery(function($) {
 
 		$(document)
 			.off('click', menuPopupPreloaderCloseHandler)
-			.on('click', {id: $preloader.prop('id'), xhr: xhr}, menuPopupPreloaderCloseHandler);
+			.on('click', {id: $preloader.prop('id')}, menuPopupPreloaderCloseHandler);
 
 		return false;
 	});

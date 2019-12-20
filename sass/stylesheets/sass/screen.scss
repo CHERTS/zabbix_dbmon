@@ -14,7 +14,7 @@ body {
 	line-height: $body-line-height;
 	color: $font-color;
 	background-color: $body-bg-color;
-	margin-bottom: 60px;
+	margin-bottom: 71px;
 	min-width: 1200px;
 
 	font: {
@@ -1622,16 +1622,16 @@ output {
 }
 
 .multiselect-control {
+	display: flex;
 	position: relative;
 	vertical-align: top;
-	display: inline-block;
 	white-space: nowrap;
 }
 
 .multiselect {
 	@extend %form-input-style;
-	@extend .multiselect-button;
-	position: relative;
+	display: flex;
+	flex-direction: column;
 	margin-right: 3px;
 	min-height: 24px;
 	white-space: normal;
@@ -1729,20 +1729,7 @@ output {
 	}
 }
 
-.multiselect-collapsed {
-	&.multiselect-control,
-	.multiselect {
-		overflow: hidden;
-		max-height: 24px;
-
-		input[type="text"] {
-			display: none;
-		}
-	}
-}
-
 .multiselect-button {
-	display: inline-block;
 	vertical-align: top;
 }
 
@@ -6545,10 +6532,11 @@ svg {
 .sysmap-widget-container {
 	overflow: hidden;
 	height: 100%;
-	width: 100%;
-	max-height: 100%;
-	max-width: 100%;
 	display: flex;
+
+	svg {
+		flex-grow: 1;
+	}
 }
 
 @supports (-ms-ime-align:auto) {
@@ -6658,8 +6646,15 @@ svg {
 	}
 
 	.list-accordion-item-closed {
-		@extend .multiselect-collapsed;
-		height: 30px;
+
+		.multiselect {
+			height: 24px;
+			overflow: hidden;
+		}
+
+		.list-accordion-item-head {
+			margin-bottom: 5px;
+		}
 
 		.list-accordion-item-body {
 			display: none;

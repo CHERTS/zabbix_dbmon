@@ -43,6 +43,7 @@
     <ClCompile Include="..\..\src\libs\zbxcrypto\base64.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\md5.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\tls.c" />
+    <ClCompile Include="..\..\src\libs\zbxcrypto\tls_version.c" />
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon.c" />
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_mysql.c" />
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_oracle.c" />

@@ -386,7 +386,7 @@ if (hasRequest('form')) {
 		'form' => getRequest('form'),
 		'correlationid' => $correlationid,
 		'new_condition' => getRequest('new_condition', []),
-		'new_operation' => getRequest('new_operation'),
+		'new_operation' => getRequest('new_operation', ['type' => null]),
 		'config' => $config
 	];
 
