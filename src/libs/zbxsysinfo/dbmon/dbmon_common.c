@@ -180,7 +180,7 @@ int make_onerow_json_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct
 
 			for (col = 0; col < db_result.nb_columns; col++)
 			{
-				zbx_snprintf(buffer, sizeof(buffer), "{#%s}", zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value)));
+				zbx_snprintf(buffer, sizeof(buffer), "%s", zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value)));
 
 				for (c = &buffer[0]; *c; c++)
 					*c = toupper(*c);

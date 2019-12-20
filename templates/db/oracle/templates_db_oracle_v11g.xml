@@ -1,0 +1,844 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2019-12-20T13:21:04Z</date>
+    <groups>
+        <group>
+            <name>DBS.Templates/Databases</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>DBS_Template Oracle 11g for Windows</template>
+            <name>DBS_Template Oracle 11g for Windows</name>
+            <description>Template for monitoring Oracle 11g for Windows</description>
+            <groups>
+                <group>
+                    <name>DBS.Templates/Databases</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Oracle: Instance info</name>
+                </application>
+                <application>
+                    <name>stubs</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Ping</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS Oracle (Ping)</name>
+                    </valuemap>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(#2)}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(#3)}=1</recovery_expression>
+                            <name>Instance access failed</name>
+                            <priority>HIGH</priority>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Version</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.version[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Version of Oracle has been changed</name>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <priority>INFO</priority>
+                            <description>Версия экземпляра Oracle была изменена. Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Oracle database discovery</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.db.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>30m</delay>
+                    <filter>
+                        <conditions>
+                            <condition>
+                                <macro>{#DBNAME}</macro>
+                                <value>{$DBS_ORACLE_DBNAME_EXCLUDE}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>A</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle][{#INSTANCE}][{#DBNAME}] Get database incarnation</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>oracle.db.incarnation[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            <delay>1h</delay>
+                            <history>1d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>stubs</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle][{#INSTANCE}][{#DBNAME}] Get database info</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            <delay>2m</delay>
+                            <history>1d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>stubs</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle][{#INSTANCE}][{#DBNAME}] Get database size</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>oracle.db.size[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            <delay>1h</delay>
+                            <history>1d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>stubs</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Controlfile creation date</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},controlfile_created]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <description>Creation date of the control file.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.CONTROLFILE_CREATED</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': DataGuard broker</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},dataguard_broker]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Indicates whether the Data Guard configuration is being managed by the broker (ENABLED) or not (DISABLED).</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (dataguard_broker)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.DATAGUARD_BROKER</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': DBID</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},dbid]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Database identifier calculated when the database is created and stored in all file headers.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.DBID</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': DBName</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},dbname]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Name of the database.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (log_mode)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.DBNAME</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Database size</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},db_size]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <description>Full database size.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.DBSIZE</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>7200</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.size[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Flashback mode</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},flashback_on]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (flashback_on)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.FLASHBACK_ON</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Force logging mode</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},force_logging]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Indicates whether the database is under force logging mode (YES) or not (NO).</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (yes_no)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.FORCE_LOGGING</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Guard status</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},guard_status]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Protects data from being changed.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (guard_status)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.GUARD_STATUS</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Current incarnation</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},incarnation]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Information about current database incarnation.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.INCARNATION</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>7200</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.incarnation[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Archive log mode</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},log_mode]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (log_mode)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.LOG_MODE</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Open mode</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},open_mode]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Open mode information:&#13;
+- MOUNTED&#13;
+- READ WRITE&#13;
+- READ ONLY</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (open_mode)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.OPEN_MODE</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Platform name</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},platform_name]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Platform name.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (log_mode)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.PLATFORM_NAME</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Protection mode</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},protection_mode]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Protection mode currently in effect for the database.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (protection_mode)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.PROTECTION_MODE</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Resetlogs time</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},resetlogs_time]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Timestamp of open resetlogs.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (log_mode)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.RESETLOGS_TIME</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Database role</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},role]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Current role of the database.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (database_role)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.DATABASE_ROLE</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Switchover number</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},switchover]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number assigned to the database switchover.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.SWITCHOVER_NUMBER</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$DBS_ORACLE_DBNAME_EXCLUDE}</macro>
+                    <value>^(excludedbname1|excludedbname2)$</value>
+                    <description>List of exclude database name</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_HOST}</macro>
+                    <value>127.0.0.1</value>
+                    <description>Instance address (ip address or dns)</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_INSTANCE}</macro>
+                    <value>orcl</value>
+                    <description>Instance name</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_MODE}</macro>
+                    <value>0</value>
+                    <description>0 - OCI_DEFAULT, 1 - OCI_SYSDBA, 2 - OCI_SYSOPER, 3 - OCI_SYSASM, 4 - OCI_SYSDGD</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PORT}</macro>
+                    <value>1521</value>
+                    <description>Database port</description>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <value_maps>
+        <value_map>
+            <name>DBS Oracle (database_role)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>SNAPSHOT STANDBY</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>LOGICAL STANDBY</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>PHYSICAL STANDBY</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>PRIMARY</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (dataguard_broker)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>ENABLED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>DISABLED</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (flashback_on)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>YES</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>NO</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>RESTORE POINT ONLY</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (guard_status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>ALL</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>STANDBY</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>NONE</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (log_mode)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>NOARCHIVELOG</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>ARCHIVELOG</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>MANUAL</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (open_mode)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>MOUNTED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>READ WRITE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>READ ONLY</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>READ ONLY WITH APPLY</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (Ping)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>Down</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Up</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (protection_mode)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>MAXIMUM PROTECTION</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>MAXIMUM AVAILABILITY</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>RESYNCHRONIZATION</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>MAXIMUM PERFORMANCE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>5</value>
+                    <newvalue>UNPROTECTED</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (yes_no)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>YES</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>NO</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
+</zabbix_export>
