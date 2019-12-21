@@ -964,6 +964,28 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 #else
 #	define TLS_FEATURE_STATUS	" NO"
 #endif
+#if defined(HAVE_DBMON)
+#if defined(HAVE_MYSQL)
+#	define MYSQL_MONITORING_FEATURE_STATUS	" YES"
+#else
+#	define MYSQL_MONITORING_FEATURE_STATUS	" NO"
+#endif
+#if defined(HAVE_POSTGRESQL)
+#	define POSTGRESQL_MONITORING_FEATURE_STATUS	" YES"
+#else
+#	define POSTGRESQL_MONITORING_FEATURE_STATUS	" NO"
+#endif
+#if defined(HAVE_ORACLE)
+#	define ORACLE_MONITORING_FEATURE_STATUS	" YES"
+#else
+#	define ORACLE_MONITORING_FEATURE_STATUS	" NO"
+#endif
+#if defined(HAVE_MSSQL)
+#	define MSSQL_MONITORING_FEATURE_STATUS	" YES"
+#else
+#	define MSSQL_MONITORING_FEATURE_STATUS	" NO"
+#endif
+#endif
 
 	zabbix_log(LOG_LEVEL_INFORMATION, "Starting Zabbix Agent [%s]. Zabbix %s (revision %s).",
 			CONFIG_HOSTNAME, ZABBIX_VERSION, ZABBIX_REVISION);
@@ -971,6 +993,12 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 	zabbix_log(LOG_LEVEL_INFORMATION, "**** Enabled features ****");
 	zabbix_log(LOG_LEVEL_INFORMATION, "IPv6 support:          " IPV6_FEATURE_STATUS);
 	zabbix_log(LOG_LEVEL_INFORMATION, "TLS support:           " TLS_FEATURE_STATUS);
+#if defined(HAVE_DBMON)
+	zabbix_log(LOG_LEVEL_INFORMATION, "MySQL support:        " MYSQL_MONITORING_FEATURE_STATUS);
+	zabbix_log(LOG_LEVEL_INFORMATION, "PostgreSQL support:   " POSTGRESQL_MONITORING_FEATURE_STATUS);
+	zabbix_log(LOG_LEVEL_INFORMATION, "Oracle support:       " ORACLE_MONITORING_FEATURE_STATUS);
+	zabbix_log(LOG_LEVEL_INFORMATION, "MSSQL support:        " MSSQL_MONITORING_FEATURE_STATUS);
+#endif
 	zabbix_log(LOG_LEVEL_INFORMATION, "**************************");
 
 	zabbix_log(LOG_LEVEL_INFORMATION, "using configuration file: %s", CONFIG_FILE);
