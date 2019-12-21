@@ -21,6 +21,14 @@ extern char	*CONFIG_ORACLE_INSTANCE;
 SELECT version AS VERSION \
 FROM v$instance"
 
+#define ORACLE_INSTANCE_INFO_DBS "\
+SELECT to_char(round(((sysdate - startup_time) * 60 * 60 * 24), 0)) AS UPTIME, \
+	decode(status, 'STARTED', 1, 'MOUNTED', 2, 'OPEN', 3, 'OPEN MIGRATE', 4, 0) AS STATUS, \
+	decode(parallel, 'YES', 1, 'NO', 2, 0) PARALLEL, \
+	decode(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER \
+FROM v$instance \
+WHERE instance_name = '%s'"
+
 #define ORACLE_V11_DISCOVER_DB_DBS "\
 SELECT i.instance_name AS INSTANCE, \
     i.host_name AS HOSTNAME, \
@@ -96,18 +104,19 @@ WHERE d.con_id = p.con_id"
 
 
 ZBX_METRIC	parameters_dbmon_oracle[] =
-/*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
+/*	KEY							FLAG				FUNCTION					TEST PARAMETERS */
 {
-	{"oracle.ping",			CF_HAVEPARAMS,		ORACLE_PING,			NULL},
-	{"oracle.version",		CF_HAVEPARAMS,		ORACLE_VERSION,			NULL},
-	{"oracle.db.discovery",	CF_HAVEPARAMS,		ORACLE_DB_DISCOVERY,	NULL},
-	{"oracle.db.info",		CF_HAVEPARAMS,		ORACLE_DB_INFO,			NULL},
-	{"oracle.db.incarnation",		CF_HAVEPARAMS,		ORACLE_DB_INCARNATION,			NULL},
-	{"oracle.db.size",		CF_HAVEPARAMS,		ORACLE_DB_SIZE,			NULL},
+	{"oracle.instance.ping",	CF_HAVEPARAMS,		ORACLE_INSTANCE_PING,		NULL},
+	{"oracle.instance.version",	CF_HAVEPARAMS,		ORACLE_INSTANCE_VERSION,	NULL},
+	{"oracle.instance.info",	CF_HAVEPARAMS,		ORACLE_INSTANCE_INFO,		NULL},
+	{"oracle.db.discovery",		CF_HAVEPARAMS,		ORACLE_DB_DISCOVERY,		NULL},
+	{"oracle.db.info",			CF_HAVEPARAMS,		ORACLE_DB_INFO,				NULL},
+	{"oracle.db.incarnation",	CF_HAVEPARAMS,		ORACLE_DB_INCARNATION,		NULL},
+	{"oracle.db.size",			CF_HAVEPARAMS,		ORACLE_DB_SIZE,				NULL},
 	{NULL}
 };
 
-static int	ORACLE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
+static int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance;
@@ -167,7 +176,7 @@ static int	ORACLE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return SYSINFO_RET_OK;
 }
 
-static int	ORACLE_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
+static int	ORACLE_INSTANCE_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance;
@@ -218,6 +227,79 @@ static int	ORACLE_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_VERSION_DBS))
 		{
 			ret = make_result(request, result, ora_result);
+			zbx_db_clean_result(&ora_result);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
+		}
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		ret = SYSINFO_RET_FAIL;
+	}
+
+	zbx_db_close_db(oracle_conn);
+	zbx_db_clean_connection(oracle_conn);
+
+	return ret;
+}
+
+static int	ORACLE_INSTANCE_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int							ret = SYSINFO_RET_FAIL, ping = 0;
+	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance;
+	unsigned short				oracle_port = 0;
+	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	struct zbx_db_connection	*oracle_conn;
+	struct zbx_db_result		ora_result;
+
+	if (NULL == CONFIG_ORACLE_USER)
+		CONFIG_ORACLE_USER = zbx_strdup(CONFIG_ORACLE_USER, ORACLE_DEFAULT_USER);
+	if (NULL == CONFIG_ORACLE_PASSWORD)
+		CONFIG_ORACLE_PASSWORD = zbx_strdup(CONFIG_ORACLE_PASSWORD, ORACLE_DEFAULT_PASSWORD);
+	if (NULL == CONFIG_ORACLE_INSTANCE)
+		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
+
+	oracle_host = get_rparam(request, 0);
+	oracle_str_port = get_rparam(request, 1);
+	oracle_instance = get_rparam(request, 2);
+	oracle_str_mode = get_rparam(request, 3);
+
+	if (NULL == oracle_instance || '\0' == *oracle_instance)
+	{
+		oracle_instance = CONFIG_ORACLE_INSTANCE;
+	}
+
+	if (NULL != oracle_str_port && '\0' != *oracle_str_port)
+	{
+		if (SUCCEED != is_ushort(oracle_str_port, &oracle_port))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (port)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
+
+	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
+	{
+		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
+
+	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
+
+	if (oracle_conn != NULL)
+	{
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_INSTANCE_INFO_DBS, oracle_instance))
+		{
+			ret = make_onerow_json_result(request, result, ora_result);
 			zbx_db_clean_result(&ora_result);
 		}
 		else

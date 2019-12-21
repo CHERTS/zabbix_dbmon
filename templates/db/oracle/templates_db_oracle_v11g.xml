@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-21T08:24:48Z</date>
+    <date>2019-12-21T17:35:53Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -27,9 +27,23 @@
             </applications>
             <items>
                 <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Ping</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
                     <history>30d</history>
                     <description>Test connection with an instance of Oracle.</description>
@@ -52,7 +66,7 @@
                             <dependencies>
                                 <dependency>
                                     <name>Test connection data not received for more than {$DBS_ORACLE_PING_NODATA_WARN} (minutes).</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].nodata({$DBS_ORACLE_PING_NODATA_WARN})}=1</expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].nodata({$DBS_ORACLE_PING_NODATA_WARN})}=1</expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -96,7 +110,7 @@
                             <dependencies>
                                 <dependency>
                                     <name>Test connection data not received for more than {$DBS_ORACLE_PING_NODATA_CRIT} (minutes).</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].nodata({$DBS_ORACLE_PING_NODATA_CRIT})}=1</expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].nodata({$DBS_ORACLE_PING_NODATA_CRIT})}=1</expression>
                                 </dependency>
                                 <dependency>
                                     <name>Zabbix agent is unreachable for more {$DBS_ZBX_AGENTD_NODATA_WARN} (minutes)</name>
@@ -119,7 +133,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Version</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.version[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.version[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>1h</delay>
                     <history>30d</history>
                     <trends>0</trends>
@@ -143,8 +157,221 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Archiver</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},archiver]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Automatic archiving status:&#13;
+- STOPPED&#13;
+- STARTED&#13;
+- FAILED - Archiver failed to archive a log last time but will try again within 5 minutes</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS Oracle (archiver)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.ARCHIVER</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}=3</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{last()}&lt;&gt;3</recovery_expression>
+                            <name>Automatic archiving status is failed</name>
+                            <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                            <priority>DISASTER</priority>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Parallel</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},parallel]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Indicates whether the instance is mounted in cluster database mode (YES) or not (NO)</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS Oracle (yes_no)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.PARALLEL</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Status</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},status]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Status of the instance:&#13;
+- STARTED - After STARTUP NOMOUNT&#13;
+- MOUNTED - After STARTUP MOUNT or ALTER DATABASE CLOSE&#13;
+- OPEN - After STARTUP or ALTER DATABASE OPEN&#13;
+- OPEN MIGRATE - After ALTER DATABASE OPEN { UPGRADE | DOWNGRADE }</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS Oracle (instance_status)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.STATUS</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(#3)}=1 and {min(#3)}=1</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{last()}&lt;&gt;1</recovery_expression>
+                            <name>Database is not mounted</name>
+                            <priority>WARNING</priority>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{diff()}=1 and {last()}&lt;5 and {$DBS_ORACLE_DISABLE_INSTANCE_STATUS_ALARM:&quot;{$DBS_ORACLE_INSTANCE}&quot;}=0</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Instance status has been changed</name>
+                            <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                            <priority>DISASTER</priority>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Uptime</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},uptime]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Instance uptime in second.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.UPTIME</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{change()}&lt;-20 and {$DBS_ORACLE_DISABLE_INSTANCE_RESTART_ALARM:&quot;{$DBS_ORACLE_INSTANCE}&quot;}=0</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Instance '{$DBS_ORACLE_INSTANCE}' has just been restarted</name>
+                            <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
+                            <priority>DISASTER</priority>
+                            <description>Экземпляр был перезапущен. Необходимо убедиться в том, что он действительно был перезапущен, если так, то проверить alert.log на предмет причин перезапуска, уведомить заказчика и передать данные эксперту.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -288,8 +515,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -346,8 +573,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -431,8 +658,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -460,8 +687,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Size of database '{#DBNAME}' has increased</name>
@@ -525,8 +752,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -586,8 +813,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -647,8 +874,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -732,8 +959,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -762,8 +989,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -826,8 +1053,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -923,8 +1150,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -1015,8 +1242,8 @@
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -1075,8 +1302,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -1117,6 +1344,11 @@
                     <description>Set 1 to disable alarm &quot;Database status has been changed&quot;</description>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_DISABLE_INSTANCE_STATUS_ALARM}</macro>
+                    <value>0</value>
+                    <description>Set 1 to disable alarm &quot;Instance status has been changed&quot;</description>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_HOST}</macro>
                     <value>127.0.0.1</value>
                     <description>Instance address (ip address or dns)</description>
@@ -1153,6 +1385,27 @@
         </template>
     </templates>
     <value_maps>
+        <value_map>
+            <name>DBS Oracle (archiver)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>STOPPED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>STARTED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>FAILED</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
         <value_map>
             <name>DBS Oracle (database_role)</name>
             <mappings>
@@ -1234,6 +1487,35 @@
                 <mapping>
                     <value>3</value>
                     <newvalue>NONE</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (instance_status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>STARTED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>MOUNTED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>OPEN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>OPEN MIGRATE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>5</value>
+                    <newvalue>STOPPED</newvalue>
                 </mapping>
             </mappings>
         </value_map>
