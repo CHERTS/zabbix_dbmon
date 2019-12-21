@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-20T13:21:04Z</date>
+    <date>2019-12-21T07:49:12Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -32,6 +32,7 @@
                     <key>oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
                     <history>30d</history>
+                    <description>Test connection with an instance of Oracle.</description>
                     <applications>
                         <application>
                             <name>Oracle: Instance info</name>
@@ -46,7 +47,62 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{min(#3)}=1</recovery_expression>
                             <name>Instance access failed</name>
+                            <priority>DISASTER</priority>
+                            <description>Тестовое подключение к экземпляру БД Oracle не успешно. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Test connection data not received for more than {$DBS_ORACLE_PING_NODATA_WARN} (minutes).</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].nodata({$DBS_ORACLE_PING_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{nodata({$DBS_ORACLE_PING_NODATA_CRIT})}=1</expression>
+                            <name>Test connection data not received for more than {$DBS_ORACLE_PING_NODATA_CRIT} (minutes).</name>
                             <priority>HIGH</priority>
+                            <description>Данные о доступности экземпляра БД Oracle не поступали более 12 минут. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent is unreachable for more {$DBS_ZBX_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template App Zabbix Agent Active:agent.ping.nodata({$DBS_ZBX_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{nodata({$DBS_ORACLE_PING_NODATA_WARN})}=1</expression>
+                            <name>Test connection data not received for more than {$DBS_ORACLE_PING_NODATA_WARN} (minutes).</name>
+                            <priority>AVERAGE</priority>
+                            <description>Данные о доступности экземпляра БД Oracle не поступали более 6 минут. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Test connection data not received for more than {$DBS_ORACLE_PING_NODATA_CRIT} (minutes).</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].nodata({$DBS_ORACLE_PING_NODATA_CRIT})}=1</expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent is unreachable for more {$DBS_ZBX_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template App Zabbix Agent Active:agent.ping.nodata({$DBS_ZBX_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
@@ -68,6 +124,7 @@
                     <history>30d</history>
                     <trends>0</trends>
                     <value_type>CHAR</value_type>
+                    <description>Version of Oracle instance.</description>
                     <applications>
                         <application>
                             <name>Oracle: Instance info</name>
@@ -422,6 +479,10 @@
                             <key>oracle.db[{#INSTANCE},{#DBNAME},log_mode]</key>
                             <delay>0</delay>
                             <history>30d</history>
+                            <description>Archive log mode:&#13;
+- NOARCHIVELOG&#13;
+- ARCHIVELOG&#13;
+- MANUAL</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
@@ -641,6 +702,14 @@
                     <macro>{$DBS_ORACLE_MODE}</macro>
                     <value>0</value>
                     <description>0 - OCI_DEFAULT, 1 - OCI_SYSDBA, 2 - OCI_SYSOPER, 3 - OCI_SYSASM, 4 - OCI_SYSDGD</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PING_NODATA_CRIT}</macro>
+                    <value>12m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PING_NODATA_WARN}</macro>
+                    <value>6m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_PORT}</macro>
