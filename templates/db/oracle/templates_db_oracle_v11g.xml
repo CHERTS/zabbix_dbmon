@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-21T07:49:12Z</date>
+    <date>2019-12-21T08:14:14Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -276,6 +276,38 @@
                             <master_item>
                                 <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>DataGuard broker has been changed</name>
+                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <priority>INFO</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': DBID</name>
@@ -302,6 +334,38 @@
                             <master_item>
                                 <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Database ID has been changed</name>
+                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <priority>INFO</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': DBName</name>
@@ -360,6 +424,71 @@
                             <master_item>
                                 <key>oracle.db.size[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;{$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&lt;={$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                    <name>Size of database '{#DBNAME}' has increased</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>HIGH</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;{$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&lt;={$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                    <name>Size of database '{#DBNAME}' has increased</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>WARNING</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>Size of database '{#DBNAME}' has increased</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},db_size].last()}&gt;{$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},db_size].last()}&lt;={$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Flashback mode</name>
@@ -388,6 +517,38 @@
                             <master_item>
                                 <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Database flashback mode has been changed</name>
+                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <priority>INFO</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Force logging mode</name>
@@ -417,6 +578,38 @@
                             <master_item>
                                 <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Force logging mode has been changed</name>
+                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <priority>INFO</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Guard status</name>
@@ -446,6 +639,38 @@
                             <master_item>
                                 <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Database guard mode has been changed</name>
+                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <priority>INFO</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Current incarnation</name>
@@ -504,6 +729,67 @@
                             <master_item>
                                 <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}=1 and {last()}&lt;&gt;{$DBS_ORACLE_NOARCHIVELOG:&quot;{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}=2 or {$DBS_ORACLE_NOARCHIVELOG:&quot;{#DBNAME}&quot;}=1</recovery_expression>
+                                    <name>Database '{#DBNAME}' is NOARCHIVELOG mode.</name>
+                                    <priority>WARNING</priority>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Database archive log mode has been changed</name>
+                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <priority>INFO</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Open mode</name>
@@ -536,6 +822,38 @@
                             <master_item>
                                 <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1 and {$DBS_ORACLE_DISABLE_DB_STATUS_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=0</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Database status has been changed</name>
+                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <priority>DISASTER</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Platform name</name>
@@ -574,7 +892,12 @@
                             <key>oracle.db[{#INSTANCE},{#DBNAME},protection_mode]</key>
                             <delay>0</delay>
                             <history>30d</history>
-                            <description>Protection mode currently in effect for the database.</description>
+                            <description>Protection mode currently in effect for the database:&#13;
+- MAXIMUM PROTECTION - Database is running in maximized protection mode&#13;
+- MAXIMUM AVAILABILITY - Database is running in maximized availability mode&#13;
+- RESYNCHRONIZATION - Database is running in resynchronization mode&#13;
+- MAXIMUM PERFORMANCE - Database is running in maximized performance mode&#13;
+- UNPROTECTED - Database is unprotected (this normally occurs when the primary database is mounted and not open)</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
@@ -596,6 +919,38 @@
                             <master_item>
                                 <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Database protection mode has been changed</name>
+                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <priority>INFO</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Resetlogs time</name>
@@ -652,6 +1007,38 @@
                             <master_item>
                                 <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Database role has been changed</name>
+                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <priority>INFO</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Switchover number</name>
@@ -680,6 +1067,38 @@
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},switchover].diff()}=1 and {DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},incarnation].diff()}=0</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Database switchover has been performed</name>
+                            <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                            <priority>INFO</priority>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Database</tag>
+                                    <value>{#DBNAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{#INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                    </trigger_prototypes>
                 </discovery_rule>
             </discovery_rules>
             <macros>
@@ -687,6 +1106,19 @@
                     <macro>{$DBS_ORACLE_DBNAME_EXCLUDE}</macro>
                     <value>^(excludedbname1|excludedbname2)$</value>
                     <description>List of exclude database name</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_DBSIZE_CRIT}</macro>
+                    <value>300G</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_DBSIZE_WARN}</macro>
+                    <value>100G</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_DISABLE_DB_STATUS_ALARM}</macro>
+                    <value>0</value>
+                    <description>Set 1 to disable alarm &quot;Database status has been changed&quot;</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_HOST}</macro>
@@ -702,6 +1134,11 @@
                     <macro>{$DBS_ORACLE_MODE}</macro>
                     <value>0</value>
                     <description>0 - OCI_DEFAULT, 1 - OCI_SYSDBA, 2 - OCI_SYSOPER, 3 - OCI_SYSASM, 4 - OCI_SYSDGD</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_NOARCHIVELOG}</macro>
+                    <value>0</value>
+                    <description>Set 1 to disable alarm &quot;Database 'XXX' is NOARCHIVELOG mode.&quot;</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_PING_NODATA_CRIT}</macro>
