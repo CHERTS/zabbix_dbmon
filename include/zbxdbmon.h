@@ -72,7 +72,7 @@ struct zbx_db_type_datetime {
  */
 struct zbx_db_type_text {
 	size_t length;
-	char * value;
+	char *value;
 };
 
 /**
@@ -80,7 +80,7 @@ struct zbx_db_type_text {
  */
 struct zbx_db_type_blob {
 	size_t length;
-	void * value;
+	void *value;
 };
 
 /**
@@ -88,7 +88,7 @@ struct zbx_db_type_blob {
  */
 struct zbx_db_connection {
 	int type;
-	void * connection;
+	void *connection;
 };
 
 /**
@@ -96,14 +96,14 @@ struct zbx_db_connection {
  */
 struct zbx_db_data {
 	int    type;
-	void * t_data;
+	void *t_data;
 };
 
 /**
  * sql fields container
  */
 struct zbx_db_fields {
-	void * t_data;
+	void *t_data;
 };
 
 /**
@@ -112,8 +112,8 @@ struct zbx_db_fields {
 struct zbx_db_result {
 	unsigned int      nb_rows;
 	unsigned int      nb_columns;
-	struct zbx_db_fields ** fields;
-	struct zbx_db_data ** data;
+	struct zbx_db_fields **fields;
+	struct zbx_db_data **data;
 };
 
 
