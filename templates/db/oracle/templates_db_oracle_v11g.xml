@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-21T08:14:14Z</date>
+    <date>2019-12-21T08:24:48Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -240,8 +240,8 @@
                                     <params>$.CONTROLFILE_CREATED</params>
                                 </step>
                                 <step>
-                                    <type>DISCARD_UNCHANGED</type>
-                                    <params/>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -415,10 +415,6 @@
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$.DBSIZE</params>
-                                </step>
-                                <step>
-                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>7200</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -689,10 +685,6 @@
                                     <type>JSONPATH</type>
                                     <params>$.INCARNATION</params>
                                 </step>
-                                <step>
-                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>7200</params>
-                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.db.incarnation[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
@@ -878,8 +870,8 @@
                                     <params>$.PLATFORM_NAME</params>
                                 </step>
                                 <step>
-                                    <type>DISCARD_UNCHANGED</type>
-                                    <params/>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -975,8 +967,8 @@
                                     <params>$.RESETLOGS_TIME</params>
                                 </step>
                                 <step>
-                                    <type>DISCARD_UNCHANGED</type>
-                                    <params/>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1002,6 +994,10 @@
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$.DATABASE_ROLE</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>300</params>
                                 </step>
                             </preprocessing>
                             <master_item>
