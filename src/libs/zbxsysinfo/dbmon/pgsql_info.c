@@ -120,11 +120,15 @@ static int	PG_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 		else
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
 		}
 	}
 	else
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		ret = SYSINFO_RET_FAIL;
 	}
 
 	zbx_db_close_db(pgsql_conn);
@@ -174,11 +178,15 @@ int	pg_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, const char *q
 		else
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
 		}
 	}
 	else
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		ret = SYSINFO_RET_FAIL;
 	}
 
 	zbx_db_close_db(pgsql_conn);
