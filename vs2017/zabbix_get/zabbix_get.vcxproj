@@ -40,6 +40,7 @@
     <ClCompile Include="..\..\src\libs\zbxcrypto\base64.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\md5.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\tls.c" />
+    <ClCompile Include="..\..\src\libs\zbxcrypto\tls_version.c" />
     <ClCompile Include="..\..\src\libs\zbxjson\json.c" />
     <ClCompile Include="..\..\src\libs\zbxjson\jsonpath.c" />
     <ClCompile Include="..\..\src\libs\zbxjson\json_parser.c" />

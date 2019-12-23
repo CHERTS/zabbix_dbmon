@@ -123,6 +123,9 @@
     <ClCompile Include="..\..\src\libs\zbxcommon\comms.c">
       <Filter>Исходные файлы\zbxcommon</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcrypto\tls_version.c">
+      <Filter>Исходные файлы\zbxcrypto</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\resource.h">
