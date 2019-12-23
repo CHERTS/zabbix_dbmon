@@ -193,7 +193,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x86;$(ProjectDir)..\openssl\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;pcre.lib;libssl.lib;libcrypto.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>true</EnableUAC>
       <TargetMachine>NotSet</TargetMachine>
       <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
@@ -212,8 +212,9 @@ copy $(ProjectDir)\MSG00001.bin $(ProjectDir)..\..\build\win32\project\ /Y</Comm
     <PostBuildEvent>
       <Command>signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)..\bin\win32 /Y
-copy $(SolutionDir)openssl\bin\x86\libcrypto-1_1.dll $(SolutionDir)..\bin\win32 /Y
-copy $(SolutionDir)openssl\bin\x86\libssl-1_1.dll $(SolutionDir)..\bin\win32 /Y</Command>
+copy $(SolutionDir)openssl\bin\x86\libeay32.dll $(SolutionDir)..\bin\win32
+copy $(SolutionDir)openssl\bin\x86\libssl32.dll $(SolutionDir)..\bin\win32
+copy $(SolutionDir)openssl\bin\x86\ssleay32.dll $(SolutionDir)..\bin\win32</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -246,7 +247,7 @@ copy $(SolutionDir)openssl\bin\x86\libssl-1_1.dll $(SolutionDir)..\bin\win32 /Y<
       </OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x64;$(ProjectDir)..\openssl\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;pcre.lib;libssl.lib;libcrypto.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>true</EnableUAC>
       <TargetMachine>MachineX64</TargetMachine>
       <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
@@ -276,8 +277,9 @@ copy $(ProjectDir)\MSG00001.bin $(ProjectDir)..\..\build\win32\project\ /Y</Comm
     <PostBuildEvent>
       <Command>signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)..\bin\win64 /Y
-copy $(SolutionDir)openssl\bin\x64\libcrypto-1_1-x64.dll $(SolutionDir)..\bin\win64 /Y
-copy $(SolutionDir)openssl\bin\x64\libssl-1_1-x64.dll $(SolutionDir)..\bin\win64 /Y</Command>
+copy $(SolutionDir)openssl\bin\x64\libeay32.dll $(SolutionDir)..\bin\win64
+copy $(SolutionDir)openssl\bin\x64\libssl32.dll $(SolutionDir)..\bin\win64
+copy $(SolutionDir)openssl\bin\x64\ssleay32.dll $(SolutionDir)..\bin\win64</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
