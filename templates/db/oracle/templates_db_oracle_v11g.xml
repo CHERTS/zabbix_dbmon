@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-23T12:36:43Z</date>
+    <date>2019-12-23T13:19:03Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -145,6 +145,20 @@
                     </triggers>
                 </item>
                 <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' resource info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.resource[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Version</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.version[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -266,6 +280,50 @@
                     </preprocessing>
                     <master_item>
                         <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Current running processes</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of current running processes on instance.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.PROCESSES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.resource[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Current running sessions</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of current running sessions on instance.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SESSIONS</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.resource[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
