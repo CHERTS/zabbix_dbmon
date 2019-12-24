@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-23T13:19:03Z</date>
+    <date>2019-12-24T08:06:31Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -26,6 +26,20 @@
                 </application>
             </applications>
             <items>
+                <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' dbfiles info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' info</name>
                     <type>ZABBIX_ACTIVE</type>
@@ -256,6 +270,27 @@
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Current DB files</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},db_files_current]</key>
+                    <delay>0</delay>
+                    <description>Number of current db files on instance.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.DB_FILES_CURRENT</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Parallel</name>
@@ -1519,9 +1554,166 @@
                     <value>1521</value>
                     <description>Database port</description>
                 </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PROCESSES_PRC_CRIT}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PROCESSES_PRC_WARN}</macro>
+                    <value>80</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_SESSIONS_PRC_CRIT}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_SESSIONS_PRC_WARN}</macro>
+                    <value>80</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}</macro>
+                    <value>90</value>
+                </macro>
             </macros>
         </template>
     </templates>
+    <triggers>
+        <trigger>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},db_files_current].last()}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&gt;={$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},db_files_current].last()}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&lt;{$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <name>Current number of data files is near its limit</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2})</opdata>
+            <priority>WARNING</priority>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>Oracle</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&gt;={$DBS_ORACLE_PROCESSES_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <name>Too many processes</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <priority>HIGH</priority>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>Oracle</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].avg(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&gt;={$DBS_ORACLE_PROCESSES_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <name>Too many processes</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <priority>WARNING</priority>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                </dependency>
+                <dependency>
+                    <name>Too many processes</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&gt;={$DBS_ORACLE_PROCESSES_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>Oracle</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&gt;={$DBS_ORACLE_SESSIONS_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <name>Too many sessions</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <priority>HIGH</priority>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>Oracle</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].avg(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&gt;={$DBS_ORACLE_SESSIONS_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <name>Too many sessions</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <priority>WARNING</priority>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#3)}=1</recovery_expression>
+                </dependency>
+                <dependency>
+                    <name>Too many sessions</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&gt;={$DBS_ORACLE_SESSIONS_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>Oracle</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+    </triggers>
     <value_maps>
         <value_map>
             <name>DBS Oracle (archiver)</name>
