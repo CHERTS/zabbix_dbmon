@@ -31,6 +31,12 @@ static char *DB_TYPE[] = {
 	"MSSQL"
 };
 
+
+#define	ZBX_DB_RES_TYPE_NOJSON		-1
+#define	ZBX_DB_RES_TYPE_ONEROW		0
+#define	ZBX_DB_RES_TYPE_MULTIROW	1
+
+
 #define ZBX_COL_TYPE_INT    0
 #define ZBX_COL_TYPE_DOUBLE 1
 #define ZBX_COL_TYPE_TEXT   2
