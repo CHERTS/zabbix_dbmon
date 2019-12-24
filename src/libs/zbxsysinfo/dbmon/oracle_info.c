@@ -97,10 +97,10 @@ SELECT nvl(sum(bytes), 0) AS DBSIZE \
 FROM v$datafile"
 
 #define ORACLE_PDB_SIZE_INFO_DBS "\
-SELECT p.name AS PDB_NAME, \
-	nvl(sum(d.bytes), 0) AS PDB_SIZE \
+SELECT nvl(sum(d.bytes), 0) AS PDB_SIZE \
 FROM v$datafile d, v$pdbs p \
-WHERE d.con_id = p.con_id"
+WHERE d.con_id = p.con_id \
+AND p.name = '%s'"
 
 #define ORACLE_INSTANCE_PARAMETER_INFO_DBS "\
 SELECT p.name AS PARAMETER, p.value AS PVALUE \
@@ -123,6 +123,12 @@ FROM gv$instance i, gv$datafile d \
 WHERE i.instance_number = d.inst_id \
 	AND i.instance_name = '%s'"
 
+#define ORACLE_INSTANCE_RESUMABLE_COUNT_DBS "\
+SELECT count(rr.instance_id) AS RESUMABLE_COUNT \
+FROM(SELECT r.instance_id FROM dba_resumable r WHERE r.STATUS = 'SUSPENDED') rr \
+RIGHT JOIN gv$instance i ON i.inst_id = rr.instance_id \
+GROUP BY i.INSTANCE_NAME"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY								FLAG				FUNCTION					TEST PARAMETERS */
 {
@@ -132,6 +138,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.instance.parameter",	CF_HAVEPARAMS,		ORACLE_INSTANCE_PARAMETER_INFO,		NULL},
 	{"oracle.instance.resource",	CF_HAVEPARAMS,		ORACLE_INSTANCE_RESOURCE_INFO,		NULL},
 	{"oracle.instance.dbfiles",		CF_HAVEPARAMS,		ORACLE_INSTANCE_DBFILES_INFO,		NULL},
+	{"oracle.instance.resumable",	CF_HAVEPARAMS,		ORACLE_INSTANCE_RESUMABLE_INFO,		NULL},
 	{"oracle.db.discovery",			CF_HAVEPARAMS,		ORACLE_DB_DISCOVERY,			NULL},
 	{"oracle.db.info",				CF_HAVEPARAMS,		ORACLE_DB_INFO,					NULL},
 	{"oracle.db.incarnation",		CF_HAVEPARAMS,		ORACLE_DB_INCARNATION,			NULL},
@@ -540,6 +547,79 @@ static int	ORACLE_INSTANCE_DBFILES_INFO(AGENT_REQUEST *request, AGENT_RESULT *re
 	if (oracle_conn != NULL)
 	{
 		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_INSTANCE_DB_FILES_CURRENT_DBS, oracle_instance))
+		{
+			ret = make_onerow_json_result(request, result, ora_result);
+			zbx_db_clean_result(&ora_result);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
+		}
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		ret = SYSINFO_RET_FAIL;
+	}
+
+	zbx_db_close_db(oracle_conn);
+	zbx_db_clean_connection(oracle_conn);
+
+	return ret;
+}
+
+static int	ORACLE_INSTANCE_RESUMABLE_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int							ret = SYSINFO_RET_FAIL, ping = 0;
+	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance;
+	unsigned short				oracle_port = 0;
+	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	struct zbx_db_connection	*oracle_conn;
+	struct zbx_db_result		ora_result;
+
+	if (NULL == CONFIG_ORACLE_USER)
+		CONFIG_ORACLE_USER = zbx_strdup(CONFIG_ORACLE_USER, ORACLE_DEFAULT_USER);
+	if (NULL == CONFIG_ORACLE_PASSWORD)
+		CONFIG_ORACLE_PASSWORD = zbx_strdup(CONFIG_ORACLE_PASSWORD, ORACLE_DEFAULT_PASSWORD);
+	if (NULL == CONFIG_ORACLE_INSTANCE)
+		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
+
+	oracle_host = get_rparam(request, 0);
+	oracle_str_port = get_rparam(request, 1);
+	oracle_instance = get_rparam(request, 2);
+	oracle_str_mode = get_rparam(request, 3);
+
+	if (NULL == oracle_instance || '\0' == *oracle_instance)
+	{
+		oracle_instance = CONFIG_ORACLE_INSTANCE;
+	}
+
+	if (NULL != oracle_str_port && '\0' != *oracle_str_port)
+	{
+		if (SUCCEED != is_ushort(oracle_str_port, &oracle_port))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (port)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
+
+	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
+	{
+		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
+
+	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
+
+	if (oracle_conn != NULL)
+	{
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_INSTANCE_RESUMABLE_COUNT_DBS, oracle_instance))
 		{
 			ret = make_onerow_json_result(request, result, ora_result);
 			zbx_db_clean_result(&ora_result);
