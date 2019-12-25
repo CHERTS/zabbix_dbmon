@@ -354,7 +354,7 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp((const char*)"oracle.instance.fra", request->key))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FRA_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW);
-	}c
+	}
 	else
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key"));
