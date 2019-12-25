@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-24T13:35:15Z</date>
+    <date>2019-12-25T06:44:15Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -27,10 +27,38 @@
             </applications>
             <items>
                 <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' bad process info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>2m</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' dbfiles info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>1h</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' fra info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>2m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -275,6 +303,28 @@
                     </triggers>
                 </item>
                 <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Count bad processes</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},count_bad_processes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of zombie processes.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.COUNT_BAD_PROCESSES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Current DB files</name>
                     <type>DEPENDENT</type>
                     <key>oracle.instance[{$DBS_ORACLE_INSTANCE},db_files_current]</key>
@@ -294,6 +344,142 @@
                     </preprocessing>
                     <master_item>
                         <key>oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': FRA files</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},fra_files]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of files in the flash recovery area.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.FRA_FILE_NUM</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': FRA free, %</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},fra_free_pct]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.FRA_FREE_PCT</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': FRA limit</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Maximum amount of disk space (in bytes) that the database can use for the flash recovery area. This is the value specified in the DB_RECOVERY_FILE_DEST_SIZE initialization parameter.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.FRA_SPACE_LIMIT</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': FRA location name</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},fra_name]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Location name. This is the value specified in the DB_RECOVERY_FILE_DEST initialization parameter.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.FRA_LOCATION_NAME</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': FRA reclaimable</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},fra_reclaimable]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Total amount of disk space (in bytes) that can be created by deleting obsolete, redundant, and other low priority files from the flash recovery area.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.FRA_SPACE_RECLAIMABLE</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': FRA used</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Amount of disk space (in bytes) used by flash recovery area files created in current and all previous flash recovery areas. Changing flash recovery areas does not reset SPACE_USED to 0.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.FRA_SPACE_USED</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
