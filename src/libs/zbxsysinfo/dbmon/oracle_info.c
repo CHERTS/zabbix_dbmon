@@ -88,6 +88,23 @@ FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
 	AND d.name = '%s'"
 
+#define ORACLE_CHECK_DB_OPEN_MODE_DBS "\
+SELECT decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
+FROM gv$instance i, gv$database d \
+WHERE i.inst_id = d.inst_id \
+	AND d.database_role = '%s' \
+	AND i.status in('MOUNTED', 'OPEN') \
+	AND i.instance_name = '%s' \
+	AND d.name = '%s'"
+
+#define ORACLE_CHECK_INST_OPEN_MODE_DBS "\
+SELECT decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
+FROM gv$instance i, gv$database d \
+WHERE i.inst_id = d.inst_id \
+	AND d.database_role = '%s' \
+	AND i.status in('MOUNTED', 'OPEN') \
+	AND i.instance_name = '%s'"
+
 #define ORACLE_DB_INCARNATION_INFO_DBS "\
 SELECT nvl(incarnation#, 0) AS INCARNATION \
 FROM v$database_incarnation \
@@ -101,14 +118,14 @@ FROM v$datafile"
 SELECT nvl(sum(d.bytes), 0) AS PDB_SIZE \
 FROM v$datafile d, v$pdbs p \
 WHERE d.con_id = p.con_id \
-AND p.name = '%s'"
+	AND p.name = '%s'"
 
 #define ORACLE_INSTANCE_PARAMETER_INFO_DBS "\
 SELECT p.name AS PARAMETER, p.value AS PVALUE \
 FROM gv$instance i, gv$parameter p \
 WHERE i.instance_number = p.inst_id \
-AND i.instance_name = '%s' \
-AND p.name in('db_files', 'processes', 'sessions')"
+	AND i.instance_name = '%s' \
+	AND p.name in('db_files', 'processes', 'sessions')"
 
 #define ORACLE_INSTANCE_RESOURCE_INFO_DBS "\
 SELECT r.resource_name AS RNAME, \
@@ -249,12 +266,12 @@ static int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return SYSINFO_RET_OK;
 }
 
-int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, unsigned int result_type)
+int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, unsigned int result_type, const char *oracle_need_db_role, unsigned int oracle_need_open_mode)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance;
+	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance, *oracle_dbname;
 	unsigned short				oracle_port = 0;
-	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_db_open_mode = 0;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
 
@@ -269,6 +286,7 @@ int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query
 	oracle_str_port = get_rparam(request, 1);
 	oracle_instance = get_rparam(request, 2);
 	oracle_str_mode = get_rparam(request, 3);
+	oracle_dbname = get_rparam(request, 4);
 
 	if (NULL == oracle_instance || '\0' == *oracle_instance)
 	{
@@ -295,29 +313,119 @@ int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query
 
 	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
 
-	if (oracle_conn != NULL)
+	if (NULL != oracle_conn)
 	{
-		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance))
+		if (NULL == oracle_dbname || '\0' == *oracle_dbname)
 		{
-			switch (result_type)
+			if (0 != strcmp((const char*)"ANY", oracle_need_db_role))
 			{
-				case ZBX_DB_RES_TYPE_ONEROW:
-					ret = make_onerow_json_result(request, result, ora_result);
-					break;
-				case ZBX_DB_RES_TYPE_MULTIROW:
-					ret = make_multirow_json_result(request, result, ora_result);
-					break;
-				default:
-					ret = make_result(request, result, ora_result);
-					break;
+				if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_CHECK_INST_OPEN_MODE_DBS, oracle_need_db_role, oracle_instance))
+				{
+					oracle_db_open_mode = get_int_one_result(request, result, 0, 0, ora_result);
+
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Instance: %s, Need_Role: %s, Need_Open_Mode: %u, Current_Open_Mode: %u", __func__, request->key, oracle_instance, oracle_need_db_role, oracle_need_open_mode, oracle_db_open_mode);
+
+					if (oracle_db_open_mode > oracle_need_open_mode)
+					{
+						goto exec_inst_query;
+					}
+					else
+					{
+						SET_MSG_RESULT(result, zbx_strdup(NULL, "Instance closed for reading information (may be database not primary or not open with read-only or read-write)"));
+						goto out;
+					}
+
+					zbx_db_clean_result(&ora_result);
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+					ret = SYSINFO_RET_FAIL;
+				}
 			}
-			zbx_db_clean_result(&ora_result);
+			else
+			{
+exec_inst_query:
+				if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance))
+				{
+					switch (result_type)
+					{
+					case ZBX_DB_RES_TYPE_ONEROW:
+						ret = make_onerow_json_result(request, result, ora_result);
+						break;
+					case ZBX_DB_RES_TYPE_MULTIROW:
+						ret = make_multirow_json_result(request, result, ora_result);
+						break;
+					default:
+						ret = make_result(request, result, ora_result);
+						break;
+					}
+					zbx_db_clean_result(&ora_result);
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+					ret = SYSINFO_RET_FAIL;
+				}
+			}
 		}
 		else
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
-			ret = SYSINFO_RET_FAIL;
+			if (0 != strcmp((const char*)"ANY", oracle_need_db_role))
+			{
+				if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_CHECK_DB_OPEN_MODE_DBS, oracle_need_db_role, oracle_instance, oracle_dbname))
+				{
+					oracle_db_open_mode = get_int_one_result(request, result, 0, 0, ora_result);
+
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Instance: %s, Database: %s, Need_Role: %s, Need_Open_Mode: %u, Current_Open_Mode: %u", __func__, request->key, oracle_instance, oracle_dbname, oracle_need_db_role, oracle_need_open_mode, oracle_db_open_mode);
+
+					if (oracle_db_open_mode > oracle_need_open_mode)
+					{
+						goto exec_db_query;
+					}
+					else
+					{
+						SET_MSG_RESULT(result, zbx_strdup(NULL, "Database closed for reading information (may be not primary or not open with read-only or read-write)"));
+						goto out;
+					}
+
+					zbx_db_clean_result(&ora_result);
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+					ret = SYSINFO_RET_FAIL;
+				}
+			}
+			else
+			{
+exec_db_query:
+				if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance, oracle_dbname))
+				{
+					switch (result_type)
+					{
+					case ZBX_DB_RES_TYPE_ONEROW:
+						ret = make_onerow_json_result(request, result, ora_result);
+						break;
+					case ZBX_DB_RES_TYPE_MULTIROW:
+						ret = make_multirow_json_result(request, result, ora_result);
+						break;
+					default:
+						ret = make_result(request, result, ora_result);
+						break;
+					}
+					zbx_db_clean_result(&ora_result);
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+					ret = SYSINFO_RET_FAIL;
+				}
+			}
 		}
 	}
 	else
@@ -327,6 +435,7 @@ int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query
 		ret = SYSINFO_RET_FAIL;
 	}
 
+out:
 	zbx_db_close_db(oracle_conn);
 	zbx_db_clean_connection(oracle_conn);
 
@@ -341,39 +450,39 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 
 	if (0 == strcmp((const char*)"oracle.instance.version", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_VERSION_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = oracle_make_result(request, result, ORACLE_VERSION_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"ANY", 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.info", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, (const char*)"ANY", 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.parameter", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETER_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETER_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, (const char*)"ANY", 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.resource", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESOURCE_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESOURCE_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, (const char*)"ANY", 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.dbfiles", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_DB_FILES_CURRENT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_DB_FILES_CURRENT_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"ANY", 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.resumable", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESUMABLE_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESUMABLE_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"PRIMARY", 1);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.bad_processes", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_COUNT_BAD_PROCESSES_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_COUNT_BAD_PROCESSES_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"ANY", 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.fra", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FRA_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FRA_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, (const char*)"ANY", 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.redolog_switch_rate", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SWITCH_RATE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SWITCH_RATE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"PRIMARY", 1);
 	}
 	else
 	{
