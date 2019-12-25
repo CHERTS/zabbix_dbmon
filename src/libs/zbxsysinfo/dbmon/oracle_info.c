@@ -148,6 +148,12 @@ SELECT nvl(count(pp.addr), 0) AS COUNT_BAD_PROCESSES FROM \
 RIGHT JOIN gv$instance i ON i.INST_ID = pp.INST_ID  \
 GROUP BY i.INSTANCE_NAME"
 
+#define ORACLE_INSTANCE_FRA_INFO_DBS "\
+SELECT name AS FRA_LOCATION_NAME, number_of_files AS FRA_FILE_NUM, space_limit AS FRA_SPACE_LIMIT, \
+	space_used AS FRA_SPACE_USED, space_reclaimable AS FRA_SPACE_RECLAIMABLE, \
+	decode(space_limit, 0, 100, 100-(space_used-space_reclaimable)/space_limit*100) AS FRA_FREE_PCT \
+FROM v$recovery_file_dest"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY										FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -158,7 +164,8 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.instance.resource",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.dbfiles",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.resumable",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.cnt_bad_processes",	CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.bad_processes",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.fra",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.db.discovery",					CF_HAVEPARAMS,		ORACLE_DB_DISCOVERY,			NULL},
 	{"oracle.db.info",						CF_HAVEPARAMS,		ORACLE_DB_INFO,					NULL},
 	{"oracle.db.incarnation",				CF_HAVEPARAMS,		ORACLE_DB_INCARNATION,			NULL},
@@ -340,10 +347,14 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESUMABLE_COUNT_DBS, ZBX_DB_RES_TYPE_ONEROW);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.cnt_bad_processes", request->key))
+	else if (0 == strcmp((const char*)"oracle.instance.bad_processes", request->key))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_COUNT_BAD_PROCESSES_DBS, ZBX_DB_RES_TYPE_ONEROW);
 	}
+	else if (0 == strcmp((const char*)"oracle.instance.fra", request->key))
+	{
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FRA_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW);
+	}c
 	else
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key"));
