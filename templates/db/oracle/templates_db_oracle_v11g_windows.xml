@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-25T07:11:41Z</date>
+    <date>2019-12-25T13:39:05Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -27,30 +27,86 @@
             </applications>
             <items>
                 <item>
-                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' bad process info</name>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Count bad processes</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
-                    <history>1d</history>
-                    <trends>0</trends>
-                    <value_type>TEXT</value_type>
+                    <history>30d</history>
+                    <description>Number of zombie processes.</description>
                     <applications>
                         <application>
-                            <name>stubs</name>
+                            <name>Oracle: Instance info</name>
                         </application>
                     </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <name>Number of zombie processes is too high</name>
+                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <priority>HIGH</priority>
+                            <description>Количество зомби процессов достигло критического уровня. Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{avg(7m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <name>Number of zombie processes is too high</name>
+                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <priority>WARNING</priority>
+                            <description>Количество зомби процессов достигло угрожающего уровня. Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Number of zombie processes is too high</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
-                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' dbfiles info</name>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Current DB files</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>1h</delay>
-                    <history>1d</history>
-                    <trends>0</trends>
-                    <value_type>TEXT</value_type>
+                    <history>30d</history>
                     <applications>
                         <application>
-                            <name>stubs</name>
+                            <name>Oracle: Instance info</name>
                         </application>
                     </applications>
                 </item>
@@ -176,6 +232,19 @@
                     </triggers>
                 </item>
                 <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Redo log switch rate</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <description>Redo log switch rate per 1 hour.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' resource info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.resource[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -190,18 +259,44 @@
                     </applications>
                 </item>
                 <item>
-                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' resumable info</name>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Resumable sessions</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.resumable[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
-                    <history>1d</history>
-                    <trends>0</trends>
-                    <value_type>TEXT</value_type>
+                    <history>30d</history>
+                    <description>Number of resumable sessions.</description>
                     <applications>
                         <application>
-                            <name>stubs</name>
+                            <name>Oracle: Instance info</name>
                         </application>
                     </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;={$DBS_ORACLE_RESUMABLE_COUNT_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{last()}&lt;{$DBS_ORACLE_RESUMABLE_COUNT_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <name>Resumable sessions suspended due to lack of space in tablespace</name>
+                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_RESUMABLE_COUNT_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <priority>DISASTER</priority>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Version</name>
@@ -301,109 +396,6 @@
                             </tags>
                         </trigger>
                     </triggers>
-                </item>
-                <item>
-                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Count bad processes</name>
-                    <type>DEPENDENT</type>
-                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},count_bad_processes]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <description>Number of zombie processes.</description>
-                    <applications>
-                        <application>
-                            <name>Oracle: Instance info</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.COUNT_BAD_PROCESSES</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    </master_item>
-                    <triggers>
-                        <trigger>
-                            <expression>{avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
-                            <name>Number of zombie processes is too high</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
-                            <priority>HIGH</priority>
-                            <description>Количество зомби процессов достигло критического уровня. Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                            </dependencies>
-                            <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
-                                    <tag>Instance</tag>
-                                    <value>{$DBS_ORACLE_INSTANCE}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
-                        <trigger>
-                            <expression>{avg(7m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
-                            <name>Number of zombie processes is too high</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
-                            <priority>WARNING</priority>
-                            <description>Количество зомби процессов достигло угрожающего уровня. Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                                <dependency>
-                                    <name>Number of zombie processes is too high</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},count_bad_processes].avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},count_bad_processes].max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
-                                </dependency>
-                            </dependencies>
-                            <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
-                                    <tag>Instance</tag>
-                                    <value>{$DBS_ORACLE_INSTANCE}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
-                    </triggers>
-                </item>
-                <item>
-                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Current DB files</name>
-                    <type>DEPENDENT</type>
-                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},db_files_current]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <description>Number of current db files on instance.</description>
-                    <applications>
-                        <application>
-                            <name>Oracle: Instance info</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.DB_FILES_CURRENT</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    </master_item>
                 </item>
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': FRA files</name>
@@ -555,6 +547,7 @@
                     <key>oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <value_type>FLOAT</value_type>
                     <applications>
                         <application>
                             <name>Oracle: Instance info</name>
@@ -616,55 +609,6 @@
                     <master_item>
                         <key>oracle.instance.resource[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
-                </item>
-                <item>
-                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Resumable sessions</name>
-                    <type>DEPENDENT</type>
-                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},resumable_count]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <description>Number of resumable sessions.</description>
-                    <applications>
-                        <application>
-                            <name>Oracle: Instance info</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.RESUMABLE_COUNT</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>oracle.instance.resumable[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    </master_item>
-                    <triggers>
-                        <trigger>
-                            <expression>{last()}&gt;={$DBS_ORACLE_RESUMABLE_COUNT_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{last()}&lt;{$DBS_ORACLE_RESUMABLE_COUNT_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
-                            <name>Resumable sessions suspended due to lack of space in tablespace</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_RESUMABLE_COUNT_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
-                            <priority>DISASTER</priority>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                            </dependencies>
-                            <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
-                                    <tag>Instance</tag>
-                                    <value>{$DBS_ORACLE_INSTANCE}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
-                    </triggers>
                 </item>
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Current running sessions</name>
@@ -1906,6 +1850,14 @@
                     <value>80</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}</macro>
+                    <value>12</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_REDOLOG_SW_RATE_WARN}</macro>
+                    <value>8</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_RESUMABLE_COUNT_CRIT}</macro>
                     <value>1</value>
                     <description>Max number of resumable sessions</description>
@@ -1927,9 +1879,7 @@
     </templates>
     <triggers>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},db_files_current].last()}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&gt;={$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},db_files_current].last()}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&lt;{$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&gt;={$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
             <name>Current number of data files is near its limit</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2})</opdata>
             <priority>WARNING</priority>
@@ -1991,6 +1941,58 @@
                     <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0</expression>
                     <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
                 </dependency>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>Oracle</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
+            <name>Redolog switch rate per hour is too high</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+            <priority>HIGH</priority>
+            <description>Генерация redo log черезвычайно высокая, возможно в базу интенсивно пишутся данные.</description>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>Oracle</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
+            <name>Redolog switch rate per hour is too high</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+            <priority>WARNING</priority>
+            <description>Генерация redo log слишком высокая, возможно в базу интенсивно пишутся данные.</description>
+            <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
                     <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>

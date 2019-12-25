@@ -155,6 +155,20 @@ SELECT name AS FRA_LOCATION_NAME, number_of_files AS FRA_FILE_NUM, space_limit A
 	decode(space_limit, 0, 100, 100-(space_used-space_reclaimable)/space_limit*100) AS FRA_FREE_PCT \
 FROM v$recovery_file_dest"
 
+#define ORACLE_INSTANCE_REDOLOG_SWITCH_RATE_INFO_DBS "\
+WITH a AS(SELECT cnt, thread# , row_number() over(partition by thread# order by cnt desc) rn \
+	FROM(SELECT count(*) cnt, a.thread#, a.dest_id \
+		FROM v$archived_log a, v$archive_dest_status d \
+		WHERE completion_time > sysdate-1/24 \
+		AND a.dest_id = d.dest_id AND d.status = 'VALID' AND type = 'LOCAL' \
+		GROUP BY a.thread#, a.dest_id \
+	) \
+) \
+SELECT nvl(sum(cnt), 0) AS REDOLOG_SWITCH_RATE \
+FROM( \
+	SELECT t.thread# as thread, nvl((SELECT cnt FROM a WHERE a.thread# = t.thread# AND rn = 1), 0) cnt FROM v$thread t WHERE t.status = 'OPEN' \
+)"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY										FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -167,6 +181,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.instance.resumable",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.bad_processes",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.fra",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.redolog_switch_rate",	CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.db.discovery",					CF_HAVEPARAMS,		ORACLE_DB_DISCOVERY,			NULL},
 	{"oracle.db.info",						CF_HAVEPARAMS,		ORACLE_DB_INFO,					NULL},
 	{"oracle.db.incarnation",				CF_HAVEPARAMS,		ORACLE_DB_INCARNATION,			NULL},
@@ -342,19 +357,23 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.dbfiles", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_DB_FILES_CURRENT_DBS, ZBX_DB_RES_TYPE_ONEROW);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_DB_FILES_CURRENT_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.resumable", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESUMABLE_COUNT_DBS, ZBX_DB_RES_TYPE_ONEROW);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESUMABLE_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.bad_processes", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_COUNT_BAD_PROCESSES_DBS, ZBX_DB_RES_TYPE_ONEROW);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_COUNT_BAD_PROCESSES_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.fra", request->key))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FRA_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW);
+	}
+	else if (0 == strcmp((const char*)"oracle.instance.redolog_switch_rate", request->key))
+	{
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SWITCH_RATE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else
 	{
