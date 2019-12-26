@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-26T09:00:46Z</date>
+    <date>2019-12-26T13:12:12Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -480,6 +480,20 @@
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Size of redo log in last 1 hour</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.redolog_size_per_hour[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Size of redo log in last 1 hour</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Redo log switch rate</name>
@@ -2016,6 +2030,12 @@
                             </tags>
                         </trigger_prototype>
                     </trigger_prototypes>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Oracle standby discovery</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.standby.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>5m</delay>
                 </discovery_rule>
             </discovery_rules>
             <macros>

@@ -186,6 +186,14 @@ FROM( \
 	SELECT t.thread# as thread, nvl((SELECT cnt FROM a WHERE a.thread# = t.thread# AND rn = 1), 0) cnt FROM v$thread t WHERE t.status = 'OPEN' \
 )"
 
+#define ORACLE_INSTANCE_REDOLOG_SIZE_INFO_DBS "\
+SELECT NVL(ROUND(SUM(blocks * block_size)), 0) AS REDOLOG_SIZE_IN_BYTE \
+FROM v$archived_log a, v$archive_dest_status d \
+WHERE first_time >= sysdate-1/24 \
+	AND a.dest_id = d.dest_id \
+	AND d.status = 'VALID' \
+	AND type = 'LOCAL'"
+
 #define ORACLE_INSTANCE_ARCHIVE_LOG_BACKUP_INFO_DBS "\
 SELECT nvl((SELECT to_char(round((sysdate-(max(c.start_time)))*24*60*60, 0)) \
 FROM v$backup_set c, v$backup_piece p \
@@ -291,28 +299,47 @@ SELECT nvl((SELECT to_char(round((sysdate-(max(c.start_time)))*24*60*60, 0)) \
 	AND c.set_count = p.set_count), \
 to_char((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_CF_BACKUP FROM dual"
 
+#define ORACLE_V11_DISCOVER_STANDBY_DBS "\
+SELECT i.instance_name AS INSTANCE, \
+    i.host_name AS HOSTNAME, \
+    d.name AS DBNAME \
+FROM gv$instance i, gv$database d \
+WHERE i.inst_id = d.inst_id \
+	AND d.database_role <> 'PRIMARY'"
+
+#define ORACLE_V12_DISCOVER_STANDBY_DBS "\
+SELECT i.instance_name AS INSTANCE, \
+    i.host_name AS HOSTNAME, \
+    d.name AS DBNAME \
+FROM gv$instance i, gv$database d \
+WHERE i.inst_id = d.inst_id \
+	AND d.database_role <> 'PRIMARY' \
+	AND d.cdb = 'NO'"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
-/*	KEY										FLAG				FUNCTION						TEST PARAMETERS */
+/*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
-	{"oracle.instance.ping",				CF_HAVEPARAMS,		ORACLE_INSTANCE_PING,			NULL},
-	{"oracle.instance.version",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.info",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.parameter",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.resource",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.dbfiles",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.resumable",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.bad_processes",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.fra",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.redolog_switch_rate",	CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.archivelog",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.full",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.incr",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.incr_file_num",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.cf",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.db.discovery",					CF_HAVEPARAMS,		ORACLE_DB_DISCOVERY,			NULL},
-	{"oracle.db.info",						CF_HAVEPARAMS,		ORACLE_DB_INFO,					NULL},
-	{"oracle.db.incarnation",				CF_HAVEPARAMS,		ORACLE_DB_INCARNATION,			NULL},
-	{"oracle.db.size",						CF_HAVEPARAMS,		ORACLE_DB_SIZE,					NULL},
+	{"oracle.instance.ping",					CF_HAVEPARAMS,		ORACLE_INSTANCE_PING,			NULL},
+	{"oracle.instance.version",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.parameter",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.resource",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.dbfiles",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.resumable",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.bad_processes",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.fra",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.redolog_switch_rate",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.redolog_size_per_hour",	CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.archivelog",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.full",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.incr",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.incr_file_num",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.cf",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.db.discovery",						CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
+	{"oracle.db.info",							CF_HAVEPARAMS,		ORACLE_DB_INFO,					NULL},
+	{"oracle.db.incarnation",					CF_HAVEPARAMS,		ORACLE_DB_INCARNATION,			NULL},
+	{"oracle.db.size",							CF_HAVEPARAMS,		ORACLE_DB_SIZE,					NULL},
+	{"oracle.standby.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,		NULL},
 	{NULL}
 };
 
@@ -594,6 +621,10 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SWITCH_RATE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"PRIMARY", 1);
 	}
+	else if (0 == strcmp((const char*)"oracle.instance.redolog_size_per_hour", request->key))
+	{
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SIZE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"PRIMARY", 1);
+	}
 	else if (0 == strcmp((const char*)"oracle.backup.archivelog", request->key))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_ARCHIVE_LOG_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"ANY", 0);
@@ -686,14 +717,49 @@ int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 				if (-1 == zbx_db_compare_version(ora_version, "12.0.0.0.0"))
 				{
-					query = ORACLE_V11_DISCOVER_DB_DBS;
 					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
+
+					if (0 == strcmp((const char*)"oracle.standby.discovery", request->key))
+					{
+						query = ORACLE_V11_DISCOVER_STANDBY_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else if (0 == strcmp((const char*)"oracle.db.discovery", request->key))
+					{
+						query = ORACLE_V11_DISCOVER_DB_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else
+					{
+						SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown discovery request key"));
+						ret = SYSINFO_RET_FAIL;
+					}
 				}
 				else
 				{
-					query = ORACLE_V12_DISCOVER_DB_DBS;
 					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version >= 12, use query '%s'", __func__, request->key, query);
+
+					if (0 == strcmp((const char*)"oracle.standby.discovery", request->key))
+					{
+						query = ORACLE_V12_DISCOVER_STANDBY_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else if (0 == strcmp((const char*)"oracle.db.discovery", request->key))
+					{
+						query = ORACLE_V12_DISCOVER_DB_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else
+					{
+						SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown discovery request key"));
+						ret = SYSINFO_RET_FAIL;
+					}
 				}
+			}
+			else
+			{
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get Oracle version in discovery procedure"));
+				ret = SYSINFO_RET_FAIL;
 			}
 
 			zbx_db_clean_result(&ora_result);
@@ -701,20 +767,25 @@ int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
 		else
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
 		}
 
 		zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle instance '%s'", __func__, request->key, oracle_instance);
 
-		if (zbx_db_query_select(oracle_conn, &ora_result, query) == ZBX_DB_OK)
+		if (ZBX_DB_OK == ret)
 		{
-			ret = make_discovery_result(request, result, ora_result);
-			zbx_db_clean_result(&ora_result);
-		}
-		else
-		{
-			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
-			ret = SYSINFO_RET_FAIL;
+			if (zbx_db_query_select(oracle_conn, &ora_result, query) == ZBX_DB_OK)
+			{
+				ret = make_discovery_result(request, result, ora_result);
+				zbx_db_clean_result(&ora_result);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing discovery query", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing discovery query"));
+				ret = SYSINFO_RET_FAIL;
+			}
 		}
 	}
 	else
@@ -732,7 +803,7 @@ int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return ret;
 }
 
-static int	ORACLE_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
+static int	ORACLE_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int ret = SYSINFO_RET_FAIL;
 
