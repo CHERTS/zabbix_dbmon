@@ -977,31 +977,24 @@ unsigned int zbx_db_get_oracle_mode(int ora_mode)
 {
 	int rc = ZBX_DB_OCI_DEFAULT;
 
-	if (NULL == ora_mode)
-	{ 
-		rc = ZBX_DB_OCI_DEFAULT;
-	}
-	else
+	switch (ora_mode)
 	{
-		switch (ora_mode)
-		{
-			case 0:
-			default:
-				rc = ZBX_DB_OCI_DEFAULT;
-				break;
-			case 1:
-				rc = ZBX_DB_OCI_SYSDBA;
-				break;
-			case 2:
-				rc = ZBX_DB_OCI_SYSOPER;
-				break;
-			case 3:
-				rc = ZBX_DB_OCI_SYSASM;
-				break;
-			case 4:
-				rc = ZBX_DB_OCI_SYSDGD;
-				break;
-		}
+		case 0:
+		default:
+			rc = ZBX_DB_OCI_DEFAULT;
+			break;
+		case 1:
+			rc = ZBX_DB_OCI_SYSDBA;
+			break;
+		case 2:
+			rc = ZBX_DB_OCI_SYSOPER;
+			break;
+		case 3:
+			rc = ZBX_DB_OCI_SYSASM;
+			break;
+		case 4:
+			rc = ZBX_DB_OCI_SYSDGD;
+			break;
 	}
 
 	return rc;

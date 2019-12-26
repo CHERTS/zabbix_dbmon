@@ -31,11 +31,13 @@ static char *DB_TYPE[] = {
 	"MSSQL"
 };
 
-
-#define	ZBX_DB_RES_TYPE_NOJSON		-1
-#define	ZBX_DB_RES_TYPE_ONEROW		0
-#define	ZBX_DB_RES_TYPE_MULTIROW	1
-
+typedef enum
+{
+	ZBX_DB_RES_TYPE_NOJSON = 0,
+	ZBX_DB_RES_TYPE_ONEROW,
+	ZBX_DB_RES_TYPE_MULTIROW
+}
+zbx_db_result_type;
 
 #define ZBX_COL_TYPE_INT    0
 #define ZBX_COL_TYPE_DOUBLE 1

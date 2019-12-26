@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-26T13:12:12Z</date>
+    <date>2019-12-26T16:11:04Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -2036,6 +2036,66 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.standby.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>5m</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle][{#INSTANCE}] Get standby lag</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>oracle.standby.lag[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            <delay>3m</delay>
+                            <history>1d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>stubs</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Standby DB '{#DBNAME}': Apply lag</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.standby[{#INSTANCE},{#DBNAME},apply_lag]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>s</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Standby</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.APPLY_LAG</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.standby.lag[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Standby DB '{#DBNAME}': Transport lag</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.standby[{#INSTANCE},{#DBNAME},transport_lag]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>s</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Standby</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.TRANSPORT_LAG</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.standby.lag[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
                 </discovery_rule>
             </discovery_rules>
             <macros>
