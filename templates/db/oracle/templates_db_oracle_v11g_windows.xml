@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-25T13:39:05Z</date>
+    <date>2019-12-26T09:00:46Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -19,6 +19,9 @@
             </groups>
             <applications>
                 <application>
+                    <name>Oracle: Instance backup</name>
+                </application>
+                <application>
                     <name>Oracle: Instance info</name>
                 </application>
                 <application>
@@ -26,6 +29,252 @@
                 </application>
             </applications>
             <items>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last archive log backup</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.backup.archivelog[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>30m</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Last archive log backup</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance backup</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <name>No archived log backups</name>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <priority>HIGH</priority>
+                            <description>Очень давно не выполнялся бэкап архивных логов экземпляра. Актуально только если экземпляр в режиме ARCHIVELOG. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <name>No archived log backups</name>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <priority>WARNING</priority>
+                            <description>Давно не выполнялся бэкап архивных логов экземпляра. Актуально только если экземпляр в режиме ARCHIVELOG. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>No archived log backups</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.archivelog[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.archivelog[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last control file backup</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.backup.cf[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>2h</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Last control file backup</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance backup</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_ORACLE_CF_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_CF_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <name>No control file backups</name>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <priority>HIGH</priority>
+                            <description>Очень давно не выполнялся бэкап контрол файла (control file) экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_ORACLE_CF_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_CF_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <name>No control file backups</name>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <priority>WARNING</priority>
+                            <description>Давно не выполнялся бэкап контрол файла (control file) экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>No control file backups</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.cf[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_CF_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.cf[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_CF_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last full database backup</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.backup.full[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Last full database backup</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance backup</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_ORACLE_FULL_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_FULL_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <name>No full database backups</name>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <priority>HIGH</priority>
+                            <description>Очень давно не выполнялся полный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_ORACLE_FULL_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_FULL_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <name>No full database backups</name>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <priority>WARNING</priority>
+                            <description>Давно не выполнялся полный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>No full database backups</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.full[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_FULL_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.full[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_FULL_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last incremental database backup</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>30m</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Last incremental database backup</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance backup</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Total incremental database backup</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>30m</delay>
+                    <history>30d</history>
+                    <description>Total files number of incremental backup</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance backup</name>
+                        </application>
+                    </applications>
+                </item>
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Count bad processes</name>
                     <type>ZABBIX_ACTIVE</type>
@@ -104,6 +353,7 @@
                     <key>oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>1h</delay>
                     <history>30d</history>
+                    <description>Number of current data files on instance.</description>
                     <applications>
                         <application>
                             <name>Oracle: Instance info</name>
@@ -1770,6 +2020,22 @@
             </discovery_rules>
             <macros>
                 <macro>
+                    <macro>{$DBS_ORACLE_ALOG_BACKUP_CRIT}</macro>
+                    <value>16h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_ALOG_BACKUP_WARN}</macro>
+                    <value>12h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_CF_BACKUP_CRIT}</macro>
+                    <value>4d</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_CF_BACKUP_WARN}</macro>
+                    <value>60h</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</macro>
                     <value>10</value>
                 </macro>
@@ -1796,6 +2062,11 @@
                     <description>Set 1 to disable alarm &quot;Database status has been changed&quot;</description>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_DISABLE_INSTANCE_RESTART_ALARM}</macro>
+                    <value>0</value>
+                    <description>Set 1 to disable alarm &quot;Instance 'orcl' has just been restarted&quot;</description>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_DISABLE_INSTANCE_STATUS_ALARM}</macro>
                     <value>0</value>
                     <description>Set 1 to disable alarm &quot;Instance status has been changed&quot;</description>
@@ -1809,9 +2080,25 @@
                     <value>70</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_FULL_BACKUP_CRIT}</macro>
+                    <value>14d</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_FULL_BACKUP_WARN}</macro>
+                    <value>180h</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_HOST}</macro>
                     <value>127.0.0.1</value>
                     <description>Instance address (ip address or dns)</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_INCR_BACKUP_CRIT}</macro>
+                    <value>4d</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_INCR_BACKUP_WARN}</macro>
+                    <value>60h</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_INSTANCE}</macro>
@@ -1945,6 +2232,63 @@
                     <name>Instance access failed</name>
                     <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
                     <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>Oracle</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
+            <name>No incremental database backups</name>
+            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+            <priority>HIGH</priority>
+            <description>Очень давно не выполнялся инкрементальный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>Oracle</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
+            <name>No incremental database backups</name>
+            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+            <priority>WARNING</priority>
+            <description>Давно не выполнялся инкрементальный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                </dependency>
+                <dependency>
+                    <name>No incremental database backups</name>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>

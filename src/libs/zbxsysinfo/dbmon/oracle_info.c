@@ -186,6 +186,111 @@ FROM( \
 	SELECT t.thread# as thread, nvl((SELECT cnt FROM a WHERE a.thread# = t.thread# AND rn = 1), 0) cnt FROM v$thread t WHERE t.status = 'OPEN' \
 )"
 
+#define ORACLE_INSTANCE_ARCHIVE_LOG_BACKUP_INFO_DBS "\
+SELECT nvl((SELECT to_char(round((sysdate-(max(c.start_time)))*24*60*60, 0)) \
+FROM v$backup_set c, v$backup_piece p \
+WHERE c.backup_type = 'L' \
+	AND c.set_stamp = p.set_stamp \
+	AND c.set_count = p.set_count), \
+to_char((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_ARCHIVE_LOG_BACKUP FROM dual"
+
+#define ORACLE_INSTANCE_FULL_BACKUP_INFO_DBS "\
+SELECT nvl((SELECT to_char(round((sysdate-(min(completion_time)))*24*60*60,0)) \
+FROM( \
+	SELECT CASE \
+	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time < greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then sysdate \
+	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time >= greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD'))) \
+	ELSE nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')) \
+	END completion_time, \
+	a.FILE# \
+	FROM( \
+		SELECT max(c.completion_time) as completion_time, c.FILE# as FILE# \
+		FROM v$backup_datafile c, v$backup_piece p \
+		WHERE c.FILE# > 0 AND(c.incremental_level = 0 or c.incremental_level is null) \
+		AND  c.set_stamp = p.set_stamp  AND c.set_count = p.set_count \
+		GROUP BY c.FILE# \
+	) a, \
+	(SELECT max(c.completion_time) as completion_time, c.FILE# as FILE# \
+		FROM v$backup_datafile c, v$backup_piece p \
+		WHERE c.file#  > 0 AND c.incremental_level > 0 \
+		AND  c.set_stamp = p.set_stamp  AND c.set_count = p.set_count \
+		GROUP BY c.FILE#) b, \
+	v$datafile e \
+	WHERE a.FILE#(+) = e.file# \
+	AND  b.FILE#(+) = e.file# \
+	AND e.creation_time < ( \
+		SELECT max(c.completion_time) as completion_time \
+		FROM v$backup_datafile c, v$backup_piece p \
+		WHERE(c.incremental_level = 0 or c.incremental_level is null) AND c.file#  > 0 AND  c.set_stamp = p.set_stamp  AND c.set_count = p.set_count \
+		))), \
+to_char((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_FULL_BACKUP FROM dual"
+
+#define ORACLE_INSTANCE_INCR_BACKUP_FILE_NUM_DBS "\
+SELECT to_char(count(*)) AS LAST_INCR_BACKUP_FILE_NUM \
+FROM v$backup_datafile c, v$backup_piece p \
+WHERE incremental_level > 0 \
+AND  c.set_stamp = p.set_stamp \
+AND c.set_count = p.set_count \
+AND c.completion_time > (SELECT min(nvl(completion_time, to_date('1970-01-01', 'YYYY-MM-DD'))) \
+	FROM(SELECT max(c.completion_time) as completion_time, c.FILE# as FILE# \
+		FROM  v$backup_datafile c, v$backup_piece p \
+		WHERE c.FILE# > 0 AND(c.incremental_level = 0 or c.incremental_level is null) \
+		AND  c.set_stamp = p.set_stamp  AND c.set_count = p.set_count \
+		GROUP BY c.FILE# \
+	) a, v$datafile e \
+	WHERE a.FILE#(+) = e.file# \
+	AND e.creation_time < (SELECT max(completion_time) \
+		FROM(SELECT max(c.completion_time) as completion_time, c.FILE# as FILE# \
+			FROM  v$backup_datafile c, v$backup_piece p \
+			WHERE c.FILE# > 0 AND(c.incremental_level = 0 or c.incremental_level is null) \
+			AND c.set_stamp = p.set_stamp  \
+			AND c.set_count = p.set_count \
+			GROUP BY c.FILE# \
+		) \
+		) \
+)"
+
+#define ORACLE_INSTANCE_INCR_BACKUP_INFO_DBS "\
+SELECT nvl((SELECT to_char(round((sysdate-(min(completion_time)))*24*60*60, 0)) \
+FROM( \
+	SELECT CASE \
+	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time < greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then sysdate \
+	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time >= greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD'))) \
+	ELSE nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')) \
+	END completion_time, \
+	a.FILE# \
+	FROM( \
+		SELECT max(c.completion_time) as completion_time, c.FILE# as FILE# \
+		FROM v$backup_datafile c, v$backup_piece p \
+		WHERE c.FILE# > 0 AND(c.incremental_level = 0 OR c.incremental_level is null) \
+		AND  c.set_stamp = p.set_stamp  \
+		AND c.set_count = p.set_count \
+		GROUP BY c.FILE# \
+	) a, \
+	(SELECT max(c.completion_time) as completion_time, c.FILE# as FILE# \
+		FROM v$backup_datafile c, v$backup_piece p \
+		WHERE c.file#  > 0 AND c.incremental_level > 0 \
+		AND  c.set_stamp = p.set_stamp  \
+		AND c.set_count = p.set_count \
+		GROUP BY c.FILE#) b, \
+	v$datafile e \
+	WHERE a.FILE#(+) = e.file# \
+	AND  b.FILE#(+) = e.file# \
+	AND e.creation_time < ( \
+		SELECT max(c.completion_time) as completion_time \
+		FROM v$backup_datafile c, v$backup_piece p \
+		WHERE(c.incremental_level = 0 or c.incremental_level is null) AND c.file#  > 0 AND c.set_stamp = p.set_stamp AND c.set_count = p.set_count \
+		))), \
+to_char((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_INCR_BACKUP FROM dual"
+
+#define ORACLE_INSTANCE_CF_BACKUP_INFO_DBS "\
+SELECT nvl((SELECT to_char(round((sysdate-(max(c.start_time)))*24*60*60, 0)) \
+	FROM v$backup_set c, v$backup_piece p \
+	WHERE c.controlfile_included in('YES', 'SBY') \
+	AND c.set_stamp = p.set_stamp \
+	AND c.set_count = p.set_count), \
+to_char((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_CF_BACKUP FROM dual"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY										FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -199,6 +304,11 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.instance.bad_processes",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.fra",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.redolog_switch_rate",	CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.archivelog",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.full",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.incr",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.incr_file_num",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.cf",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.db.discovery",					CF_HAVEPARAMS,		ORACLE_DB_DISCOVERY,			NULL},
 	{"oracle.db.info",						CF_HAVEPARAMS,		ORACLE_DB_INFO,					NULL},
 	{"oracle.db.incarnation",				CF_HAVEPARAMS,		ORACLE_DB_INCARNATION,			NULL},
@@ -483,6 +593,26 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp((const char*)"oracle.instance.redolog_switch_rate", request->key))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SWITCH_RATE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"PRIMARY", 1);
+	}
+	else if (0 == strcmp((const char*)"oracle.backup.archivelog", request->key))
+	{
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_ARCHIVE_LOG_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"ANY", 0);
+	}
+	else if (0 == strcmp((const char*)"oracle.backup.full", request->key))
+	{
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FULL_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"ANY", 0);
+	}
+	else if (0 == strcmp((const char*)"oracle.backup.incr", request->key))
+	{
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INCR_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"ANY", 0);
+	}
+	else if (0 == strcmp((const char*)"oracle.backup.incr_file_num", request->key))
+	{
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INCR_BACKUP_FILE_NUM_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"ANY", 0);
+	}
+	else if (0 == strcmp((const char*)"oracle.backup.cf", request->key))
+	{
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_CF_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, (const char*)"ANY", 0);
 	}
 	else
 	{
