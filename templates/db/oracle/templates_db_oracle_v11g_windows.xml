@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-27T09:02:08Z</date>
+    <date>2019-12-27T10:21:16Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -1114,18 +1114,22 @@
                     </filter>
                     <item_prototypes>
                         <item_prototype>
-                            <name>[Oracle][{#INSTANCE}][{#DBNAME}] Get database incarnation</name>
+                            <name>[Oracle] DB '{#DBNAME}': Current incarnation</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>oracle.db.incarnation[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             <delay>1h</delay>
                             <history>1d</history>
-                            <trends>0</trends>
-                            <value_type>TEXT</value_type>
+                            <description>Information about current database incarnation.</description>
                             <applications>
                                 <application>
                                     <name>stubs</name>
                                 </application>
                             </applications>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle][{#INSTANCE}][{#DBNAME}] Get database info</name>
@@ -1142,18 +1146,88 @@
                             </applications>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle][{#INSTANCE}][{#DBNAME}] Get database size</name>
+                            <name>[Oracle] DB '{#DBNAME}': Database size</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>oracle.db.size[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             <delay>1h</delay>
                             <history>1d</history>
-                            <trends>0</trends>
-                            <value_type>TEXT</value_type>
+                            <units>B</units>
+                            <description>Full database size.</description>
                             <applications>
                                 <application>
                                     <name>stubs</name>
                                 </application>
                             </applications>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;{$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&lt;={$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                    <name>Size of database '{#DBNAME}' has increased</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>HIGH</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;{$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&lt;={$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                    <name>Size of database '{#DBNAME}' has increased</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>WARNING</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>Size of database '{#DBNAME}' has increased</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.db.size[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].last()}&gt;{$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.db.size[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].last()}&lt;={$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Controlfile creation date</name>
@@ -1332,94 +1406,6 @@
                             <master_item>
                                 <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
-                        </item_prototype>
-                        <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Database size</name>
-                            <type>DEPENDENT</type>
-                            <key>oracle.db[{#INSTANCE},{#DBNAME},db_size]</key>
-                            <delay>0</delay>
-                            <history>30d</history>
-                            <units>B</units>
-                            <description>Full database size.</description>
-                            <application_prototypes>
-                                <application_prototype>
-                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
-                                </application_prototype>
-                            </application_prototypes>
-                            <preprocessing>
-                                <step>
-                                    <type>JSONPATH</type>
-                                    <params>$.DBSIZE</params>
-                                </step>
-                            </preprocessing>
-                            <master_item>
-                                <key>oracle.db.size[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
-                            </master_item>
-                            <trigger_prototypes>
-                                <trigger_prototype>
-                                    <expression>{last()}&gt;{$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
-                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                                    <recovery_expression>{last()}&lt;={$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
-                                    <name>Size of database '{#DBNAME}' has increased</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
-                                    <priority>HIGH</priority>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
-                                    <tags>
-                                        <tag>
-                                            <tag>Database</tag>
-                                            <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>Instance</tag>
-                                            <value>{#INSTANCE}</value>
-                                        </tag>
-                                    </tags>
-                                </trigger_prototype>
-                                <trigger_prototype>
-                                    <expression>{last()}&gt;{$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
-                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                                    <recovery_expression>{last()}&lt;={$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
-                                    <name>Size of database '{#DBNAME}' has increased</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
-                                    <priority>WARNING</priority>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                        <dependency>
-                                            <name>Size of database '{#DBNAME}' has increased</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},db_size].last()}&gt;{$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},db_size].last()}&lt;={$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
-                                    <tags>
-                                        <tag>
-                                            <tag>Database</tag>
-                                            <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>Instance</tag>
-                                            <value>{#INSTANCE}</value>
-                                        </tag>
-                                    </tags>
-                                </trigger_prototype>
-                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Flashback mode</name>
@@ -1602,28 +1588,6 @@
                                     </tags>
                                 </trigger_prototype>
                             </trigger_prototypes>
-                        </item_prototype>
-                        <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Current incarnation</name>
-                            <type>DEPENDENT</type>
-                            <key>oracle.db[{#INSTANCE},{#DBNAME},incarnation]</key>
-                            <delay>0</delay>
-                            <history>30d</history>
-                            <description>Information about current database incarnation.</description>
-                            <application_prototypes>
-                                <application_prototype>
-                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
-                                </application_prototype>
-                            </application_prototypes>
-                            <preprocessing>
-                                <step>
-                                    <type>JSONPATH</type>
-                                    <params>$.INCARNATION</params>
-                                </step>
-                            </preprocessing>
-                            <master_item>
-                                <key>oracle.db.incarnation[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
-                            </master_item>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Archive log mode</name>
@@ -2000,7 +1964,7 @@
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},switchover].diff()}=1 and {DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},incarnation].diff()}=0</expression>
+                            <expression>{DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},switchover].diff()}=1 and {DBS_Template Oracle 11g for Windows:oracle.db.incarnation[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].diff()}=0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Database switchover has been performed</name>
                             <opdata>(current: {ITEM.LASTVALUE})</opdata>
