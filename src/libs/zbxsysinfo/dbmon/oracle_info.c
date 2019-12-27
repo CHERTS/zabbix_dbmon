@@ -339,6 +339,17 @@ SELECT decode(name, 'apply lag', 'APPLY_LAG', 'transport lag', 'TRANSPORT_LAG', 
 FROM v$dataguard_stats \
 WHERE name in('apply lag', 'transport lag')"
 
+#define ORACLE_STANDBY_MRP_STATUS_DBS "\
+SELECT b.status AS MRP_STATUS, b.mrp_cnt AS MRP_CNT \
+FROM(SELECT a.status, a.mrp_cnt, max(a.status) over() mx \
+	FROM(SELECT decode(nvl(status, 'NULL'), 'UNUSED', 1, 'ALLOCATED', 2, 'CONNECTED', 3, 'ATTACHED', 4, 'IDLE', 5, 'ERROR', 6, 'OPENING', 7, 'CLOSING', 8, 'WRITING', 9, 'RECEIVING', 10, 'ANNOUNCING', 11, 'REGISTERING', 12, 'WAIT_FOR_LOG', 13, 'WAIT_FOR_GAP', 14, 'APPLYING_LOG', 15, 0) AS status, count(*) AS mrp_cnt \
+		FROM v$managed_standby \
+		WHERE process LIKE 'MRP%%' \
+		GROUP by process, status \
+		UNION ALL \
+		SELECT 0, 0 FROM dual) a) b \
+	WHERE mx <= status"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -364,6 +375,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.db.size",							CF_HAVEPARAMS,		ORACLE_DB_SIZE,					NULL},
 	{"oracle.standby.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.standby.lag",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.mrp_status",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{NULL}
 };
 
@@ -732,6 +744,10 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp((const char*)"oracle.standby.lag", request->key))
 	{
 		ret = oracle_make_result(request, result, ORACLE_STANDBY_LAG_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_STANDBY, 0);
+	}
+	else if (0 == strcmp((const char*)"oracle.standby.mrp_status", request->key))
+	{
+		ret = oracle_make_result(request, result, ORACLE_STANDBY_MRP_STATUS_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_STANDBY, 0);
 	}
 	else
 	{

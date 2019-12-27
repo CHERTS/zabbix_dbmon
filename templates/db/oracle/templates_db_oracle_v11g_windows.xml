@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-26T16:11:04Z</date>
+    <date>2019-12-27T09:02:08Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -2041,6 +2041,20 @@
                             <name>[Oracle][{#INSTANCE}] Get standby lag</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>oracle.standby.lag[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            <delay>5m</delay>
+                            <history>1d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>stubs</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle][{#INSTANCE}] Get MRP status</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>oracle.standby.mrp_status[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             <delay>3m</delay>
                             <history>1d</history>
                             <trends>0</trends>
@@ -2072,6 +2086,163 @@
                             <master_item>
                                 <key>oracle.standby.lag[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{avg({$DBS_ORACLE_APPLY_LAG_CRIT_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;} and {min({$DBS_ORACLE_APPLY_LAG_CRIT_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&lt;{$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                    <name>Apply lag is too high</name>
+                                    <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>HIGH</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{avg({$DBS_ORACLE_APPLY_LAG_WARN_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_APPLY_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;} and {min({$DBS_ORACLE_APPLY_LAG_WARN_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_APPLY_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&lt;{$DBS_ORACLE_APPLY_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                    <name>Apply lag is too high</name>
+                                    <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_APPLY_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>WARNING</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Apply lag is too high</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.standby[{#INSTANCE},{#DBNAME},apply_lag].avg({$DBS_ORACLE_APPLY_LAG_CRIT_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.standby[{#INSTANCE},{#DBNAME},apply_lag].min({$DBS_ORACLE_APPLY_LAG_CRIT_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.standby[{#INSTANCE},{#DBNAME},apply_lag].last()}&lt;{$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Standby DB '{#DBNAME}': MRP</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.standby[{#INSTANCE},{#DBNAME},mrp_cnt]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of MRP process.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Standby</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.MRP_CNT</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.standby.mrp_status[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}=0 and {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=0</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&gt;0 or {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=1</recovery_expression>
+                                    <name>MRP process is Down or Blocked</name>
+                                    <priority>HIGH</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Standby DB '{#DBNAME}': MRP status</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.standby[{#INSTANCE},{#DBNAME},mrp_status]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Current MRP process status:&#13;
+- UNUSED - No active process&#13;
+- ALLOCATED - Process is active but not currently connected to a primary database&#13;
+- CONNECTED - Network connection established to a primary database&#13;
+- ATTACHED - Process is actively attached and communicating to a primary database&#13;
+- IDLE - Process is not performing any activities&#13;
+- ERROR - Process has failed&#13;
+- OPENING - Process is opening the archived redo log&#13;
+- CLOSING - Process has completed archival and is closing the archived redo log&#13;
+- WRITING - Process is actively writing redo data to the archived redo log&#13;
+- RECEIVING - Process is receiving network communication&#13;
+- ANNOUNCING - Process is announcing the existence of a potential dependent archived redo log&#13;
+- REGISTERING - Process is registering the existence of a completed dependent archived redo log&#13;
+- WAIT_FOR_LOG - Process is waiting for the archived redo log to be completed&#13;
+- WAIT_FOR_GAP - Process is waiting for the archive gap to be resolved&#13;
+- APPLYING_LOG - Process is actively applying the archived redo log to the standby database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Standby</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (standby_status)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.MRP_STATUS</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.standby.mrp_status[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] Standby DB '{#DBNAME}': Transport lag</name>
@@ -2094,6 +2265,71 @@
                             <master_item>
                                 <key>oracle.standby.lag[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{avg({$DBS_ORACLE_TRANSPORT_LAG_CRIT_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;} and {min({$DBS_ORACLE_TRANSPORT_LAG_CRIT_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&lt;{$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                    <name>Transport lag is too high</name>
+                                    <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>HIGH</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{avg({$DBS_ORACLE_TRANSPORT_LAG_WARN_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_TRANSPORT_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;} and {min({$DBS_ORACLE_TRANSPORT_LAG_WARN_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_TRANSPORT_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&lt;{$DBS_ORACLE_TRANSPORT_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                    <name>Transport lag is too high</name>
+                                    <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_TRANSPORT_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>WARNING</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>Transport lag is too high</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.standby[{#INSTANCE},{#DBNAME},transport_lag].avg({$DBS_ORACLE_TRANSPORT_LAG_CRIT_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.standby[{#INSTANCE},{#DBNAME},transport_lag].min({$DBS_ORACLE_TRANSPORT_LAG_CRIT_ALERT:&quot;{#INSTANCE}:{#DBNAME}&quot;})}&gt;={$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.standby[{#INSTANCE},{#DBNAME},transport_lag].last()}&lt;{$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
                 </discovery_rule>
@@ -2106,6 +2342,22 @@
                 <macro>
                     <macro>{$DBS_ORACLE_ALOG_BACKUP_WARN}</macro>
                     <value>12h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_APPLY_LAG_CRIT}</macro>
+                    <value>1h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_APPLY_LAG_CRIT_ALERT}</macro>
+                    <value>6m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_APPLY_LAG_WARN}</macro>
+                    <value>30m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_APPLY_LAG_WARN_ALERT}</macro>
+                    <value>8m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_CF_BACKUP_CRIT}</macro>
@@ -2150,6 +2402,11 @@
                     <macro>{$DBS_ORACLE_DISABLE_INSTANCE_STATUS_ALARM}</macro>
                     <value>0</value>
                     <description>Set 1 to disable alarm &quot;Instance status has been changed&quot;</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_DISABLE_MRP_ALARM}</macro>
+                    <value>0</value>
+                    <description>Set 1 to disable alarm &quot;MRP process is Down or Blocked&quot;</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_FRA_USED_PRC_CRIT}</macro>
@@ -2240,6 +2497,22 @@
                 <macro>
                     <macro>{$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}</macro>
                     <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TRANSPORT_LAG_CRIT}</macro>
+                    <value>1h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TRANSPORT_LAG_CRIT_ALERT}</macro>
+                    <value>6m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TRANSPORT_LAG_WARN}</macro>
+                    <value>30m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TRANSPORT_LAG_WARN_ALERT}</macro>
+                    <value>8m</value>
                 </macro>
             </macros>
         </template>
@@ -2765,6 +3038,75 @@
                 <mapping>
                     <value>5</value>
                     <newvalue>UNPROTECTED</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (standby_status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>UNUSED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>ALLOCATED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>CONNECTED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>ATTACHED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>5</value>
+                    <newvalue>IDLE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>6</value>
+                    <newvalue>ERROR</newvalue>
+                </mapping>
+                <mapping>
+                    <value>7</value>
+                    <newvalue>OPENING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>8</value>
+                    <newvalue>CLOSING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>9</value>
+                    <newvalue>WRITING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>10</value>
+                    <newvalue>RECEIVING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>11</value>
+                    <newvalue>ANNOUNCING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>12</value>
+                    <newvalue>REGISTERING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>13</value>
+                    <newvalue>WAIT_FOR_LOG</newvalue>
+                </mapping>
+                <mapping>
+                    <value>14</value>
+                    <newvalue>WAIT_FOR_GAP</newvalue>
+                </mapping>
+                <mapping>
+                    <value>15</value>
+                    <newvalue>APPLYING_LOG</newvalue>
                 </mapping>
             </mappings>
         </value_map>
