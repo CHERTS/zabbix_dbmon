@@ -350,6 +350,30 @@ FROM(SELECT a.status, a.mrp_cnt, max(a.status) over() mx \
 		SELECT 0, 0 FROM dual) a) b \
 	WHERE mx <= status"
 
+#define ORACLE_DISCOVER_ARLDEST_DBS "\
+SELECT i.INSTANCE_NAME AS INSTANCE, \
+	db.name AS DBNAME, \
+	bt.dest_name AS ARLDEST \
+FROM gv$instance i \
+JOIN gv$database db ON(db.INST_ID = i.INST_ID) \
+JOIN gv$archive_dest bt ON(bt.INST_ID = i.INST_ID) \
+WHERE bt.status != 'INACTIVE' \
+	AND db.log_mode = 'ARCHIVELOG'"
+
+#define ORACLE_ARLDEST_INFO_DBS "\
+SELECT i.INSTANCE_NAME AS INSTANCE, \
+	db.name AS DBNAME, \
+	d.dest_name AS ARLDEST, \
+	decode(d.status, 'VALID', 1, 'INACTIVE', 2, 'DEFERRED', 3, 'ERROR', 4, 'DISABLED', 5, 'BAD PARAM', 6, 'ALTERNATE', 7, 'FULL', 8, 0) AS LOG_STATUS, \
+	decode(d.target, 'PRIMARY', 1, 'STANDBY', 2, 'LOCAL', 3, 'REMOTE', 4, 0) AS LOG_TARGET, \
+	decode(d.archiver, 'ARCH', 1, 'FOREGROUND', 2, 'LGWR', 3, 'RFS', 4, 0) AS LOG_ARCHIVER, \
+	nvl(d.log_sequence, 0) AS LOG_SEQUENCE, \
+	replace(d.error, '\"', '|') AS LOG_ERROR \
+FROM gv$archive_dest d, gv$database db, gv$instance i \
+WHERE d.status != 'INACTIVE' \
+	AND d.inst_id = i.inst_id \
+	AND db.log_mode = 'ARCHIVELOG'"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -376,6 +400,8 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.standby.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.standby.lag",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.standby.mrp_status",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.archlogdest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.archlogdest.info",					CF_HAVEPARAMS,		ORACLE_DISCOVERY_ALL,			NULL},
 	{NULL}
 };
 
@@ -557,8 +583,8 @@ exec_inst_query:
 						case ZBX_DB_RES_TYPE_ONEROW:
 							ret = make_onerow_json_result(request, result, ora_result);
 							break;
-						case ZBX_DB_RES_TYPE_MULTIROW:
-							ret = make_multirow_json_result(request, result, ora_result);
+						case ZBX_DB_RES_TYPE_TWOCOLL:
+							ret = make_multirow_twocoll_json_result(request, result, ora_result);
 							break;
 						default:
 							ret = make_result(request, result, ora_result);
@@ -643,8 +669,8 @@ exec_db_query:
 						case ZBX_DB_RES_TYPE_ONEROW:
 							ret = make_onerow_json_result(request, result, ora_result);
 							break;
-						case ZBX_DB_RES_TYPE_MULTIROW:
-							ret = make_multirow_json_result(request, result, ora_result);
+						case ZBX_DB_RES_TYPE_TWOCOLL:
+							ret = make_multirow_twocoll_json_result(request, result, ora_result);
 							break;
 						default:
 							ret = make_result(request, result, ora_result);
@@ -691,11 +717,11 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.parameter", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETER_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETER_INFO_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_ANY, 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.resource", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESOURCE_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESOURCE_INFO_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_ANY, 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.dbfiles", request->key))
 	{
@@ -751,7 +777,7 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 	}
 	else if (0 == strcmp((const char*)"oracle.standby.lag", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_STANDBY_LAG_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_STANDBY, 0);
+		ret = oracle_make_result(request, result, ORACLE_STANDBY_LAG_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_STANDBY, 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.standby.mrp_status", request->key))
 	{
@@ -841,6 +867,11 @@ int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
 						query = ORACLE_V11_DISCOVER_DB_DBS;
 						ret = ZBX_DB_OK;
 					}
+					else if (0 == strcmp((const char*)"oracle.archlogdest.discovery", request->key))
+					{
+						query = ORACLE_DISCOVER_ARLDEST_DBS;
+						ret = ZBX_DB_OK;
+					}
 					else
 					{
 						SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown discovery request key"));
@@ -859,6 +890,11 @@ int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
 					else if (0 == strcmp((const char*)"oracle.db.discovery", request->key))
 					{
 						query = ORACLE_V12_DISCOVER_DB_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else if (0 == strcmp((const char*)"oracle.archlogdest.discovery", request->key))
+					{
+						query = ORACLE_DISCOVER_ARLDEST_DBS;
 						ret = ZBX_DB_OK;
 					}
 					else
@@ -922,6 +958,156 @@ static int	ORACLE_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
 
 	ret = oracle_get_discovery(request, result);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
+
+	return ret;
+}
+
+int	oracle_get_all(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int							ret = SYSINFO_RET_FAIL, ping = 0;
+	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance, *ora_version, *sql = NULL;
+	unsigned short				oracle_port = 0;
+	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	struct zbx_db_connection	*oracle_conn;
+	struct zbx_db_result		ora_result;
+	const char					*query = ORACLE_V11_DISCOVER_DB_DBS;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
+
+	if (NULL == CONFIG_ORACLE_USER)
+		CONFIG_ORACLE_USER = zbx_strdup(CONFIG_ORACLE_USER, ORACLE_DEFAULT_USER);
+	if (NULL == CONFIG_ORACLE_PASSWORD)
+		CONFIG_ORACLE_PASSWORD = zbx_strdup(CONFIG_ORACLE_PASSWORD, ORACLE_DEFAULT_PASSWORD);
+	if (NULL == CONFIG_ORACLE_INSTANCE)
+		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
+
+	oracle_host = get_rparam(request, 0);
+	oracle_str_port = get_rparam(request, 1);
+	oracle_instance = get_rparam(request, 2);
+	oracle_str_mode = get_rparam(request, 3);
+
+	if (NULL == oracle_instance || '\0' == *oracle_instance)
+	{
+		oracle_instance = CONFIG_ORACLE_INSTANCE;
+	}
+
+	if (NULL != oracle_str_port && '\0' != *oracle_str_port)
+	{
+		if (SUCCEED != is_ushort(oracle_str_port, &oracle_port))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (port)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
+
+	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
+	{
+		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
+
+	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
+
+	if (oracle_conn != NULL)
+	{
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_VERSION_DBS, oracle_instance))
+		{
+			ora_version = get_str_one_result(request, result, 0, 0, ora_result);
+
+			if (NULL != ora_version)
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version: %s", __func__, request->key, ora_version);
+
+				if (-1 == zbx_db_compare_version(ora_version, "12.0.0.0.0"))
+				{
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
+
+					if (0 == strcmp((const char*)"oracle.archlogdest.info", request->key))
+					{
+						query = ORACLE_ARLDEST_INFO_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else
+					{
+						SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key in oracle_get_all() procedure"));
+						ret = SYSINFO_RET_FAIL;
+					}
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version >= 12, use query '%s'", __func__, request->key, query);
+
+					if (0 == strcmp((const char*)"oracle.archlogdest.info", request->key))
+					{
+						query = ORACLE_ARLDEST_INFO_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else
+					{
+						SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key in oracle_get_all() procedure"));
+						ret = SYSINFO_RET_FAIL;
+					}
+				}
+			}
+			else
+			{
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get Oracle version in oracle_get_all() procedure"));
+				ret = SYSINFO_RET_FAIL;
+			}
+
+			zbx_db_clean_result(&ora_result);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
+		}
+
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle instance '%s'", __func__, request->key, oracle_instance);
+
+		if (ZBX_DB_OK == ret)
+		{
+			if (zbx_db_query_select(oracle_conn, &ora_result, query) == ZBX_DB_OK)
+			{
+				ret = make_multi_json_result(request, result, ora_result);
+				zbx_db_clean_result(&ora_result);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing discovery query", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing discovery query"));
+				ret = SYSINFO_RET_FAIL;
+			}
+		}
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		ret = SYSINFO_RET_FAIL;
+	}
+
+	zbx_db_close_db(oracle_conn);
+	zbx_db_clean_connection(oracle_conn);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
+
+	return ret;
+}
+
+static int	ORACLE_DISCOVERY_ALL(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int ret = SYSINFO_RET_FAIL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
+
+	ret = oracle_get_all(request, result);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
 

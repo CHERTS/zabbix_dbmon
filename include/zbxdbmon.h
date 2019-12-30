@@ -35,6 +35,7 @@ typedef enum
 {
 	ZBX_DB_RES_TYPE_NOJSON = 0,
 	ZBX_DB_RES_TYPE_ONEROW,
+	ZBX_DB_RES_TYPE_TWOCOLL,
 	ZBX_DB_RES_TYPE_MULTIROW
 }
 zbx_db_result_type;
