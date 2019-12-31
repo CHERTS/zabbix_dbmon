@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-31T05:10:49Z</date>
+    <date>2019-12-31T06:15:30Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -2241,6 +2241,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <type>JSONPATH</type>
                                     <params>$.APPLY_LAG</params>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.standby.lag[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -2328,6 +2332,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <type>JSONPATH</type>
                                     <params>$.MRP_CNT</params>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.standby.mrp_status[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -2399,6 +2407,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <type>JSONPATH</type>
                                     <params>$.MRP_STATUS</params>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.standby.mrp_status[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -2420,6 +2432,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$.TRANSPORT_LAG</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
                                 </step>
                             </preprocessing>
                             <master_item>
