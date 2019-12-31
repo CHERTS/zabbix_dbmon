@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-31T04:29:57Z</date>
+    <date>2019-12-31T05:10:49Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -1120,7 +1120,7 @@
                         <item_prototype>
                             <name>[Oracle] '{#ARLDEST}': Archiver</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.archlogdest[{#INSTANCE},{#DBNAME},{#ARLDEST},archiver]</key>
+                            <key>oracle.archlogdest[{#INSTANCE},{#ARLDEST},archiver]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <application_prototypes>
@@ -1136,6 +1136,10 @@
                                     <type>JSONPATH</type>
                                     <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_ARCHIVER.first()</params>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -1144,7 +1148,7 @@
                         <item_prototype>
                             <name>[Oracle] '{#ARLDEST}': Error</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.archlogdest[{#INSTANCE},{#DBNAME},{#ARLDEST},error]</key>
+                            <key>oracle.archlogdest[{#INSTANCE},{#ARLDEST},error]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <trends>0</trends>
@@ -1159,6 +1163,10 @@
                                     <type>JSONPATH</type>
                                     <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_ERROR.first()</params>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED</type>
+                                    <params/>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -1167,7 +1175,7 @@
                         <item_prototype>
                             <name>[Oracle] '{#ARLDEST}': Sequence</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.archlogdest[{#INSTANCE},{#DBNAME},{#ARLDEST},sequence]</key>
+                            <key>oracle.archlogdest[{#INSTANCE},{#ARLDEST},sequence]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <application_prototypes>
@@ -1180,6 +1188,10 @@
                                     <type>JSONPATH</type>
                                     <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_SEQUENCE.first()</params>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED</type>
+                                    <params/>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -1188,7 +1200,7 @@
                         <item_prototype>
                             <name>[Oracle] '{#ARLDEST}': Status</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.archlogdest[{#INSTANCE},{#DBNAME},{#ARLDEST},status]</key>
+                            <key>oracle.archlogdest[{#INSTANCE},{#ARLDEST},status]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <application_prototypes>
@@ -1204,6 +1216,10 @@
                                     <type>JSONPATH</type>
                                     <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_STATUS.first()</params>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -1212,7 +1228,7 @@
                         <item_prototype>
                             <name>[Oracle] '{#ARLDEST}': Target</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.archlogdest[{#INSTANCE},{#DBNAME},{#ARLDEST},target]</key>
+                            <key>oracle.archlogdest[{#INSTANCE},{#ARLDEST},target]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <application_prototypes>
@@ -1228,12 +1244,44 @@
                                     <type>JSONPATH</type>
                                     <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_TARGET.first()</params>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{DBS_Template Oracle 11g for Windows:oracle.archlogdest[{#INSTANCE},{#ARLDEST},error].strlen()}&gt;0 and {DBS_Template Oracle 11g for Windows:oracle.archlogdest[{#INSTANCE},{#ARLDEST},status].max(#3)}&gt;3 and {DBS_Template Oracle 11g for Windows:oracle.archlogdest[{#INSTANCE},{#ARLDEST},status].max(#3)}&lt;&gt;5</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.archlogdest[{#INSTANCE},{#ARLDEST},status].max(#2)}&lt;=3 or {DBS_Template Oracle 11g for Windows:oracle.archlogdest[{#INSTANCE},{#ARLDEST},status].last()}=5</recovery_expression>
+                            <name>Error '{#ARLDEST}'</name>
+                            <opdata>(current status: {ITEM.LASTVALUE2}): {ITEM.LASTVALUE1}</opdata>
+                            <priority>HIGH</priority>
+                            <description>Ошибка Archive log destination.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{#INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                    </trigger_prototypes>
                     <master_item>
                         <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
@@ -1244,12 +1292,7 @@
     return {
         &quot;{#INSTANCE}&quot;: arl.INSTANCE,
         &quot;{#DBNAME}&quot;: arl.DBNAME,
-        &quot;{#ARLDEST}&quot;: arl.ARLDEST,
-        &quot;{#LOG_STATUS}&quot;: arl.LOG_STATUS,
-        &quot;{#LOG_TARGET}&quot;: arl.LOG_TARGET,
-        &quot;{#LOG_ARCHIVER}&quot;: arl.LOG_ARCHIVER,
-        &quot;{#LOG_SEQUENCE}&quot;: arl.LOG_SEQUENCE,
-        &quot;{#LOG_ERROR}&quot;: arl.LOG_ERROR
+        &quot;{#ARLDEST}&quot;: arl.ARLDEST
     }})
 return JSON.stringify({&quot;data&quot;: output})</params>
                         </step>
