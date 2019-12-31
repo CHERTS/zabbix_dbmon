@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-27T10:21:16Z</date>
+    <date>2019-12-31T04:29:57Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -29,6 +29,20 @@
                 </application>
             </applications>
             <items>
+                <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' archlog dest info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>2m</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last archive log backup</name>
                     <type>ZABBIX_ACTIVE</type>
@@ -1098,10 +1112,158 @@
             </items>
             <discovery_rules>
                 <discovery_rule>
+                    <name>Oracle archivelog dest discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.archlogdest.discovery</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle] '{#ARLDEST}': Archiver</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.archlogdest[{#INSTANCE},{#DBNAME},{#ARLDEST},archiver]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Archive log dest info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (archive_dest_archiver)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_ARCHIVER.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] '{#ARLDEST}': Error</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.archlogdest[{#INSTANCE},{#DBNAME},{#ARLDEST},error]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Archive log dest info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_ERROR.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] '{#ARLDEST}': Sequence</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.archlogdest[{#INSTANCE},{#DBNAME},{#ARLDEST},sequence]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Archive log dest info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_SEQUENCE.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] '{#ARLDEST}': Status</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.archlogdest[{#INSTANCE},{#DBNAME},{#ARLDEST},status]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Archive log dest info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (archive_dest_status)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_STATUS.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] '{#ARLDEST}': Target</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.archlogdest[{#INSTANCE},{#DBNAME},{#ARLDEST},target]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Archive log dest info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (archive_dest_target)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_TARGET.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(arl){
+    return {
+        &quot;{#INSTANCE}&quot;: arl.INSTANCE,
+        &quot;{#DBNAME}&quot;: arl.DBNAME,
+        &quot;{#ARLDEST}&quot;: arl.ARLDEST,
+        &quot;{#LOG_STATUS}&quot;: arl.LOG_STATUS,
+        &quot;{#LOG_TARGET}&quot;: arl.LOG_TARGET,
+        &quot;{#LOG_ARCHIVER}&quot;: arl.LOG_ARCHIVER,
+        &quot;{#LOG_SEQUENCE}&quot;: arl.LOG_SEQUENCE,
+        &quot;{#LOG_ERROR}&quot;: arl.LOG_ERROR
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
                     <name>Oracle database discovery</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.db.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>30m</delay>
+                    <delay>1h</delay>
                     <filter>
                         <conditions>
                             <condition>
@@ -1120,11 +1282,6 @@
                             <delay>1h</delay>
                             <history>1d</history>
                             <description>Information about current database incarnation.</description>
-                            <applications>
-                                <application>
-                                    <name>stubs</name>
-                                </application>
-                            </applications>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
@@ -1153,11 +1310,6 @@
                             <history>1d</history>
                             <units>B</units>
                             <description>Full database size.</description>
-                            <applications>
-                                <application>
-                                    <name>stubs</name>
-                                </application>
-                            </applications>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
@@ -1999,7 +2151,7 @@
                     <name>Oracle standby discovery</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.standby.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>5m</delay>
+                    <delay>1h</delay>
                     <item_prototypes>
                         <item_prototype>
                             <name>[Oracle][{#INSTANCE}] Get standby lag</name>
@@ -2019,7 +2171,7 @@
                             <name>[Oracle][{#INSTANCE}] Get MRP status</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>oracle.standby.mrp_status[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                            <delay>3m</delay>
+                            <delay>2m</delay>
                             <history>1d</history>
                             <trends>0</trends>
                             <value_type>TEXT</value_type>
@@ -2144,6 +2296,7 @@
                                     <recovery_expression>{last()}&gt;0 or {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=1</recovery_expression>
                                     <name>MRP process is Down or Blocked</name>
                                     <priority>HIGH</priority>
+                                    <description>Процесс MRP был остановлен или аварийно завершился. Пока процесс MRP не будет запущен, резервная база будет не актуальна.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -2801,6 +2954,97 @@
                 <mapping>
                     <value>3</value>
                     <newvalue>FAILED</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (archive_dest_archiver)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>ARCn</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>FOREGROUND</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>LGWR</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>RFS</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (archive_dest_status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>VALID</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>INACTIVE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>DEFERRED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>ERROR</newvalue>
+                </mapping>
+                <mapping>
+                    <value>5</value>
+                    <newvalue>DISABLED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>6</value>
+                    <newvalue>BAD PARAM</newvalue>
+                </mapping>
+                <mapping>
+                    <value>7</value>
+                    <newvalue>ALTERNATE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>8</value>
+                    <newvalue>FULL</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (archive_dest_target)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>PRIMARY</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>STANDBY</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>LOCAL</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>REMOTE</newvalue>
                 </mapping>
             </mappings>
         </value_map>
