@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-31T06:15:30Z</date>
+    <date>2019-12-31T08:43:15Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -407,6 +407,20 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.parameter[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>1h</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' patch info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>6h</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -1107,6 +1121,102 @@
                     </preprocessing>
                     <master_item>
                         <key>oracle.instance.parameter[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' patch: Last patchset action</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.patch[{$DBS_ORACLE_INSTANCE},last_patchset_action]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Last patchset action.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.LAST_PATCHSET_ACTION</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' patch: Last patchset action time</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.patch[{$DBS_ORACLE_INSTANCE},last_patchset_action_time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Last patchset action time.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.LAST_PATCHSET_ACTION_TIME</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' patch: Last patchset comment</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.patch[{$DBS_ORACLE_INSTANCE},last_patchset_comment]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Last patchset comment.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.LAST_PATCHSET_COMMENTS</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' patch: Last patchset version</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.patch[{$DBS_ORACLE_INSTANCE},last_patchset_version]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Last patchset version.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.LAST_PATCHSET_VERSION</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
             </items>

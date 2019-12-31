@@ -145,7 +145,7 @@ WHERE i.instance_number = p.inst_id \
 	AND p.name in('db_files', 'processes', 'sessions')"
 
 #define ORACLE_LASTPATCH_INFO_DBS "\
-SELECT ACTION_TIME AS LAST_PATCHSET_ACTION_TIME, \
+SELECT TO_CHAR(ACTION_TIME, 'DD-MON-YYYY HH24:MI:SS') AS LAST_PATCHSET_ACTION_TIME, \
 	ACTION AS LAST_PATCHSET_ACTION, \
 	VERSION AS LAST_PATCHSET_VERSION, \
 	COMMENTS AS LAST_PATCHSET_COMMENTS \
@@ -742,7 +742,7 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.patch_info", request->key))
 	{
-		ret = oracle_make_result(request, result, ORACLE_LASTPATCH_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_LASTPATCH_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_PRIMARY, 0);
 	}
 	else if (0 == strcmp((const char*)"oracle.instance.resource", request->key))
 	{
