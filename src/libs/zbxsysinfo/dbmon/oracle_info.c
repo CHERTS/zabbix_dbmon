@@ -398,6 +398,17 @@ WHERE i.instance_number = p.inst_id \
 	AND p.isdefault = 'FALSE' \
 	AND p.name NOT IN('db_files', 'processes', 'sessions')"
 
+#define ORACLE_V11_INSTANCE_SERVICES_DISCOVERY_DBS "\
+SELECT i.instance_name AS INSTANCE, \
+	s.name AS SERVICE_NAME \
+FROM gv$services s join gv$instance i on(s.inst_id = i.inst_id)"
+
+#define ORACLE_V12_INSTANCE_SERVICES_DISCOVERY_DBS "\
+SELECT s.pdb AS PDB, \
+	i.instance_name AS INSTANCE, \
+	s.name AS SERVICE_NAME \
+FROM gv$services s join gv$instance i on(s.inst_id = i.inst_id)"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
