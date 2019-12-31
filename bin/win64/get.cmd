@@ -58,6 +58,10 @@ echo Oracle instance parameter (%oracle_srv_name%):
 zabbix_get.exe %zbx_conn_string% -k oracle.instance.parameter[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
+echo Oracle instance patch info (%oracle_srv_name%):
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.patch_info[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
 echo Oracle instance resource (%oracle_srv_name%):
 zabbix_get.exe %zbx_conn_string% -k oracle.instance.resource[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
@@ -128,5 +132,17 @@ echo ---------------------------------------------------------------------------
 
 echo Oracle get standby lag (%oracle_srv_name%):
 zabbix_get.exe %zbx_conn_string% -k oracle.standby.lag[%oracle_srv_ip%,1521,%oracle_instance%,1]
+echo -----------------------------------------------------------------------------
+
+echo Oracle get standby MRP status (%oracle_srv_name%):
+zabbix_get.exe %zbx_conn_string% -k oracle.standby.mrp_status[%oracle_srv_ip%,1521,%oracle_instance%,1]
+echo -----------------------------------------------------------------------------
+
+echo Oracle archlogdest discovery (%oracle_srv_name%):
+zabbix_get.exe %zbx_conn_string% -k oracle.archlogdest.discovery[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo Oracle archlogdest info (%oracle_srv_name%):
+zabbix_get.exe %zbx_conn_string% -k oracle.archlogdest.info[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
 
 echo =============================================================================
