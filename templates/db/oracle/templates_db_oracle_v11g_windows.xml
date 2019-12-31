@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-31T08:43:15Z</date>
+    <date>2019-12-31T11:38:19Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -34,7 +34,7 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
-                    <history>1d</history>
+                    <history>1h</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -403,10 +403,24 @@
                     </applications>
                 </item>
                 <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' all parameters info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.parameters[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>6h</delay>
+                    <history>1h</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' parameters info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.parameter[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>1h</delay>
+                    <delay>2m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -1142,6 +1156,10 @@
                             <type>JSONPATH</type>
                             <params>$.LAST_PATCHSET_ACTION</params>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED</type>
+                            <params/>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -1165,6 +1183,10 @@
                         <step>
                             <type>JSONPATH</type>
                             <params>$.LAST_PATCHSET_ACTION_TIME</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED</type>
+                            <params/>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1190,6 +1212,10 @@
                             <type>JSONPATH</type>
                             <params>$.LAST_PATCHSET_COMMENTS</params>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED</type>
+                            <params/>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -1213,6 +1239,10 @@
                         <step>
                             <type>JSONPATH</type>
                             <params>$.LAST_PATCHSET_VERSION</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED</type>
+                            <params/>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -2299,6 +2329,49 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </tags>
                         </trigger_prototype>
                     </trigger_prototypes>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Oracle instance parameters discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance.parameters.discovery</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle] Instance '{#INSTANCE}' parameter: {#PARAMETER}</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.instance_parameter[{#INSTANCE},{#PARAMETER}]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <applications>
+                                <application>
+                                    <name>Oracle: Instance info</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.PARAMETER== &quot;{#PARAMETER}&quot;)].PVALUE.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.instance.parameters[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>oracle.instance.parameters[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(param){
+    return {
+        &quot;{#INSTANCE}&quot;: param.INSTANCE,
+        &quot;{#PARAMETER}&quot;: param.PARAMETER
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                    </preprocessing>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Oracle standby discovery</name>

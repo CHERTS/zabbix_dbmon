@@ -388,6 +388,16 @@ WHERE d.status != 'INACTIVE' \
 	AND d.inst_id = i.inst_id \
 	AND db.log_mode = 'ARCHIVELOG'"
 
+#define ORACLE_INSTANCE_PARAMETERS_INFO_DBS "\
+SELECT i.instance_name AS INSTANCE, \
+	p.name AS PARAMETER, \
+	to_char(p.value) AS PVALUE \
+FROM gv$instance i, gv$parameter p \
+WHERE i.instance_number = p.inst_id \
+	AND p.type IN(3, 6) \
+	AND p.isdefault = 'FALSE' \
+	AND p.name NOT IN('db_files', 'processes', 'sessions')"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -416,7 +426,8 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.standby.lag",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.standby.mrp_status",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.archlogdest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
-	{"oracle.archlogdest.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,			NULL},
+	{"oracle.archlogdest.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.parameters",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{NULL}
 };
 
@@ -811,6 +822,10 @@ static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp((const char*)"oracle.archlogdest.info", request->key))
 	{
 		ret = oracle_make_result(request, result, ORACLE_ARLDEST_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY, 0);
+	}
+	else if (0 == strcmp((const char*)"oracle.instance.parameters", request->key))
+	{
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETERS_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY, 0);
 	}
 	else
 	{
