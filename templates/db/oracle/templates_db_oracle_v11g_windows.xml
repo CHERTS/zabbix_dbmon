@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-31T11:38:19Z</date>
+    <date>2019-12-31T11:40:05Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -403,7 +403,7 @@
                     </applications>
                 </item>
                 <item>
-                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' all parameters info</name>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' not default parameters info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.parameters[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>6h</delay>
