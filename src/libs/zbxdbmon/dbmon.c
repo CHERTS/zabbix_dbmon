@@ -1,3 +1,22 @@
+/*
+** Zabbix
+** Copyright (C) 2019 Mikhail Grigorev
+**
+** This program is free software; you can redistribute it and/or modify
+** it under the terms of the GNU General Public License as published by
+** the Free Software Foundation; either version 2 of the License, or
+** (at your option) any later version.
+**
+** This program is distributed in the hope that it will be useful,
+** but WITHOUT ANY WARRANTY; without even the implied warranty of
+** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+** GNU General Public License for more details.
+**
+** You should have received a copy of the GNU General Public License
+** along with this program; if not, write to the Free Software
+** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+**/
+
 #include "common.h"
 #include "threads.h"
 #include "log.h"
@@ -10,18 +29,18 @@ extern int bsd_strptime(const char *s, const char *format, struct tm *tm);
 #endif
 
 #if defined(HAVE_MYSQL)
-#	include "mysql.h"
-#	include "errmsg.h"
-#	include "mysqld_error.h"
+#include "mysql.h"
+#include "errmsg.h"
+#include "mysqld_error.h"
 #endif
 
 #if defined(HAVE_POSTGRESQL)
-#	include <libpq-fe.h>
+#include <libpq-fe.h>
 #endif
 
 #if defined(HAVE_ORACLE)
-#	include "oci.h"
-#	include "dbschema.h"
+#include "oci.h"
+#include "dbschema.h"
 #endif
 
 #if defined(HAVE_MSSQL)
