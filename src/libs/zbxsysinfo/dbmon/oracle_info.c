@@ -388,8 +388,8 @@ SELECT i.INSTANCE_NAME AS INSTANCE, \
 	db.name AS DBNAME, \
 	bt.dest_name AS ARLDEST \
 FROM gv$instance i \
-JOIN gv$database db ON(db.INST_ID = i.INST_ID) \
-JOIN gv$archive_dest bt ON(bt.INST_ID = i.INST_ID) \
+JOIN gv$database db ON (db.inst_id = i.inst_id) \
+JOIN gv$archive_dest bt ON (bt.inst_id = i.inst_id) \
 WHERE bt.status != 'INACTIVE' \
 	AND db.log_mode = 'ARCHIVELOG'"
 
@@ -415,18 +415,45 @@ FROM gv$instance i, gv$parameter p \
 WHERE i.instance_number = p.inst_id \
 	AND p.type IN(3, 6) \
 	AND p.isdefault = 'FALSE' \
-	AND p.name NOT IN('db_files', 'processes', 'sessions')"
+	AND p.name NOT IN ('db_files', 'processes', 'sessions')"
 
 #define ORACLE_V11_INSTANCE_SERVICES_DISCOVERY_DBS "\
 SELECT i.instance_name AS INSTANCE, \
 	s.name AS SERVICE_NAME \
-FROM gv$services s join gv$instance i on(s.inst_id = i.inst_id)"
+FROM gv$services s join gv$instance i on (s.inst_id = i.inst_id)"
 
 #define ORACLE_V12_INSTANCE_SERVICES_DISCOVERY_DBS "\
 SELECT s.pdb AS PDB, \
 	i.instance_name AS INSTANCE, \
 	s.name AS SERVICE_NAME \
-FROM gv$services s join gv$instance i on(s.inst_id = i.inst_id)"
+FROM gv$services s join gv$instance i ON (s.inst_id = i.inst_id)"
+
+#define ORACLE_V11_PERMANENT_TS_INFO_DBS "\
+WITH \
+i AS (SELECT i.instance_name, d.name FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
+f AS (SELECT tablespace_name, SUM(bytes) file_free_space FROM dba_free_space GROUP BY tablespace_name), \
+m AS (SELECT tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
+d AS (SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'PERMANENT'), \
+df AS (SELECT tablespace_name, count(*) df_cnt from dba_data_files GROUP BY tablespace_name) \
+SELECT i.instance_name AS INSTANCE, i.name AS DBNAME, d.tablespace_name AS TSNAME, df.df_cnt AS DF_NUMBER, decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, round(nvl(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+FROM i, f, m, d, df  \
+WHERE d.tablespace_name = f.tablespace_name(+)  \
+	AND d.tablespace_name = m.tablespace_name(+)  \
+	AND d.tablespace_name = df.tablespace_name(+)"
+
+#define ORACLE_V12_PERMANENT_TS_INFO_DBS "\
+WITH \
+i AS (SELECT i.instance_name, decode(s.con_id, 0, d.name, p.name) AS name, s.tablespace_name, s.status \
+	FROM cdb_tablespaces s, v$containers p, gv$database d, gv$instance i \
+	WHERE p.con_id(+) = s.con_id AND d.inst_id = i.inst_id AND s.contents = 'PERMANENT'), \
+f AS (SELECT tablespace_name, SUM(bytes) file_free_space FROM dba_free_space GROUP BY tablespace_name), \
+m AS (SELECT tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
+df AS (SELECT tablespace_name, count(*) df_cnt from dba_data_files GROUP BY tablespace_name) \
+SELECT i.instance_name AS INSTANCE, i.name AS DBNAME, i.tablespace_name AS TSNAME, df.df_cnt AS DF_NUMBER, decode(i.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, round(nvl(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+FROM i, f, m, df \
+WHERE i.tablespace_name = f.tablespace_name(+) \
+	AND i.tablespace_name = m.tablespace_name(+) \
+	AND i.tablespace_name = df.tablespace_name(+)"
 
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
@@ -458,6 +485,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.archlogdest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.archlogdest.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.parameters",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.tablespace.permanent.info",		CF_HAVEPARAMS,		ORACLE_TS_INFO,					NULL},
 	{NULL}
 };
 
@@ -564,6 +592,12 @@ int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
 			return SYSINFO_RET_FAIL;
 		}
+	}
+
+	if (NULL != oracle_dbname && '\0' != *oracle_dbname)
+	{
+		if (0 != isdigit(*oracle_dbname))
+			oracle_dbname = NULL;
 	}
 
 	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
@@ -1143,6 +1177,146 @@ static int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
+		}
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		ret = SYSINFO_RET_FAIL;
+	}
+
+	zbx_db_close_db(oracle_conn);
+	zbx_db_clean_connection(oracle_conn);
+
+	return ret;
+}
+
+static int	ORACLE_TS_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int							ret = SYSINFO_RET_FAIL, ping = 0;
+	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_str_ts_type;
+	unsigned short				oracle_port = 1521;
+	unsigned int				oracle_mode;
+	zbx_db_oracle_ts_type		oracle_ts_type;
+	struct zbx_db_connection	*oracle_conn;
+	struct zbx_db_result		ora_result;
+	char						*query = ORACLE_V11_PERMANENT_TS_INFO_DBS;
+
+	if (NULL == CONFIG_ORACLE_USER)
+		CONFIG_ORACLE_USER = zbx_strdup(CONFIG_ORACLE_USER, ORACLE_DEFAULT_USER);
+	if (NULL == CONFIG_ORACLE_PASSWORD)
+		CONFIG_ORACLE_PASSWORD = zbx_strdup(CONFIG_ORACLE_PASSWORD, ORACLE_DEFAULT_PASSWORD);
+	if (NULL == CONFIG_ORACLE_INSTANCE)
+		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
+
+	if (5 < request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (5 > request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too few options."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	oracle_host = get_rparam(request, 0);
+	oracle_str_port = get_rparam(request, 1);
+	oracle_instance = get_rparam(request, 2);
+	oracle_str_mode = get_rparam(request, 3);
+	oracle_str_ts_type = get_rparam(request, 4);
+
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): request->nparam = %d", __func__, request->key, request->nparam);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_host);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[1] = %s", __func__, request->key, oracle_str_port);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_instance);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_str_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[4] = %s", __func__, request->key, oracle_str_ts_type);
+
+	if (NULL == oracle_instance || '\0' == *oracle_instance)
+	{
+		oracle_instance = CONFIG_ORACLE_INSTANCE;
+	}
+
+	if (NULL != oracle_str_port && '\0' != *oracle_str_port)
+	{
+		if (SUCCEED != is_ushort(oracle_str_port, &oracle_port))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (port)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
+
+	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
+	{
+		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
+
+	if (NULL != oracle_str_ts_type && '\0' != *oracle_str_ts_type)
+	{
+		if (SUCCEED != is_ushort(oracle_str_ts_type, &oracle_ts_type))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fourth parameter (tstype)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
+
+	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
+
+	if (oracle_conn != NULL)
+	{
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_VERSION_DBS, oracle_instance))
+		{
+			ora_version = get_str_one_result(request, result, 0, 0, ora_result);
+
+			if (NULL != ora_version)
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version: %s", __func__, request->key, ora_version);
+
+				//zbx_strcmp_natural(ora_version, "12.0.0.0.0")
+				if (-1 == zbx_db_compare_version(ora_version, "12.0.0.0.0"))
+				{
+					switch (oracle_ts_type)
+					{
+						case ORA_TS_PERMANENT:
+							query = ORACLE_V11_PERMANENT_TS_INFO_DBS;
+							break;
+						default:
+							query = ORACLE_V11_PERMANENT_TS_INFO_DBS;
+							break;
+					}
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
+				}
+				else
+				{
+					switch (oracle_ts_type)
+					{
+					case ORA_TS_PERMANENT:
+						query = ORACLE_V12_PERMANENT_TS_INFO_DBS;
+						break;
+					default:
+						query = ORACLE_V12_PERMANENT_TS_INFO_DBS;
+						break;
+					}
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version >= 12, use query '%s'", __func__, request->key, query);
+				}
+			}
+
+			zbx_db_clean_result(&ora_result);
+
+			ret = oracle_make_result(request, result, query, ZBX_DB_RES_TYPE_MULTIROW, ORA_PRIMARY, 0);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query "));
 			ret = SYSINFO_RET_FAIL;
 		}
 	}

@@ -38,9 +38,18 @@ static char *ORA_DB_ROLE[] = {
 	"PRIMARY"
 };
 
+typedef enum
+{
+	ORA_TS_PERMANENT = 0,
+	ORA_TS_TEMPORARY,
+	ORA_TS_UNDO,
+}
+zbx_db_oracle_ts_type;
+
 static int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result);
 static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result);
 static int	ORACLE_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result);
 static int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result);
+static int	ORACLE_TS_INFO(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 #endif /* ZABBIX_ORACLEINFO_H */
