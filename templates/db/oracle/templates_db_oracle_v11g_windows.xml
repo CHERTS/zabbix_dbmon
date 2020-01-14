@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2019-12-31T11:40:05Z</date>
+    <date>2020-01-14T18:34:45Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -623,7 +623,7 @@
                             <expression>{diff()}=1</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Version of Oracle has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>(current: {ITEM.LASTVALUE})</opdata>
                             <priority>INFO</priority>
                             <description>Версия экземпляра Oracle была изменена. Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
                             <type>MULTIPLE</type>
@@ -972,6 +972,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;&gt;1</recovery_expression>
                             <name>Database is not mounted</name>
+                            <opdata>(current status: {ITEM.LASTVALUE1})</opdata>
                             <priority>WARNING</priority>
                             <dependencies>
                                 <dependency>
