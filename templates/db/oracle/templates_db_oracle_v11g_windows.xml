@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-15T16:25:59Z</date>
+    <date>2020-01-15T16:32:15Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -972,7 +972,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;&gt;1</recovery_expression>
                             <name>Database is not mounted</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>(current: {ITEM.VALUE1})</opdata>
                             <priority>WARNING</priority>
                             <dependencies>
                                 <dependency>
