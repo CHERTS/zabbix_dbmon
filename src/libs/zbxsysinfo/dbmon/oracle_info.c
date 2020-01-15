@@ -435,7 +435,14 @@ f AS (SELECT tablespace_name, SUM(bytes) file_free_space FROM dba_free_space GRO
 m AS (SELECT tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
 d AS (SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'PERMANENT'), \
 df AS (SELECT tablespace_name, count(*) df_cnt from dba_data_files GROUP BY tablespace_name) \
-SELECT i.instance_name AS INSTANCE, i.name AS DBNAME, d.tablespace_name AS TSNAME, df.df_cnt AS DF_NUMBER, decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, round(nvl(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+SELECT i.instance_name AS INSTANCE, \
+	i.name AS DBNAME, \
+	d.tablespace_name AS TSNAME, \
+	df.df_cnt AS DF_NUMBER, \
+	decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	round(nvl(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, \
+	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
+	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
 FROM i, f, m, d, df  \
 WHERE d.tablespace_name = f.tablespace_name(+)  \
 	AND d.tablespace_name = m.tablespace_name(+)  \
@@ -449,7 +456,14 @@ i AS (SELECT i.instance_name, decode(s.con_id, 0, d.name, p.name) AS name, s.tab
 f AS (SELECT tablespace_name, SUM(bytes) file_free_space FROM dba_free_space GROUP BY tablespace_name), \
 m AS (SELECT tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
 df AS (SELECT tablespace_name, count(*) df_cnt from dba_data_files GROUP BY tablespace_name) \
-SELECT i.instance_name AS INSTANCE, i.name AS DBNAME, i.tablespace_name AS TSNAME, df.df_cnt AS DF_NUMBER, decode(i.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, round(nvl(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+SELECT i.instance_name AS INSTANCE, \
+	i.name AS DBNAME, \
+	i.tablespace_name AS TSNAME, \
+	df.df_cnt AS DF_NUMBER, \
+	decode(i.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	round(nvl(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, \
+	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
+	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
 FROM i, f, m, df \
 WHERE i.tablespace_name = f.tablespace_name(+) \
 	AND i.tablespace_name = m.tablespace_name(+) \

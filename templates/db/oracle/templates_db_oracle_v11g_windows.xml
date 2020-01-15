@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-14T18:34:45Z</date>
+    <date>2020-01-15T16:25:59Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -623,7 +623,7 @@
                             <expression>{diff()}=1</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Version of Oracle has been changed</name>
-                            <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
                             <priority>INFO</priority>
                             <description>Версия экземпляра Oracle была изменена. Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
                             <type>MULTIPLE</type>
@@ -681,7 +681,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;&gt;3</recovery_expression>
                             <name>Automatic archiving status is failed</name>
-                            <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
                             <priority>DISASTER</priority>
                             <dependencies>
                                 <dependency>
@@ -752,7 +752,7 @@
                             <expression>{diff()}=1</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Size for FRA has been changed</name>
-                            <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
                             <priority>INFO</priority>
                             <description>Размер области Fast Recovery Area (FRA) был изменен. Необходимо выяснить кто менял размер FRA и какие были причины.</description>
                             <type>MULTIPLE</type>
@@ -972,7 +972,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;&gt;1</recovery_expression>
                             <name>Database is not mounted</name>
-                            <opdata>(current status: {ITEM.LASTVALUE1})</opdata>
+                            <opdata>(current: {ITEM.LASTVALUE1}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>WARNING</priority>
                             <dependencies>
                                 <dependency>
@@ -996,7 +996,7 @@
                             <expression>{diff()}=1 and {last()}&lt;5 and {$DBS_ORACLE_DISABLE_INSTANCE_STATUS_ALARM:&quot;{$DBS_ORACLE_INSTANCE}&quot;}=0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Instance status has been changed</name>
-                            <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
                             <priority>DISASTER</priority>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
@@ -1249,6 +1249,20 @@
                     <master_item>
                         <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' permanent tablespace info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.tablespace.permanent.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                    <delay>5m</delay>
+                    <history>1h</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
                 </item>
             </items>
             <discovery_rules>
@@ -1626,7 +1640,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>DataGuard broker has been changed</name>
-                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -1684,7 +1698,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database ID has been changed</name>
-                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -1775,7 +1789,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database flashback mode has been changed</name>
-                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -1836,7 +1850,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Force logging mode has been changed</name>
-                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -1897,7 +1911,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database guard mode has been changed</name>
-                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -1990,7 +2004,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database archive log mode has been changed</name>
-                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -2054,7 +2068,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1 and {$DBS_ORACLE_DISABLE_DB_STATUS_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=0</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database status has been changed</name>
-                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>DISASTER</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -2151,7 +2165,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database protection mode has been changed</name>
-                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -2243,7 +2257,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database role has been changed</name>
-                                    <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -2303,7 +2317,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <expression>{DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},switchover].diff()}=1 and {DBS_Template Oracle 11g for Windows:oracle.db.incarnation[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].diff()}=0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Database switchover has been performed</name>
-                            <opdata>(current: {ITEM.LASTVALUE})</opdata>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
                             <priority>INFO</priority>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
@@ -2371,6 +2385,366 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         &quot;{#PARAMETER}&quot;: param.PARAMETER
     }})
 return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Oracle permanent tablespace discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.permanent.tablespace.discovery</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle] Tablespace '{#TSNAME}': Data file number</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},df_number]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].DF_NUMBER.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.tablespace.permanent.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                            </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Number of datafile in tablespace '{#TSNAME}' has been changed</name>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <priority>INFO</priority>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Tablespace</tag>
+                                            <value>{#TSNAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Tablespace '{#TSNAME}': File free space</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filefreespace]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_FREE_SPACE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.tablespace.permanent.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Tablespace '{#TSNAME}': Total file size</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filesize]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_SIZE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.tablespace.permanent.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Tablespace '{#TSNAME}': Total free space</name>
+                            <type>CALCULATED</type>
+                            <key>oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace]</key>
+                            <delay>5m</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <params>last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize]&quot;)-(last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filesize]&quot;)-last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filefreespace]&quot;))</params>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Tablespace '{#TSNAME}': Max size</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_MAX_SIZE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.tablespace.permanent.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Tablespace '{#TSNAME}': Status</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (tbs_status)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_STATUS.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>600</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.tablespace.permanent.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                            </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <name>Tablespace '{#TSNAME}' is not available.</name>
+                                    <priority>HIGH</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Tablespace</tag>
+                                            <value>{#TSNAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Tablespace '{#TSNAME}' status has been changed</name>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <priority>WARNING</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Tablespace</tag>
+                                            <value>{#TSNAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Tablespace '{#TSNAME}': Used size</name>
+                            <type>CALCULATED</type>
+                            <key>oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},usedbytes]</key>
+                            <delay>5m</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <params>last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filesize]&quot;)-last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filefreespace]&quot;)</params>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&lt;{$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize].last()}&gt;0 and {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},usedbytes].last()}&gt;0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;{$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
+                            <name>Free space in tablespace '{#TSNAME}'</name>
+                            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <priority>HIGH</priority>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Database</tag>
+                                    <value>{#DBNAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{#INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Tablespace</tag>
+                                    <value>{#TSNAME}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&lt;{$DBS_ORACLE_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize].last()}&gt;0 and {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},usedbytes].last()}&gt;0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;{$DBS_ORACLE_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
+                            <name>Free space in tablespace '{#TSNAME}'</name>
+                            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <priority>WARNING</priority>
+                            <dependencies>
+                                <dependency>
+                                    <name>Free space in tablespace '{#TSNAME}'</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&lt;{$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize].last()}&gt;0 and {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},usedbytes].last()}&gt;0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;{$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Database</tag>
+                                    <value>{#DBNAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{#INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Tablespace</tag>
+                                    <value>{#TSNAME}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                    </trigger_prototypes>
+                    <master_item>
+                        <key>oracle.tablespace.permanent.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(tbs){
+    return {
+        &quot;{#INSTANCE}&quot;: tbs.INSTANCE,
+        &quot;{#DBNAME}&quot;: tbs.DBNAME,
+        &quot;{#TSNAME}&quot;: tbs.TSNAME
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
                         </step>
                     </preprocessing>
                 </discovery_rule>
@@ -2461,6 +2835,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
+                                        <tag>
+                                            <tag>Service</tag>
+                                            <value>Standby</value>
+                                        </tag>
                                     </tags>
                                 </trigger_prototype>
                                 <trigger_prototype>
@@ -2494,6 +2872,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Service</tag>
+                                            <value>Standby</value>
                                         </tag>
                                     </tags>
                                 </trigger_prototype>
@@ -2551,6 +2933,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Service</tag>
+                                            <value>Standby</value>
                                         </tag>
                                     </tags>
                                 </trigger_prototype>
@@ -2653,6 +3039,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
+                                        <tag>
+                                            <tag>Service</tag>
+                                            <value>Standby</value>
+                                        </tag>
                                     </tags>
                                 </trigger_prototype>
                                 <trigger_prototype>
@@ -2686,6 +3076,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Service</tag>
+                                            <value>Standby</value>
                                         </tag>
                                     </tags>
                                 </trigger_prototype>
@@ -2767,6 +3161,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_ORACLE_DISABLE_MRP_ALARM}</macro>
                     <value>0</value>
                     <description>Set 1 to disable alarm &quot;MRP process is Down or Blocked&quot;</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_DISABLE_NO_TBS_ALARM}</macro>
+                    <value>0</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_FRA_USED_PRC_CRIT}</macro>
@@ -2855,6 +3253,26 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>80</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_TBS_FREESPACE_MB_CRIT}</macro>
+                    <value>5G</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TBS_FREESPACE_MB_WARN}</macro>
+                    <value>7G</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TBS_NODATA_WARN}</macro>
+                    <value>90m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT}</macro>
+                    <value>500M</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN}</macro>
+                    <value>700M</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}</macro>
                     <value>90</value>
                 </macro>
@@ -2873,6 +3291,14 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_ORACLE_TRANSPORT_LAG_WARN_ALERT}</macro>
                     <value>8m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT}</macro>
+                    <value>500M</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN}</macro>
+                    <value>700M</value>
                 </macro>
             </macros>
         </template>
@@ -3558,6 +3984,27 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <mapping>
                     <value>15</value>
                     <newvalue>APPLYING_LOG</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (tbs_status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>ONLINE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>OFFLINE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>READ ONLY</newvalue>
                 </mapping>
             </mappings>
         </value_map>
