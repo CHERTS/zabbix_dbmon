@@ -144,5 +144,9 @@ echo ---------------------------------------------------------------------------
 
 echo Oracle archlogdest info (%oracle_srv_name%):
 zabbix_get.exe %zbx_conn_string% -k oracle.archlogdest.info[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo Oracle permanent tablespace info (%oracle_srv_name%):
+zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.permanent.info[%oracle_srv_ip%,1521,%oracle_instance%,1,0] | jq-win64.exe .
 
 echo =============================================================================

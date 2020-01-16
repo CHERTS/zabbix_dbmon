@@ -46,10 +46,10 @@ typedef enum
 }
 zbx_db_oracle_ts_type;
 
-static int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result);
-static int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result);
-static int	ORACLE_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result);
-static int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result);
-static int	ORACLE_TS_INFO(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	ORACLE_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	ORACLE_TS_INFO(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 #endif /* ZABBIX_ORACLEINFO_H */
