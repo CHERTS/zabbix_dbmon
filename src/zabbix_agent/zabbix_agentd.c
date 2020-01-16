@@ -765,7 +765,7 @@ static void	zbx_load_config(int requirement, ZBX_TASK_EX *task)
 		{"LogFileSize",			&CONFIG_LOG_FILE_SIZE,			TYPE_INT,
 			PARM_OPT,	0,			1024},
 		{"Timeout",			&CONFIG_TIMEOUT,			TYPE_INT,
-			PARM_OPT,	1,			30},
+			PARM_OPT,	1,			120},
 		{"ListenPort",			&CONFIG_LISTEN_PORT,			TYPE_INT,
 			PARM_OPT,	1024,			32767},
 		{"ListenIP",			&CONFIG_LISTEN_IP,			TYPE_STRING_LIST,

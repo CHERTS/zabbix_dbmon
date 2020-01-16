@@ -503,7 +503,11 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{NULL}
 };
 
-int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
+#if !defined(_WINDOWS) && !defined(__MINGW32__)
+static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
+#else
+static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
+#endif
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance;
@@ -546,6 +550,12 @@ int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 		}
 	}
 
+#if defined(_WINDOWS) && defined(__MINGW32__)
+	/* 'timeout_event' argument is here to make the oracle_instance_ping() prototype as required by */
+	/* zbx_execute_threaded_metric() on MS Windows */
+	ZBX_UNUSED(timeout_event);
+#endif
+
 	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
 
 	if (oracle_conn != NULL)
@@ -561,6 +571,11 @@ int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 	zbx_db_clean_connection(oracle_conn);
 
 	return SYSINFO_RET_OK;
+}
+
+int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	return zbx_execute_threaded_metric(oracle_instance_ping, request, result);
 }
 
 static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode)
