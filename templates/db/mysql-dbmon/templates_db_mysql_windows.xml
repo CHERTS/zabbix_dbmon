@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2020-01-17T06:58:53Z</date>
+    <groups>
+        <group>
+            <name>DBS.Templates/Databases</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>DBS_Template MySQL for Windows</template>
+            <name>DBS_Template MySQL for Windows</name>
+            <groups>
+                <group>
+                    <name>DBS.Templates/Databases</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>MySQL: Instance info</name>
+                </application>
+                <application>
+                    <name>stubs</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Ping</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    <history>30d</history>
+                    <description>Test connection with an instance of MySQL.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Instance info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MySQL (Instance state)</name>
+                    </valuemap>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(#2)}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(#2)}=1</recovery_expression>
+                            <name>Instance access failed</name>
+                            <priority>DISASTER</priority>
+                            <description>Тестовое подключение к экземпляру БД MySQL не успешно. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].nodata({$DBS_MYSQL_PING_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{nodata({$DBS_MYSQL_PING_NODATA_CRIT})}=1</expression>
+                            <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
+                            <priority>HIGH</priority>
+                            <description>Данные о доступности экземпляра БД MySQL не поступали более 12 минут. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{nodata({$DBS_MYSQL_PING_NODATA_WARN})}=1</expression>
+                            <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
+                            <priority>WARNING</priority>
+                            <description>Данные о доступности экземпляра БД MySQL не поступали более 12 минут. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
+                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].nodata({$DBS_MYSQL_PING_NODATA_CRIT})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Version</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>mysql.version[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Version of MySQL instance.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Instance info</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Version of MySQL has been changed</name>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <priority>HIGH</priority>
+                            <description>Версия экземпляра MySQL была изменена. Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <macros>
+                <macro>
+                    <macro>{$DBS_MYSQL_HOST}</macro>
+                    <value>127.0.0.1</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_INSTANCE}</macro>
+                    <value>mysql_3306</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_PING_NODATA_CRIT}</macro>
+                    <value>12m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_PING_NODATA_WARN}</macro>
+                    <value>6m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_PORT}</macro>
+                    <value>3306</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <value_maps>
+        <value_map>
+            <name>DBS MySQL (Instance state)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>STOPPED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>RUNNING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>RUNNING_BACKUPING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>RESTORING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>ERROR</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
+</zabbix_export>
