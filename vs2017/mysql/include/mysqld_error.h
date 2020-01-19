@@ -4,7 +4,7 @@
 #define MYSQLD_ERROR_INCLUDED
 
 static const int errmsg_section_start[] = { 1000, 3000 };
-static const int errmsg_section_size[] = { 887, 229 };
+static const int errmsg_section_size[] = { 889, 231 };
 
 #define ER_HASHCHK 1000
 #define ER_NISAMCHK 1001
@@ -893,6 +893,8 @@ static const int errmsg_section_size[] = { 887, 229 };
 #define ER_GTID_UNSAFE_BINLOG_SPLITTABLE_STATEMENT_AND_GTID_GROUP 1884
 #define ER_SLAVE_HAS_MORE_GTIDS_THAN_MASTER 1885
 #define ER_MISSING_KEY 1886
+#define WARN_NAMED_PIPE_ACCESS_EVERYONE 1887
+#define ER_FOUND_MISSING_GTIDS 1888
 #define ER_FILE_CORRUPT 3000
 #define ER_ERROR_ON_MASTER 3001
 #define ER_INCONSISTENT_ERROR 3002
@@ -1122,4 +1124,6 @@ static const int errmsg_section_size[] = { 887, 229 };
 #define WARN_DEPRECATED_MAXDB_SQL_MODE_FOR_TIMESTAMP 3226
 #define ER_XA_REPLICATION_FILTERS 3227
 #define ER_CANT_OPEN_ERROR_LOG 3228
+#define ER_GROUPING_ON_TIMESTAMP_IN_DST 3229
+#define ER_CANT_START_SERVER_NAMED_PIPE 3230
 #endif
