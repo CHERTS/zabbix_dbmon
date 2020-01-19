@@ -286,6 +286,34 @@ int zbx_db_execute_query_mysql(const struct zbx_db_connection *conn, struct zbx_
 	return ZBX_DB_OK;
 }
 
+char *zbx_db_get_version_mysql(const struct zbx_db_connection *conn)
+{
+	unsigned long	version = 0L;
+	char		value[13];
+
+	if (pthread_mutex_lock(&(((struct zbx_db_mysql *)conn->connection)->lock)))
+	{
+		return 0;
+	}
+
+	version = mysql_get_server_version(((struct zbx_db_mysql *)conn->connection)->db_handle);
+
+	if (-1 == version) {
+		zbx_db_err_log(ZBX_DB_TYPE_MYSQL, ERR_Z3005, mysql_errno(((struct zbx_db_mysql *)conn->connection)->db_handle), mysql_error(((struct zbx_db_mysql *)conn->connection)->db_handle), NULL);
+		zbx_snprintf(value, sizeof(value), "%d.%d.%d", 0, 0, 0);
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): MySQL version: %lu", __func__, version);
+		//zbx_snprintf(value, sizeof(value), "%d.%d.%d", version / 10000, (version % 10000) / 100, (version % 10000) % 100);
+		zbx_snprintf(value, sizeof(value), "%02u.%02u.%06u", version / 10000, (version % 10000) / 100, version % 100);
+	}
+
+	pthread_mutex_unlock(&(((struct zbx_db_mysql *)conn->connection)->lock));
+
+	return zbx_strdup(NULL, value);
+}
+
 /**
  * zbx_db_connect_mysql
  * Opens a database connection to a MySQL server

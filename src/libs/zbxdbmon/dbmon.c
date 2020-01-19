@@ -877,6 +877,52 @@ int zbx_db_query_select(const struct zbx_db_connection *conn, struct zbx_db_resu
 	return rc;
 }
 
+char *zbx_db_version(const struct zbx_db_connection *conn)
+{
+	char *rc;
+
+	if (NULL != conn && NULL != conn->connection) {
+		if (0) {
+			/* Not happening */
+#if defined(HAVE_MYSQL)
+		}
+		else if (conn->type == ZBX_DB_TYPE_MYSQL)
+		{
+			rc = zbx_db_get_version_mysql(conn);
+#endif
+/*
+#if defined(HAVE_POSTGRESQL)
+		}
+		else if (conn->type == ZBX_DB_TYPE_POSTGRESQL)
+		{
+			rc = zbx_db_get_version_pgsql(conn);
+#endif
+#if defined(HAVE_ORACLE)
+		}
+		else if (conn->type == ZBX_DB_TYPE_ORACLE)
+		{
+			rc = zbx_db_get_version_oracle(conn);
+#endif
+#if defined(HAVE_MSSQL)
+		}
+		else if (conn->type == ZBX_DB_TYPE_MSSQL)
+		{
+			rc = zbx_db_get_version_mssql(conn);
+#endif*/
+		}
+		else
+		{
+			rc = NULL;
+		}
+	}
+	else
+	{
+		rc = NULL;
+	}
+
+	return rc;
+}
+
 /**
  * Close a database connection
  * Return ZBX_DB_OK on success

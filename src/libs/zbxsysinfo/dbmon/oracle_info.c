@@ -1015,7 +1015,7 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 			{
 				zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version: %s", __func__, request->key, ora_version);
 
-				if (-1 == zbx_db_compare_version(ora_version, "12.0.0.0.0"))
+				if (0 > zbx_strcmp_natural(ora_version, "12.0.0.0.0"))
 				{
 					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
 
@@ -1195,7 +1195,7 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 			{
 				zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version: %s", __func__, request->key, ora_version);
 
-				if (-1 == zbx_db_compare_version(ora_version, "12.0.0.0.0"))
+				if (0 > zbx_strcmp_natural(ora_version, "12.0.0.0.0"))
 				{
 					query = ORACLE_V11_DB_INFO_DBS;
 					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
@@ -1337,7 +1337,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 				zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version: %s", __func__, request->key, ora_version);
 
 				//zbx_strcmp_natural(ora_version, "12.0.0.0.0")
-				if (-1 == zbx_db_compare_version(ora_version, "12.0.0.0.0"))
+				if (0 > zbx_strcmp_natural(ora_version, "12.0.0.0.0"))
 				{
 					switch (oracle_ts_type)
 					{

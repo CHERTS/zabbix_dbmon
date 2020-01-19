@@ -159,6 +159,7 @@ int zbx_db_row_add_data(struct zbx_db_data **row, struct zbx_db_data *e_data, in
 int zbx_db_result_add_row(struct zbx_db_result *result, struct zbx_db_data *row, int rows);
 int zbx_db_result_add_fields(struct zbx_db_result *result, struct zbx_db_fields *field);
 int zbx_db_query_select(const struct zbx_db_connection *conn, struct zbx_db_result *e_result, const char *fmt, ...) __zbx_attr_format_printf(3, 4);
+char *zbx_db_version(const struct zbx_db_connection *conn);
 int zbx_db_close_db(struct zbx_db_connection *conn);
 int zbx_db_clean_connection(struct zbx_db_connection *conn);
 int zbx_db_clean_result(struct zbx_db_result *e_result);
@@ -166,6 +167,7 @@ unsigned int zbx_db_get_oracle_mode(int ora_mode);
 
 #if defined(HAVE_MYSQL)
 int zbx_db_execute_query_mysql(const struct zbx_db_connection *conn, struct zbx_db_result *m_result, const char *query);
+char *zbx_db_get_version_mysql(const struct zbx_db_connection *conn);
 struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *user, const char *passwd, const char *dbname, const unsigned int port, const char *dbsocket);
 void zbx_db_close_mysql(struct zbx_db_connection *conn);
 #endif

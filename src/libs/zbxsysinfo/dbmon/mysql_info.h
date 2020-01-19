@@ -24,8 +24,9 @@
 
 extern ZBX_METRIC	parameters_dbmon_mysql[];
 
-static int	MYSQL_PING(AGENT_REQUEST *request, AGENT_RESULT *result);
-static int	MYSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result);
-static int	MYSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	MYSQL_PING(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	MYSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	MYSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	MYSQL_GET_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 #endif /* ZABBIX_MYSQLINFO_H */
