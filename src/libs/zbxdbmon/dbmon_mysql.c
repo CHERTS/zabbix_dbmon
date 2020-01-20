@@ -297,6 +297,8 @@ unsigned long	zbx_db_get_version_mysql(const struct zbx_db_connection *conn)
 
 	version = mysql_get_server_version(((struct zbx_db_mysql *)conn->connection)->db_handle);
 
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): MySQL version: %lu", __func__, version);
+
 	pthread_mutex_unlock(&(((struct zbx_db_mysql *)conn->connection)->lock));
 
 	return version;

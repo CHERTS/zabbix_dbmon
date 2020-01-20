@@ -51,14 +51,18 @@ ORDER BY 1;"
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
-	{"pg.ping",			CF_HAVEPARAMS,		PG_PING,			NULL},
-	{"pg.version",		CF_HAVEPARAMS,		PG_VERSION,			NULL},
-	{"pg.version.full",	CF_HAVEPARAMS,		PG_VERSION,			NULL},
-	{"pg.db.discovery",	CF_HAVEPARAMS,		PG_DB_DISCOVERY,	NULL},
+	{"pg.ping",			CF_HAVEPARAMS,		PGSQL_PING,			NULL},
+	{"pg.version",		CF_HAVEPARAMS,		PGSQL_VERSION,			NULL},
+	{"pg.version.full",	CF_HAVEPARAMS,		PGSQL_VERSION,			NULL},
+	{"pg.db.discovery",	CF_HAVEPARAMS,		PGSQL_DB_DISCOVERY,	NULL},
 	{NULL}
 };
 
-int	PG_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
+#if !defined(_WINDOWS) && !defined(__MINGW32__)
+static int	pgsql_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
+#else
+static int	pgsql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
+#endif
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*pg_conn_string;
@@ -84,6 +88,12 @@ int	PG_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 
+#if defined(_WINDOWS) && defined(__MINGW32__)
+	/* 'timeout_event' argument is here to make the pgsql_ping() prototype as required by */
+	/* zbx_execute_threaded_metric() on MS Windows */
+	ZBX_UNUSED(timeout_event);
+#endif
+
 	pgsql_conn = zbx_db_connect_pgsql(pg_conn_string);
 
 	if (NULL != pgsql_conn)
@@ -101,7 +111,12 @@ int	PG_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return SYSINFO_RET_OK;
 }
 
-static int	pg_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned int ver_mode)
+int	PGSQL_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	return zbx_execute_threaded_metric(pgsql_ping, request, result);
+}
+
+static int	pgsql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned int ver_mode)
 {
 	int							ret = SYSINFO_RET_FAIL;
 	char						*pg_conn_string;
@@ -196,7 +211,7 @@ static int	pg_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned int
 	return ret;
 }
 
-int	PG_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
+int	PGSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int ret = SYSINFO_RET_FAIL;
 
@@ -204,11 +219,11 @@ int	PG_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (0 == strcmp(request->key, (const char*)"pg.version"))
 	{
-		ret = pg_version(request, result, 0);
+		ret = pgsql_version(request, result, 0);
 	}
 	else if (0 == strcmp(request->key, (const char*)"pg.version.full"))
 	{
-		ret = pg_version(request, result, 1);
+		ret = pgsql_version(request, result, 1);
 	}
 	else
 	{
@@ -221,7 +236,7 @@ int	PG_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return ret;
 }
 
-int	pg_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query)
+static int	pgsql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query)
 {
 	int							ret = SYSINFO_RET_FAIL;
 	char						*pgsql_conn_string, *c = NULL;
@@ -281,13 +296,13 @@ int	pg_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, const char *q
 	return ret;
 }
 
-int	PG_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
+int	PGSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int ret = SYSINFO_RET_FAIL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
 
-	ret = pg_get_discovery(request, result, PG_DISCOVER_DBS);
+	ret = pgsql_get_discovery(request, result, PG_DISCOVER_DBS);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
 

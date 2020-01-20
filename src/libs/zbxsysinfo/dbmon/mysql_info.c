@@ -37,11 +37,9 @@ extern char	*CONFIG_MYSQL_PASSWORD;
 
 #define MYSQL_VERSION_DBS "SELECT /*DBS_001*/ VERSION() AS VERSION;"
 
+//SELECT /*DBS_002*/ TRUNCATE(UNIX_TIMESTAMP() - VARIABLE_VALUE, 0) AS STARTUPTIME FROM %s.global_status WHERE VARIABLE_NAME = 'UPTIME'; "
 #define MYSQL_STARTUPTIME_DBS "\
-SELECT /*DBS_002*/ UNIX_TIMESTAMP()-VARIABLE_VALUE AS STARTUPTIME FROM information_schema.global_status WHERE VARIABLE_NAME='UPTIME';"
-
-#define MYSQL_V57_V80_STARTUPTIME_DBS "\
-SELECT /*DBS_002*/ UNIX_TIMESTAMP()-VARIABLE_VALUE AS STARTUPTIME FROM performance_schema.global_status WHERE VARIABLE_NAME='UPTIME';"
+SELECT /*DBS_002*/ CAST(sum(TRUNCATE(UNIX_TIMESTAMP() - VARIABLE_VALUE, 0))/count(TRUNCATE(UNIX_TIMESTAMP() - VARIABLE_VALUE, 0)) as UNSIGNED) AS STARTUPTIME FROM %s.global_status WHERE VARIABLE_NAME = 'UPTIME';"
 
 #define MYSQL_DISCOVER_DBS "\
 SELECT SCHEMA_NAME AS DBNAME, DEFAULT_CHARACTER_SET_NAME AS DB_CHARACTER_SET, DEFAULT_COLLATION_NAME AS DB_COLLATION_NAME \
@@ -334,11 +332,13 @@ int	MYSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type)
 {
-	int							ret = SYSINFO_RET_FAIL, ping = 0;
+	int							ret = SYSINFO_RET_FAIL, db_ret = ZBX_DB_ERROR;
 	char						*mysql_host, *mysql_str_port;
 	unsigned short				mysql_port = 0;
 	struct zbx_db_connection	*mysql_conn;
 	struct zbx_db_result		mysql_result;
+	unsigned long				mysql_version;
+	const char					*mysql_schema;
 
 	if (NULL == CONFIG_MYSQL_USER)
 		CONFIG_MYSQL_USER = zbx_strdup(CONFIG_MYSQL_USER, MYSQL_DEFAULT_USER);
@@ -364,7 +364,23 @@ static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 
 	if (NULL != mysql_conn)
 	{
-		if (ZBX_DB_OK == zbx_db_query_select(mysql_conn, &mysql_result, query))
+		if (0 == strcmp(request->key, (const char*)"mysql.startuptime"))
+		{
+			mysql_version = zbx_db_version(mysql_conn);
+
+			if (mysql_version > 50000 && mysql_version < 100000)
+				mysql_schema = "performance_schema";
+			else
+				mysql_schema = "information_schema";
+
+			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
+		}
+		else
+		{
+			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query);
+		}
+
+		if (ZBX_DB_OK == db_ret)
 		{
 			switch (result_type)
 			{
@@ -420,11 +436,7 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 
-	if (0 == strcmp(request->key, (const char*)"mysql.version"))
-	{
-		ret = mysql_make_result(request, result, MYSQL_VERSION_DBS, ZBX_DB_RES_TYPE_NOJSON);
-	}
-	else if (0 == strcmp(request->key, (const char*)"mysql.startuptime"))
+	if (0 == strcmp(request->key, (const char*)"mysql.startuptime"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_STARTUPTIME_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
