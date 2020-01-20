@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-15T16:32:15Z</date>
+    <date>2020-01-20T06:17:33Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -502,7 +502,7 @@
                         <trigger>
                             <expression>{nodata({$DBS_ORACLE_PING_NODATA_WARN})}=1</expression>
                             <name>Test connection data not received for more than {$DBS_ORACLE_PING_NODATA_WARN} (minutes).</name>
-                            <priority>AVERAGE</priority>
+                            <priority>WARNING</priority>
                             <description>Данные о доступности экземпляра БД Oracle не поступали более 6 минут. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
                             <dependencies>
                                 <dependency>
@@ -671,6 +671,10 @@
                             <type>JSONPATH</type>
                             <params>$.ARCHIVER</params>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>600</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -719,6 +723,10 @@
                         <step>
                             <type>JSONPATH</type>
                             <params>$.FRA_FILE_NUM</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>600</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -795,6 +803,10 @@
                         <step>
                             <type>JSONPATH</type>
                             <params>$.FRA_LOCATION_NAME</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>600</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -888,6 +900,10 @@
                         <step>
                             <type>JSONPATH</type>
                             <params>$.PARALLEL</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>600</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1157,10 +1173,6 @@
                             <type>JSONPATH</type>
                             <params>$.LAST_PATCHSET_ACTION</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED</type>
-                            <params/>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -1184,10 +1196,6 @@
                         <step>
                             <type>JSONPATH</type>
                             <params>$.LAST_PATCHSET_ACTION_TIME</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED</type>
-                            <params/>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1213,10 +1221,6 @@
                             <type>JSONPATH</type>
                             <params>$.LAST_PATCHSET_COMMENTS</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED</type>
-                            <params/>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -1240,10 +1244,6 @@
                         <step>
                             <type>JSONPATH</type>
                             <params>$.LAST_PATCHSET_VERSION</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED</type>
-                            <params/>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -2471,10 +2471,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <type>JSONPATH</type>
                                     <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_FREE_SPACE.first()</params>
                                 </step>
-                                <step>
-                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>600</params>
-                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.tablespace.permanent.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
@@ -2496,10 +2492,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_SIZE.first()</params>
-                                </step>
-                                <step>
-                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>600</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2536,10 +2528,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_MAX_SIZE.first()</params>
-                                </step>
-                                <step>
-                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>600</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2669,6 +2657,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
                                     <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
+                                <dependency>
+                                    <name>Tablespace '{#TSNAME}' is not available.</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                </dependency>
                             </dependencies>
                             <tags>
                                 <tag>
@@ -2706,6 +2698,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Instance access failed</name>
                                     <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
                                     <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Tablespace '{#TSNAME}' is not available.</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -2798,10 +2794,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$.APPLY_LAG</params>
-                                </step>
-                                <step>
-                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>600</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -3002,10 +2994,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$.TRANSPORT_LAG</params>
-                                </step>
-                                <step>
-                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>600</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -3262,7 +3250,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_TBS_NODATA_WARN}</macro>
-                    <value>90m</value>
+                    <value>20m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT}</macro>
