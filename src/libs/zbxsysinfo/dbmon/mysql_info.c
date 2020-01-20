@@ -37,9 +37,23 @@ extern char	*CONFIG_MYSQL_PASSWORD;
 
 #define MYSQL_VERSION_DBS "SELECT /*DBS_001*/ VERSION() AS VERSION;"
 
-//SELECT /*DBS_002*/ TRUNCATE(UNIX_TIMESTAMP() - VARIABLE_VALUE, 0) AS STARTUPTIME FROM %s.global_status WHERE VARIABLE_NAME = 'UPTIME'; "
 #define MYSQL_STARTUPTIME_DBS "\
-SELECT /*DBS_002*/ CAST(sum(TRUNCATE(UNIX_TIMESTAMP() - VARIABLE_VALUE, 0))/count(TRUNCATE(UNIX_TIMESTAMP() - VARIABLE_VALUE, 0)) as UNSIGNED) AS STARTUPTIME FROM %s.global_status WHERE VARIABLE_NAME = 'UPTIME';"
+SELECT /*DBS_002*/ CAST(SUM(TRUNCATE(UNIX_TIMESTAMP()-VARIABLE_VALUE, 0))/COUNT(TRUNCATE(UNIX_TIMESTAMP()-VARIABLE_VALUE, 0)) AS UNSIGNED) AS STARTUPTIME \
+FROM %s.GLOBAL_STATUS \
+WHERE VARIABLE_NAME = 'UPTIME';"
+
+#define MYSQL_SERVER_INFO_DBS "\
+SELECT /*DBS_003*/ @@server_id AS SERVER_ID, \
+	UUID() AS SERVER_UUID, \
+	VERSION() AS VERSION, \
+	VARIABLE_VALUE AS UPTIME, \
+	CAST(SUM(TRUNCATE(UNIX_TIMESTAMP()-VARIABLE_VALUE, 0))/COUNT(TRUNCATE(UNIX_TIMESTAMP()-VARIABLE_VALUE, 0)) AS UNSIGNED) AS STARTUPTIME \
+FROM %s.GLOBAL_STATUS \
+WHERE VARIABLE_NAME='UPTIME';"
+
+#define MYSQL_GLOBAL_STATUS_DBS "\
+SELECT /*DBS_004*/ VARIABLE_NAME, VARIABLE_VALUE \
+FROM %s.GLOBAL_STATUS;"
 
 #define MYSQL_DISCOVER_DBS "\
 SELECT SCHEMA_NAME AS DBNAME, DEFAULT_CHARACTER_SET_NAME AS DB_CHARACTER_SET, DEFAULT_COLLATION_NAME AS DB_COLLATION_NAME \
@@ -51,7 +65,9 @@ ZBX_METRIC	parameters_dbmon_mysql[] =
 	{"mysql.ping",			CF_HAVEPARAMS,		MYSQL_PING,			NULL},
 	{"mysql.version",		CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
 	{"mysql.version.full",	CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
-	{"mysql.startuptime",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.startup.time",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.server.info",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.global.status",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.db.discovery",	CF_HAVEPARAMS,		MYSQL_DB_DISCOVERY,	NULL},
 	{NULL}
 };
@@ -364,15 +380,23 @@ static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 
 	if (NULL != mysql_conn)
 	{
-		if (0 == strcmp(request->key, (const char*)"mysql.startuptime"))
+		mysql_version = zbx_db_version(mysql_conn);
+
+		if (mysql_version > 50000 && mysql_version < 100000)
+			mysql_schema = "performance_schema";
+		else
+			mysql_schema = "information_schema";
+
+		if (0 == strcmp(request->key, (const char*)"mysql.startup.time"))
 		{
-			mysql_version = zbx_db_version(mysql_conn);
-
-			if (mysql_version > 50000 && mysql_version < 100000)
-				mysql_schema = "performance_schema";
-			else
-				mysql_schema = "information_schema";
-
+			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
+		}
+		else if (0 == strcmp(request->key, (const char*)"mysql.server.info"))
+		{
+			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
+		}
+		else if (0 == strcmp(request->key, (const char*)"mysql.global.status"))
+		{
 			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
 		}
 		else
@@ -436,9 +460,17 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 
-	if (0 == strcmp(request->key, (const char*)"mysql.startuptime"))
+	if (0 == strcmp(request->key, (const char*)"mysql.startup.time"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_STARTUPTIME_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, (const char*)"mysql.server.info"))
+	{
+		ret = mysql_make_result(request, result, MYSQL_SERVER_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW);
+	}
+	else if (0 == strcmp(request->key, (const char*)"mysql.global.status"))
+	{
+		ret = mysql_make_result(request, result, MYSQL_GLOBAL_STATUS_DBS, ZBX_DB_RES_TYPE_TWOCOLL);
 	}
 	else
 	{
