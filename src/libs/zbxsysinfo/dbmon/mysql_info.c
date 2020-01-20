@@ -52,6 +52,7 @@ ZBX_METRIC	parameters_dbmon_mysql[] =
 {
 	{"mysql.ping",			CF_HAVEPARAMS,		MYSQL_PING,			NULL},
 	{"mysql.version",		CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
+	{"mysql.version.full",	CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
 	{"mysql.startuptime",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.db.discovery",	CF_HAVEPARAMS,		MYSQL_DB_DISCOVERY,	NULL},
 	{NULL}
@@ -128,13 +129,15 @@ int	MYSQL_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return zbx_execute_threaded_metric(mysql_ping, request, result);
 }
 
-int	MYSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
+static int	mysql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned int ver_mode)
 {
 	int							ret = SYSINFO_RET_FAIL;
-	char						*mysql_host, *mysql_str_port, *mysql_ver;
+	char						*mysql_host, *mysql_str_port;
 	unsigned short				mysql_port = 0;
 	struct zbx_db_connection	*mysql_conn;
-	//struct zbx_db_result		mysql_result;
+	struct zbx_db_result		mysql_result;
+	char						mysql_ver[10];
+	unsigned long				version;
 
 	if (2 < request->nparam)
 	{
@@ -172,31 +175,38 @@ int	MYSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (NULL != mysql_conn)
 	{
-		mysql_ver = zbx_db_version(mysql_conn);
+		if (0 == ver_mode)
+		{
+			version = zbx_db_version(mysql_conn);
+			zbx_snprintf(mysql_ver, sizeof(mysql_ver), "%d.%d.%d", version / 10000, (version % 10000) / 100, (version % 10000) % 100);
 
-		if (NULL != mysql_ver)
-		{
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): MySQL version: %s", __func__, request->key, mysql_ver);
-			SET_TEXT_RESULT(result, zbx_strdup(NULL, mysql_ver));
-			ret = SYSINFO_RET_OK;
+			if (NULL != mysql_ver)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): MySQL version: %s", __func__, request->key, mysql_ver);
+				SET_TEXT_RESULT(result, zbx_strdup(NULL, mysql_ver));
+				ret = SYSINFO_RET_OK;
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get MySQL version", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get MySQL version"));
+				ret = SYSINFO_RET_FAIL;
+			}
 		}
 		else
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get MySQL version", __func__, request->key);
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get MySQL version"));
-			ret = SYSINFO_RET_FAIL;
+			if (ZBX_DB_OK == zbx_db_query_select(mysql_conn, &mysql_result, MYSQL_VERSION_DBS))
+			{
+				ret = make_result(request, result, mysql_result);
+				zbx_db_clean_result(&mysql_result);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+				ret = SYSINFO_RET_FAIL;
+			}
 		}
-		/*if (ZBX_DB_OK == zbx_db_query_select(mysql_conn, &mysql_result, MYSQL_VERSION_DBS))
-		{
-			ret = make_result(request, result, mysql_result);
-			zbx_db_clean_result(&mysql_result);
-		}
-		else
-		{
-			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
-			ret = SYSINFO_RET_FAIL;
-		}*/
 	}
 	else
 	{
@@ -207,6 +217,31 @@ int	MYSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	zbx_db_close_db(mysql_conn);
 	zbx_db_clean_connection(mysql_conn);
+
+	return ret;
+}
+
+int	MYSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int ret = SYSINFO_RET_FAIL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
+
+	if (0 == strcmp(request->key, (const char*)"mysql.version"))
+	{
+		ret = mysql_version(request, result, 0);
+	}
+	else if (0 == strcmp(request->key, (const char*)"mysql.version.full"))
+	{
+		ret = mysql_version(request, result, 1);
+	}
+	else
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key"));
+		ret = SYSINFO_RET_FAIL;
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
 
 	return ret;
 }

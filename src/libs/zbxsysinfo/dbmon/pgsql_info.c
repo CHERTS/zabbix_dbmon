@@ -51,13 +51,14 @@ ORDER BY 1;"
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
-	{"pg.ping",		CF_HAVEPARAMS,		PG_PING,	NULL},
-	{"pg.version",	CF_HAVEPARAMS,		PG_VERSION,	NULL},
+	{"pg.ping",			CF_HAVEPARAMS,		PG_PING,			NULL},
+	{"pg.version",		CF_HAVEPARAMS,		PG_VERSION,			NULL},
+	{"pg.version.full",	CF_HAVEPARAMS,		PG_VERSION,			NULL},
 	{"pg.db.discovery",	CF_HAVEPARAMS,		PG_DB_DISCOVERY,	NULL},
 	{NULL}
 };
 
-static int	PG_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
+int	PG_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*pg_conn_string;
@@ -100,12 +101,14 @@ static int	PG_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return SYSINFO_RET_OK;
 }
 
-static int	PG_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
+static int	pg_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned int ver_mode)
 {
 	int							ret = SYSINFO_RET_FAIL;
 	char						*pg_conn_string;
 	struct zbx_db_connection	*pgsql_conn;
 	struct zbx_db_result		pgsql_result;
+	char						pgsql_ver[10];
+	unsigned long				version;
 
 	if (1 < request->nparam)
 	{
@@ -131,16 +134,53 @@ static int	PG_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (NULL != pgsql_conn)
 	{
-		if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, PG_VERSION_DBS))
+		if (0 == ver_mode)
 		{
-			ret = make_result(request, result, pgsql_result);
-			zbx_db_clean_result(&pgsql_result);
+			/*
+			version 9.5.2	=> 90502
+			version 9.6.0	=> 90600
+			version 9.6.16	=> 90616
+			version 10.5	=> 100500
+			version 10.11	=> 100011
+			version 12.1	=> 120001
+			*/
+			version = zbx_db_version(pgsql_conn);
+
+			if (version < 100000)
+			{
+				zbx_snprintf(pgsql_ver, sizeof(pgsql_ver), "%d.%d.%d", version / 10000, (version % 10000) / 100, (version % 10000) % 100);
+			}
+			else
+			{
+				zbx_snprintf(pgsql_ver, sizeof(pgsql_ver), "%d.%d.%d", version / 10000, ((version % 10000) / 100) == 0 ? (version % 10000) % 100 : (version % 10000) / 100, ((version % 10000) / 100) == 0 ? (version % 10000) / 100 : (version % 10000) % 100);
+			}
+
+			if (NULL != pgsql_ver)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %s", __func__, request->key, pgsql_ver);
+				SET_TEXT_RESULT(result, zbx_strdup(NULL, pgsql_ver));
+				ret = SYSINFO_RET_OK;
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				ret = SYSINFO_RET_FAIL;
+			}
 		}
 		else
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
-			ret = SYSINFO_RET_FAIL;
+			if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, PG_VERSION_DBS))
+			{
+				ret = make_result(request, result, pgsql_result);
+				zbx_db_clean_result(&pgsql_result);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+				ret = SYSINFO_RET_FAIL;
+			}
 		}
 	}
 	else
@@ -152,6 +192,31 @@ static int	PG_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	zbx_db_close_db(pgsql_conn);
 	zbx_db_clean_connection(pgsql_conn);
+
+	return ret;
+}
+
+int	PG_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int ret = SYSINFO_RET_FAIL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
+
+	if (0 == strcmp(request->key, (const char*)"pg.version"))
+	{
+		ret = pg_version(request, result, 0);
+	}
+	else if (0 == strcmp(request->key, (const char*)"pg.version.full"))
+	{
+		ret = pg_version(request, result, 1);
+	}
+	else
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key"));
+		ret = SYSINFO_RET_FAIL;
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
 
 	return ret;
 }
@@ -216,7 +281,7 @@ int	pg_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, const char *q
 	return ret;
 }
 
-static int	PG_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
+int	PG_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int ret = SYSINFO_RET_FAIL;
 

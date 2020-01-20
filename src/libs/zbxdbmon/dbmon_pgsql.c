@@ -224,6 +224,24 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 	return ret;
 }
 
+unsigned long	zbx_db_get_version_pgsql(const struct zbx_db_connection *conn)
+{
+	int	version = 0;
+
+	if (pthread_mutex_lock(&(((struct zbx_db_pgsql *)conn->connection)->lock)))
+	{
+		return 0;
+	}
+
+	version = PQserverVersion(((struct zbx_db_pgsql *)conn->connection)->db_handle);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): PostgreSQL version: %lu", __func__, version);
+
+	pthread_mutex_unlock(&(((struct zbx_db_pgsql *)conn->connection)->lock));
+
+	return version;
+}
+
 /**
  * zbx_db_connect_pgsql
  * Opens a database connection to a PostgreSQL server

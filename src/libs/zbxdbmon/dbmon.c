@@ -877,9 +877,9 @@ int zbx_db_query_select(const struct zbx_db_connection *conn, struct zbx_db_resu
 	return rc;
 }
 
-char *zbx_db_version(const struct zbx_db_connection *conn)
+unsigned long zbx_db_version(const struct zbx_db_connection *conn)
 {
-	char *rc;
+	unsigned long rc;
 
 	if (NULL != conn && NULL != conn->connection) {
 		if (0) {
@@ -890,13 +890,13 @@ char *zbx_db_version(const struct zbx_db_connection *conn)
 		{
 			rc = zbx_db_get_version_mysql(conn);
 #endif
-/*
 #if defined(HAVE_POSTGRESQL)
 		}
 		else if (conn->type == ZBX_DB_TYPE_POSTGRESQL)
 		{
 			rc = zbx_db_get_version_pgsql(conn);
 #endif
+/*
 #if defined(HAVE_ORACLE)
 		}
 		else if (conn->type == ZBX_DB_TYPE_ORACLE)
@@ -912,12 +912,12 @@ char *zbx_db_version(const struct zbx_db_connection *conn)
 		}
 		else
 		{
-			rc = NULL;
+			rc = 0;
 		}
 	}
 	else
 	{
-		rc = NULL;
+		rc = 0;
 	}
 
 	return rc;
