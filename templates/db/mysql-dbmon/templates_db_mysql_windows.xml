@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-20T19:49:18Z</date>
+    <date>2020-01-21T08:22:12Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -18,7 +18,16 @@
             </groups>
             <applications>
                 <application>
-                    <name>MySQL: Instance info</name>
+                    <name>MySQL: Connections</name>
+                </application>
+                <application>
+                    <name>MySQL: Info</name>
+                </application>
+                <application>
+                    <name>MySQL: Performance</name>
+                </application>
+                <application>
+                    <name>MySQL: Throughput</name>
                 </application>
                 <application>
                     <name>stubs</name>
@@ -45,9 +54,10 @@
                     <key>mysql.instance[{$DBS_MYSQL_INSTANCE},server_id]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <description>This variable specifies the server ID. In MySQL 5.7, server_id must be specified if binary logging is enabled, otherwise the server is not allowed to start.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Info</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -67,9 +77,10 @@
                     <delay>0</delay>
                     <history>30d</history>
                     <units>unixtime</units>
+                    <description>The time at which MySQL was started.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Info</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -90,9 +101,10 @@
                     <history>30d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
+                    <description>Universal Unique Identifier (UUID).</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Info</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -113,9 +125,10 @@
                     <history>30d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
+                    <description>Full MySQL version information (number and vendor).</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Info</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -136,7 +149,7 @@
                     <description>Test connection with an instance of MySQL.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Info</name>
                         </application>
                     </applications>
                     <valuemap>
@@ -222,14 +235,714 @@
                     </applications>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Aborted clients per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},aborted_clients_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The number of connections that were aborted because the client died without closing the connection properly.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.ABORTED_CLIENTS</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Aborted connections per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},aborted_connects_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The number of failed attempts to connect to the MySQL server.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.ABORTED_CONNECTS</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool efficiency</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_efficiency]</key>
+                    <delay>2m</delay>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_reads]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) = 0 ) ) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) &gt; 0 )</params>
+                    <description>The item shows how effectively the buffer pool is serving reads.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool utilization</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization]</key>
+                    <delay>2m</delay>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) - last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_free]&quot;) ) / ( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) = 0)) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) &gt; 0)</params>
+                    <description>Ratio of used to total pages in the buffer pool.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Bytes received</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},bytes_received_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>Bps</units>
+                    <description>The number of bytes received from all clients.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.BYTES_RECEIVED</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Bytes sent</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},bytes_sent_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>Bps</units>
+                    <description>The number of bytes sent to all clients.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.BYTES_SENT</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Command Delete per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_delete_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The Com_delete counter variable indicates the number of times the delete statement has been executed.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.COM_DELETE</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Command Insert per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_insert_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The Com_insert counter variable indicates the number of times the insert statement has been executed.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.COM_INSERT</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Command Select per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_select_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The Com_select counter variable indicates the number of times the select statement has been executed.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.COM_SELECT</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Command Update per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_update_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The Com_update counter variable indicates the number of times the update statement has been executed.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.COM_UPDATE</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Connections per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},connections_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The number of connection attempts (successful or not) to the MySQL server.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CONNECTIONS</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Connection errors accept per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},connection_errors_accept_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of errors that occurred during calls to accept() on the listening port.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CONNECTION_ERRORS_ACCEPT</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Connection errors internal per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},connection_errors_internal_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of refused connections due to internal server errors, for example out of memory errors, or failed thread starts.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CONNECTION_ERRORS_INTERNAL</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Connection errors max connections per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},connection_errors_max_connections_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of refused connections due to the max_connections limit being reached.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CONNECTION_ERRORS_MAX_CONNECTIONS</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Connection errors peer address per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},connection_errors_peer_address_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of errors while searching for the connecting client IP address.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CONNECTION_ERRORS_PEER_ADDRESS</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Connection errors select per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},connection_errors_select_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of errors during calls to select() or poll() on the listening port. The client would not necessarily have been rejected in these cases.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CONNECTION_ERRORS_SELECT</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Connection errors tcpwrap per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},connection_errors_tcpwrap_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of connections the libwrap library refused.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CONNECTION_ERRORS_TCPWRAP</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp tables on disk</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_disk_tables]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of internal on-disk temporary tables created by the server while executing statements.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CREATED_TMP_DISK_TABLES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp files on disk</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_files]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>How many temporary files mysqld has created.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CREATED_TMP_FILES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp tables on memory</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_tables]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of internal temporary tables created by the server while executing statements.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CREATED_TMP_TABLES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB buffer pool pages free</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_free]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of free pages in the InnoDB buffer pool.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_BUFFER_POOL_PAGES_FREE</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB buffer pool pages total</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The total size of the InnoDB buffer pool, in pages.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_BUFFER_POOL_PAGES_TOTAL</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB buffer pool reads</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_reads]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of logical reads that InnoDB could not satisfy from the buffer pool, and had to read directly from disk.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_BUFFER_POOL_READS</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB buffer pool read requests</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of logical read requests.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_BUFFER_POOL_READ_REQUESTS</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB row lock time</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_row_lock_time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>The total time spent in acquiring row locks for InnoDB tables, in milliseconds.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_ROW_LOCK_TIME</params>
+                        </step>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <params>0.001</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB row lock time max</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_row_lock_time_max]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>The maximum time to acquire a row lock for InnoDB tables, in milliseconds.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_ROW_LOCK_TIME_MAX</params>
+                        </step>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <params>0.001</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB row lock waits</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_row_lock_waits]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of times operations on InnoDB tables had to wait for a row lock.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_ROW_LOCK_WAITS</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Max used connections</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},max_used_connections]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The maximum number of connections that have been in use simultaneously since the server started.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.MAX_USED_CONNECTIONS</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Open files</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},open_files]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <description>The number of files that are open. This count includes regular files opened by the server. It does not include other types of files such as sockets or pipes. Also, the count does not include files that storage engines open using their own internal functions rather than asking the server level to do so.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Info</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -248,9 +961,10 @@
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},open_tables]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <description>The number of tables that are open.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Info</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -264,14 +978,96 @@
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads - Cached</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Queries per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},queries_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The number of statements executed by the server. This variable includes statements executed within stored programs, unlike the Questions variable.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QUERIES</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Questions per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},questions_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The number of statements executed by the server. This includes only statements sent to the server by clients and not statements executed within stored programs, unlike the Queries variable.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QUESTIONS</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Slow queries per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},slow_queries_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The number of queries that have taken more than long_query_time seconds. This counter increments regardless of whether the slow query log is enabled.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SLOW_QUERIES</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads cached</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_cached]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <description>The number of threads in the thread cache.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Connections</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -285,14 +1081,15 @@
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads - Connected</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads connected</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <description>The number of currently open connections.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Connections</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -306,14 +1103,15 @@
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads - Created</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads created</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_created]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <description>The number of threads created to handle connections. If Threads_created is big, you may want to increase the thread_cache_size value. The cache miss rate can be calculated as Threads_created/Connections.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Connections</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -327,14 +1125,15 @@
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads - Running</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads running</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_running]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <description>The number of threads that are not sleeping.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Connections</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -354,10 +1153,10 @@
                     <delay>0</delay>
                     <history>30d</history>
                     <units>s</units>
-                    <description>Total MySQL runtime since launch.</description>
+                    <description>The number of seconds that the server has been up.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Info</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -369,6 +1168,34 @@
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{change()}&lt;-5</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Instance '{$DBS_MYSQL_INSTANCE}' has just been restarted</name>
+                            <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
+                            <priority>DISASTER</priority>
+                            <description>Процесс mysqld был перезапущен. Необходимо проверить факт перезапуска на сервере, проверить логи, далее уточнить в чате кто произвел перезапуск. Возможно, что перезапуск произошел в результате краха процесса в автоматическом режиме.</description>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Version</name>
@@ -381,12 +1208,12 @@
                     <description>Version of MySQL instance.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Instance info</name>
+                            <name>MySQL: Info</name>
                         </application>
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{diff()}=1</expression>
+                            <expression>{diff()}=1 and {strlen()}&gt;0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Version of MySQL has been changed</name>
                             <opdata>(current: {ITEM.VALUE})</opdata>
@@ -437,8 +1264,337 @@
                     <value>3306</value>
                 </macro>
             </macros>
+            <screens>
+                <screen>
+                    <name>[MySQL] Performance</name>
+                    <hsize>2</hsize>
+                    <vsize>3</vsize>
+                    <screen_items>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[MySQL] Operations</name>
+                                <host>DBS_Template MySQL for Windows</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>0</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[MySQL] Queries</name>
+                                <host>DBS_Template MySQL for Windows</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>0</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[MySQL] Connections</name>
+                                <host>DBS_Template MySQL for Windows</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>1</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[MySQL] Bandwidth</name>
+                                <host>DBS_Template MySQL for Windows</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>1</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[MySQL]  InnoDB buffer pool</name>
+                                <host>DBS_Template MySQL for Windows</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>2</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[MySQL] Threads</name>
+                                <host>DBS_Template MySQL for Windows</host>
+                            </resource>
+                            <width>500</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>2</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                    </screen_items>
+                </screen>
+            </screens>
         </template>
     </templates>
+    <graphs>
+        <graph>
+            <name>[MySQL] Bandwidth</name>
+            <graph_items>
+                <graph_item>
+                    <drawtype>GRADIENT_LINE</drawtype>
+                    <color>00AA00</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},bytes_received_rate]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>GRADIENT_LINE</drawtype>
+                    <color>3333FF</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},bytes_sent_rate]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[MySQL] Connections</name>
+            <graph_items>
+                <graph_item>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},aborted_clients_rate]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},aborted_connects_rate]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>2774A4</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},connections_rate]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <color>A54F10</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},max_used_connections]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[MySQL]  InnoDB buffer pool</name>
+            <graph_items>
+                <graph_item>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_free]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>2774A4</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <color>A54F10</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_reads]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[MySQL] Operations</name>
+            <graph_items>
+                <graph_item>
+                    <color>C80000</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_delete_rate]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>0000EE</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_insert_rate]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>00C800</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_select_rate]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <color>C800C8</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_update_rate]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[MySQL] Queries</name>
+            <graph_items>
+                <graph_item>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},queries_rate]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},questions_rate]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>2774A4</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},slow_queries_rate]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[MySQL] Threads</name>
+            <graph_items>
+                <graph_item>
+                    <color>A54F10</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_cached]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>FC6EA3</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>6C59DC</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_running]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+    </graphs>
     <value_maps>
         <value_map>
             <name>DBS MySQL (Instance state)</name>
