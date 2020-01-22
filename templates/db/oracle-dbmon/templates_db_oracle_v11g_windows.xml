@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-20T06:17:33Z</date>
+    <date>2020-01-22T05:54:16Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -58,11 +58,11 @@
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <expression>{last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_CRIT}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_CRIT}</recovery_expression>
                             <name>No archived log backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_CRIT})</opdata>
                             <priority>HIGH</priority>
                             <description>Очень давно не выполнялся бэкап архивных логов экземпляра. Актуально только если экземпляр в режиме ARCHIVELOG. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
                             <dependencies>
@@ -84,11 +84,11 @@
                             </tags>
                         </trigger>
                         <trigger>
-                            <expression>{last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <expression>{last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_WARN}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_WARN}</recovery_expression>
                             <name>No archived log backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_WARN})</opdata>
                             <priority>WARNING</priority>
                             <description>Давно не выполнялся бэкап архивных логов экземпляра. Актуально только если экземпляр в режиме ARCHIVELOG. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
                             <dependencies>
@@ -99,8 +99,8 @@
                                 </dependency>
                                 <dependency>
                                     <name>No archived log backups</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.archivelog[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.archivelog[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.archivelog[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_CRIT}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.archivelog[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -131,11 +131,11 @@
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{last()}&gt;{$DBS_ORACLE_CF_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <expression>{last()}&gt;{$DBS_ORACLE_CF_BACKUP_CRIT}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_CF_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_CF_BACKUP_CRIT}</recovery_expression>
                             <name>No control file backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_CRIT})</opdata>
                             <priority>HIGH</priority>
                             <description>Очень давно не выполнялся бэкап контрол файла (control file) экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
                             <dependencies>
@@ -157,11 +157,11 @@
                             </tags>
                         </trigger>
                         <trigger>
-                            <expression>{last()}&gt;{$DBS_ORACLE_CF_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <expression>{last()}&gt;{$DBS_ORACLE_CF_BACKUP_WARN}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_CF_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_CF_BACKUP_WARN}</recovery_expression>
                             <name>No control file backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_WARN})</opdata>
                             <priority>WARNING</priority>
                             <description>Давно не выполнялся бэкап контрол файла (control file) экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
                             <dependencies>
@@ -172,8 +172,8 @@
                                 </dependency>
                                 <dependency>
                                     <name>No control file backups</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.cf[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_CF_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.cf[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_CF_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.cf[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_CF_BACKUP_CRIT}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.cf[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_CF_BACKUP_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -204,11 +204,11 @@
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{last()}&gt;{$DBS_ORACLE_FULL_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <expression>{last()}&gt;{$DBS_ORACLE_FULL_BACKUP_CRIT}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_FULL_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_FULL_BACKUP_CRIT}</recovery_expression>
                             <name>No full database backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_CRIT})</opdata>
                             <priority>HIGH</priority>
                             <description>Очень давно не выполнялся полный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
                             <dependencies>
@@ -230,11 +230,11 @@
                             </tags>
                         </trigger>
                         <trigger>
-                            <expression>{last()}&gt;{$DBS_ORACLE_FULL_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <expression>{last()}&gt;{$DBS_ORACLE_FULL_BACKUP_WARN}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_FULL_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <recovery_expression>{last()}&lt;={$DBS_ORACLE_FULL_BACKUP_WARN}</recovery_expression>
                             <name>No full database backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_WARN})</opdata>
                             <priority>WARNING</priority>
                             <description>Давно не выполнялся полный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
                             <dependencies>
@@ -245,8 +245,8 @@
                                 </dependency>
                                 <dependency>
                                     <name>No full database backups</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.full[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_FULL_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.full[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_FULL_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.full[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_FULL_BACKUP_CRIT}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.full[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_FULL_BACKUP_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -303,11 +303,11 @@
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <expression>{avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</recovery_expression>
                             <name>Number of zombie processes is too high</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>HIGH</priority>
                             <description>Количество зомби процессов достигло критического уровня. Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
                             <dependencies>
@@ -329,11 +329,11 @@
                             </tags>
                         </trigger>
                         <trigger>
-                            <expression>{avg(7m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <expression>{avg(7m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}</recovery_expression>
                             <name>Number of zombie processes is too high</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>WARNING</priority>
                             <description>Количество зомби процессов достигло угрожающего уровня. Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
                             <dependencies>
@@ -344,8 +344,8 @@
                                 </dependency>
                                 <dependency>
                                     <name>Number of zombie processes is too high</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -578,11 +578,11 @@
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{last()}&gt;={$DBS_ORACLE_RESUMABLE_COUNT_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+                            <expression>{last()}&gt;={$DBS_ORACLE_RESUMABLE_COUNT_CRIT}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{last()}&lt;{$DBS_ORACLE_RESUMABLE_COUNT_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                            <recovery_expression>{last()}&lt;{$DBS_ORACLE_RESUMABLE_COUNT_CRIT}</recovery_expression>
                             <name>Resumable sessions suspended due to lack of space in tablespace</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_RESUMABLE_COUNT_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_RESUMABLE_COUNT_CRIT}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>DISASTER</priority>
                             <dependencies>
                                 <dependency>
@@ -1009,7 +1009,7 @@
                             </tags>
                         </trigger>
                         <trigger>
-                            <expression>{diff()}=1 and {last()}&lt;5 and {$DBS_ORACLE_DISABLE_INSTANCE_STATUS_ALARM:&quot;{$DBS_ORACLE_INSTANCE}&quot;}=0</expression>
+                            <expression>{diff()}=1 and {last()}&lt;5 and {$DBS_ORACLE_DISABLE_INSTANCE_STATUS_ALARM}=0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Instance status has been changed</name>
                             <opdata>(current: {ITEM.VALUE})</opdata>
@@ -1060,7 +1060,7 @@
                     </master_item>
                     <triggers>
                         <trigger>
-                            <expression>{change()}&lt;-20 and {$DBS_ORACLE_DISABLE_INSTANCE_RESTART_ALARM:&quot;{$DBS_ORACLE_INSTANCE}&quot;}=0</expression>
+                            <expression>{change()}&lt;-20 and {$DBS_ORACLE_DISABLE_INSTANCE_RESTART_ALARM}=0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Instance '{$DBS_ORACLE_INSTANCE}' has just been restarted</name>
                             <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
@@ -3293,7 +3293,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
     </templates>
     <triggers>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&gt;={$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&gt;={$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}</expression>
             <name>Current number of data files is near its limit</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2})</opdata>
             <priority>WARNING</priority>
@@ -3316,11 +3316,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT}</recovery_expression>
             <name>FRA usage is to high</name>
-            <opdata>(used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}%, alert started: {ITEM.VALUE1}%)</opdata>
+            <opdata>(used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_CRIT}%, alert started: {ITEM.VALUE1}%)</opdata>
             <priority>HIGH</priority>
             <description>Область Fast Recovery Area (FRA) заполнена до критического уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
@@ -3342,18 +3342,18 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_WARN} and {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_WARN}</recovery_expression>
             <name>FRA usage is to high</name>
-            <opdata>(used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}%, alert started: {ITEM.VALUE1}%)</opdata>
+            <opdata>(used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_WARN}%, alert started: {ITEM.VALUE1}%)</opdata>
             <priority>WARNING</priority>
             <description>Область Fast Recovery Area (FRA) заполнена до угрожающего уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
                 <dependency>
                     <name>FRA usage is to high</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT}</recovery_expression>
                 </dependency>
                 <dependency>
                     <name>Instance access failed</name>
@@ -3373,11 +3373,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
             <name>No incremental database backups</name>
-            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_CRIT})</opdata>
             <priority>HIGH</priority>
             <description>Очень давно не выполнялся инкрементальный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
             <dependencies>
@@ -3399,11 +3399,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_WARN} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_WARN} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
             <name>No incremental database backups</name>
-            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;})</opdata>
+            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_WARN})</opdata>
             <priority>WARNING</priority>
             <description>Давно не выполнялся инкрементальный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
             <dependencies>
@@ -3414,8 +3414,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
                 <dependency>
                     <name>No incremental database backups</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -3430,11 +3430,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT} or {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
             <name>Redolog switch rate per hour is too high</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}, alert started: {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
             <description>Генерация redo log черезвычайно высокая, возможно в базу интенсивно пишутся данные.</description>
             <dependencies>
@@ -3456,11 +3456,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_WARN}</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_WARN} or {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
             <name>Redolog switch rate per hour is too high</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_WARN}, alert started: {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
             <description>Генерация redo log слишком высокая, возможно в базу интенсивно пишутся данные.</description>
             <dependencies>
@@ -3482,11 +3482,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&gt;={$DBS_ORACLE_PROCESSES_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&gt;={$DBS_ORACLE_PROCESSES_PRC_CRIT}</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_CRIT}</recovery_expression>
             <name>Too many processes</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
             <dependencies>
                 <dependency>
@@ -3507,11 +3507,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].avg(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&gt;={$DBS_ORACLE_PROCESSES_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].avg(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&gt;={$DBS_ORACLE_PROCESSES_PRC_WARN}</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_WARN}</recovery_expression>
             <name>Too many processes</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
             <dependencies>
                 <dependency>
@@ -3521,8 +3521,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
                 <dependency>
                     <name>Too many processes</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&gt;={$DBS_ORACLE_PROCESSES_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&gt;={$DBS_ORACLE_PROCESSES_PRC_CRIT}</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_CRIT}</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -3537,11 +3537,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&gt;={$DBS_ORACLE_SESSIONS_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&gt;={$DBS_ORACLE_SESSIONS_PRC_CRIT}</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_CRIT}</recovery_expression>
             <name>Too many sessions</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
             <dependencies>
                 <dependency>
@@ -3562,11 +3562,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].avg(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&gt;={$DBS_ORACLE_SESSIONS_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].avg(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&gt;={$DBS_ORACLE_SESSIONS_PRC_WARN}</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(10m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_WARN}</recovery_expression>
             <name>Too many sessions</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_WARN:&quot;{$DBS_ORACLE_INSTANCE}&quot;}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
             <dependencies>
                 <dependency>
@@ -3576,8 +3576,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
                 <dependency>
                     <name>Too many sessions</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&gt;={$DBS_ORACLE_SESSIONS_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_CRIT:&quot;{$DBS_ORACLE_INSTANCE}&quot;}</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].avg(6m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&gt;={$DBS_ORACLE_SESSIONS_PRC_CRIT}</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(8m)}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_CRIT}</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
