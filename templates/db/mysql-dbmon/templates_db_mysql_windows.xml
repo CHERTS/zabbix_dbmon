@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-22T10:43:58Z</date>
+    <date>2020-01-22T12:57:20Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -317,6 +317,35 @@
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_MYSQL_ABORTED_CONN_MAX_WARN}</expression>
+                            <name>Server has aborted connections</name>
+                            <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_ABORTED_CONN_MAX_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
+                            <priority>AVERAGE</priority>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Refused connections (max_connections limit reached)</name>
+                                    <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},connection_errors_max_connections_rate].last()}&gt;0</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool dirty</name>
@@ -659,6 +688,30 @@
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;0</expression>
+                            <name>Refused connections (max_connections limit reached)</name>
+                            <priority>AVERAGE</priority>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Connection errors peer address per second</name>
@@ -1292,6 +1345,31 @@
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_MYSQL_SLOW_QUERIES_MAX_WARN}</expression>
+                            <name>Server has slow queries</name>
+                            <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_SLOW_QUERIES_MAX_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
+                            <priority>WARNING</priority>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads cached</name>
@@ -1779,6 +1857,102 @@
                             <master_item>
                                 <key>mysql.db.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{nodata({$DBS_MYSQL_DB_NODATA_WARN:&quot;{#DBNAME}&quot;})}=1</expression>
+                                    <name>Database '{#DBNAME}' is not available</name>
+                                    <priority>HIGH</priority>
+                                    <description>Давно не поступает информация о базе данных '{#DBNAME}'. Зайдите на сервер и проверьте наличие базы данных, возможно она была удалена. Доведите информацию до эксперта.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>MySQL</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_MYSQL_INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;{$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&lt;={$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}</recovery_expression>
+                                    <name>Size of database '{#DBNAME}' has increased</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>HIGH</priority>
+                                    <description>Размер базы данных '{#DBNAME}' превысил порог {$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}.&#13;
+Необходимо довести информацию до эксперта для дальнейшего анализа состояния базы данных.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>MySQL</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_MYSQL_INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;{$DBS_MYSQL_DBSIZE_WARN:&quot;{#DBNAME}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{last()}&lt;={$DBS_MYSQL_DBSIZE_WARN:&quot;{#DBNAME}&quot;}</recovery_expression>
+                                    <name>Size of database '{#DBNAME}' has increased</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_DBSIZE_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>Размер базы данных '{#DBNAME}' превысил порог {$DBS_MYSQL_DBSIZE_WARN:&quot;{#DBNAME}&quot;}.&#13;
+Необходимо довести информацию до эксперта для дальнейшего анализа состояния базы данных.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>Size of database '{#DBNAME}' has increased</name>
+                                            <expression>{DBS_Template MySQL for Windows:mysql.db.info[{#DBNAME},db_size].last()}&gt;{$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}</expression>
+                                            <recovery_expression>{DBS_Template MySQL for Windows:mysql.db.info[{#DBNAME},db_size].last()}&lt;={$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>MySQL</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_MYSQL_INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
                     <master_item>
@@ -1802,12 +1976,28 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </discovery_rules>
             <macros>
                 <macro>
+                    <macro>{$DBS_MYSQL_ABORTED_CONN_MAX_WARN}</macro>
+                    <value>3</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_MYSQL_CONNECTION_PRC_CRIT}</macro>
                     <value>95</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_CONNECTION_PRC_WARN}</macro>
                     <value>85</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_DBSIZE_CRIT}</macro>
+                    <value>70G</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_DBSIZE_WARN}</macro>
+                    <value>50G</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_DB_NODATA_WARN}</macro>
+                    <value>1h</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_HOST}</macro>
@@ -1840,6 +2030,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}</macro>
                     <value>20</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_SLOW_QUERIES_MAX_WARN}</macro>
+                    <value>3</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT}</macro>
