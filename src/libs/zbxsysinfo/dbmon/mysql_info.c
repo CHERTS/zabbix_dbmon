@@ -53,9 +53,19 @@ FROM %s.GLOBAL_STATUS;"
 SELECT /*DBS_004*/ LOWER(VARIABLE_NAME), VARIABLE_VALUE \
 FROM %s.GLOBAL_VARIABLES;"
 
-#define MYSQL_DISCOVER_DBS "\
-SELECT /*DBS_005*/ SCHEMA_NAME AS DBNAME, DEFAULT_CHARACTER_SET_NAME AS DB_CHARACTER_SET, DEFAULT_COLLATION_NAME AS DB_COLLATION_NAME \
+#define MYSQL_DB_DISCOVERY_DBS "\
+SELECT /*DBS_005*/ SCHEMA_NAME AS DBNAME, \
+	DEFAULT_CHARACTER_SET_NAME AS DB_CHARACTER_SET, \
+	DEFAULT_COLLATION_NAME AS DB_COLLATION_NAME \
 FROM information_schema.schemata;"
+
+#define MYSQL_DB_INFO_DBS "\
+SELECT /*DBS_006*/ s.SCHEMA_NAME AS DBNAME, \
+	s.DEFAULT_CHARACTER_SET_NAME AS DB_CHARACTER_SET, \
+	s.DEFAULT_COLLATION_NAME AS DB_COLLATION_NAME, \
+	Sum(t.DATA_LENGTH + t.INDEX_LENGTH) AS DB_SIZE \
+FROM information_schema.schemata s INNER JOIN information_schema.tables t ON s.SCHEMA_NAME = t.TABLE_SCHEMA \
+WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema)' GROUP BY s.SCHEMA_NAME;"
 
 ZBX_METRIC	parameters_dbmon_mysql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
@@ -67,6 +77,7 @@ ZBX_METRIC	parameters_dbmon_mysql[] =
 	{"mysql.global.status",		CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.global.variables",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.db.discovery",		CF_HAVEPARAMS,		MYSQL_DB_DISCOVERY,	NULL},
+	{"mysql.db.info",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -337,7 +348,7 @@ int	MYSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
 
-	ret = mysql_get_discovery(request, result, MYSQL_DISCOVER_DBS);
+	ret = mysql_get_discovery(request, result, MYSQL_DB_DISCOVERY_DBS);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
 
@@ -469,6 +480,10 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, (const char*)"mysql.global.variables"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_GLOBAL_VARIABLES_DBS, ZBX_DB_RES_TYPE_TWOCOLL);
+	}
+	else if (0 == strcmp(request->key, (const char*)"mysql.db.info"))
+	{
+		ret = mysql_make_result(request, result, MYSQL_DB_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else
 	{

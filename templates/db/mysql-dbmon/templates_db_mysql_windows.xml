@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-22T08:06:36Z</date>
+    <date>2020-01-22T10:39:20Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -37,6 +37,20 @@
                 </application>
             </applications>
             <items>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get database info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>mysql.db.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    <delay>30m</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get global status</name>
                     <type>ZABBIX_ACTIVE</type>
@@ -1683,6 +1697,101 @@
                     </triggers>
                 </item>
             </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>MySQL database discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.database.discovery</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[MySQL] Database '{#DBNAME}': Character set</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.db.info[{#DBNAME},db_character_set]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].DB_CHARACTER_SET.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.db.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] Database '{#DBNAME}': Collation name</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.db.info[{#DBNAME},db_collation_name]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].DB_COLLATION_NAME.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.db.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] Database '{#DBNAME}': Size</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.db.info[{#DBNAME},db_size]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].DB_SIZE.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.db.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>mysql.db.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(db){
+    return {
+        &quot;{#DBNAME}&quot;: db.DBNAME
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+            </discovery_rules>
             <macros>
                 <macro>
                     <macro>{$DBS_MYSQL_CONNECTION_PRC_CRIT}</macro>
