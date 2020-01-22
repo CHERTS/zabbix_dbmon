@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-22T05:30:50Z</date>
+    <date>2020-01-22T07:18:33Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -178,7 +178,7 @@
                             <recovery_expression>{min(#2)}=1</recovery_expression>
                             <name>Instance access failed</name>
                             <priority>DISASTER</priority>
-                            <description>Тестовое подключение к экземпляру БД MySQL не успешно. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <description>Тестовое подключение к экземпляру БД MySQL не успешно. Необходимо проверить работу экземпляра БД, посмотреть error.log, далее проверить работу и настройки zabbix-agent.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
@@ -200,7 +200,7 @@
                             <expression>{nodata({$DBS_MYSQL_PING_NODATA_CRIT})}=1</expression>
                             <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
                             <priority>HIGH</priority>
-                            <description>Данные о доступности экземпляра БД MySQL не поступали более 12 минут. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_MYSQL_PING_NODATA_CRIT} (минут). Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent. Сообщить о проблеме эксперту в  соответствующий чат.</description>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
@@ -216,7 +216,7 @@
                             <expression>{nodata({$DBS_MYSQL_PING_NODATA_WARN})}=1</expression>
                             <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
                             <priority>WARNING</priority>
-                            <description>Данные о доступности экземпляра БД MySQL не поступали более 12 минут. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_MYSQL_PING_NODATA_WARN} (минут). Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent. Сообщить о проблеме эксперту в  соответствующий чат.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
@@ -1396,7 +1396,7 @@
                             <name>Instance '{$DBS_MYSQL_INSTANCE}' has just been restarted</name>
                             <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
                             <priority>DISASTER</priority>
-                            <description>Процесс mysqld был перезапущен. Необходимо проверить факт перезапуска на сервере, проверить логи, далее уточнить в чате кто произвел перезапуск. Возможно, что перезапуск произошел в результате краха процесса в автоматическом режиме.</description>
+                            <description>Процесс (сервис) mysqld был перезапущен. Необходимо проверить факт перезапуска на сервере заказчика, проверить логи (error.log), далее уточнить в чате кто произвел перезапуск. Возможно, что перезапуск произошел в результате краха процесса в автоматическом режиме.</description>
                             <manual_close>YES</manual_close>
                             <dependencies>
                                 <dependency>
@@ -1907,6 +1907,9 @@
             <name>Too many connections</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
+            <description>Текущее количество открытых соединений очень велико.&#13;
+Зайдите в консоль mysql и выполните SHOW PROCESSLIST;&#13;
+Проанализируйте кто занимает больше всего соединений, желательно уменьшить их количество. Передайте данные эксперту для анализа.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -1930,6 +1933,9 @@
             <name>Too many connections</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
+            <description>Текущее количество открытых соединений велико.&#13;
+Зайдите в консоль mysql и выполните SHOW PROCESSLIST;&#13;
+Проанализируйте кто занимает больше всего соединений, желательно уменьшить их количество. Передайте данные эксперту для анализа.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -1957,6 +1963,10 @@
             <name>Too many threads running</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_CRIT}, alert started {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
+            <description>Текущее количество работающих тредов велико.&#13;
+Зайдите в консоль mysql и выполните:&#13;
+SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Sleep|Binlog Dump|Binlog Dump GTID)' AND ID != CONNECTION_ID() AND USER NOT REGEXP '(system user|proxysql|rep)' AND STATE NOT REGEXP '(slave|relay|event)';&#13;
+Проанализируйте кто занимает больше всего работающих соединений, желательно уменьшить их количество. Передайте данные эксперту для анализа.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -1980,6 +1990,10 @@
             <name>Too many threads running</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_WARN}, alert started {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
+            <description>Текущее количество работающих тредов велико.&#13;
+Зайдите в консоль mysql и выполните:&#13;
+SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Sleep|Binlog Dump|Binlog Dump GTID)' AND ID != CONNECTION_ID() AND USER NOT REGEXP '(system user|proxysql|rep)' AND STATE NOT REGEXP '(slave|relay|event)';&#13;
+Проанализируйте кто занимает больше всего работающих соединений, желательно уменьшить их количество. Передайте данные эксперту для анализа.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
