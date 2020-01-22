@@ -38,7 +38,7 @@ extern char	*CONFIG_MYSQL_PASSWORD;
 #define MYSQL_VERSION_DBS "SELECT /*DBS_001*/ VERSION() AS VERSION;"
 
 #define MYSQL_SERVER_INFO_DBS "\
-SELECT /*DBS_003*/ @@server_id AS SERVER_ID, \
+SELECT /*DBS_002*/ @@server_id AS SERVER_ID, \
 	UUID() AS SERVER_UUID, \
 	VERSION() AS VERSION, \
 	CAST(SUM(TRUNCATE(UNIX_TIMESTAMP()-VARIABLE_VALUE, 0))/COUNT(TRUNCATE(UNIX_TIMESTAMP()-VARIABLE_VALUE, 0)) AS UNSIGNED) AS STARTUPTIME \
@@ -46,8 +46,12 @@ FROM %s.GLOBAL_STATUS \
 WHERE VARIABLE_NAME='UPTIME';"
 
 #define MYSQL_GLOBAL_STATUS_DBS "\
-SELECT /*DBS_004*/ VARIABLE_NAME, VARIABLE_VALUE \
+SELECT /*DBS_003*/ LOWER(VARIABLE_NAME), VARIABLE_VALUE \
 FROM %s.GLOBAL_STATUS;"
+
+#define MYSQL_GLOBAL_VARIABLES_DBS "\
+SELECT /*DBS_004*/ LOWER(VARIABLE_NAME), VARIABLE_VALUE \
+FROM %s.GLOBAL_VARIABLES;"
 
 #define MYSQL_DISCOVER_DBS "\
 SELECT /*DBS_005*/ SCHEMA_NAME AS DBNAME, DEFAULT_CHARACTER_SET_NAME AS DB_CHARACTER_SET, DEFAULT_COLLATION_NAME AS DB_COLLATION_NAME \
@@ -56,12 +60,13 @@ FROM information_schema.schemata;"
 ZBX_METRIC	parameters_dbmon_mysql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
-	{"mysql.ping",			CF_HAVEPARAMS,		MYSQL_PING,			NULL},
-	{"mysql.version",		CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
-	{"mysql.version.full",	CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
-	{"mysql.server.info",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
-	{"mysql.global.status",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
-	{"mysql.db.discovery",	CF_HAVEPARAMS,		MYSQL_DB_DISCOVERY,	NULL},
+	{"mysql.ping",				CF_HAVEPARAMS,		MYSQL_PING,			NULL},
+	{"mysql.version",			CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
+	{"mysql.version.full",		CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
+	{"mysql.server.info",		CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.global.status",		CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.global.variables",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.db.discovery",		CF_HAVEPARAMS,		MYSQL_DB_DISCOVERY,	NULL},
 	{NULL}
 };
 
@@ -388,6 +393,10 @@ static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 		{
 			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
 		}
+		else if (0 == strcmp(request->key, (const char*)"mysql.global.variables"))
+		{
+			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
+		}
 		else
 		{
 			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query);
@@ -456,6 +465,10 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, (const char*)"mysql.global.status"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_GLOBAL_STATUS_DBS, ZBX_DB_RES_TYPE_TWOCOLL);
+	}
+	else if (0 == strcmp(request->key, (const char*)"mysql.global.variables"))
+	{
+		ret = mysql_make_result(request, result, MYSQL_GLOBAL_VARIABLES_DBS, ZBX_DB_RES_TYPE_TWOCOLL);
 	}
 	else
 	{

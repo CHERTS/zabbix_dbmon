@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-21T08:22:12Z</date>
+    <date>2020-01-22T05:20:07Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -30,6 +30,9 @@
                     <name>MySQL: Throughput</name>
                 </application>
                 <application>
+                    <name>MySQL: Variables</name>
+                </application>
+                <application>
                     <name>stubs</name>
                 </application>
             </applications>
@@ -39,6 +42,20 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     <delay>2m</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get global variables</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    <delay>5m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -289,10 +306,27 @@
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool dirty</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_dirty_ratio]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_dirty]&quot;) / ( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) = 0)) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) &gt; 0)</params>
+                    <description>Ratio of total to dirty pages in the buffer pool.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool efficiency</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_efficiency]</key>
                     <delay>2m</delay>
+                    <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>%</units>
                     <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_reads]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) = 0 ) ) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) &gt; 0 )</params>
@@ -308,6 +342,7 @@
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization]</key>
                     <delay>2m</delay>
+                    <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>%</units>
                     <params>( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) - last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_free]&quot;) ) / ( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) = 0)) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) &gt; 0)</params>
@@ -422,6 +457,28 @@
                         <step>
                             <type>CHANGE_PER_SECOND</type>
                             <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Command Select</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_select]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The Com_select counter variable indicates the number of times the select statement has been executed.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.COM_SELECT</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -738,6 +795,28 @@
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB buffer pool dirty pages</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_dirty]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The current number of dirty pages in the InnoDB buffer pool.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_BUFFER_POOL_PAGES_DIRTY</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB buffer pool pages free</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_free]</key>
@@ -978,6 +1057,149 @@
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Query cache efficiency</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_hits]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},com_select]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_hits]&quot;)) * 100</params>
+                    <description>Query cache efficiency in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Query cache efficiency (2)</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency_2]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <status>DISABLED</status>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_hits]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_hits]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_inserts]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_not_cached]&quot;))) * 100</params>
+                    <description>Query cache efficiency in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Query cache free memory</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_free_memory]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The amount of free memory for the query cache.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QCACHE_FREE_MEMORY</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Query cache hits</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_hits]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of query cache hits.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QCACHE_HITS</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Query cache inserts</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_inserts]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of queries added to the query cache.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QCACHE_INSERTS</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Query cache lowmem prunes</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_lowmem_prunes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of queries that were deleted from the query cache because of low memory.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QCACHE_LOWMEM_PRUNES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Query cache not cached</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_not_cached]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of noncached queries (not cacheable, or not cached due to the query_cache_type setting).</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QCACHE_NOT_CACHED</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Queries per second</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},queries_rate]</key>
@@ -1198,6 +1420,226 @@
                     </triggers>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Have query cache</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},have_query_cache]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>YES if mysqld supports the query cache, NO if not.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.HAVE_QUERY_CACHE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Hostname</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},hostname]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Hostname</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.HOSTNAME</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Max connections</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The maximum permitted number of simultaneous client connections.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.MAX_CONNECTIONS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Query cache limit</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_limit]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Do not cache results that are larger than this number of bytes. The default value is 1MB.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QUERY_CACHE_LIMIT</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Query cache min res until</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_min_res_unit]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>The minimum size (in bytes) for blocks allocated by the query cache. The default value is 4096 (4KB).</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QUERY_CACHE_MIN_RES_UNIT</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Query cache size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>The amount of memory allocated for caching query results. By default, the query cache is disabled.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QUERY_CACHE_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Query cache type</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_type]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Set the query cache type.&#13;
+0 or OFF - Do not cache results in or retrieve results from the query cache. Note that this does not deallocate the query cache buffer. To do that, you should set query_cache_size to 0.&#13;
+1 or ON - Cache all cacheable query results except for those that begin with SELECT SQL_NO_CACHE.&#13;
+2 or DEMAND - Cache results only for cacheable queries that begin with SELECT SQL_CACHE.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.QUERY_CACHE_TYPE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Table open cache</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},table_open_cache]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of open tables for all threads. Increasing this value increases the number of file descriptors that mysqld requires.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.TABLE_OPEN_CACHE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Version</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.version[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
@@ -1244,12 +1686,28 @@
             </items>
             <macros>
                 <macro>
+                    <macro>{$DBS_MYSQL_CONNECTION_PRC_CRIT}</macro>
+                    <value>95</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_CONNECTION_PRC_WARN}</macro>
+                    <value>85</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_MYSQL_HOST}</macro>
                     <value>127.0.0.1</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_INSTANCE}</macro>
                     <value>mysql_3306</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_LOGDIR}</macro>
+                    <value>c:\windows</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_LOGNAME}</macro>
+                    <value>error.log</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_PING_NODATA_CRIT}</macro>
@@ -1262,6 +1720,18 @@
                 <macro>
                     <macro>{$DBS_MYSQL_PORT}</macro>
                     <value>3306</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}</macro>
+                    <value>20</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_THREADS_RUNNING_PRC_WARN}</macro>
+                    <value>80</value>
                 </macro>
             </macros>
             <screens>
@@ -1407,6 +1877,133 @@
             </screens>
         </template>
     </templates>
+    <triggers>
+        <trigger>
+            <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency].avg(30m)}&lt;{$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_limit].last()}&gt;0</expression>
+            <name>Query cache efficiency is very low</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}%, alert started: {ITEM.VALUE1})</opdata>
+            <url>https://dev.mysql.com/doc/refman/5.7/en/query-cache-status-and-maintenance.html</url>
+            <priority>WARNING</priority>
+            <description>Процент эффективности кэша запросов, составляет менее 20%, указывает на проблему с производительностью. Постарайтесь сократить набор результатов, создав более строгие запросы. Если это невозможно, Вы можете увеличить параметр query_cache_limit, чтобы большее количество ваших наборов результатов действительно попадало в кеш. Увеличивайте query_cache_limit постепенно, сильно высокие значения могут снизить производительность.</description>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>MySQL</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
+            <name>Too many connections</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
+            <priority>HIGH</priority>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>MySQL</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_WARN} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
+            <name>Too many connections</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
+            <priority>WARNING</priority>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                </dependency>
+                <dependency>
+                    <name>Too many connections</name>
+                    <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>MySQL</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
+            <name>Too many threads running</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_CRIT}, alert started {ITEM.VALUE1})</opdata>
+            <priority>HIGH</priority>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>MySQL</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_WARN} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
+            <name>Too many threads running</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_WARN}, alert started {ITEM.VALUE1})</opdata>
+            <priority>WARNING</priority>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                </dependency>
+                <dependency>
+                    <name>Too many threads running</name>
+                    <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>MySQL</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+    </triggers>
     <graphs>
         <graph>
             <name>[MySQL] Bandwidth</name>
@@ -1562,6 +2159,35 @@
                     <item>
                         <host>DBS_Template MySQL for Windows</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},slow_queries_rate]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[MySQL] Query Cache Performance</name>
+            <graph_items>
+                <graph_item>
+                    <drawtype>GRADIENT_LINE</drawtype>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_hits]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>2774A4</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_inserts]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template MySQL for Windows</host>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_lowmem_prunes]</key>
                     </item>
                 </graph_item>
             </graph_items>
