@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-22T05:20:07Z</date>
+    <date>2020-01-22T05:30:50Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -41,7 +41,6 @@
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get global status</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
-                    <delay>2m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -55,7 +54,7 @@
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get global variables</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
-                    <delay>5m</delay>
+                    <delay>30m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
