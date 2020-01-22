@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-22T10:39:20Z</date>
+    <date>2020-01-22T10:43:58Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -1722,6 +1722,10 @@
                                     <type>JSONPATH</type>
                                     <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].DB_CHARACTER_SET.first()</params>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>6h</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>mysql.db.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
@@ -1744,6 +1748,10 @@
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].DB_COLLATION_NAME.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>6h</params>
                                 </step>
                             </preprocessing>
                             <master_item>
