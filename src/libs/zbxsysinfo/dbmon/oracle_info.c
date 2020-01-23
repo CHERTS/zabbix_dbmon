@@ -443,9 +443,9 @@ SELECT i.instance_name AS INSTANCE, \
 	round(nvl(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, \
 	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
 	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
-FROM i, f, m, d, df  \
-WHERE d.tablespace_name = f.tablespace_name(+)  \
-	AND d.tablespace_name = m.tablespace_name(+)  \
+FROM i, f, m, d, df \
+WHERE d.tablespace_name = f.tablespace_name(+) \
+	AND d.tablespace_name = m.tablespace_name(+) \
 	AND d.tablespace_name = df.tablespace_name(+)"
 
 #define ORACLE_V12_PERMANENT_TS_INFO_DBS "\
@@ -468,6 +468,90 @@ FROM i, f, m, df \
 WHERE i.tablespace_name = f.tablespace_name(+) \
 	AND i.tablespace_name = m.tablespace_name(+) \
 	AND i.tablespace_name = df.tablespace_name(+)"
+
+#define ORACLE_V11_TEMPORARY_TS_INFO_DBS "\
+WITH \
+i AS(SELECT i.instance_name, d.name FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
+f as(SELECT t.tablespace_name tablespace_name, nvl(nvl((SELECT sum(bytes) FROM dba_temp_files tf WHERE tf.tablespace_name = t.tablespace_name), 0) - nvl((SELECT sum(s.blocks) FROM v$tempseg_usage s WHERE t.tablespace_name = s.tablespace), 0)*t.block_size, 0) as tbs_free from dba_tablespaces t WHERE t.contents = 'TEMPORARY' GROUP BY t.tablespace_name, t.block_size), \
+m as(SELECT d.tablespace_name tablespace_name, sum(d.bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_temp_files d GROUP BY d.tablespace_name), \
+d as(SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'TEMPORARY'), \
+df as(SELECT tablespace_name, count(*) df_cnt from dba_temp_files GROUP BY tablespace_name) \
+SELECT i.instance_name AS INSTANCE, \
+	i.name AS DBNAME, \
+	d.tablespace_name AS TSNAME, \
+	df.df_cnt AS DF_NUMBER, \
+	decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	round(nvl(f.tbs_free, 0)) AS TS_FILE_FREE_SPACE, \
+	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
+	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+FROM i, f, m, d, df \
+WHERE d.tablespace_name = f.tablespace_name(+) \
+	AND d.tablespace_name = m.tablespace_name(+) \
+	AND d.tablespace_name = df.tablespace_name(+)"
+
+#define ORACLE_V12_TEMPORARY_TS_INFO_DBS "\
+WITH \
+i AS (SELECT i.instance_name, decode(s.con_id, 0, d.name, p.name) AS name, s.tablespace_name, s.status \
+	FROM cdb_tablespaces s, v$containers p, gv$database d, gv$instance i \
+	WHERE p.con_id(+) = s.con_id AND d.inst_id = i.inst_id AND s.contents = 'TEMPORARY'), \
+f as(SELECT t.tablespace_name tablespace_name, nvl(nvl((SELECT sum(bytes) FROM dba_temp_files tf WHERE tf.tablespace_name = t.tablespace_name), 0) - nvl((SELECT sum(s.blocks) FROM v$tempseg_usage s WHERE t.tablespace_name = s.tablespace), 0)*t.block_size, 0) as tbs_free from dba_tablespaces t WHERE t.contents = 'TEMPORARY' GROUP BY t.tablespace_name, t.block_size), \
+m as(SELECT d.tablespace_name tablespace_name, sum(d.bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_temp_files d GROUP BY d.tablespace_name), \
+d as(SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'TEMPORARY'), \
+df as(SELECT tablespace_name, count(*) df_cnt from dba_temp_files GROUP BY tablespace_name) \
+SELECT i.instance_name AS INSTANCE, \
+	i.name AS DBNAME, \
+	d.tablespace_name AS TSNAME, \
+	df.df_cnt AS DF_NUMBER, \
+	decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	round(nvl(f.tbs_free, 0)) AS TS_FILE_FREE_SPACE, \
+	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
+	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+FROM i, f, m, d, df \
+WHERE d.tablespace_name = f.tablespace_name(+) \
+	AND d.tablespace_name = m.tablespace_name(+) \
+	AND d.tablespace_name = df.tablespace_name(+)"
+
+#define ORACLE_V11_UNDO_TS_INFO_DBS "\
+WITH \
+i AS(SELECT i.instance_name, d.name FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
+f as(SELECT tablespace_name, SUM(bytes) usedbytes FROM dba_undo_extents WHERE status = 'ACTIVE' GROUP BY tablespace_name), \
+m as(SELECT tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
+d as(SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'UNDO'), \
+df as(SELECT tablespace_name, count(*) df_cnt from dba_data_files GROUP BY tablespace_name) \
+SELECT i.instance_name AS INSTANCE, \
+	i.name AS DBNAME, \
+	d.tablespace_name AS TSNAME, \
+	df.df_cnt AS DF_NUMBER, \
+	decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	round(nvl(f.usedbytes, 0)) AS TS_USED_BYTES, \
+	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
+	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+FROM i, f, m, d, df \
+WHERE d.tablespace_name = f.tablespace_name(+) \
+	AND d.tablespace_name = m.tablespace_name(+) \
+	AND d.tablespace_name = df.tablespace_name(+)"
+
+#define ORACLE_V12_UNDO_TS_INFO_DBS "\
+WITH \
+i AS(SELECT i.instance_name, decode(s.con_id, 0, d.name, p.name) AS name, s.tablespace_name, s.status \
+	FROM cdb_tablespaces s, v$containers p, gv$database d, gv$instance i \
+	WHERE p.con_id(+) = s.con_id AND d.inst_id = i.inst_id AND s.contents = 'UNDO'), \
+f as(SELECT tablespace_name, SUM(bytes) usedbytes FROM dba_undo_extents WHERE status = 'ACTIVE' GROUP BY tablespace_name), \
+m as(SELECT tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
+d as(SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'UNDO'), \
+df as(SELECT tablespace_name, count(*) df_cnt from dba_data_files GROUP BY tablespace_name) \
+SELECT i.instance_name AS INSTANCE, \
+	i.name AS DBNAME, \
+	d.tablespace_name AS TSNAME, \
+	df.df_cnt AS DF_NUMBER, \
+	decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	round(nvl(f.usedbytes, 0)) AS TS_USED_BYTES, \
+	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
+	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+FROM i, f, m, d, df \
+WHERE d.tablespace_name = f.tablespace_name(+) \
+	AND d.tablespace_name = m.tablespace_name(+) \
+	AND d.tablespace_name = df.tablespace_name(+)"
 
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
@@ -499,7 +583,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.archlogdest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.archlogdest.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.parameters",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.tablespace.permanent.info",		CF_HAVEPARAMS,		ORACLE_TS_INFO,					NULL},
+	{"oracle.tablespace.info",					CF_HAVEPARAMS,		ORACLE_TS_INFO,					NULL},
 	{NULL}
 };
 
@@ -511,7 +595,7 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance;
-	unsigned short				oracle_port = 0;
+	unsigned short				oracle_port = 1521;
 	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
 
@@ -954,7 +1038,7 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance, *ora_version, *sql = NULL;
-	unsigned short				oracle_port = 0;
+	unsigned short				oracle_port = 1521;
 	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
@@ -1123,7 +1207,7 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_dbname;
 	unsigned short				oracle_port = 1521;
-	unsigned int				oracle_mode;
+	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
 	const char					*query = ORACLE_V11_DB_INFO_DBS;
@@ -1248,8 +1332,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_str_ts_type;
 	unsigned short				oracle_port = 1521;
-	unsigned int				oracle_mode;
-	zbx_db_oracle_ts_type		oracle_ts_type;
+	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_ts_type = 0;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
 	char						*query = ORACLE_V11_PERMANENT_TS_INFO_DBS;
@@ -1318,6 +1401,12 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 		}
 	}
 
+	if (2 < oracle_ts_type)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Incorrect fourth parameter (tstype). Allow: 0 - permanent, 1 - temporary, 2 - undo"));
+		return SYSINFO_RET_FAIL;
+	}
+
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the oracle_ts_info() prototype as required by */
 	/* zbx_execute_threaded_metric() on MS Windows */
@@ -1336,13 +1425,18 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 			{
 				zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version: %s", __func__, request->key, ora_version);
 
-				//zbx_strcmp_natural(ora_version, "12.0.0.0.0")
 				if (0 > zbx_strcmp_natural(ora_version, "12.0.0.0.0"))
 				{
-					switch (oracle_ts_type)
+					switch ((zbx_db_oracle_ts_type)oracle_ts_type)
 					{
 						case ORA_TS_PERMANENT:
 							query = ORACLE_V11_PERMANENT_TS_INFO_DBS;
+							break;
+						case ORA_TS_TEMPORARY:
+							query = ORACLE_V11_TEMPORARY_TS_INFO_DBS;
+							break;
+						case ORA_TS_UNDO:
+							query = ORACLE_V11_UNDO_TS_INFO_DBS;
 							break;
 						default:
 							query = ORACLE_V11_PERMANENT_TS_INFO_DBS;
@@ -1354,12 +1448,18 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 				{
 					switch (oracle_ts_type)
 					{
-					case ORA_TS_PERMANENT:
-						query = ORACLE_V12_PERMANENT_TS_INFO_DBS;
-						break;
-					default:
-						query = ORACLE_V12_PERMANENT_TS_INFO_DBS;
-						break;
+						case ORA_TS_PERMANENT:
+							query = ORACLE_V12_PERMANENT_TS_INFO_DBS;
+							break;
+						case ORA_TS_TEMPORARY:
+							query = ORACLE_V12_TEMPORARY_TS_INFO_DBS;
+							break;
+						case ORA_TS_UNDO:
+							query = ORACLE_V12_UNDO_TS_INFO_DBS;
+							break;
+						default:
+							query = ORACLE_V12_PERMANENT_TS_INFO_DBS;
+							break;
 					}
 					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version >= 12, use query '%s'", __func__, request->key, query);
 				}
