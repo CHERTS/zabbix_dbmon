@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-23T13:34:17Z</date>
+    <date>2020-01-24T07:14:50Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -1549,6 +1549,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Size of database '{#DBNAME}' has increased</name>
                                     <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                                     <priority>HIGH</priority>
+                                    <description>Размер базы '{#DBNAME}' превышает {$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}. Необходима консультация эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -1578,6 +1579,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Size of database '{#DBNAME}' has increased</name>
                                     <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                                     <priority>WARNING</priority>
+                                    <description>Размер базы '{#DBNAME}' превышает {$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}. Необходима консультация эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -2005,6 +2007,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <recovery_expression>{last()}=2 or {$DBS_ORACLE_NOARCHIVELOG:&quot;{#DBNAME}&quot;}=1</recovery_expression>
                                     <name>Database '{#DBNAME}' is NOARCHIVELOG mode.</name>
                                     <priority>WARNING</priority>
+                                    <description>База данных '{#DBNAME}' находиться в режиме NOARCHIVELOG. Уточните у заказчика и эксперта обоснованность использования данного режима.</description>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
                                         <dependency>
@@ -2098,6 +2101,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Database status has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>DISASTER</priority>
+                                    <description>Статус базы данных '{#DBNAME}' изменился.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
@@ -2287,6 +2291,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Database role has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
+                                    <description>Роль базы данных '{#DBNAME}' была изменена.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
