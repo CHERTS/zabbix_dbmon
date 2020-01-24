@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-24T11:54:37Z</date>
+    <date>2020-01-24T16:09:21Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -673,7 +673,7 @@
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>600</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -726,7 +726,7 @@
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>600</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -806,7 +806,7 @@
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>600</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -903,7 +903,7 @@
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>600</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -977,6 +977,10 @@
                         <step>
                             <type>JSONPATH</type>
                             <params>$.STATUS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1298,12 +1302,12 @@
                     <name>Oracle alert log discovery</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.alertlog.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>1h</delay>
+                    <delay>5m</delay>
                     <item_prototypes>
                         <item_prototype>
                             <name>[Oracle] Instance '{#INSTANCE}': Alert log '{#ALERTLOG}'</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>logrt[&quot;{#ALERTLOG}&quot;,{$DBS_ORACLE_ALERTLOG_REGEXP:&quot;{#INSTANCE}&quot;}]</key>
+                            <key>logrt[&quot;{#ALERTLOG}&quot;,&quot;{$DBS_ORACLE_ALERTLOG_REGEXP}&quot;]</key>
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>LOG</value_type>
@@ -1312,6 +1316,42 @@
                                     <name>Oracle: Instance info</name>
                                 </application>
                             </applications>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{iregexp(&quot;Corrupt block relative dba:&quot;)}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>{{ITEM.VALUE}.iregsub(&quot;Corrupt block relative dba: 0x[a-z0-9]{1,} \(file ([0-9]+), block ([0-9]+)\)&quot;, &quot;Found corrupt block (file: '\1', block: '\2')&quot;)}</name>
+                                    <priority>WARNING</priority>
+                                    <description>У экземпляра &quot;{#INSTANCE}&quot; обнаружены ошибки в блоках данных.&#13;
+Проверьте лог-файл &quot;{#ALERTLOG}&quot; на предмет успешного повторного чтения блока данных.&#13;
+Пример успешного повторного чтения:&#13;
+Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{iregexp(&quot;ORA-00600:&quot;)}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>{{ITEM.VALUE}.iregsub(&quot;ORA-00600: (.*): (\[.*\])&quot;, &quot;Found ORA-00600: \2&quot;)}</name>
+                                    <priority>WARNING</priority>
+                                    <description>У экземпляра &quot;{#INSTANCE}&quot; обнаружена ошибка ORA-00600.&#13;
+Проверьте лог-файл &quot;{#ALERTLOG}&quot; для детального анализа ошибки.</description>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
                 </discovery_rule>
@@ -1342,7 +1382,7 @@
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>600</params>
+                                    <params>10m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1422,7 +1462,7 @@
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>600</params>
+                                    <params>10m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1450,7 +1490,7 @@
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>600</params>
+                                    <params>10m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1651,7 +1691,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1680,7 +1720,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1738,7 +1778,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1801,7 +1841,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1829,7 +1869,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1890,7 +1930,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1951,7 +1991,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2015,7 +2055,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2109,7 +2149,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2173,7 +2213,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2207,7 +2247,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2270,7 +2310,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2299,7 +2339,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2358,7 +2398,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>300</params>
+                                    <params>5m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2960,7 +3000,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>600</params>
+                                    <params>10m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -3039,7 +3079,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>600</params>
+                                    <params>10m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -3889,7 +3929,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <macros>
                 <macro>
                     <macro>{$DBS_ORACLE_ALERTLOG_REGEXP}</macro>
-                    <value>&quot;ORA-|PLS-|SP2-|IMP-|TNS|TERMINAT|ERROR|[Ee]rror|Corrupt block relative dba:&quot;</value>
+                    <value>ORA-|PLS-|SP2-|IMP-|TNS|TERMINAT|ERROR|[Ee]rror|Corrupt block relative dba:</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_ALOG_BACKUP_CRIT}</macro>
