@@ -20,25 +20,49 @@ echo MySQL version:
 zabbix_get.exe %zbx_conn_string% -k mysql.version[127.0.0.1,3306]
 echo -----------------------------------------------------------------------------
 
+echo MySQL version full:
+zabbix_get.exe %zbx_conn_string% -k mysql.version.full[127.0.0.1,3306]
+echo -----------------------------------------------------------------------------
+
 echo MySQL ping:
 zabbix_get.exe %zbx_conn_string% -k mysql.ping[127.0.0.1,3306]
 echo -----------------------------------------------------------------------------
 
+echo MySQL server info:
+zabbix_get.exe %zbx_conn_string% -k mysql.server.info[127.0.0.1,3306] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL global status:
+zabbix_get.exe %zbx_conn_string% -k mysql.global.status[127.0.0.1,3306] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL global variables:
+zabbix_get.exe %zbx_conn_string% -k mysql.global.variables[127.0.0.1,3306] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
 echo MySQL database discovery:
 zabbix_get.exe %zbx_conn_string% -k mysql.db.discovery[127.0.0.1,3306] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL database info:
+zabbix_get.exe %zbx_conn_string% -k mysql.db.info[127.0.0.1,3306] | jq-win64.exe .
 
 echo === PgSQL ===================================================================
 
 echo PostgreSQL version:
-zabbix_get.exe %zbx_conn_string% -k pg.version["host = localhost port = 5432 dbname = template1 user=postgres password=timetrax connect_timeout = 10"]
+zabbix_get.exe %zbx_conn_string% -k pg.version["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL version full:
+zabbix_get.exe %zbx_conn_string% -k pg.version.full["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
 echo -----------------------------------------------------------------------------
 
 echo PostgreSQL ping:
-zabbix_get.exe %zbx_conn_string% -k pg.ping["host = localhost port = 5432 dbname = template1 user=postgres password=timetrax connect_timeout = 10"]
+zabbix_get.exe %zbx_conn_string% -k pg.ping["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
 echo -----------------------------------------------------------------------------
 
 echo PostgreSQL database discovery:
-zabbix_get.exe %zbx_conn_string% -k pg.db.discovery["host = localhost port = 5432 dbname = template1 user=postgres password=timetrax connect_timeout = 10"] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k pg.db.discovery["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
 
 echo === Oracle (%oracle_srv_name%) =================================================
 
@@ -147,6 +171,14 @@ zabbix_get.exe %zbx_conn_string% -k oracle.archlogdest.info[%oracle_srv_ip%,1521
 echo -----------------------------------------------------------------------------
 
 echo Oracle permanent tablespace info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.permanent.info[%oracle_srv_ip%,1521,%oracle_instance%,1,0] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.info[%oracle_srv_ip%,1521,%oracle_instance%,1,0] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo Oracle temporary tablespace info (%oracle_srv_name%):
+zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.info[%oracle_srv_ip%,1521,%oracle_instance%,1,1] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo Oracle undo tablespace info (%oracle_srv_name%):
+zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.info[%oracle_srv_ip%,1521,%oracle_instance%,1,2] | jq-win64.exe .
 
 echo =============================================================================
