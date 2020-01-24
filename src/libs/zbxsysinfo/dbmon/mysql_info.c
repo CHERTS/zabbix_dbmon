@@ -251,11 +251,11 @@ int	MYSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 
-	if (0 == strcmp(request->key, (const char*)"mysql.version"))
+	if (0 == strcmp(request->key, "mysql.version"))
 	{
 		ret = mysql_version(request, result, 0);
 	}
-	else if (0 == strcmp(request->key, (const char*)"mysql.version.full"))
+	else if (0 == strcmp(request->key, "mysql.version.full"))
 	{
 		ret = mysql_version(request, result, 1);
 	}
@@ -397,15 +397,15 @@ static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 		else
 			mysql_schema = "information_schema";
 
-		if (0 == strcmp(request->key, (const char*)"mysql.server.info"))
+		if (0 == strcmp(request->key, "mysql.server.info"))
 		{
 			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
 		}
-		else if (0 == strcmp(request->key, (const char*)"mysql.global.status"))
+		else if (0 == strcmp(request->key, "mysql.global.status"))
 		{
 			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
 		}
-		else if (0 == strcmp(request->key, (const char*)"mysql.global.variables"))
+		else if (0 == strcmp(request->key, "mysql.global.variables"))
 		{
 			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
 		}
@@ -470,19 +470,19 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 
-	if (0 == strcmp(request->key, (const char*)"mysql.server.info"))
+	if (0 == strcmp(request->key, "mysql.server.info"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_SERVER_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW);
 	}
-	else if (0 == strcmp(request->key, (const char*)"mysql.global.status"))
+	else if (0 == strcmp(request->key, "mysql.global.status"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_GLOBAL_STATUS_DBS, ZBX_DB_RES_TYPE_TWOCOLL);
 	}
-	else if (0 == strcmp(request->key, (const char*)"mysql.global.variables"))
+	else if (0 == strcmp(request->key, "mysql.global.variables"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_GLOBAL_VARIABLES_DBS, ZBX_DB_RES_TYPE_TWOCOLL);
 	}
-	else if (0 == strcmp(request->key, (const char*)"mysql.db.info"))
+	else if (0 == strcmp(request->key, "mysql.db.info"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_DB_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}

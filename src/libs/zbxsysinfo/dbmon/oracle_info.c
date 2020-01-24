@@ -926,91 +926,91 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 
-	if (0 == strcmp((const char*)"oracle.instance.version", request->key))
+	if (0 == strcmp(request->key, "oracle.instance.version"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_VERSION_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.info", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.info"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.parameter", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.parameter"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETER_INFO_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.patch_info", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.patch_info"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_LASTPATCH_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_PRIMARY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.resource", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.resource"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESOURCE_INFO_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.dbfiles", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.dbfiles"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_DB_FILES_CURRENT_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.resumable", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.resumable"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESUMABLE_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.bad_processes", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.bad_processes"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_COUNT_BAD_PROCESSES_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.fra", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.fra"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FRA_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.redolog_switch_rate", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.redolog_switch_rate"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SWITCH_RATE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.redolog_size_per_hour", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.redolog_size_per_hour"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SIZE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1);
 	}
-	else if (0 == strcmp((const char*)"oracle.backup.archivelog", request->key))
+	else if (0 == strcmp(request->key, "oracle.backup.archivelog"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_ARCHIVE_LOG_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.backup.full", request->key))
+	else if (0 == strcmp(request->key, "oracle.backup.full"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FULL_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.backup.incr", request->key))
+	else if (0 == strcmp(request->key, "oracle.backup.incr"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INCR_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.backup.incr_file_num", request->key))
+	else if (0 == strcmp(request->key, "oracle.backup.incr_file_num"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INCR_BACKUP_FILE_NUM_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.backup.cf", request->key))
+	else if (0 == strcmp(request->key, "oracle.backup.cf"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_CF_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.db.incarnation", request->key))
+	else if (0 == strcmp(request->key, "oracle.db.incarnation"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_DB_INCARNATION_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.db.size", request->key))
+	else if (0 == strcmp(request->key, "oracle.db.size"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_DB_SIZE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.standby.lag", request->key))
+	else if (0 == strcmp(request->key, "oracle.standby.lag"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_STANDBY_LAG_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_STANDBY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.standby.mrp_status", request->key))
+	else if (0 == strcmp(request->key, "oracle.standby.mrp_status"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_STANDBY_MRP_STATUS_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_STANDBY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.archlogdest.info", request->key))
+	else if (0 == strcmp(request->key, "oracle.archlogdest.info"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_ARLDEST_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY, 0);
 	}
-	else if (0 == strcmp((const char*)"oracle.instance.parameters", request->key))
+	else if (0 == strcmp(request->key, "oracle.instance.parameters"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETERS_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY, 0);
 	}
@@ -1103,17 +1103,17 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 				{
 					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
 
-					if (0 == strcmp((const char*)"oracle.standby.discovery", request->key))
+					if (0 == strcmp(request->key, "oracle.standby.discovery"))
 					{
 						query = ORACLE_V11_DISCOVER_STANDBY_DBS;
 						ret = ZBX_DB_OK;
 					}
-					else if (0 == strcmp((const char*)"oracle.db.discovery", request->key))
+					else if (0 == strcmp(request->key, "oracle.db.discovery"))
 					{
 						query = ORACLE_V11_DISCOVER_DB_DBS;
 						ret = ZBX_DB_OK;
 					}
-					else if (0 == strcmp((const char*)"oracle.archlogdest.discovery", request->key))
+					else if (0 == strcmp(request->key, "oracle.archlogdest.discovery"))
 					{
 						query = ORACLE_DISCOVER_ARLDEST_DBS;
 						ret = ZBX_DB_OK;
@@ -1128,17 +1128,17 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 				{
 					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version >= 12, use query '%s'", __func__, request->key, query);
 
-					if (0 == strcmp((const char*)"oracle.standby.discovery", request->key))
+					if (0 == strcmp(request->key, "oracle.standby.discovery"))
 					{
 						query = ORACLE_V12_DISCOVER_STANDBY_DBS;
 						ret = ZBX_DB_OK;
 					}
-					else if (0 == strcmp((const char*)"oracle.db.discovery", request->key))
+					else if (0 == strcmp(request->key, "oracle.db.discovery"))
 					{
 						query = ORACLE_V12_DISCOVER_DB_DBS;
 						ret = ZBX_DB_OK;
 					}
-					else if (0 == strcmp((const char*)"oracle.archlogdest.discovery", request->key))
+					else if (0 == strcmp(request->key, "oracle.archlogdest.discovery"))
 					{
 						query = ORACLE_DISCOVER_ARLDEST_DBS;
 						ret = ZBX_DB_OK;

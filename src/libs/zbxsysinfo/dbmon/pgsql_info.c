@@ -217,11 +217,11 @@ int	PGSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 
-	if (0 == strcmp(request->key, (const char*)"pg.version"))
+	if (0 == strcmp(request->key, "pg.version"))
 	{
 		ret = pgsql_version(request, result, 0);
 	}
-	else if (0 == strcmp(request->key, (const char*)"pg.version.full"))
+	else if (0 == strcmp(request->key, "pg.version.full"))
 	{
 		ret = pgsql_version(request, result, 1);
 	}
