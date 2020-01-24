@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-24T11:35:27Z</date>
+    <date>2020-01-24T11:54:37Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -1298,7 +1298,7 @@
                     <name>Oracle alert log discovery</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.alertlog.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>5m</delay>
+                    <delay>1h</delay>
                     <item_prototypes>
                         <item_prototype>
                             <name>[Oracle] Instance '{#INSTANCE}': Alert log '{#ALERTLOG}'</name>
