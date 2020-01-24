@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-24T08:13:44Z</date>
+    <date>2020-01-24T11:35:27Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -1294,6 +1294,27 @@
                 </item>
             </items>
             <discovery_rules>
+                <discovery_rule>
+                    <name>Oracle alert log discovery</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.alertlog.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>5m</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle] Instance '{#INSTANCE}': Alert log '{#ALERTLOG}'</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>logrt[&quot;{#ALERTLOG}&quot;,{$DBS_ORACLE_ALERTLOG_REGEXP:&quot;{#INSTANCE}&quot;}]</key>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>LOG</value_type>
+                            <applications>
+                                <application>
+                                    <name>Oracle: Instance info</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
                 <discovery_rule>
                     <name>Oracle archivelog dest discovery</name>
                     <type>DEPENDENT</type>
@@ -3866,6 +3887,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </discovery_rule>
             </discovery_rules>
             <macros>
+                <macro>
+                    <macro>{$DBS_ORACLE_ALERTLOG_REGEXP}</macro>
+                    <value>&quot;ORA-|PLS-|SP2-|IMP-|TNS|TERMINAT|ERROR|[Ee]rror|Corrupt block relative dba:&quot;</value>
+                </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_ALOG_BACKUP_CRIT}</macro>
                     <value>16h</value>

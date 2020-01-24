@@ -553,6 +553,35 @@ WHERE d.tablespace_name = f.tablespace_name(+) \
 	AND d.tablespace_name = m.tablespace_name(+) \
 	AND d.tablespace_name = df.tablespace_name(+)"
 
+// Oracle v8i/9i/10g/11g (get alert log path)
+#define ORACLE_V11_ALERTLOG_INFO_DBS "\
+SELECT regexp_replace(value,'(.*)([/\\])(trace|bdump)$','\\1\\2\\3\\2')||( \
+	SELECT 'alert_' || instance_name || '.log' FROM v$instance) AS ALERTLOG \
+FROM v$parameter \
+WHERE name = 'background_dump_dest'"
+
+// Oracle v11g/12c/18c (get alert log path)
+#define ORACLE_V12_ALERTLOG_INFO_DBS "\
+SELECT regexp_replace(value,'(.*)([/\\])(trace)$','\\1\\2\\3\\2')||( \
+	SELECT 'alert_'||instance_name||'.log' FROM v$instance) AS ALERTLOG \
+FROM v$diag_info WHERE name='Diag Trace'"
+
+// Oracle v8i/9i/10g/11g (get discovery alert log path)
+#define ORACLE_V11_ALERTLOG_DISCOVERY_DBS "\
+SELECT i.instance_name AS INSTANCE, regexp_replace(value, '(.*)([/\\])(trace|bdump)$', '\\1\\2\\3\\2') || ( \
+	SELECT 'alert_' || instance_name || '.log' FROM v$instance) AS ALERTLOG \
+FROM gv$instance i, gv$parameter p \
+WHERE i.instance_number = p.inst_id \
+	AND p.name = 'background_dump_dest'"
+
+// Oracle v11g/12c/18c (get discovery alert log path)
+#define ORACLE_V12_ALERTLOG_DISCOVERY_DBS "\
+SELECT i.instance_name AS INSTANCE, regexp_replace(value, '(.*)([/\\])(trace|bdump)$', '\\1\\2\\3\\2') || ( \
+	SELECT 'alert_' || instance_name || '.log' FROM v$instance) AS ALERTLOG \
+FROM gv$instance i, gv$diag_info d \
+WHERE i.inst_id = d.inst_id \
+	AND d.name = 'Diag Trace'"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -584,6 +613,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.archlogdest.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.parameters",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.tablespace.info",					CF_HAVEPARAMS,		ORACLE_TS_INFO,					NULL},
+	{"oracle.alertlog.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{NULL}
 };
 
@@ -1118,6 +1148,11 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 						query = ORACLE_DISCOVER_ARLDEST_DBS;
 						ret = ZBX_DB_OK;
 					}
+					else if (0 == strcmp(request->key, "oracle.alertlog.discovery"))
+					{
+						query = ORACLE_V11_ALERTLOG_DISCOVERY_DBS;
+						ret = ZBX_DB_OK;
+					}
 					else
 					{
 						SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown discovery request key"));
@@ -1141,6 +1176,11 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 					else if (0 == strcmp(request->key, "oracle.archlogdest.discovery"))
 					{
 						query = ORACLE_DISCOVER_ARLDEST_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else if (0 == strcmp(request->key, "oracle.alertlog.discovery"))
+					{
+						query = ORACLE_V12_ALERTLOG_DISCOVERY_DBS;
 						ret = ZBX_DB_OK;
 					}
 					else
