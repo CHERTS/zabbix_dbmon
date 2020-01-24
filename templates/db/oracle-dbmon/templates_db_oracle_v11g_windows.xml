@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-24T07:14:50Z</date>
+    <date>2020-01-24T08:10:20Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -3306,7 +3306,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
                                     <name>Temporary tablespace '{#TSNAME}' is not available</name>
                                     <priority>HIGH</priority>
-                                    <description>Данные о временном табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Проверьте наличие данного табличного пространства. Доведите информацию до эксперта.</description>
+                                    <description>Данные о временном табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Проверьте наличие данного табличного пространства. Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -3394,7 +3394,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <expression>{DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&lt;{$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize].last()}&gt;0</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;={$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
-                            <name>Free space in temp tablespace '{#TSNAME}'</name>
+                            <name>Free space in temporary tablespace '{#TSNAME}'</name>
                             <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>HIGH</priority>
                             <description>Свободное место во временном табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Необходимо выяснить запрос который заполняет временное табличное пространство, так же нужно выяснить его параметры и сообщить заказчику. При критической ситуации с заполнением временного табличного пространстве необходимо прервать запрос и сообщить заказчику.</description>
@@ -3433,14 +3433,14 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <expression>{DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&lt;{$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize].last()}&gt;0</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;={$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
-                            <name>Free space in temp tablespace '{#TSNAME}'</name>
+                            <name>Free space in temporary tablespace '{#TSNAME}'</name>
                             <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>WARNING</priority>
                             <description>Свободное место во временном табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Необходимо выяснить запрос который заполняет временное табличное пространство, так же нужно выяснить его параметры и сообщить заказчику. При критической ситуации с заполнением временного табличного пространстве необходимо прервать запрос и сообщить заказчику.</description>
                             <manual_close>YES</manual_close>
                             <dependencies>
                                 <dependency>
-                                    <name>Free space in temp tablespace '{#TSNAME}'</name>
+                                    <name>Free space in temporary tablespace '{#TSNAME}'</name>
                                     <expression>{DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&lt;{$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize].last()}&gt;0</expression>
                                     <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;={$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template Oracle 11g for Windows:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
                                 </dependency>
@@ -3525,6 +3525,46 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <master_item>
                                 <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Number of datafile in undo tablespace '{#TSNAME}' has been changed</name>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <priority>INFO</priority>
+                                    <description>Количество дата-файлов во undo табличном пространстве '{#TSNAME}' было изменено. Проверьте, что было выполнено - добавление файлов или удаление. Доведите информацию до эксперта.</description>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>Undo tablespace '{#TSNAME}' is not available</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Tablespace</tag>
+                                            <value>{#TSNAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] Undo tablespace '{#TSNAME}': File free space</name>
@@ -3625,6 +3665,78 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <master_item>
                                 <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <name>Undo tablespace '{#TSNAME}' is not available</name>
+                                    <priority>HIGH</priority>
+                                    <description>Данные о undo табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Проверьте наличие данного табличного пространства. Доведите информацию до эксперта.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Tablespace</tag>
+                                            <value>{#TSNAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Undo tablespace '{#TSNAME}' status has been changed</name>
+                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>У undo табличного пространстве '{#TSNAME}' изменился статус. Доведите информацию до эксперта.</description>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>Undo tablespace '{#TSNAME}' is not available</name>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>Oracle</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Tablespace</tag>
+                                            <value>{#TSNAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] Undo tablespace '{#TSNAME}': Used size</name>
@@ -3649,6 +3761,89 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&lt;{$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize].last()}&gt;0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;={$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
+                            <name>Free space in undo tablespace '{#TSNAME}'</name>
+                            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <priority>HIGH</priority>
+                            <description>Свободное место в undo табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Необходимо выяснить запрос который заполняет табличное пространство, так же нужно выяснить его параметры и сообщить заказчику. Довести информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Undo tablespace '{#TSNAME}' is not available</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Database</tag>
+                                    <value>{#DBNAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{#INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Tablespace</tag>
+                                    <value>{#TSNAME}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&lt;{$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize].last()}&gt;0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;={$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
+                            <name>Free space in undo tablespace '{#TSNAME}'</name>
+                            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <priority>WARNING</priority>
+                            <description>Свободное место в undo табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Необходимо выяснить запрос который заполняет табличное пространство, так же нужно выяснить его параметры и сообщить заказчику. Довести информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Free space in undo tablespace '{#TSNAME}'</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&lt;{$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} and {DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize].last()}&gt;0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;={$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Undo tablespace '{#TSNAME}' is not available</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Database</tag>
+                                    <value>{#DBNAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{#INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Tablespace</tag>
+                                    <value>{#TSNAME}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                    </trigger_prototypes>
                     <master_item>
                         <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                     </master_item>
@@ -3750,6 +3945,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM}</macro>
+                    <value>0</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM}</macro>
                     <value>0</value>
                 </macro>
                 <macro>
