@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-22T12:57:20Z</date>
+    <date>2020-01-24T07:14:38Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -37,6 +37,37 @@
                 </application>
             </applications>
             <items>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Log of '{$DBS_MYSQL_ERROR_LOG}'</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>logrt[&quot;{$DBS_MYSQL_ERROR_LOG}&quot;,&quot;PANIC|FATAL|ERROR|[Ee]rror&quot;]</key>
+                    <trends>0</trends>
+                    <value_type>LOG</value_type>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <logtimefmt>yyyy-MM-ddThh:mm:ss</logtimefmt>
+                    <triggers>
+                        <trigger>
+                            <expression>{iregexp(InnoDB)}=1</expression>
+                            <name>{{ITEM.VALUE}.iregsub(&quot;InnoDB: ([a-zA-Z0-9 &gt;]+)&quot;, &quot;Fatal error in MySQL InnoDB (Error: '\1')&quot;)}</name>
+                            <priority>HIGH</priority>
+                            <description>В лог-файле &quot;{$DBS_MYSQL_ERROR_LOG}&quot; обнаружена критическая ошибка в работе InnoDB, как можно скорее просмотрите лог-файл на сервере, передайте информацию эксперту.</description>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get database info</name>
                     <type>ZABBIX_ACTIVE</type>
@@ -1862,7 +1893,7 @@
                                     <expression>{nodata({$DBS_MYSQL_DB_NODATA_WARN:&quot;{#DBNAME}&quot;})}=1</expression>
                                     <name>Database '{#DBNAME}' is not available</name>
                                     <priority>HIGH</priority>
-                                    <description>Давно не поступает информация о базе данных '{#DBNAME}'. Зайдите на сервер и проверьте наличие базы данных, возможно она была удалена. Доведите информацию до эксперта.</description>
+                                    <description>Более {$DBS_MYSQL_DB_NODATA_WARN} (минут) не поступает информация о базе данных '{#DBNAME}'. Зайдите на сервер и проверьте наличие этой базы данных, возможно она была удалена. Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -2000,20 +2031,16 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>1h</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_MYSQL_ERROR_LOG}</macro>
+                    <value>&quot;C:\Users\All Users\MySQL\MySQL Server 5.7\error.log&quot;</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_MYSQL_HOST}</macro>
                     <value>127.0.0.1</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_INSTANCE}</macro>
                     <value>mysql_3306</value>
-                </macro>
-                <macro>
-                    <macro>{$DBS_MYSQL_LOGDIR}</macro>
-                    <value>c:\windows</value>
-                </macro>
-                <macro>
-                    <macro>{$DBS_MYSQL_LOGNAME}</macro>
-                    <value>error.log</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_PING_NODATA_CRIT}</macro>
@@ -2194,7 +2221,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}%, alert started: {ITEM.VALUE1})</opdata>
             <url>https://dev.mysql.com/doc/refman/5.7/en/query-cache-status-and-maintenance.html</url>
             <priority>WARNING</priority>
-            <description>Процент эффективности кэша запросов, составляет менее 20%, указывает на проблему с производительностью. Постарайтесь сократить набор результатов, создав более строгие запросы. Если это невозможно, Вы можете увеличить параметр query_cache_limit, чтобы большее количество ваших наборов результатов действительно попадало в кеш. Увеличивайте query_cache_limit постепенно, сильно высокие значения могут снизить производительность.</description>
+            <description>Процент эффективности кэша запросов, составляет менее {$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}%, указывает на проблему с производительностью. Постарайтесь сократить набор результатов, создав более строгие запросы. Если это невозможно, Вы можете постепенно увеличивать параметр query_cache_limit, чтобы большее количество ваших наборов результатов действительно попадало в кеш. Увеличивайте query_cache_limit постепенно, сильно высокие значения могут снизить производительность.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
