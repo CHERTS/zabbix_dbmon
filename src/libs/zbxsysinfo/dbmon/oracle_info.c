@@ -45,7 +45,8 @@ WHERE instance_name = '%s'"
 SELECT to_char(round(((sysdate - startup_time) * 60 * 60 * 24), 0)) AS UPTIME, \
 	decode(status, 'STARTED', 1, 'MOUNTED', 2, 'OPEN', 3, 'OPEN MIGRATE', 4, 0) AS STATUS, \
 	decode(parallel, 'YES', 1, 'NO', 2, 0) PARALLEL, \
-	decode(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER \
+	decode(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER, \
+	decode(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY', 3, 0) DBSTATUS \
 FROM v$instance \
 WHERE instance_name = '%s'"
 

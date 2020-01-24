@@ -611,7 +611,7 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *host, const char *us
 			return NULL;
 		}
 
-		while (ZBX_DB_OK == ret)
+		while (OCI_SUCCESS == ret)
 		{
 			/* Create environment */
 			if (OCI_SUCCESS == (err = OCIEnvNlsCreate((OCIEnv **)&((struct zbx_db_oracle *)conn->connection)->envhp, (ub4)OCI_DEFAULT, (dvoid *)0,
@@ -641,7 +641,7 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *host, const char *us
 			}
 		}
 
-		if (ZBX_DB_OK == ret)
+		if (OCI_SUCCESS == ret)
 		{
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Connect to Oracle database: Stage 1 (Create environment) - done", __func__);
 
@@ -649,50 +649,78 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *host, const char *us
 			(void)OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp,
 				(dvoid **)&((struct zbx_db_oracle *)conn->connection)->errhp, OCI_HTYPE_ERROR, (size_t)0, (dvoid **)0);
 
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Allocate an error handle - done", __func__);
+
 			/* Allocate server contexts */
 			(void)OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp, (void *)&((struct zbx_db_oracle *)conn->connection)->srvhp,
 				OCI_HTYPE_SERVER, (size_t)0, (dvoid **)0);
+
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Allocate server contexts - done", __func__);
 
 			/* Allocate service contexts */
 			(void)OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp, (void *)&((struct zbx_db_oracle *)conn->connection)->svchp,
 				OCI_HTYPE_SVCCTX, (size_t)0, (dvoid **)0);
 
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Allocate service contexts - done", __func__);
+
 			/* Create a server context */
-			(void)OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+			err = OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
 				(text *)connect, (ub4)strlen(connect), 0);
-
-			/* Set attribute server context in the service context */
-			(void)OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX, ((struct zbx_db_oracle *)conn->connection)->srvhp,
-				(ub4)0, OCI_ATTR_SERVER, ((struct zbx_db_oracle *)conn->connection)->errhp);
-
-			/* Allocate session handle */
-			(void)OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp,
-				(dvoid **)&((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_AUTHINFO, (size_t)0, (dvoid **)NULL);
-
-			/* Setup username and password */
-			OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)user, (ub4)(NULL != user ? strlen(user) : 0),
-				OCI_ATTR_USERNAME, ((struct zbx_db_oracle *)conn->connection)->errhp);
-
-			OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)passwd, (ub4)(NULL != passwd ? strlen(passwd) : 0),
-				OCI_ATTR_PASSWORD, ((struct zbx_db_oracle *)conn->connection)->errhp);
-
-			// mode is OCI_DEFAULT or OCI_SYSDBA or OCI_SYSOPER or OCI_SYSASM or OCI_SYSDGD
-			err = OCISessionBegin(((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
-				((struct zbx_db_oracle *)conn->connection)->authp, OCI_CRED_RDBMS, (ub4)mode);
 
 			if (OCI_SUCCESS != err)
 			{
 				zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3001, err, zbx_db_oci_error(conn, err, NULL), connect);
 				ret = ZBX_DB_ERROR_CONNECTION;
 			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(): Create a server context - done", __func__);
+
+				/* Set attribute server context in the service context */
+				(void)OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX, ((struct zbx_db_oracle *)conn->connection)->srvhp,
+					(ub4)0, OCI_ATTR_SERVER, ((struct zbx_db_oracle *)conn->connection)->errhp);
+
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(): Set attribute server context in the service context - done", __func__);
+
+				/* Allocate session handle */
+				(void)OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp,
+					(dvoid **)&((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_AUTHINFO, (size_t)0, (dvoid **)NULL);
+
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(): Allocate session handle - done", __func__);
+
+				/* Setup username and password */
+				OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)user, (ub4)(NULL != user ? strlen(user) : 0),
+					OCI_ATTR_USERNAME, ((struct zbx_db_oracle *)conn->connection)->errhp);
+
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(): Setup username - done", __func__);
+
+				OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)passwd, (ub4)(NULL != passwd ? strlen(passwd) : 0),
+					OCI_ATTR_PASSWORD, ((struct zbx_db_oracle *)conn->connection)->errhp);
+
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(): Setup password - done", __func__);
+
+				// Mode is OCI_DEFAULT or OCI_SYSDBA or OCI_SYSOPER or OCI_SYSASM or OCI_SYSDGD
+				err = OCISessionBegin(((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+					((struct zbx_db_oracle *)conn->connection)->authp, OCI_CRED_RDBMS, (ub4)mode);
+
+				if (OCI_SUCCESS != err)
+				{
+					zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3001, err, zbx_db_oci_error(conn, err, NULL), connect);
+					ret = ZBX_DB_ERROR_CONNECTION;
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(): OCISessionBegin, mode set %d - done", __func__, (ub4)mode);
+				}
+			}
 		}
 
-		if (ZBX_DB_OK == ret)
+		if (OCI_SUCCESS == ret)
 		{
 			(void)OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->svchp, (ub4)OCI_HTYPE_SVCCTX, ((struct zbx_db_oracle *)conn->connection)->authp,
 				(ub4)0,	(ub4)OCI_ATTR_SESSION, ((struct zbx_db_oracle *)conn->connection)->errhp);
 
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Connect to Oracle database: Stage 2 (Get the session) - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Connect to Oracle database: Stage 2 (OCI_ATTR_SESSION) - done", __func__);
 
 			/* Initialize statement handle */
 			err = OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp, (dvoid **)&((struct zbx_db_oracle *)conn->connection)->stmthp, OCI_HTYPE_STMT,
@@ -705,7 +733,7 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *host, const char *us
 			}
 		}
 
-		if (ZBX_DB_OK == ret)
+		if (OCI_SUCCESS == ret)
 		{
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Connect to Oracle database: Stage 3 (Initialize statement handle) - done", __func__);
 
