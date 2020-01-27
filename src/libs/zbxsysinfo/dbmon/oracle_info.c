@@ -616,7 +616,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.tablespace.info",					CF_HAVEPARAMS,		ORACLE_TS_INFO,					NULL},
 	{"oracle.alertlog.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{NULL}
-};
+}; 
 
 #if !defined(_WINDOWS) && !defined(__MINGW32__)
 static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
@@ -625,8 +625,7 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 #endif
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance;
-	unsigned short				oracle_port = 1521;
+	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance;
 	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
 
@@ -637,23 +636,39 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 	if (NULL == CONFIG_ORACLE_INSTANCE)
 		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
 
-	oracle_host = get_rparam(request, 0);
-	oracle_str_port = get_rparam(request, 1);
-	oracle_instance = get_rparam(request, 2);
-	oracle_str_mode = get_rparam(request, 3);
+	if (3 < request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (3 > request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too few options."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	oracle_conn_string = get_rparam(request, 0);
+	oracle_instance = get_rparam(request, 1);
+	oracle_str_mode = get_rparam(request, 2);
+
+	if (NULL == oracle_conn_string || '\0' == *oracle_conn_string)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter (connection string)."));
+		return SYSINFO_RET_FAIL;
+	}
 
 	if (NULL == oracle_instance || '\0' == *oracle_instance)
 	{
 		oracle_instance = CONFIG_ORACLE_INSTANCE;
 	}
 
-	if (NULL != oracle_str_port && '\0' != *oracle_str_port)
+	if (FAIL == zbx_check_oracle_instance_name(oracle_instance, &check_error))
 	{
-		if (SUCCEED != is_ushort(oracle_str_port, &oracle_port))
-		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (port)."));
-			return SYSINFO_RET_FAIL;
-		}
+		zabbix_log(LOG_LEVEL_CRIT, "Invalid \"Instance name\" parameter: '%s': %s", oracle_instance, check_error);
+		zbx_free(check_error);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (instance name)."));
+		return SYSINFO_RET_FAIL;
 	}
 
 	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
@@ -671,7 +686,7 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 	ZBX_UNUSED(timeout_event);
 #endif
 
-	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
 
 	if (oracle_conn != NULL)
 	{
@@ -696,11 +711,12 @@ int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance, *oracle_dbname;
-	unsigned short				oracle_port = 0;
+	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *oracle_dbname;
 	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_db_open_mode = 0;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 
 	if (NULL == CONFIG_ORACLE_USER)
 		CONFIG_ORACLE_USER = zbx_strdup(CONFIG_ORACLE_USER, ORACLE_DEFAULT_USER);
@@ -709,31 +725,41 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 	if (NULL == CONFIG_ORACLE_INSTANCE)
 		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
 
-	oracle_host = get_rparam(request, 0);
-	oracle_str_port = get_rparam(request, 1);
-	oracle_instance = get_rparam(request, 2);
-	oracle_str_mode = get_rparam(request, 3);
-	oracle_dbname = get_rparam(request, 4);
+	oracle_conn_string = get_rparam(request, 0);
+	oracle_instance = get_rparam(request, 1);
+	oracle_str_mode = get_rparam(request, 2);
+	oracle_dbname = get_rparam(request, 3);
+
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): request->nparam = %d", __func__, request->key, request->nparam);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_conn_string);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[1] = %s", __func__, request->key, oracle_instance);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_str_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_dbname);
+
+	if (NULL == oracle_conn_string || '\0' == *oracle_conn_string)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter (connection string)."));
+		return SYSINFO_RET_FAIL;
+	}
 
 	if (NULL == oracle_instance || '\0' == *oracle_instance)
 	{
 		oracle_instance = CONFIG_ORACLE_INSTANCE;
 	}
 
-	if (NULL != oracle_str_port && '\0' != *oracle_str_port)
+	if (FAIL == zbx_check_oracle_instance_name(oracle_instance, &check_error))
 	{
-		if (SUCCEED != is_ushort(oracle_str_port, &oracle_port))
-		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (port)."));
-			return SYSINFO_RET_FAIL;
-		}
+		zabbix_log(LOG_LEVEL_CRIT, "Invalid \"Instance name\" parameter: '%s': %s", oracle_instance, check_error);
+		zbx_free(check_error);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (instance name)."));
+		return SYSINFO_RET_FAIL;
 	}
 
 	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
 	{
 		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
 		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fourth parameter (mode)."));
 			return SYSINFO_RET_FAIL;
 		}
 	}
@@ -742,9 +768,19 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 	{
 		if (0 != isdigit(*oracle_dbname))
 			oracle_dbname = NULL;
+		else
+		{
+			if (FAIL == zbx_check_oracle_instance_name(oracle_dbname, &check_error))
+			{
+				zabbix_log(LOG_LEVEL_CRIT, "Invalid \"Database name\" parameter: '%s': %s", oracle_dbname, check_error);
+				zbx_free(check_error);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fifth parameter (database name)."));
+				return SYSINFO_RET_FAIL;
+			}
+		}
 	}
 
-	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
 
 	if (NULL != oracle_conn)
 	{
@@ -849,6 +885,8 @@ exec_inst_query:
 
 						zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Instance: %s, Database: %s, Need_Role: %s, Need_Open_Mode: %u, Current_Open_Mode: %u", __func__, request->key, oracle_instance, oracle_dbname, ORA_DB_ROLE[oracle_need_db_role], oracle_need_open_mode, oracle_db_open_mode);
 
+						zbx_db_clean_result(&ora_result);
+
 						if (oracle_db_open_mode > oracle_need_open_mode)
 						{
 							goto exec_db_query;
@@ -858,8 +896,6 @@ exec_inst_query:
 							SET_MSG_RESULT(result, zbx_strdup(NULL, "Database closed for reading information (may be not standby or open mode not mounted or read-only or read-only-with-apply)"));
 							goto out;
 						}
-
-						zbx_db_clean_result(&ora_result);
 					}
 					else
 					{
@@ -876,6 +912,8 @@ exec_inst_query:
 
 						zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Instance: %s, Database: %s, Need_Role: %s, Need_Open_Mode: %u, Current_Open_Mode: %u", __func__, request->key, oracle_instance, oracle_dbname, ORA_DB_ROLE[oracle_need_db_role], oracle_need_open_mode, oracle_db_open_mode);
 
+						zbx_db_clean_result(&ora_result);
+
 						if (oracle_db_open_mode > oracle_need_open_mode)
 						{
 							goto exec_db_query;
@@ -885,8 +923,6 @@ exec_inst_query:
 							SET_MSG_RESULT(result, zbx_strdup(NULL, "Database closed for reading information (may be not primary or not open with read-only or read-write)"));
 							goto out;
 						}
-
-						zbx_db_clean_result(&ora_result);
 					}
 					else
 					{
@@ -937,6 +973,8 @@ exec_db_query:
 out:
 	zbx_db_close_db(oracle_conn);
 	zbx_db_clean_connection(oracle_conn);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
 
 	return ret;
 }
@@ -1068,8 +1106,7 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 #endif
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance, *ora_version, *sql = NULL;
-	unsigned short				oracle_port = 1521;
+	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *sql = NULL;
 	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
@@ -1084,23 +1121,27 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 	if (NULL == CONFIG_ORACLE_INSTANCE)
 		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
 
-	oracle_host = get_rparam(request, 0);
-	oracle_str_port = get_rparam(request, 1);
-	oracle_instance = get_rparam(request, 2);
-	oracle_str_mode = get_rparam(request, 3);
+	oracle_conn_string = get_rparam(request, 0);
+	oracle_instance = get_rparam(request, 1);
+	oracle_str_mode = get_rparam(request, 2);
+
+	if (NULL == oracle_conn_string || '\0' == *oracle_conn_string)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter (connection string)."));
+		return SYSINFO_RET_FAIL;
+	}
 
 	if (NULL == oracle_instance || '\0' == *oracle_instance)
 	{
 		oracle_instance = CONFIG_ORACLE_INSTANCE;
 	}
 
-	if (NULL != oracle_str_port && '\0' != *oracle_str_port)
+	if (FAIL == zbx_check_oracle_instance_name(oracle_instance, &check_error))
 	{
-		if (SUCCEED != is_ushort(oracle_str_port, &oracle_port))
-		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (port)."));
-			return SYSINFO_RET_FAIL;
-		}
+		zabbix_log(LOG_LEVEL_CRIT, "Invalid \"Instance name\" parameter: '%s': %s", oracle_instance, check_error);
+		zbx_free(check_error);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (instance name)."));
+		return SYSINFO_RET_FAIL;
 	}
 
 	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
@@ -1118,7 +1159,7 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 	ZBX_UNUSED(timeout_event);
 #endif
 
-	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
 
 	if (oracle_conn != NULL)
 	{
@@ -1246,8 +1287,7 @@ int	ORACLE_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_dbname;
-	unsigned short				oracle_port = 1521;
+	char						*oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_dbname;
 	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
@@ -1260,37 +1300,38 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 	if (NULL == CONFIG_ORACLE_INSTANCE)
 		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
 
-	if (5 < request->nparam)
+	if (4 < request->nparam)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
 		return SYSINFO_RET_FAIL;
 	}
 
-	oracle_host = get_rparam(request, 0);
-	oracle_str_port = get_rparam(request, 1);
-	oracle_instance = get_rparam(request, 2);
-	oracle_str_mode = get_rparam(request, 3);
-	oracle_dbname = get_rparam(request, 4);
+	if (4 > request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too few options."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	oracle_conn_string = get_rparam(request, 0);
+	oracle_instance = get_rparam(request, 1);
+	oracle_str_mode = get_rparam(request, 2);
+	oracle_dbname = get_rparam(request, 3);
 
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): request->nparam = %d", __func__, request->key, request->nparam);
-	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_host);
-	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[1] = %s", __func__, request->key, oracle_str_port);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_conn_string);
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_instance);
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_str_mode);
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[4] = %s", __func__, request->key, oracle_dbname);
 
+	if (NULL == oracle_conn_string || '\0' == *oracle_conn_string)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter (connection string)."));
+		return SYSINFO_RET_FAIL;
+	}
+
 	if (NULL == oracle_instance || '\0' == *oracle_instance)
 	{
 		oracle_instance = CONFIG_ORACLE_INSTANCE;
-	}
-
-	if (NULL != oracle_str_port && '\0' != *oracle_str_port)
-	{
-		if (SUCCEED != is_ushort(oracle_str_port, &oracle_port))
-		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (port)."));
-			return SYSINFO_RET_FAIL;
-		}
 	}
 
 	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
@@ -1308,7 +1349,7 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 
-	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
 
 	if (oracle_conn != NULL)
 	{
@@ -1371,8 +1412,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 #endif
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*oracle_host, *oracle_str_port, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_str_ts_type;
-	unsigned short				oracle_port = 1521;
+	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_str_ts_type;
 	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_ts_type = 0;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
@@ -1385,43 +1425,46 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 	if (NULL == CONFIG_ORACLE_INSTANCE)
 		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
 
-	if (5 < request->nparam)
+	if (4 < request->nparam)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (5 > request->nparam)
+	if (4 > request->nparam)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too few options."));
 		return SYSINFO_RET_FAIL;
 	}
 
-	oracle_host = get_rparam(request, 0);
-	oracle_str_port = get_rparam(request, 1);
-	oracle_instance = get_rparam(request, 2);
-	oracle_str_mode = get_rparam(request, 3);
-	oracle_str_ts_type = get_rparam(request, 4);
+	oracle_conn_string = get_rparam(request, 0);
+	oracle_instance = get_rparam(request, 1);
+	oracle_str_mode = get_rparam(request, 2);
+	oracle_str_ts_type = get_rparam(request, 3);
 
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): request->nparam = %d", __func__, request->key, request->nparam);
-	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_host);
-	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[1] = %s", __func__, request->key, oracle_str_port);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_conn_string);
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_instance);
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_str_mode);
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[4] = %s", __func__, request->key, oracle_str_ts_type);
+
+	if (NULL == oracle_conn_string || '\0' == *oracle_conn_string)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter (connection string)."));
+		return SYSINFO_RET_FAIL;
+	}
 
 	if (NULL == oracle_instance || '\0' == *oracle_instance)
 	{
 		oracle_instance = CONFIG_ORACLE_INSTANCE;
 	}
 
-	if (NULL != oracle_str_port && '\0' != *oracle_str_port)
+	if (FAIL == zbx_check_oracle_instance_name(oracle_instance, &check_error))
 	{
-		if (SUCCEED != is_ushort(oracle_str_port, &oracle_port))
-		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (port)."));
-			return SYSINFO_RET_FAIL;
-		}
+		zabbix_log(LOG_LEVEL_CRIT, "Invalid \"Instance name\" parameter: '%s': %s", oracle_instance, check_error);
+		zbx_free(check_error);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (instance name)."));
+		return SYSINFO_RET_FAIL;
 	}
 
 	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
@@ -1454,7 +1497,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 	ZBX_UNUSED(timeout_event);
 #endif
 
-	oracle_conn = zbx_db_connect_oracle(oracle_host, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, oracle_instance, oracle_port, zbx_db_get_oracle_mode(oracle_mode));
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
 
 	if (oracle_conn != NULL)
 	{

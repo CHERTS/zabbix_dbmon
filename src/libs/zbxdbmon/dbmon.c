@@ -981,7 +981,7 @@ int zbx_db_close_db(struct zbx_db_connection * conn)
  */
 int zbx_db_clean_connection(struct zbx_db_connection * conn)
 {
-	if (NULL !=  conn)
+	if (NULL != conn)
 	{
 		zbx_db_free(conn->connection);
 		zbx_db_free(conn);
@@ -1038,6 +1038,7 @@ int zbx_db_clean_result(struct zbx_db_result * e_result)
 	}
 }
 
+#if defined(HAVE_ORACLE)
 unsigned int zbx_db_get_oracle_mode(int ora_mode)
 {
 	int rc = ZBX_DB_OCI_DEFAULT;
@@ -1060,7 +1061,175 @@ unsigned int zbx_db_get_oracle_mode(int ora_mode)
 		case 4:
 			rc = ZBX_DB_OCI_SYSDGD;
 			break;
+		case 5:
+			rc = ZBX_DB_OCI_PRELIM_AUTH;
+			break;
 	}
 
 	return rc;
 }
+
+/******************************************************************************
+ *                                                                            *
+ * Function: is_instance_char                                                 *
+ *                                                                            *
+ * Return value:  SUCCEED - the char is allowed in the instance name          *
+ *                FAIL - otherwise                                            *
+ *                                                                            *
+ * Author: Mikhail Grigorev                                                   *
+ *                                                                            *
+ * Comments: in instance name allowed characters: '0-9a-zA-Z'                 *
+ *                                                                            *
+ ******************************************************************************/
+int	is_instance_char(unsigned char c)
+{
+	if (0 != isalnum(c))
+		return SUCCEED;
+
+	return FAIL;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_check_oracle_instance_name                                   *
+ *                                                                            *
+ * Purpose: check a byte stream for a valid instance name                     *
+ *                                                                            *
+ * Parameters: instance - pointer to the first char of instance name          *
+ *             error - pointer to the error message (can be NULL)             *
+ *                                                                            *
+ * Return value: return SUCCEED if instance name is valid                     *
+ *               or FAIL if instance contains invalid chars, is empty         *
+ *               or is longer than MAX_ZBX_DB_ORACLE_INSTANCE_LEN             *
+ *                                                                            *
+ * Author: Mikhail Grigorev                                                   *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_check_oracle_instance_name(const char *instance, char **error)
+{
+	int	len = 0;
+
+	while ('\0' != instance[len])
+	{
+		if (FAIL == is_instance_char(instance[len]))
+		{
+			if (NULL != error)
+				*error = zbx_dsprintf(NULL, "name contains invalid character '%c'", instance[len]);
+			return FAIL;
+		}
+
+		len++;
+	}
+
+	if (0 == len)
+	{
+		if (NULL != error)
+			*error = zbx_strdup(NULL, "name is empty");
+		return FAIL;
+	}
+
+	if (MAX_ZBX_DB_ORACLE_INSTANCE_LEN < len)
+	{
+		if (NULL != error)
+			*error = zbx_dsprintf(NULL, "name is too long (max %d characters)", MAX_ZBX_DB_ORACLE_INSTANCE_LEN);
+		return FAIL;
+	}
+
+	return SUCCEED;
+}
+
+char *zbx_check_oracle_conn_string(char *conn_string)
+{
+	char			*oracle_conn_string = NULL, *oracle_service_name, *oracle_host, *oracle_full_host, *oracle_port;
+	unsigned short	*oracle_int_port;
+
+	// Check service name in connection string
+	zbx_strsplit(conn_string, '/', &oracle_full_host, &oracle_service_name);
+
+	if (NULL == oracle_service_name)
+	{
+		//oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", conn_string);
+
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): In connection string '%s' not found service name, use default 'orcl'", __func__, conn_string);
+
+		// Check port number in connection string
+		zbx_strsplit(oracle_full_host, ':', &oracle_host, &oracle_port);
+
+		if (NULL == oracle_port)
+		{
+			oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", conn_string);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): In connection string '%s' not found port, use default 1521", __func__, conn_string);
+			oracle_conn_string = zbx_strdcatf(oracle_conn_string, ":1521/orcl");
+		}
+		else
+		{
+			if ('\0' != *oracle_port)
+			{
+				if (SUCCEED != is_ushort(oracle_port, &oracle_int_port))
+				{
+					oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", oracle_host);
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(): In connection string '%s' port is incorrect, use default 1521", __func__, conn_string);
+					oracle_conn_string = zbx_strdcatf(oracle_conn_string, ":1521/orcl");
+				}
+				else
+				{
+					oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", conn_string);
+					oracle_conn_string = zbx_strdcatf(oracle_conn_string, "/orcl");
+				}
+			}
+			else
+			{
+				oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", conn_string);
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(): In connection string '%s' found empty port, use default 1521", __func__, conn_string);
+				oracle_conn_string = zbx_strdcatf(oracle_conn_string, "1521/orcl");
+			}
+		}
+	}
+	else
+	{
+		//oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", oracle_full_host);
+
+		if ('\0' == *oracle_service_name)
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): In connection string '%s' found empty service name, use default 'orcl'", __func__, conn_string);
+			oracle_service_name = zbx_strdup(NULL, "orcl");
+		}
+
+		// Check port number in connection string
+		zbx_strsplit(oracle_full_host, ':', &oracle_host, &oracle_port);
+
+		if (NULL == oracle_port)
+		{
+			oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", oracle_full_host);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): In connection string '%s' not found port, use default 1521", __func__, conn_string);
+			oracle_conn_string = zbx_strdcatf(oracle_conn_string, ":1521/%s", oracle_service_name);
+		}
+		else
+		{
+			if ('\0' != *oracle_port)
+			{
+				if (SUCCEED != is_ushort(oracle_port, &oracle_int_port))
+				{
+					oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", oracle_host);
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(): In connection string '%s' port is incorrect, use default 1521", __func__, conn_string);
+					oracle_conn_string = zbx_strdcatf(oracle_conn_string, ":1521");
+				}
+				else
+				{
+					oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", oracle_full_host);
+				}
+			}
+			else
+			{
+				oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", oracle_host);
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(): In connection string '%s' found empty port, use default 1521", __func__, conn_string);
+				oracle_conn_string = zbx_strdcatf(oracle_conn_string, ":1521");
+			}
+
+			oracle_conn_string = zbx_strdcatf(oracle_conn_string, "/%s", oracle_service_name);
+		}
+	}
+
+	return oracle_conn_string;
+}
+#endif

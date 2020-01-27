@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-24T16:09:21Z</date>
+    <date>2020-01-27T13:25:56Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -32,7 +32,7 @@
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' archlog dest info</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.archlogdest.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
                     <history>1h</history>
                     <trends>0</trends>
@@ -46,7 +46,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last archive log backup</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.backup.archivelog[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.backup.archivelog[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>30m</delay>
                     <history>30d</history>
                     <units>s</units>
@@ -68,8 +68,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -94,13 +94,13 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>No archived log backups</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.archivelog[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_CRIT}</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.archivelog[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_CRIT}</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.archivelog[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_ALOG_BACKUP_CRIT}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.archivelog[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -119,7 +119,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last control file backup</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.backup.cf[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.backup.cf[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2h</delay>
                     <history>30d</history>
                     <units>s</units>
@@ -141,8 +141,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -167,13 +167,13 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>No control file backups</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.cf[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_CF_BACKUP_CRIT}</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.cf[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_CF_BACKUP_CRIT}</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.cf[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_CF_BACKUP_CRIT}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.cf[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_CF_BACKUP_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -192,7 +192,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last full database backup</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.backup.full[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.backup.full[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>1h</delay>
                     <history>30d</history>
                     <units>s</units>
@@ -214,8 +214,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -240,13 +240,13 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>No full database backups</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.full[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_FULL_BACKUP_CRIT}</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.full[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_FULL_BACKUP_CRIT}</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.full[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_FULL_BACKUP_CRIT}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.full[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_FULL_BACKUP_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -265,7 +265,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last incremental database backup</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>30m</delay>
                     <history>30d</history>
                     <units>s</units>
@@ -279,7 +279,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Total incremental database backup</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>30m</delay>
                     <history>30d</history>
                     <description>Total files number of incremental backup</description>
@@ -292,7 +292,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Count bad processes</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.bad_processes[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
                     <history>30d</history>
                     <description>Number of zombie processes.</description>
@@ -313,8 +313,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -339,13 +339,13 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>Number of zombie processes is too high</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.bad_processes[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.bad_processes[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.bad_processes[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -364,7 +364,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Current DB files</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.dbfiles[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>1h</delay>
                     <history>30d</history>
                     <description>Number of current data files on instance.</description>
@@ -377,7 +377,7 @@
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' fra info</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.fra[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
                     <history>1d</history>
                     <trends>0</trends>
@@ -391,7 +391,7 @@
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' info</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
                     <history>1d</history>
                     <trends>0</trends>
@@ -405,7 +405,7 @@
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' not default parameters info</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.parameters[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.parameters[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>6h</delay>
                     <history>1h</history>
                     <trends>0</trends>
@@ -419,7 +419,7 @@
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' parameters info</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.parameter[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.parameter[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
                     <history>1d</history>
                     <trends>0</trends>
@@ -433,7 +433,7 @@
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' patch info</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.patch_info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>6h</delay>
                     <history>1d</history>
                     <trends>0</trends>
@@ -447,7 +447,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Ping</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <history>30d</history>
                     <description>Test connection with an instance of Oracle.</description>
                     <applications>
@@ -469,7 +469,7 @@
                             <dependencies>
                                 <dependency>
                                     <name>Test connection data not received for more than {$DBS_ORACLE_PING_NODATA_WARN} (minutes).</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].nodata({$DBS_ORACLE_PING_NODATA_WARN})}=1</expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].nodata({$DBS_ORACLE_PING_NODATA_WARN})}=1</expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -507,7 +507,7 @@
                             <dependencies>
                                 <dependency>
                                     <name>Test connection data not received for more than {$DBS_ORACLE_PING_NODATA_CRIT} (minutes).</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].nodata({$DBS_ORACLE_PING_NODATA_CRIT})}=1</expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].nodata({$DBS_ORACLE_PING_NODATA_CRIT})}=1</expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -526,7 +526,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Size of redo log in last 1 hour</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.redolog_size_per_hour[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.redolog_size_per_hour[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>5m</delay>
                     <history>30d</history>
                     <units>B</units>
@@ -540,7 +540,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Redo log switch rate</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>10m</delay>
                     <history>30d</history>
                     <description>Redo log switch rate per 1 hour.</description>
@@ -553,7 +553,7 @@
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' resource info</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.resource[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.resource[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
                     <history>1d</history>
                     <trends>0</trends>
@@ -567,7 +567,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Resumable sessions</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.resumable[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.resumable[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2m</delay>
                     <history>30d</history>
                     <description>Number of resumable sessions.</description>
@@ -587,8 +587,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -607,7 +607,7 @@
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Version</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.instance.version[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.instance.version[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>2h</delay>
                     <history>30d</history>
                     <trends>0</trends>
@@ -631,8 +631,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -677,7 +677,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                     <triggers>
                         <trigger>
@@ -690,8 +690,69 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>Oracle</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Database status</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},dbstatus]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Status of the database:&#13;
+ACTIVE&#13;
+SUSPENDED&#13;
+INSTANCE RECOVERY</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS Oracle (database_status)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.DBSTATUS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>10m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Database status has been changed</name>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <priority>INFO</priority>
+                            <description>Статус базы данных был изменен. Скорее всего была выполнена операция ALTER SYSTEM SUSPEND которая останавливает все операции ввода/вывода (I/O) для файлов данных и управляющих файлов. Приостановленное состояние позволяет создавать резервные копии базы данных без вмешательства операций ввода-вывода. Когда база данных приостановлена, всем существующим операциям ввода-вывода разрешается завершиться и любые новые обращения к базе данных переводятся в состояние очереди.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -730,7 +791,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -753,7 +814,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                     <triggers>
                         <trigger>
@@ -768,8 +829,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -810,7 +871,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -833,7 +894,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -856,7 +917,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -878,7 +939,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.fra[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -907,7 +968,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -929,7 +990,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.resource[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.resource[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -951,7 +1012,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.resource[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.resource[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -984,7 +1045,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                     <triggers>
                         <trigger>
@@ -997,8 +1058,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -1023,8 +1084,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -1060,7 +1121,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                     <triggers>
                         <trigger>
@@ -1075,8 +1136,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -1111,7 +1172,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.parameter[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.parameter[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -1133,7 +1194,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.parameter[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.parameter[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -1155,7 +1216,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.parameter[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.parameter[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -1179,7 +1240,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.patch_info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -1203,7 +1264,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.patch_info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -1227,7 +1288,7 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.patch_info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -1251,13 +1312,13 @@
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>oracle.instance.patch_info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.patch_info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                 </item>
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' permanent tablespace info</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                    <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
                     <delay>5m</delay>
                     <history>1h</history>
                     <trends>0</trends>
@@ -1271,7 +1332,7 @@
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' temporary tablespace info</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
+                    <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
                     <delay>5m</delay>
                     <history>1h</history>
                     <trends>0</trends>
@@ -1285,7 +1346,7 @@
                 <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' undo tablespace info</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
+                    <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                     <delay>5m</delay>
                     <history>1h</history>
                     <trends>0</trends>
@@ -1301,7 +1362,7 @@
                 <discovery_rule>
                     <name>Oracle alert log discovery</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.alertlog.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.alertlog.discovery[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>5m</delay>
                     <item_prototypes>
                         <item_prototype>
@@ -1386,7 +1447,7 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                                <key>oracle.archlogdest.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -1413,7 +1474,7 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                                <key>oracle.archlogdest.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -1438,7 +1499,7 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                                <key>oracle.archlogdest.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -1466,7 +1527,7 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                                <key>oracle.archlogdest.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -1494,7 +1555,7 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                                <key>oracle.archlogdest.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
@@ -1510,8 +1571,8 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -1527,7 +1588,7 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                         </trigger_prototype>
                     </trigger_prototypes>
                     <master_item>
-                        <key>oracle.archlogdest.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.archlogdest.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                     <preprocessing>
                         <step>
@@ -1549,7 +1610,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <discovery_rule>
                     <name>Oracle database discovery</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.db.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.db.discovery[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>1h</delay>
                     <filter>
                         <conditions>
@@ -1565,7 +1626,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Current incarnation</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>oracle.db.incarnation[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            <key>oracle.db.incarnation[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             <delay>1h</delay>
                             <history>1d</history>
                             <description>Information about current database incarnation.</description>
@@ -1578,7 +1639,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[Oracle][{#INSTANCE}][{#DBNAME}] Get database info</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             <delay>2m</delay>
                             <history>1d</history>
                             <trends>0</trends>
@@ -1592,7 +1653,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Database size</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>oracle.db.size[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            <key>oracle.db.size[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             <delay>1h</delay>
                             <history>1d</history>
                             <units>B</units>
@@ -1614,8 +1675,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -1644,13 +1705,13 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Size of database '{#DBNAME}' has increased</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.db.size[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].last()}&gt;{$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.db.size[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].last()}&lt;={$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.db.size[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].last()}&gt;{$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.db.size[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].last()}&lt;={$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -1695,7 +1756,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -1724,7 +1785,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -1738,8 +1799,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -1782,7 +1843,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -1796,8 +1857,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -1845,7 +1906,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -1873,7 +1934,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -1887,8 +1948,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -1934,7 +1995,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -1948,8 +2009,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -1995,7 +2056,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -2009,8 +2070,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2059,7 +2120,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -2073,8 +2134,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2103,8 +2164,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2153,7 +2214,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -2168,8 +2229,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2217,7 +2278,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -2251,7 +2312,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -2265,8 +2326,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2314,7 +2375,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -2343,7 +2404,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -2358,8 +2419,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2402,13 +2463,13 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.db.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},switchover].diff()}=1 and {DBS_Template Oracle 11g for Windows:oracle.db.incarnation[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].diff()}=0</expression>
+                            <expression>{DBS_Template Oracle 11g for Windows:oracle.db[{#INSTANCE},{#DBNAME},switchover].diff()}=1 and {DBS_Template Oracle 11g for Windows:oracle.db.incarnation[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].diff()}=0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Database switchover has been performed</name>
                             <opdata>(current: {ITEM.VALUE})</opdata>
@@ -2418,8 +2479,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -2463,12 +2524,12 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.instance.parameters[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                                <key>oracle.instance.parameters[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
                     <master_item>
-                        <key>oracle.instance.parameters[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                        <key>oracle.instance.parameters[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     </master_item>
                     <preprocessing>
                         <step>
@@ -2511,7 +2572,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -2525,8 +2586,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Tablespace '{#TSNAME}' is not available</name>
@@ -2573,7 +2634,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -2595,7 +2656,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -2631,7 +2692,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -2659,7 +2720,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -2670,8 +2731,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2705,8 +2766,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Tablespace '{#TSNAME}' is not available</name>
@@ -2761,8 +2822,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>Tablespace '{#TSNAME}' is not available</name>
@@ -2804,8 +2865,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </dependency>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>Tablespace '{#TSNAME}' is not available</name>
@@ -2833,7 +2894,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         </trigger_prototype>
                     </trigger_prototypes>
                     <master_item>
-                        <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
+                        <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
                     </master_item>
                     <preprocessing>
                         <step>
@@ -2855,13 +2916,13 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <discovery_rule>
                     <name>Oracle standby discovery</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>oracle.standby.discovery[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <key>oracle.standby.discovery[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>1h</delay>
                     <item_prototypes>
                         <item_prototype>
                             <name>[Oracle][{#INSTANCE}] Get standby lag</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>oracle.standby.lag[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            <key>oracle.standby.lag[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             <delay>5m</delay>
                             <history>1d</history>
                             <trends>0</trends>
@@ -2875,7 +2936,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[Oracle][{#INSTANCE}] Get MRP status</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>oracle.standby.mrp_status[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            <key>oracle.standby.mrp_status[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             <delay>2m</delay>
                             <history>1d</history>
                             <trends>0</trends>
@@ -2905,7 +2966,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.standby.lag[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                                <key>oracle.standby.lag[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -2918,8 +2979,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2956,8 +3017,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         </dependency>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -3004,7 +3065,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.standby.mrp_status[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                                <key>oracle.standby.mrp_status[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -3017,8 +3078,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -3083,7 +3144,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.standby.mrp_status[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                                <key>oracle.standby.mrp_status[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -3105,7 +3166,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.standby.lag[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                                <key>oracle.standby.lag[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -3118,8 +3179,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -3151,8 +3212,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Transport lag is too high</name>
@@ -3212,7 +3273,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -3226,8 +3287,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Temporary tablespace '{#TSNAME}' is not available</name>
@@ -3274,7 +3335,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -3296,7 +3357,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -3332,7 +3393,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -3360,7 +3421,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -3371,8 +3432,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -3406,8 +3467,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Temporary tablespace '{#TSNAME}' is not available</name>
@@ -3463,8 +3524,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>Temporary tablespace '{#TSNAME}' is not available</name>
@@ -3507,8 +3568,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </dependency>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>Temporary tablespace '{#TSNAME}' is not available</name>
@@ -3536,7 +3597,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         </trigger_prototype>
                     </trigger_prototypes>
                     <master_item>
-                        <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
+                        <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
                     </master_item>
                     <preprocessing>
                         <step>
@@ -3584,7 +3645,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -3598,8 +3659,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Undo tablespace '{#TSNAME}' is not available</name>
@@ -3660,7 +3721,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -3696,7 +3757,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
@@ -3724,7 +3785,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                             </master_item>
                             <trigger_prototypes>
                                 <trigger_prototype>
@@ -3735,8 +3796,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -3770,8 +3831,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Undo tablespace '{#TSNAME}' is not available</name>
@@ -3818,7 +3879,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                             </preprocessing>
                             <master_item>
-                                <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
+                                <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
@@ -3834,8 +3895,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>Undo tablespace '{#TSNAME}' is not available</name>
@@ -3877,8 +3938,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </dependency>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>Undo tablespace '{#TSNAME}' is not available</name>
@@ -3906,7 +3967,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         </trigger_prototype>
                     </trigger_prototypes>
                     <master_item>
-                        <key>oracle.tablespace.info[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
+                        <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                     </master_item>
                     <preprocessing>
                         <step>
@@ -3962,6 +4023,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_ORACLE_CF_BACKUP_WARN}</macro>
                     <value>60h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_CONN_STRING}</macro>
+                    <value>127.0.0.1:1521/orcl</value>
+                    <description>Format connection string: username/userpassword@host[:port][/service name][:server][/instance_name]</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</macro>
@@ -4033,11 +4099,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>180h</value>
                 </macro>
                 <macro>
-                    <macro>{$DBS_ORACLE_HOST}</macro>
-                    <value>127.0.0.1</value>
-                    <description>Instance address (ip address or dns)</description>
-                </macro>
-                <macro>
                     <macro>{$DBS_ORACLE_INCR_BACKUP_CRIT}</macro>
                     <value>4d</value>
                 </macro>
@@ -4067,11 +4128,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_ORACLE_PING_NODATA_WARN}</macro>
                     <value>6m</value>
-                </macro>
-                <macro>
-                    <macro>{$DBS_ORACLE_PORT}</macro>
-                    <value>1521</value>
-                    <description>Database port</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_PROCESSES_PRC_CRIT}</macro>
@@ -4155,15 +4211,15 @@ return JSON.stringify({&quot;data&quot;: output})</params>
     </templates>
     <triggers>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.dbfiles[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&gt;={$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.dbfiles[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}/{DBS_Template Oracle 11g for Windows:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&gt;={$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}</expression>
             <name>Current number of data files is near its limit</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2})</opdata>
             <priority>WARNING</priority>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -4188,8 +4244,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -4219,8 +4275,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -4235,9 +4291,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
             <name>No incremental database backups</name>
             <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_CRIT})</opdata>
             <priority>HIGH</priority>
@@ -4245,8 +4301,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -4261,9 +4317,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_WARN} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_WARN} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_WARN} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_WARN} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
             <name>No incremental database backups</name>
             <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_WARN})</opdata>
             <priority>WARNING</priority>
@@ -4271,13 +4327,13 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
                 <dependency>
                     <name>No incremental database backups</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template Oracle 11g for Windows:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -4292,9 +4348,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT} or {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT} or {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
             <name>Redolog switch rate per hour is too high</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}, alert started: {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
@@ -4302,8 +4358,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -4318,9 +4374,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_WARN}</expression>
+            <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_WARN}</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_WARN} or {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
+            <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_WARN} or {DBS_Template Oracle 11g for Windows:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
             <name>Redolog switch rate per hour is too high</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_WARN}, alert started: {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
@@ -4328,8 +4384,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -4353,8 +4409,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -4378,8 +4434,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
                 <dependency>
                     <name>Too many processes</name>
@@ -4408,8 +4464,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -4433,8 +4489,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_HOST},{$DBS_ORACLE_PORT},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                 </dependency>
                 <dependency>
                     <name>Too many sessions</name>
@@ -4589,6 +4645,27 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <mapping>
                     <value>4</value>
                     <newvalue>PRIMARY</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle (database_status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>ACTIVE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>SUSPENDED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>INSTANCE RECOVERY</newvalue>
                 </mapping>
             </mappings>
         </value_map>

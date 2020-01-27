@@ -247,14 +247,14 @@ unsigned long	zbx_db_get_version_pgsql(const struct zbx_db_connection *conn)
  * Opens a database connection to a PostgreSQL server
  * Return pointer to a struct zbx_db_connection * on sucess, NULL on error
  */
-struct zbx_db_connection * zbx_db_connect_pgsql(const char * conninfo)
+struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 {
 	struct zbx_db_connection * conn = NULL;
 	int ntuples, i;
 	PGresult *res;
 	pthread_mutexattr_t mutexattr;
 
-	if (NULL != conninfo)
+	if (NULL != conn_string)
 	{
 		conn = malloc(sizeof(struct zbx_db_connection));
 
@@ -274,13 +274,13 @@ struct zbx_db_connection * zbx_db_connect_pgsql(const char * conninfo)
 			return NULL;
 		}
 
-		((struct zbx_db_pgsql *)conn->connection)->db_handle = PQconnectdb(conninfo);
+		((struct zbx_db_pgsql *)conn->connection)->db_handle = PQconnectdb(conn_string);
 		((struct zbx_db_pgsql *)conn->connection)->nb_type = 0;
 		((struct zbx_db_pgsql *)conn->connection)->list_type = NULL;
 
 		if (CONNECTION_OK != PQstatus(((struct zbx_db_pgsql *)conn->connection)->db_handle))
 		{
-			zbx_db_err_log(ZBX_DB_TYPE_POSTGRESQL, ERR_Z3001, 0, PQerrorMessage(((struct zbx_db_pgsql *)conn->connection)->db_handle), conninfo);
+			zbx_db_err_log(ZBX_DB_TYPE_POSTGRESQL, ERR_Z3001, 0, PQerrorMessage(((struct zbx_db_pgsql *)conn->connection)->db_handle), conn_string);
 			PQfinish(((struct zbx_db_pgsql *)conn->connection)->db_handle);
 			free(conn->connection);
 			free(conn);

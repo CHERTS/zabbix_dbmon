@@ -175,19 +175,25 @@ void zbx_db_close_mysql(struct zbx_db_connection *conn);
 #if defined(HAVE_POSTGRESQL)
 int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_db_result *p_result, const char *query);
 unsigned long zbx_db_get_version_pgsql(const struct zbx_db_connection *conn);
-struct zbx_db_connection *zbx_db_connect_pgsql(const char *conninfo);
+struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string);
 void zbx_db_close_pgsql(struct zbx_db_connection *conn);
 #endif
 
 #if defined(HAVE_ORACLE)
-#define ZBX_DB_OCI_DEFAULT	0x00000000
-#define ZBX_DB_OCI_SYSDBA	0x00000002
-#define ZBX_DB_OCI_SYSOPER	0x00000004
-#define ZBX_DB_OCI_SYSASM	0x00008000
-#define ZBX_DB_OCI_SYSDGD	0x00040000
+
+#define ZBX_DB_OCI_DEFAULT		0x00000000
+#define ZBX_DB_OCI_SYSDBA		0x00000002
+#define ZBX_DB_OCI_SYSOPER		0x00000004
+#define ZBX_DB_OCI_SYSASM		0x00008000
+#define ZBX_DB_OCI_SYSDGD		0x00040000
+#define ZBX_DB_OCI_PRELIM_AUTH	0x00000008
+
+#define MAX_ZBX_DB_ORACLE_INSTANCE_LEN 8
 int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx_db_result *o_result, const char *fmt, va_list args);
-struct zbx_db_connection *zbx_db_connect_oracle(const char *host, const char *user, const char *passwd, const char *dbname, const unsigned int port, unsigned int mode);
+struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const char *username, const char *userpasswd, unsigned int mode);
 void zbx_db_close_oracle(struct zbx_db_connection * conn);
+int	zbx_check_oracle_instance_name(const char *instance, char **error);
+char *zbx_check_oracle_conn_string(char *conn_string);
 #endif
 
 #endif

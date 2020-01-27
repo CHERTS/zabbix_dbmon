@@ -49,6 +49,8 @@ int make_discovery_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct z
 		{
 			zbx_snprintf(buffer, sizeof(buffer), "{#%s}", zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value)));
 
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): ColNum: %u, ColName: %s", __func__, request->key, col, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value));
+
 			for (c = &buffer[0]; *c; c++)
 				*c = toupper(*c);
 
@@ -63,6 +65,7 @@ int make_discovery_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct z
 					zbx_json_addstring(&j, buffer, zbx_strdup(NULL, value_str), ZBX_JSON_TYPE_STRING);
 					break;
 				case ZBX_COL_TYPE_TEXT:
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(TEXT): %d, Value: %s", __func__, request->key, row, col, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value);
 					zbx_json_addstring(&j, buffer, zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value)), ZBX_JSON_TYPE_STRING);
 					break;
 				case ZBX_COL_TYPE_DATE:
