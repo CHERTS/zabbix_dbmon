@@ -716,29 +716,30 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 3] Allocate server contexts - done", __func__);
 
-			/* Create a server context */
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
-				(const text *)oracle_conn_string, (sb4)strlen(oracle_conn_string), (ub4)OCI_DEFAULT));
-
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 4] Create a server context - done", __func__);
-
 			/* Allocate service contexts */
 			zbx_db_ora_check(err, conn, oracle_conn_string, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
 				(void **)&((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX, (size_t)0, (void **)0));
 
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 5] Allocate service contexts - done", __func__);
-
-			/* Set attribute server context in the service context */
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX,
-				(void *)((struct zbx_db_oracle *)conn->connection)->srvhp, (ub4)0, OCI_ATTR_SERVER, ((struct zbx_db_oracle *)conn->connection)->errhp));
-
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 6] Set attribute server context in the service context - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 4] Allocate service contexts - done", __func__);
 
 			/* Allocate session handle */
 			zbx_db_ora_check(err, conn, oracle_conn_string, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
 				(void **)&((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_AUTHINFO, (size_t)0, (void **)0));
 
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 7] Allocate session handle - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 5] Allocate session handle - done", __func__);
+
+			/* Create a server context */
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+				(const text *)oracle_conn_string, (sb4)strlen(oracle_conn_string), (ub4)OCI_DEFAULT));
+
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 6] Create a server context - done", __func__);
+
+
+			/* Set attribute server context in the service context */
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX,
+				(void *)((struct zbx_db_oracle *)conn->connection)->srvhp, (ub4)0, OCI_ATTR_SERVER, ((struct zbx_db_oracle *)conn->connection)->errhp));
+
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 7] Set attribute server context in the service context - done", __func__);
 
 			/* Setup username and password */
 			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_user, (ub4)(NULL != oracle_user ? strlen(oracle_user) : 0),
@@ -796,33 +797,38 @@ void zbx_db_close_oracle(struct zbx_db_connection *conn)
 {
 	sword	err = OCI_SUCCESS;
 
-	/* OCISessionEnd */
-	zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 1] OCISessionEnd - start", __func__);
-
-	err = OCISessionEnd(((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
-				((struct zbx_db_oracle *)conn->connection)->authp, (ub4)OCI_DEFAULT);
-
-	if (OCI_SUCCESS != err)
+	if (NULL != ((struct zbx_db_oracle *)conn->connection)->authp && NULL != ((struct zbx_db_oracle *)conn->connection)->svchp)
 	{
-		zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3004, err, zbx_db_oci_error(conn, err, NULL), NULL);
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 1] OCISessionEnd - start", __func__);
+
+		err = OCISessionEnd(((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+			((struct zbx_db_oracle *)conn->connection)->authp, (ub4)OCI_DEFAULT);
+
+		if (OCI_SUCCESS != err)
+		{
+			zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3004, err, zbx_db_oci_error(conn, err, NULL), NULL);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 1] Logged off - done", __func__);
+		}
 	}
-	else
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 1] Logged off - done", __func__);
-	}
 
-	/* OCIServerDetach */
-	zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] OCIServerDetach - start", __func__);
-
-	err = OCIServerDetach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)OCI_DEFAULT);
-
-	if (OCI_SUCCESS != err)
+	if (NULL != ((struct zbx_db_oracle *)conn->connection)->srvhp)
 	{
-		zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3004, err, zbx_db_oci_error(conn, err, NULL), NULL);
-	}
-	else
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] Detached from server - done", __func__);
+		/* OCIServerDetach */
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] OCIServerDetach - start", __func__);
+
+		err = OCIServerDetach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)OCI_DEFAULT);
+
+		if (OCI_SUCCESS != err)
+		{
+			zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3004, err, zbx_db_oci_error(conn, err, NULL), NULL);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] Detached from server - done", __func__);
+		}
 	}
 
 	/* Deallocate error handle */
@@ -864,8 +870,6 @@ void zbx_db_close_oracle(struct zbx_db_connection *conn)
 		((struct zbx_db_oracle *)conn->connection)->envhp = NULL;
 		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 7] Deallocate environment handle - done", __func__);
 	}
-
-	pthread_mutex_destroy(&((struct zbx_db_oracle *)conn->connection)->lock);
 }
 
 #endif

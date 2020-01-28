@@ -392,7 +392,6 @@ void zbx_db_close_mysql(struct zbx_db_connection *conn)
 {
 	mysql_close(((struct zbx_db_mysql *)conn->connection)->db_handle);
 	mysql_library_end();
-	pthread_mutex_destroy(&((struct zbx_db_mysql *)conn->connection)->lock);
 }
 
 #endif
