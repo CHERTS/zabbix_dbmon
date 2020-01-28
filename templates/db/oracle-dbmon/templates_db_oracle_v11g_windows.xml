@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-28T14:47:21Z</date>
+    <date>2020-01-28T15:48:18Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -1125,7 +1125,7 @@ INSTANCE RECOVERY</description>
                     </master_item>
                     <triggers>
                         <trigger>
-                            <expression>{change()}&lt;-20 and {$DBS_ORACLE_DISABLE_INSTANCE_RESTART_ALARM}=0</expression>
+                            <expression>{change()}&lt;0 and {$DBS_ORACLE_DISABLE_INSTANCE_RESTART_ALARM}=0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Instance '{$DBS_ORACLE_INSTANCE}' has just been restarted</name>
                             <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
@@ -1133,13 +1133,6 @@ INSTANCE RECOVERY</description>
                             <description>Экземпляр был перезапущен. Необходимо убедиться в том, что он действительно был перезапущен, если так, то проверить alert.log на предмет причин перезапуска, уведомить заказчика и передать данные эксперту.</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
