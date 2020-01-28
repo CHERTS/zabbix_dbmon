@@ -39,7 +39,6 @@ struct zbx_db_oracle
 	OCIError		*errhp;
 	OCISvcCtx		*svchp;
 	OCIServer		*srvhp;
-	//OCIStmt			*stmthp;
 	OCISession		*authp;
 	pthread_mutex_t	lock;
 };
