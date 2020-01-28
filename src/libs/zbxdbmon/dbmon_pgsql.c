@@ -378,6 +378,7 @@ void zbx_db_close_pgsql(struct zbx_db_connection *conn)
 	zbx_db_free(((struct zbx_db_pgsql *)conn->connection)->list_type);
 	((struct zbx_db_pgsql *)conn->connection)->list_type = NULL;
 	((struct zbx_db_pgsql *)conn->connection)->nb_type = 0;
+	pthread_mutex_destroy(&((struct zbx_db_pgsql *)conn->connection)->lock);
 }
 
 #endif

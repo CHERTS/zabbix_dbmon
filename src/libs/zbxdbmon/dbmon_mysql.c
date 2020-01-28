@@ -338,6 +338,7 @@ struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *use
 		if (mysql_library_init(0, NULL, NULL))
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): mysql_library_init error, aborting", __func__);
+			free(conn->connection);
 			free(conn);
 			return NULL;
 		}
@@ -347,14 +348,17 @@ struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *use
 		if (NULL == ((struct zbx_db_mysql *)conn->connection)->db_handle)
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): mysql_init error, aborting", __func__);
+			free(conn->connection);
 			free(conn);
 			return NULL;
 		}
+
 		if (NULL == mysql_real_connect(((struct zbx_db_mysql *)conn->connection)->db_handle,
 			host, user, passwd, dbname, port, dbsocket, CLIENT_MULTI_STATEMENTS))
 		{
 			zbx_db_err_log(ZBX_DB_TYPE_MYSQL, ERR_Z3001, mysql_errno(((struct zbx_db_mysql *)conn->connection)->db_handle), mysql_error(((struct zbx_db_mysql *)conn->connection)->db_handle), dbname);
 			mysql_close(((struct zbx_db_mysql *)conn->connection)->db_handle);
+			free(conn->connection);
 			free(conn);
 			return NULL;
 		}
@@ -392,6 +396,7 @@ void zbx_db_close_mysql(struct zbx_db_connection *conn)
 {
 	mysql_close(((struct zbx_db_mysql *)conn->connection)->db_handle);
 	mysql_library_end();
+	pthread_mutex_destroy(&((struct zbx_db_mysql *)conn->connection)->lock);
 }
 
 #endif
