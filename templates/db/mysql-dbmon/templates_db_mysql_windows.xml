@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-28T14:47:26Z</date>
+    <date>2020-01-28T15:49:48Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -1516,20 +1516,13 @@
                     </master_item>
                     <triggers>
                         <trigger>
-                            <expression>{change()}&lt;-5</expression>
+                            <expression>{change()}&lt;0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Instance '{$DBS_MYSQL_INSTANCE}' has just been restarted</name>
                             <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
                             <priority>DISASTER</priority>
                             <description>Процесс (сервис) mysqld был перезапущен. Необходимо проверить факт перезапуска на сервере заказчика, проверить логи (error.log), далее уточнить в чате кто произвел перезапуск. Возможно, что перезапуск произошел в результате краха процесса в автоматическом режиме.</description>
                             <manual_close>YES</manual_close>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
