@@ -39,7 +39,7 @@ struct zbx_db_oracle
 	OCIError		*errhp;
 	OCISvcCtx		*svchp;
 	OCIServer		*srvhp;
-	OCIStmt			*stmthp;
+	//OCIStmt			*stmthp;
 	OCISession		*authp;
 	pthread_mutex_t	lock;
 };
@@ -96,8 +96,8 @@ static const char *zbx_db_oci_error(const struct zbx_db_connection *conn, sword 
 	switch (status)
 	{
 		case OCI_SUCCESS_WITH_INFO:
-			OCIErrorGet((dvoid *)((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)1, (text *)NULL, perrcode,
-						(text *)errbuf, (ub4)sizeof(errbuf), OCI_HTYPE_ERROR);
+			OCIErrorGet((void *)((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)1, (text *)NULL, perrcode,
+						(text *)errbuf, (ub4)sizeof(errbuf), (ub4)OCI_HTYPE_ERROR);
 			break;
 		case OCI_NEED_DATA:
 			zbx_snprintf(errbuf, sizeof(errbuf), "%s", "OCI_NEED_DATA");
@@ -106,8 +106,8 @@ static const char *zbx_db_oci_error(const struct zbx_db_connection *conn, sword 
 			zbx_snprintf(errbuf, sizeof(errbuf), "%s", "OCI_NODATA");
 			break;
 		case OCI_ERROR:
-			OCIErrorGet((dvoid *)((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)1, (text *)NULL, perrcode,
-						(text *)errbuf, (ub4)sizeof(errbuf), OCI_HTYPE_ERROR);
+			OCIErrorGet((void *)((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)1, (text *)NULL, perrcode,
+						(text *)errbuf, (ub4)sizeof(errbuf), (ub4)OCI_HTYPE_ERROR);
 			break;
 		case OCI_INVALID_HANDLE:
 			zbx_snprintf(errbuf, sizeof(errbuf), "%s", "OCI_INVALID_HANDLE");
@@ -162,7 +162,7 @@ static void	zbx_db_oci_clean_result(ORA_DB_RESULT result)
 			/* deallocate the lob locator variable */
 			if (NULL != result->clobs[i])
 			{
-				OCIDescriptorFree((dvoid *)result->clobs[i], OCI_DTYPE_LOB);
+				OCIDescriptorFree((void *)result->clobs[i], OCI_DTYPE_LOB);
 				result->clobs[i] = NULL;
 			}
 		}
@@ -174,7 +174,7 @@ static void	zbx_db_oci_clean_result(ORA_DB_RESULT result)
 
 	if (result->stmthp)
 	{
-		OCIHandleFree((dvoid *)result->stmthp, OCI_HTYPE_STMT);
+		OCIHandleFree((void *)result->stmthp, OCI_HTYPE_STMT);
 		result->stmthp = NULL;
 	}
 }
@@ -205,7 +205,7 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 	result = (ORA_DB_RESULT)zbx_malloc(NULL, sizeof(struct zbx_db_ora_result));
 	memset(result, 0, sizeof(struct zbx_db_ora_result));
 
-	err = OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp, (dvoid **)&result->stmthp, OCI_HTYPE_STMT, (size_t)0, (dvoid **)0);
+	err = OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp, (void **)&result->stmthp, OCI_HTYPE_STMT, (size_t)0, (void **)0);
 
 	/* Prefetching when working with Oracle is needed because otherwise it fetches only 1 row at a time when doing */
 	/* selects (default behavior). There are 2 ways to do prefetching: memory based and rows based. Based on the   */
@@ -271,7 +271,7 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 		if (OCI_SUCCESS == err)
 		{
 			/* Retrieve the datatype attribute for the column */
-			err = OCIAttrGet((void *)parmdp, OCI_DTYPE_PARAM, (dvoid *)&data_type, (ub4 *)NULL,
+			err = OCIAttrGet((void *)parmdp, OCI_DTYPE_PARAM, (void *)&data_type, (ub4 *)NULL,
 				(ub4)OCI_ATTR_DATA_TYPE, (OCIError *)((struct zbx_db_oracle *)conn->connection)->errhp);
 		}
 
@@ -280,8 +280,8 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 			if (OCI_SUCCESS == err)
 			{
 				/* Allocate the lob locator variable */
-				err = OCIDescriptorAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp, (dvoid **)&result->clobs[counter - 1],
-					OCI_DTYPE_LOB, (size_t)0, (dvoid **)0);
+				err = OCIDescriptorAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp, (void **)&result->clobs[counter - 1],
+					OCI_DTYPE_LOB, (size_t)0, (void **)0);
 			}
 
 			if (OCI_SUCCESS == err)
@@ -346,8 +346,8 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 			{
 				/* Represent any data as characters */
 				err = OCIDefineByPos(result->stmthp, &defnp, ((struct zbx_db_oracle *)conn->connection)->errhp, counter,
-					(dvoid *)result->values[counter - 1], col_width, SQLT_STR,
-					(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT);
+					(void *)result->values[counter - 1], col_width, SQLT_STR,
+					(void *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT);
 			}
 		}
 
@@ -392,8 +392,8 @@ char **zbx_db_fetch_oracle(const struct zbx_db_connection *conn, ORA_DB_RESULT r
 		ub4	rows_fetched;
 		ub4	sizep = sizeof(ub4);
 
-		if (OCI_SUCCESS != (rc = OCIErrorGet((dvoid *)((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)1, (text *)NULL,
-			&errcode, (text *)errbuf, (ub4)sizeof(errbuf), OCI_HTYPE_ERROR)))
+		if (OCI_SUCCESS != (rc = OCIErrorGet((void *)((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)1, (text *)NULL,
+			&errcode, (text *)errbuf, (ub4)sizeof(errbuf), (ub4)OCI_HTYPE_ERROR)))
 		{
 			zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3006, rc, zbx_db_oci_error(conn, rc, NULL), NULL);
 			return NULL;
@@ -455,8 +455,8 @@ char **zbx_db_fetch_oracle(const struct zbx_db_connection *conn, ORA_DB_RESULT r
 		if (OCI_SUCCESS == rc2)
 		{
 			if (OCI_SUCCESS != (rc2 = OCILobRead(((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp, result->clobs[i], &amount,
-				(ub4)1, (dvoid *)result->values[i], (ub4)(result->values_alloc[i] - 1),
-				(dvoid *)NULL, (OCICallbackLobRead)NULL, (ub2)0, csfrm)))
+				(ub4)1, (void *)result->values[i], (ub4)(result->values_alloc[i] - 1),
+				(void *)NULL, (OCICallbackLobRead)NULL, (ub2)0, csfrm)))
 			{
 				zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3006, rc2, zbx_db_oci_error(conn, rc2, NULL), NULL);
 				return NULL;
@@ -496,7 +496,6 @@ int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx
 		if (NULL == result)
 		{
 			pthread_mutex_unlock(&(((struct zbx_db_oracle *)conn->connection)->lock));
-
 			return ZBX_DB_ERROR_QUERY;
 		}
 
@@ -663,7 +662,7 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 		}
 
 		conn->type = ZBX_DB_TYPE_ORACLE;
-		conn->connection = malloc(sizeof(struct zbx_db_oracle));
+		conn->connection = (struct zbx_db_oracle *)malloc(sizeof(struct zbx_db_oracle));
 
 		if (NULL == conn->connection)
 		{
@@ -704,100 +703,70 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 
 		if (OCI_SUCCESS == ret)
 		{
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Connect to Oracle database: Stage 1 (Create environment) - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 1] Create environment - done", __func__);
 
 			/* Allocate an error handle */
-			(void)OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp,
-				(dvoid **)&((struct zbx_db_oracle *)conn->connection)->errhp, OCI_HTYPE_ERROR, (size_t)0, (dvoid **)0);
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
+				(void **)&((struct zbx_db_oracle *)conn->connection)->errhp, OCI_HTYPE_ERROR, (size_t)0, (void **)0));
 
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Allocate an error handle - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 2] Allocate an error handle - done", __func__);
 
 			/* Allocate server contexts */
-			(void)OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp, (void *)&((struct zbx_db_oracle *)conn->connection)->srvhp,
-				OCI_HTYPE_SERVER, (size_t)0, (dvoid **)0);
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
+				(void **)&((struct zbx_db_oracle *)conn->connection)->srvhp, OCI_HTYPE_SERVER, (size_t)0, (void **)0));
 
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Allocate server contexts - done", __func__);
-
-			/* Allocate service contexts */
-			(void)OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp, (void *)&((struct zbx_db_oracle *)conn->connection)->svchp,
-				OCI_HTYPE_SVCCTX, (size_t)0, (dvoid **)0);
-
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Allocate service contexts - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 3] Allocate server contexts - done", __func__);
 
 			/* Create a server context */
-			err = OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
-				(text *)oracle_conn_string, (ub4)strlen(oracle_conn_string), 0);
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+				(const text *)oracle_conn_string, (sb4)strlen(oracle_conn_string), (ub4)OCI_DEFAULT));
 
-			if (OCI_SUCCESS != err)
-			{
-				zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3001, err, zbx_db_oci_error(conn, err, NULL), oracle_conn_string);
-				ret = ZBX_DB_ERROR_CONNECTION;
-			}
-			else
-			{
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): Create a server context - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 4] Create a server context - done", __func__);
 
-				/* Set attribute server context in the service context */
-				(void)OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX, ((struct zbx_db_oracle *)conn->connection)->srvhp,
-					(ub4)0, OCI_ATTR_SERVER, ((struct zbx_db_oracle *)conn->connection)->errhp);
+			/* Allocate service contexts */
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
+				(void **)&((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX, (size_t)0, (void **)0));
 
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): Set attribute server context in the service context - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 5] Allocate service contexts - done", __func__);
 
-				/* Allocate session handle */
-				(void)OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp,
-					(dvoid **)&((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_AUTHINFO, (size_t)0, (dvoid **)NULL);
+			/* Set attribute server context in the service context */
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX,
+				(void *)((struct zbx_db_oracle *)conn->connection)->srvhp, (ub4)0, OCI_ATTR_SERVER, ((struct zbx_db_oracle *)conn->connection)->errhp));
 
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): Allocate session handle - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 6] Set attribute server context in the service context - done", __func__);
 
-				/* Setup username and password */
-				OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_user, (ub4)(NULL != oracle_user ? strlen(oracle_user) : 0),
-					OCI_ATTR_USERNAME, ((struct zbx_db_oracle *)conn->connection)->errhp);
+			/* Allocate session handle */
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
+				(void **)&((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_AUTHINFO, (size_t)0, (void **)0));
 
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): Setup username - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 7] Allocate session handle - done", __func__);
 
-				OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_password, (ub4)(NULL != oracle_password ? strlen(oracle_password) : 0),
-					OCI_ATTR_PASSWORD, ((struct zbx_db_oracle *)conn->connection)->errhp);
+			/* Setup username and password */
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_user, (ub4)(NULL != oracle_user ? strlen(oracle_user) : 0),
+				OCI_ATTR_USERNAME, (void *)((struct zbx_db_oracle *)conn->connection)->errhp));
 
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): Setup password - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 8] Setup username - done", __func__);
 
-				// Mode is OCI_DEFAULT or OCI_SYSDBA or OCI_SYSOPER or OCI_SYSASM or OCI_SYSDGD
-				err = OCISessionBegin(((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
-					((struct zbx_db_oracle *)conn->connection)->authp, OCI_CRED_RDBMS, (ub4)mode);
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_password, (ub4)(NULL != oracle_password ? strlen(oracle_password) : 0),
+				OCI_ATTR_PASSWORD, (void *)((struct zbx_db_oracle *)conn->connection)->errhp));
 
-				if (OCI_SUCCESS != err)
-				{
-					zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3001, err, zbx_db_oci_error(conn, err, NULL), oracle_conn_string);
-					ret = ZBX_DB_ERROR_CONNECTION;
-				}
-				else
-				{
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(): OCISessionBegin, mode set %d - done", __func__, (ub4)mode);
-				}
-			}
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 9] Setup password - done", __func__);
+
+			// Mode is OCI_DEFAULT or OCI_SYSDBA or OCI_SYSOPER or OCI_SYSASM or OCI_SYSDGD or OCI_PRELIM_AUTH
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCISessionBegin((void *)((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+				((struct zbx_db_oracle *)conn->connection)->authp, (ub4)OCI_CRED_RDBMS, (ub4)mode));
+
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 10] OCISessionBegin, set mode %d - done", __func__, (ub4)mode);
+
+			/* Set the session attribute in the service context */
+			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->svchp, (ub4)OCI_HTYPE_SVCCTX, (void *)((struct zbx_db_oracle *)conn->connection)->authp,
+				(ub4)0, (ub4)OCI_ATTR_SESSION, ((struct zbx_db_oracle *)conn->connection)->errhp));
+
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 11]  Set the session attribute in the service context - done", __func__);
 		}
-
+out:
 		if (OCI_SUCCESS == ret)
 		{
-			(void)OCIAttrSet(((struct zbx_db_oracle *)conn->connection)->svchp, (ub4)OCI_HTYPE_SVCCTX, ((struct zbx_db_oracle *)conn->connection)->authp,
-				(ub4)0, (ub4)OCI_ATTR_SESSION, ((struct zbx_db_oracle *)conn->connection)->errhp);
-
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Connect to Oracle database: Stage 2 (OCI_ATTR_SESSION) - done", __func__);
-
-			/* Initialize statement handle */
-			err = OCIHandleAlloc((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp, (dvoid **)&((struct zbx_db_oracle *)conn->connection)->stmthp, OCI_HTYPE_STMT,
-				(size_t)0, (dvoid **)0);
-
-			if (OCI_SUCCESS != err)
-			{
-				zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3001, err, zbx_db_oci_error(conn, err, NULL), oracle_conn_string);
-				ret = ZBX_DB_ERROR_CONNECTION;
-			}
-		}
-
-		if (OCI_SUCCESS == ret)
-		{
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Connect to Oracle database: Stage 3 (Initialize statement handle) - done", __func__);
-
 			/* Initialize MUTEX for connection */
 			pthread_mutexattr_init(&mutexattr);
 			pthread_mutexattr_settype(&mutexattr, PTHREAD_MUTEX_RECURSIVE);
@@ -811,7 +780,9 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 		}
 		else
 		{
-			free(conn);
+			zbx_db_close_oracle(conn);
+			zbx_db_free(conn->connection);
+			zbx_db_free(conn);
 			conn = NULL;
 		}
 	}
@@ -855,52 +826,44 @@ void zbx_db_close_oracle(struct zbx_db_connection *conn)
 		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] Detached from server - done", __func__);
 	}
 
-	/* Deallocate statement handle */
-	if (NULL != ((struct zbx_db_oracle *)conn->connection)->stmthp)
-	{
-		OCIHandleFree((dvoid *)((struct zbx_db_oracle *)conn->connection)->stmthp, OCI_HTYPE_STMT);
-		((struct zbx_db_oracle *)conn->connection)->stmthp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 3] Deallocate statement handle - done", __func__);
-	}
-
 	/* Deallocate error handle */
 	if (NULL != ((struct zbx_db_oracle *)conn->connection)->errhp)
 	{
-		OCIHandleFree(((struct zbx_db_oracle *)conn->connection)->errhp, OCI_HTYPE_ERROR);
+		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->errhp, OCI_HTYPE_ERROR);
 		((struct zbx_db_oracle *)conn->connection)->errhp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 4] Deallocate error handle - done", __func__);
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 3] Deallocate error handle - done", __func__);
 	}
 
 	/* Deallocate server handle */
 	if (NULL != ((struct zbx_db_oracle *)conn->connection)->srvhp)
 	{
-		OCIHandleFree(((struct zbx_db_oracle *)conn->connection)->srvhp, OCI_HTYPE_SERVER);
+		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->srvhp, OCI_HTYPE_SERVER);
 		((struct zbx_db_oracle *)conn->connection)->srvhp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 5] Deallocate server handle - done", __func__);
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 4] Deallocate server handle - done", __func__);
 	}
 
 	/* Deallocate service handle */
 	if (NULL != ((struct zbx_db_oracle *)conn->connection)->svchp)
 	{
-		OCIHandleFree(((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX);
+		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX);
 		((struct zbx_db_oracle *)conn->connection)->svchp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 6] Deallocate service handle - done", __func__);
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 5] Deallocate service handle - done", __func__);
 	}
 
 	/* Deallocate session handle */
 	if (NULL != ((struct zbx_db_oracle *)conn->connection)->authp)
 	{
-		OCIHandleFree(((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION);
+		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION);
 		((struct zbx_db_oracle *)conn->connection)->authp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 7] Deallocate session handle - done", __func__);
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 6] Deallocate session handle - done", __func__);
 	}
 
 	/* Delete the environment handle, which deallocates all other handles associated with it */
 	if (NULL != ((struct zbx_db_oracle *)conn->connection)->envhp)
 	{
-		OCIHandleFree((dvoid *)((struct zbx_db_oracle *)conn->connection)->envhp, OCI_HTYPE_ENV);
+		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->envhp, OCI_HTYPE_ENV);
 		((struct zbx_db_oracle *)conn->connection)->envhp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 8] Deallocate environment handle - done", __func__);
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 7] Deallocate environment handle - done", __func__);
 	}
 
 	pthread_mutex_destroy(&((struct zbx_db_oracle *)conn->connection)->lock);

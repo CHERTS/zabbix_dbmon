@@ -691,14 +691,13 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 	if (oracle_conn != NULL)
 	{
 		SET_UI64_RESULT(result, 1);
+		zbx_db_close_db(oracle_conn);
+		zbx_db_clean_connection(oracle_conn);
 	}
 	else
 	{
 		SET_UI64_RESULT(result, 0);
 	}
-
-	zbx_db_close_db(oracle_conn);
-	zbx_db_clean_connection(oracle_conn);
 
 	return SYSINFO_RET_OK;
 }
@@ -803,7 +802,7 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 						else
 						{
 							SET_MSG_RESULT(result, zbx_strdup(NULL, "Database closed for reading information (may be not standby or open mode not mounted or read-only or read-only-with-apply)"));
-							goto out;
+							ret = SYSINFO_RET_FAIL;
 						}
 
 						zbx_db_clean_result(&ora_result);
@@ -830,7 +829,7 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 						else
 						{
 							SET_MSG_RESULT(result, zbx_strdup(NULL, "Instance closed for reading information (may be database not primary or not open with read-only or read-write)"));
-							goto out;
+							ret = SYSINFO_RET_FAIL;
 						}
 
 						zbx_db_clean_result(&ora_result);
@@ -894,7 +893,7 @@ exec_inst_query:
 						else
 						{
 							SET_MSG_RESULT(result, zbx_strdup(NULL, "Database closed for reading information (may be not standby or open mode not mounted or read-only or read-only-with-apply)"));
-							goto out;
+							ret = SYSINFO_RET_FAIL;
 						}
 					}
 					else
@@ -921,7 +920,7 @@ exec_inst_query:
 						else
 						{
 							SET_MSG_RESULT(result, zbx_strdup(NULL, "Database closed for reading information (may be not primary or not open with read-only or read-write)"));
-							goto out;
+							ret = SYSINFO_RET_FAIL;
 						}
 					}
 					else
@@ -962,6 +961,9 @@ exec_db_query:
 				}
 			}
 		}
+
+		zbx_db_close_db(oracle_conn);
+		zbx_db_clean_connection(oracle_conn);
 	}
 	else
 	{
@@ -969,10 +971,6 @@ exec_db_query:
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
-
-out:
-	zbx_db_close_db(oracle_conn);
-	zbx_db_clean_connection(oracle_conn);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
 
@@ -1263,6 +1261,9 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 				ret = SYSINFO_RET_FAIL;
 			}
 		}
+
+		zbx_db_close_db(oracle_conn);
+		zbx_db_clean_connection(oracle_conn);
 	}
 	else
 	{
@@ -1270,9 +1271,6 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
-
-	zbx_db_close_db(oracle_conn);
-	zbx_db_clean_connection(oracle_conn);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
 
@@ -1391,6 +1389,9 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
 			ret = SYSINFO_RET_FAIL;
 		}
+
+		zbx_db_close_db(oracle_conn);
+		zbx_db_clean_connection(oracle_conn);
 	}
 	else
 	{
@@ -1398,9 +1399,6 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
-
-	zbx_db_close_db(oracle_conn);
-	zbx_db_clean_connection(oracle_conn);
 
 	return ret;
 }
@@ -1559,6 +1557,9 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query "));
 			ret = SYSINFO_RET_FAIL;
 		}
+
+		zbx_db_close_db(oracle_conn);
+		zbx_db_clean_connection(oracle_conn);
 	}
 	else
 	{
@@ -1566,9 +1567,6 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
-
-	zbx_db_close_db(oracle_conn);
-	zbx_db_clean_connection(oracle_conn);
 
 	return ret;
 }
