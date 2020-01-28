@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-27T13:25:56Z</date>
+    <date>2020-01-28T14:47:21Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -1565,9 +1565,9 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template Oracle 11g for Windows:oracle.archlogdest[{#INSTANCE},{#ARLDEST},status].max(#2)}&lt;=3 or {DBS_Template Oracle 11g for Windows:oracle.archlogdest[{#INSTANCE},{#ARLDEST},status].last()}=5</recovery_expression>
                             <name>Error '{#ARLDEST}'</name>
-                            <opdata>(current status: {ITEM.LASTVALUE2}): {ITEM.LASTVALUE1}</opdata>
+                            <opdata>(status: {ITEM.VALUE2}): {ITEM.VALUE1}</opdata>
                             <priority>HIGH</priority>
-                            <description>Ошибка Archive log destination.</description>
+                            <description>Ошибка archive log destination</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
