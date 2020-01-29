@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2020-01-29T08:23:19Z</date>
+    <groups>
+        <group>
+            <name>DBS.Templates/Modules</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>DBS_Template App Zabbix Agent DBMON Active Linux</template>
+            <name>App Zabbix Agent for Linux (Active, DBMON)</name>
+            <description>Template for monitoring Zabbix Agent for Linux (Active, DBMON, Memory)</description>
+            <groups>
+                <group>
+                    <name>DBS.Templates/Modules</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Zabbix agent (DBMON)</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>[DBMON] Agent memory usage (VmHWM)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc.mem[{$DBS_ZABBIX_DBMON_PROCESS_NAME},,,,hwm]</key>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Peak resident set size (VmHWM)</description>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[DBMON] Agent memory usage (VmPeak)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc.mem[{$DBS_ZABBIX_DBMON_PROCESS_NAME},,,,peak]</key>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Peak virtual memory size (VmPeak)</description>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[DBMON] Agent memory usage (VmRSS)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc.mem[{$DBS_ZABBIX_DBMON_PROCESS_NAME},,,,rss]</key>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Resident set size (VmRSS)</description>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(10m)}&gt;{$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</expression>
+                            <name>Zabbix agent for database monitoring is high memory usage</name>
+                            <opdata>(current usage: {ITEM.LASTVALUE}, threshold: {$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}, alert started: {ITEM.VALUE})</opdata>
+                            <priority>WARNING</priority>
+                            <description>Агент мониторинга баз данных ({$DBS_ZABBIX_DBMON_PROCESS_NAME}) потребляет много оперативной памяти (более {$DBS_ZABBIX_DBMON_MEM_USAGE_WARN} (МБайт)).&#13;
+Возможно агент делает слишком много и часто проверки, так же возможно существует утечка памяти в агенте.&#13;
+Доведите информацию до эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>Service</tag>
+                                    <value>zabbix-agentd-dbmon</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[DBMON] Agent memory usage (VmSize)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc.mem[{$DBS_ZABBIX_DBMON_PROCESS_NAME},,,,vsize]</key>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Virtual memory size (VmSize)</description>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
+            </items>
+            <tags>
+                <tag>
+                    <tag>{$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</tag>
+                    <value>50M</value>
+                </tag>
+                <tag>
+                    <tag>{$DBS_ZABBIX_DBMON_PROCESS_NAME}</tag>
+                    <value>zabbix_agentd_dbmon</value>
+                </tag>
+            </tags>
+        </template>
+    </templates>
+</zabbix_export>
