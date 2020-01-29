@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-29T07:00:35Z</date>
+    <date>2020-01-29T08:22:48Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -26,9 +26,10 @@
                 <item>
                     <name>[DBMON] Agent memory usage</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>proc_info[{$DBS_ZABBIX_DBMON_EXE_NAME},vmsize]</key>
+                    <key>proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},vmsize]</key>
                     <history>30d</history>
                     <units>B</units>
+                    <description>Size of process virtual memory</description>
                     <applications>
                         <application>
                             <name>Zabbix agent (DBMON)</name>
@@ -46,7 +47,7 @@
                             <name>Zabbix agent for database monitoring is high memory usage</name>
                             <opdata>(current usage: {ITEM.LASTVALUE}, threshold: {$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}, alert started: {ITEM.VALUE})</opdata>
                             <priority>WARNING</priority>
-                            <description>Агент мониторинга баз данных (zabbix_agentd_dbmon.exe) потребляет много оперативной памяти (более {$DBS_ZABBIX_DBMON_MEM_USAGE_WARN} (МБайт)).&#13;
+                            <description>Агент мониторинга баз данных ({$DBS_ZABBIX_DBMON_PROCESS_NAME}) потребляет много оперативной памяти (более {$DBS_ZABBIX_DBMON_MEM_USAGE_WARN} (МБайт)).&#13;
 Возможно агент делает слишком много и часто проверки, так же возможно существует утечка памяти в агенте.&#13;
 Доведите информацию до эксперта.</description>
                             <tags>
@@ -61,13 +62,14 @@
             </items>
             <macros>
                 <macro>
-                    <macro>{$DBS_ZABBIX_DBMON_EXE_NAME}</macro>
-                    <value>zabbix_agentd_dbmon.exe</value>
-                </macro>
-                <macro>
                     <macro>{$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</macro>
                     <value>50M</value>
                     <description>Mbyte</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ZABBIX_DBMON_PROCESS_NAME}</macro>
+                    <value>zabbix_agentd_dbmon.exe</value>
+                    <description>Procss name</description>
                 </macro>
             </macros>
         </template>
