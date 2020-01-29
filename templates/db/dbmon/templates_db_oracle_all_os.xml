@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-29T12:55:18Z</date>
+    <date>2020-01-29T13:20:13Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -753,6 +753,40 @@
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Quiesce state</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},activestate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Quiesce state of the instance:&#13;
+NORMAL - Database is in a normal state.&#13;
+QUIESCING - ALTER SYSTEM QUIESCE RESTRICTED has been issued: no new user transactions, queries, or PL/SQL statements are processed in this instance. User transactions, queries, or PL/SQL statements issued before the ALTER SYSTEM QUIESCE RESTRICTED statement are unaffected. DBA transactions, queries, or PL/SQL statements are also unaffected.&#13;
+QUIESCED - ALTER SYSTEM QUIESCE RESTRICTED has been issued: no user transactions, queries, or PL/SQL statements are processed. DBA transactions, queries, or PL/SQL statements are unaffected. User transactions, queries, or PL/ SQL statements issued after the ALTER SYSTEM QUIESCE RESTRICTED statement are not processed.&#13;
+&#13;
+A single ALTER SYSTEM QUIESCE RESTRICTED statement quiesces all instances in an Oracle RAC environment. After this statement has been issued, some instances may enter into a quiesced state before other instances; the system is quiesced when all instances enter the quiesced state.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS Oracle (active_state)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.ACTIVESTATE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>10m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Archiver</name>
@@ -4534,6 +4568,27 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         </trigger>
     </triggers>
     <value_maps>
+        <value_map>
+            <name>DBS Oracle (active_state)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>NORMAL</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>QUIESCING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>QUIESCED</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
         <value_map>
             <name>DBS Oracle (archiver)</name>
             <mappings>
