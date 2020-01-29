@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-29T07:12:12Z</date>
+    <date>2020-01-29T12:55:18Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -569,8 +569,8 @@
                             <description>Данные о доступности экземпляра БД Oracle не поступали более {$DBS_ORACLE_PING_NODATA_CRIT} (минут). Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
                             <dependencies>
                                 <dependency>
-                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
-                                    <expression>{DBS_Template DB Oracle:dbmon.agent.ping[{$DBS_ORACLE_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_CRIT} (minutes)</name>
+                                    <expression>{DBS_Template DB Oracle:dbmon.agent.ping[{$DBS_ORACLE_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_CRIT})}=1</expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -741,13 +741,6 @@
                             <description>Версия экземпляра Oracle была изменена. Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
@@ -861,13 +854,6 @@ INSTANCE RECOVERY</description>
                             <description>Статус базы данных был изменен. Скорее всего была выполнена операция ALTER SYSTEM SUSPEND которая останавливает все операции ввода/вывода (I/O) для файлов данных и управляющих файлов. Приостановленное состояние позволяет создавать резервные копии базы данных без вмешательства операций ввода-вывода. Когда база данных приостановлена, всем существующим операциям ввода-вывода разрешается завершиться и любые новые обращения к базе данных переводятся в состояние очереди.</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
@@ -1194,13 +1180,6 @@ INSTANCE RECOVERY</description>
                             <priority>DISASTER</priority>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
@@ -1902,13 +1881,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
                                     <tags>
                                         <tag>
                                             <tag>Database</tag>
@@ -1960,13 +1932,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
                                     <tags>
                                         <tag>
                                             <tag>Database</tag>
@@ -2051,13 +2016,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
                                     <tags>
                                         <tag>
                                             <tag>Database</tag>
@@ -2112,13 +2070,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
                                     <tags>
                                         <tag>
                                             <tag>Database</tag>
@@ -2173,13 +2124,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
                                     <tags>
                                         <tag>
                                             <tag>Database</tag>
@@ -2267,13 +2211,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
                                     <tags>
                                         <tag>
                                             <tag>Database</tag>
@@ -2332,13 +2269,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <description>Статус базы данных '{#DBNAME}' изменился.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
                                     <tags>
                                         <tag>
                                             <tag>Database</tag>
@@ -2429,13 +2359,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
                                     <tags>
                                         <tag>
                                             <tag>Database</tag>
@@ -2522,13 +2445,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <description>Роль базы данных '{#DBNAME}' была изменена.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
-                                    <dependencies>
-                                        <dependency>
-                                            <name>Instance access failed</name>
-                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                        </dependency>
-                                    </dependencies>
                                     <tags>
                                         <tag>
                                             <tag>Database</tag>
@@ -2582,13 +2498,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <priority>INFO</priority>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>Database</tag>
