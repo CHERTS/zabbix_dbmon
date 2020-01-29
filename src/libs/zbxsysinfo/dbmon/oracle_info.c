@@ -46,7 +46,8 @@ SELECT to_char(round(((sysdate - startup_time) * 60 * 60 * 24), 0)) AS UPTIME, \
 	decode(status, 'STARTED', 1, 'MOUNTED', 2, 'OPEN', 3, 'OPEN MIGRATE', 4, 0) AS STATUS, \
 	decode(parallel, 'YES', 1, 'NO', 2, 0) PARALLEL, \
 	decode(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER, \
-	decode(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY', 3, 0) DBSTATUS \
+	decode(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY', 3, 0) DBSTATUS, \
+	decode(active_state, 'NORMAL', 1, 'QUIESCING', 2, 'QUIESCED', 3, 0) AS ACTIVESTATE \
 FROM v$instance \
 WHERE instance_name = '%s'"
 
@@ -582,6 +583,11 @@ SELECT i.instance_name AS INSTANCE, regexp_replace(value, '(.*)([/\\])(trace|bdu
 FROM gv$instance i, gv$diag_info d \
 WHERE i.inst_id = d.inst_id \
 	AND d.name = 'Diag Trace'"
+
+#define ORACLE_CHECK_SUSPEND_MODE_DBS "\
+SELECT decode(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY', 3, 0) DBSTATUS \
+FROM v$instance \
+WHERE instance_name = '%s'"
 
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
