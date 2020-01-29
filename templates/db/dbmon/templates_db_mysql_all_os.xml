@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-28T15:49:48Z</date>
+    <date>2020-01-29T07:12:06Z</date>
     <groups>
         <group>
-            <name>DBS.Templates/Databases</name>
+            <name>DBS.Templates/Modules</name>
         </group>
     </groups>
     <templates>
         <template>
-            <template>DBS_Template MySQL for Windows</template>
-            <name>DBS_Template MySQL for Windows</name>
+            <template>DBS_Template DB MySQL</template>
+            <name>DB MySQL (Active, DBMON, for all OS)</name>
+            <description>Template for monitoring MySQL DB for all OS (active agent)</description>
             <groups>
                 <group>
-                    <name>DBS.Templates/Databases</name>
+                    <name>DBS.Templates/Modules</name>
                 </group>
             </groups>
             <applications>
@@ -227,7 +228,7 @@
                             <dependencies>
                                 <dependency>
                                     <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
-                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].nodata({$DBS_MYSQL_PING_NODATA_WARN})}=1</expression>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].nodata({$DBS_MYSQL_PING_NODATA_WARN})}=1</expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -265,7 +266,7 @@
                             <dependencies>
                                 <dependency>
                                     <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
-                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].nodata({$DBS_MYSQL_PING_NODATA_CRIT})}=1</expression>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].nodata({$DBS_MYSQL_PING_NODATA_CRIT})}=1</expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -358,12 +359,12 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>Refused connections (max_connections limit reached)</name>
-                                    <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},connection_errors_max_connections_rate].last()}&gt;0</expression>
+                                    <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},connection_errors_max_connections_rate].last()}&gt;0</expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -729,8 +730,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -1387,8 +1388,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -2277,8 +2278,8 @@ innodb_flush_log_at_trx_commit=1.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
-                                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -2386,8 +2387,8 @@ innodb_flush_log_at_trx_commit=1.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2417,8 +2418,8 @@ innodb_flush_log_at_trx_commit=1.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2448,13 +2449,13 @@ innodb_flush_log_at_trx_commit=1.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
-                                            <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                                            <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                            <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Size of database '{#DBNAME}' has increased</name>
-                                            <expression>{DBS_Template MySQL for Windows:mysql.db.info[{#DBNAME},db_size].last()}&gt;{$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}</expression>
-                                            <recovery_expression>{DBS_Template MySQL for Windows:mysql.db.info[{#DBNAME},db_size].last()}&lt;={$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}</recovery_expression>
+                                            <expression>{DBS_Template DB MySQL:mysql.db.info[{#DBNAME},db_size].last()}&gt;{$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}</expression>
+                                            <recovery_expression>{DBS_Template DB MySQL:mysql.db.info[{#DBNAME},db_size].last()}&lt;={$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -2521,7 +2522,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_ERROR_LOG}</macro>
-                    <value>&quot;C:\Users\All Users\MySQL\MySQL Server 5.7\error.log&quot;</value>
+                    <value>&quot;c:\error.log&quot;</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_HOST}</macro>
@@ -2571,7 +2572,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <style>0</style>
                             <resource>
                                 <name>[MySQL] Operations</name>
-                                <host>DBS_Template MySQL for Windows</host>
+                                <host>DBS_Template DB MySQL</host>
                             </resource>
                             <width>500</width>
                             <height>100</height>
@@ -2593,7 +2594,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <style>0</style>
                             <resource>
                                 <name>[MySQL] Queries</name>
-                                <host>DBS_Template MySQL for Windows</host>
+                                <host>DBS_Template DB MySQL</host>
                             </resource>
                             <width>500</width>
                             <height>100</height>
@@ -2615,7 +2616,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <style>0</style>
                             <resource>
                                 <name>[MySQL] Connections</name>
-                                <host>DBS_Template MySQL for Windows</host>
+                                <host>DBS_Template DB MySQL</host>
                             </resource>
                             <width>500</width>
                             <height>100</height>
@@ -2637,7 +2638,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <style>0</style>
                             <resource>
                                 <name>[MySQL] Bandwidth</name>
-                                <host>DBS_Template MySQL for Windows</host>
+                                <host>DBS_Template DB MySQL</host>
                             </resource>
                             <width>500</width>
                             <height>100</height>
@@ -2659,7 +2660,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <style>0</style>
                             <resource>
                                 <name>[MySQL]  InnoDB buffer pool</name>
-                                <host>DBS_Template MySQL for Windows</host>
+                                <host>DBS_Template DB MySQL</host>
                             </resource>
                             <width>500</width>
                             <height>100</height>
@@ -2681,7 +2682,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <style>0</style>
                             <resource>
                                 <name>[MySQL] Threads</name>
-                                <host>DBS_Template MySQL for Windows</host>
+                                <host>DBS_Template DB MySQL</host>
                             </resource>
                             <width>500</width>
                             <height>100</height>
@@ -2705,7 +2706,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
     </templates>
     <triggers>
         <trigger>
-            <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency].avg(30m)}&lt;{$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_limit].last()}&gt;0</expression>
+            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency].avg(30m)}&lt;{$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_limit].last()}&gt;0</expression>
             <name>Query cache efficiency is very low</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}%, alert started: {ITEM.VALUE1})</opdata>
             <url>https://dev.mysql.com/doc/refman/5.7/en/query-cache-status-and-maintenance.html</url>
@@ -2714,8 +2715,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -2734,7 +2735,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
+            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
             <name>Too many connections</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
@@ -2744,8 +2745,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -2760,7 +2761,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_WARN} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
+            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_WARN} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
             <name>Too many connections</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
@@ -2770,12 +2771,12 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                 </dependency>
                 <dependency>
                     <name>Too many connections</name>
-                    <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
+                    <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -2790,7 +2791,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
+            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
             <name>Too many threads running</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_CRIT}, alert started {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
@@ -2801,8 +2802,8 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -2817,7 +2818,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_WARN} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
+            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_WARN} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
             <name>Too many threads running</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_WARN}, alert started {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
@@ -2828,12 +2829,12 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
-                    <expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template MySQL for Windows:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                 </dependency>
                 <dependency>
                     <name>Too many threads running</name>
-                    <expression>{DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template MySQL for Windows:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template MySQL for Windows:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
+                    <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -2856,7 +2857,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <drawtype>GRADIENT_LINE</drawtype>
                     <color>00AA00</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},bytes_received_rate]</key>
                     </item>
                 </graph_item>
@@ -2865,7 +2866,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <drawtype>GRADIENT_LINE</drawtype>
                     <color>3333FF</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},bytes_sent_rate]</key>
                     </item>
                 </graph_item>
@@ -2877,7 +2878,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <graph_item>
                     <color>1A7C11</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},aborted_clients_rate]</key>
                     </item>
                 </graph_item>
@@ -2885,7 +2886,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>1</sortorder>
                     <color>F63100</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},aborted_connects_rate]</key>
                     </item>
                 </graph_item>
@@ -2893,7 +2894,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>2</sortorder>
                     <color>2774A4</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},connections_rate]</key>
                     </item>
                 </graph_item>
@@ -2901,7 +2902,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>3</sortorder>
                     <color>A54F10</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},max_used_connections]</key>
                     </item>
                 </graph_item>
@@ -2913,7 +2914,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <graph_item>
                     <color>1A7C11</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_free]</key>
                     </item>
                 </graph_item>
@@ -2921,7 +2922,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>1</sortorder>
                     <color>F63100</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]</key>
                     </item>
                 </graph_item>
@@ -2929,7 +2930,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>2</sortorder>
                     <color>2774A4</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]</key>
                     </item>
                 </graph_item>
@@ -2937,7 +2938,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>3</sortorder>
                     <color>A54F10</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_reads]</key>
                     </item>
                 </graph_item>
@@ -2949,7 +2950,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <graph_item>
                     <color>C80000</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_delete_rate]</key>
                     </item>
                 </graph_item>
@@ -2957,7 +2958,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>1</sortorder>
                     <color>0000EE</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_insert_rate]</key>
                     </item>
                 </graph_item>
@@ -2965,7 +2966,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>2</sortorder>
                     <color>00C800</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_select_rate]</key>
                     </item>
                 </graph_item>
@@ -2973,7 +2974,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>3</sortorder>
                     <color>C800C8</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},com_update_rate]</key>
                     </item>
                 </graph_item>
@@ -2985,7 +2986,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <graph_item>
                     <color>1A7C11</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},queries_rate]</key>
                     </item>
                 </graph_item>
@@ -2993,7 +2994,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>1</sortorder>
                     <color>F63100</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},questions_rate]</key>
                     </item>
                 </graph_item>
@@ -3001,7 +3002,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>2</sortorder>
                     <color>2774A4</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},slow_queries_rate]</key>
                     </item>
                 </graph_item>
@@ -3014,7 +3015,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <drawtype>GRADIENT_LINE</drawtype>
                     <color>1A7C11</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_hits]</key>
                     </item>
                 </graph_item>
@@ -3022,7 +3023,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>1</sortorder>
                     <color>2774A4</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_inserts]</key>
                     </item>
                 </graph_item>
@@ -3030,7 +3031,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>2</sortorder>
                     <color>F63100</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_lowmem_prunes]</key>
                     </item>
                 </graph_item>
@@ -3042,7 +3043,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <graph_item>
                     <color>A54F10</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_cached]</key>
                     </item>
                 </graph_item>
@@ -3050,7 +3051,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>1</sortorder>
                     <color>FC6EA3</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected]</key>
                     </item>
                 </graph_item>
@@ -3058,7 +3059,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                     <sortorder>2</sortorder>
                     <color>6C59DC</color>
                     <item>
-                        <host>DBS_Template MySQL for Windows</host>
+                        <host>DBS_Template DB MySQL</host>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_running]</key>
                     </item>
                 </graph_item>
