@@ -704,8 +704,8 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 
 int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	//return zbx_execute_threaded_metric(oracle_instance_ping, request, result);
-	return oracle_instance_ping(request, result, NULL);
+	return zbx_execute_threaded_metric(oracle_instance_ping, request, result);
+	//return oracle_instance_ping(request, result, NULL);
 }
 
 static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode)
@@ -1095,7 +1095,7 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 
 int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	//return zbx_execute_threaded_metric(oracle_get_instance_result, request, result);
+	return zbx_execute_threaded_metric(oracle_get_instance_result, request, result);
 	return oracle_get_instance_result(request, result, NULL);
 }
 
@@ -1576,8 +1576,8 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 
 int	ORACLE_TS_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	//return zbx_execute_threaded_metric(oracle_ts_info, request, result);
-	return oracle_ts_info(request, result, NULL);
+	return zbx_execute_threaded_metric(oracle_ts_info, request, result);
+	//return oracle_ts_info(request, result, NULL);
 }
 #endif
 #endif
