@@ -22,12 +22,6 @@
 #include "log.h"
 #include "zbxdbmon.h"
 
-#ifdef _WINDOWS
-extern char *strptime(const char *buf, const char *fmt, struct tm *tm);
-#else
-#include <time.h>
-#endif
-
 #if defined(HAVE_MYSQL)
 #include "mysql.h"
 #include "errmsg.h"

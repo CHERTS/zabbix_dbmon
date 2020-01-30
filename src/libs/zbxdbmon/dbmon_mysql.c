@@ -22,14 +22,16 @@
 #include "log.h"
 #include "zbxdbmon.h"
 
-#ifdef _WINDOWS
-#include "strptime.h"
-#endif
-
 #if defined(HAVE_MYSQL)
 #include "mysql.h"
 #include "errmsg.h"
 #include "mysqld_error.h"
+
+#ifdef _WINDOWS
+#include "strptime.h"
+#else
+#include <time.h>
+#endif
 
 /**
  * MySQL handle
