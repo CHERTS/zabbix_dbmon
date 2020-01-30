@@ -21,7 +21,7 @@
 #include <string.h>
 #include <time.h>
 
-#ifdef _MSC_VER 
+#ifdef _WINDOWS 
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp
 #endif
