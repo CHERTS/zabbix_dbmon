@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-29T08:23:49Z</date>
+    <date>2020-01-30T12:57:09Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -13,9 +13,6 @@
             <name>MySQL for Linux (Active, DBMON)</name>
             <description>Template for monitoring MySQL DB for Linux (active agent)</description>
             <templates>
-                <template>
-                    <name>DBS_Template App Zabbix Agent DBMON Active Linux</name>
-                </template>
                 <template>
                     <name>DBS_Template DB MySQL</name>
                 </template>

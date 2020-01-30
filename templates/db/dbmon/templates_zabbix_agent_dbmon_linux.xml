@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-29T08:23:19Z</date>
+    <date>2020-01-30T12:55:22Z</date>
     <groups>
         <group>
-            <name>DBS.Templates/Modules</name>
+            <name>DBS.Templates/Operating Systems</name>
         </group>
     </groups>
     <templates>
         <template>
             <template>DBS_Template App Zabbix Agent DBMON Active Linux</template>
-            <name>App Zabbix Agent for Linux (Active, DBMON)</name>
-            <description>Template for monitoring Zabbix Agent for Linux (Active, DBMON, Memory)</description>
+            <name>App Zabbix Agent for Linux (Active, DBMON, Memory)</name>
+            <description>Template for monitoring memory usage for Zabbix Agent (Active, DBMON, Linux)</description>
             <groups>
                 <group>
-                    <name>DBS.Templates/Modules</name>
+                    <name>DBS.Templates/Operating Systems</name>
                 </group>
             </groups>
             <applications>
@@ -93,16 +93,16 @@
                     </applications>
                 </item>
             </items>
-            <tags>
-                <tag>
-                    <tag>{$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</tag>
+            <macros>
+                <macro>
+                    <macro>{$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</macro>
                     <value>50M</value>
-                </tag>
-                <tag>
-                    <tag>{$DBS_ZABBIX_DBMON_PROCESS_NAME}</tag>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ZABBIX_DBMON_PROCESS_NAME}</macro>
                     <value>zabbix_agentd_dbmon</value>
-                </tag>
-            </tags>
+                </macro>
+            </macros>
         </template>
     </templates>
 </zabbix_export>

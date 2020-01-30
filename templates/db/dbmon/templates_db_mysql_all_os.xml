@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-29T07:12:06Z</date>
+    <date>2020-01-30T13:01:26Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2282,6 +2282,27 @@ innodb_flush_log_at_trx_commit=1.</description>
                                     <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{diff()}&gt;0</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Version of MySQL has been changed</name>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <priority>INFO</priority>
+                            <description>Произошла смена версии MySQL.&#13;
+Необходимо проверить в истории какая была раньше версия и какая сейчас.&#13;
+Если смена версии действительно произошла, то уточнить у эксперта о работах по обновлению MySQL.</description>
+                            <manual_close>YES</manual_close>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
