@@ -296,13 +296,12 @@ int zbx_db_clean_data(struct zbx_db_data * e_data)
  * Free memory allocated by the struct zbx_db_data and the struct zbx_db_data pointer
  * Return ZBX_DB_OK on success
  */
-int zbx_db_clean_data_full(struct zbx_db_data * e_data)
+int zbx_db_clean_data_full(struct zbx_db_data *e_data)
 {
 	if (NULL != e_data)
 	{
 		zbx_db_clean_data(e_data);
 		zbx_db_free(e_data);
-
 		return ZBX_DB_OK;
 	}
 	else
@@ -316,12 +315,11 @@ int zbx_db_clean_data_full(struct zbx_db_data * e_data)
  * Free memory allocated by the struct zbx_db_fields
  * Return ZBX_DB_OK on success
  */
-int zbx_db_clean_fields(struct zbx_db_fields * e_data)
+int zbx_db_clean_fields(struct zbx_db_fields *e_data)
 {
 	if (NULL != e_data)
 	{
 		zbx_db_free(((struct zbx_db_type_text *)e_data->t_data)->value);
-
 		return ZBX_DB_OK;
 	}
 	else
@@ -335,13 +333,12 @@ int zbx_db_clean_fields(struct zbx_db_fields * e_data)
  * Free memory allocated by the struct zbx_db_fields and the struct zbx_db_fields pointer
  * Return ZBX_DB_OK on success
  */
-int zbx_db_clean_fields_full(struct zbx_db_fields * fields)
+int zbx_db_clean_fields_full(struct zbx_db_fields *fields)
 {
 	if (NULL != fields)
 	{
 		zbx_db_clean_fields(fields);
 		zbx_db_free(fields);
-
 		return ZBX_DB_OK;
 	}
 	else
@@ -356,9 +353,9 @@ int zbx_db_clean_fields_full(struct zbx_db_fields * fields)
  * Return pointer to the new structure
  * Return NULL on error
  */
-struct zbx_db_data * zbx_db_new_data_int(const long long int e_value)
+struct zbx_db_data *zbx_db_new_data_int(const long long int e_value)
 {
-	struct zbx_db_data * data = (struct zbx_db_data *)zbx_malloc(NULL, sizeof(struct zbx_db_data));
+	struct zbx_db_data *data = (struct zbx_db_data *)zbx_malloc(NULL, sizeof(struct zbx_db_data));
 
 	if (NULL != data)
 	{
@@ -368,7 +365,6 @@ struct zbx_db_data * zbx_db_new_data_int(const long long int e_value)
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error allocating memory for data->t_data", __func__);
 			zbx_db_free(data);
-
 			return NULL;
 		}
 
@@ -389,9 +385,9 @@ struct zbx_db_data * zbx_db_new_data_int(const long long int e_value)
  * Return pointer to the new structure
  * Return NULL on error
  */
-struct zbx_db_data * zbx_db_new_data_null()
+struct zbx_db_data *zbx_db_new_data_null()
 {
-	struct zbx_db_data * data = (struct zbx_db_data *)zbx_db_malloc(sizeof(struct zbx_db_data));
+	struct zbx_db_data *data = (struct zbx_db_data *)zbx_db_malloc(sizeof(struct zbx_db_data));
 
 	if (NULL != data)
 	{
@@ -412,9 +408,9 @@ struct zbx_db_data * zbx_db_new_data_null()
  * Return pointer to the new structure
  * Return NULL on error
  */
-struct zbx_db_data * zbx_db_new_data_double(const double e_value)
+struct zbx_db_data *zbx_db_new_data_double(const double e_value)
 {
-	struct zbx_db_data * data = (struct zbx_db_data *)zbx_db_malloc(sizeof(struct zbx_db_data));
+	struct zbx_db_data *data = (struct zbx_db_data *)zbx_db_malloc(sizeof(struct zbx_db_data));
 
 	if (NULL != data)
 	{
@@ -444,9 +440,9 @@ struct zbx_db_data * zbx_db_new_data_double(const double e_value)
  * Return pointer to the new structure
  * Return NULL on error
  */
-struct zbx_db_data * zbx_db_new_data_datetime(const struct tm * datetime)
+struct zbx_db_data *zbx_db_new_data_datetime(const struct tm *datetime)
 {
-	struct zbx_db_data * data = NULL;
+	struct zbx_db_data *data = NULL;
 
 	if (NULL != datetime)
 	{
@@ -481,9 +477,9 @@ struct zbx_db_data * zbx_db_new_data_datetime(const struct tm * datetime)
  * Return pointer to the new structure
  * Return NULL on error
  */
-struct zbx_db_data * zbx_db_new_data_blob(const void * e_value, const size_t e_length)
+struct zbx_db_data *zbx_db_new_data_blob(const void *e_value, const size_t e_length)
 {
-	struct zbx_db_data * data = (struct zbx_db_data *)zbx_db_malloc(sizeof(struct zbx_db_data));
+	struct zbx_db_data *data = (struct zbx_db_data *)zbx_db_malloc(sizeof(struct zbx_db_data));
 
 	if (NULL != data)
 	{
@@ -525,9 +521,9 @@ struct zbx_db_data * zbx_db_new_data_blob(const void * e_value, const size_t e_l
  * Return pointer to the new structure
  * Return NULL on error
  */
-struct zbx_db_data * zbx_db_new_data_text(const char * e_value, const size_t e_length)
+struct zbx_db_data *zbx_db_new_data_text(const char *e_value, const size_t e_length)
 {
-	struct zbx_db_data * data = (struct zbx_db_data *)zbx_db_malloc(sizeof(struct zbx_db_data));
+	struct zbx_db_data *data = (struct zbx_db_data *)zbx_db_malloc(sizeof(struct zbx_db_data));
 
 	if (NULL != data)
 	{
@@ -570,9 +566,9 @@ struct zbx_db_data * zbx_db_new_data_text(const char * e_value, const size_t e_l
  * Return pointer to the new structure
  * Return NULL on error
  */
-struct zbx_db_fields * zbx_db_fields_value(const char * e_value, const size_t e_length)
+struct zbx_db_fields *zbx_db_fields_value(const char *e_value, const size_t e_length)
 {
-	struct zbx_db_fields * data = (struct zbx_db_fields *)zbx_db_malloc(sizeof(struct zbx_db_fields));
+	struct zbx_db_fields *data = (struct zbx_db_fields *)zbx_db_malloc(sizeof(struct zbx_db_fields));
 
 	if (NULL != data)
 	{
@@ -613,9 +609,9 @@ struct zbx_db_fields * zbx_db_fields_value(const char * e_value, const size_t e_
  * Add a new struct zbx_db_fields * to an array of struct zbx_db_fields *, which already has cols columns
  * Return ZBX_DB_OK on success
  */
-int zbx_db_row_add_fields(struct zbx_db_fields ** row, struct zbx_db_fields * e_data, int cols)
+int zbx_db_row_add_fields(struct zbx_db_fields **row, struct zbx_db_fields *e_data, int cols)
 {
-	struct zbx_db_fields * tmp = zbx_db_realloc(*row, (cols + 1) * sizeof(struct zbx_db_fields));
+	struct zbx_db_fields *tmp = zbx_db_realloc(*row, (cols + 1) * sizeof(struct zbx_db_fields));
 
 	*row = tmp;
 
@@ -655,9 +651,9 @@ int zbx_db_row_add_fields(struct zbx_db_fields ** row, struct zbx_db_fields * e_
  * Add a new struct zbx_db_data * to an array of struct zbx_db_data *, which already has cols columns
  * Return ZBX_DB_OK on success
  */
-int zbx_db_row_add_data(struct zbx_db_data ** row, struct zbx_db_data * e_data, int cols)
+int zbx_db_row_add_data(struct zbx_db_data **row, struct zbx_db_data *e_data, int cols)
 {
-	struct zbx_db_data * tmp = zbx_db_realloc(*row, (cols + 1) * sizeof(struct zbx_db_data));
+	struct zbx_db_data *tmp = zbx_db_realloc(*row, (cols + 1) * sizeof(struct zbx_db_data));
 
 	*row = tmp;
 
@@ -779,7 +775,7 @@ int zbx_db_row_add_data(struct zbx_db_data ** row, struct zbx_db_data * e_data, 
  * Add a new row of struct zbx_db_data * in a struct zbx_db_result *
  * Return ZBX_DB_OK on success
  */
-int zbx_db_result_add_row(struct zbx_db_result * result, struct zbx_db_data * row, int rows)
+int zbx_db_result_add_row(struct zbx_db_result *result, struct zbx_db_data *row, int rows)
 {
 	result->data = zbx_db_realloc(result->data, (rows + 1) * sizeof(struct zbx_db_data *));
 
@@ -801,7 +797,7 @@ int zbx_db_result_add_row(struct zbx_db_result * result, struct zbx_db_data * ro
  * Add a new field of struct zbx_db_fields * in a struct zbx_db_fields *
  * Return ZBX_DB_OK on success
  */
-int zbx_db_result_add_fields(struct zbx_db_result * result, struct zbx_db_fields * field)
+int zbx_db_result_add_fields(struct zbx_db_result *result, struct zbx_db_fields *field)
 {
 	result->fields = zbx_db_realloc(result->fields, sizeof(struct zbx_db_fields *));
 
@@ -998,7 +994,7 @@ int zbx_db_clean_connection(struct zbx_db_connection * conn)
  * Free all the memory allocated by the struct zbx_db_result
  * Return ZBX_DB_OK on success
  */
-int zbx_db_clean_result(struct zbx_db_result * e_result) 
+int zbx_db_clean_result(struct zbx_db_result *e_result) 
 {
 	unsigned int col, row;
 

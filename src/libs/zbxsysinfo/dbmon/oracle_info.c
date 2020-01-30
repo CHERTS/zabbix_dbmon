@@ -1112,10 +1112,10 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 #endif
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *sql = NULL;
+	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version;
 	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
-	struct zbx_db_result		ora_result;
+	struct zbx_db_result		ora_ver_result, ora_result;
 	const char					*query = ORACLE_V11_DISCOVER_DB_DBS;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
@@ -1126,6 +1126,18 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 		CONFIG_ORACLE_PASSWORD = zbx_strdup(CONFIG_ORACLE_PASSWORD, ORACLE_DEFAULT_PASSWORD);
 	if (NULL == CONFIG_ORACLE_INSTANCE)
 		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
+
+	if (3 < request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (3 > request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too few options."));
+		return SYSINFO_RET_FAIL;
+	}
 
 	oracle_conn_string = get_rparam(request, 0);
 	oracle_instance = get_rparam(request, 1);
@@ -1169,9 +1181,9 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 
 	if (oracle_conn != NULL)
 	{
-		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_VERSION_DBS, oracle_instance))
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_ver_result, ORACLE_VERSION_DBS, oracle_instance))
 		{
-			ora_version = get_str_one_result(request, result, 0, 0, ora_result);
+			ora_version = get_str_one_result(request, result, 0, 0, ora_ver_result);
 
 			if (NULL != ora_version)
 			{
@@ -1244,7 +1256,7 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 				ret = SYSINFO_RET_FAIL;
 			}
 
-			zbx_db_clean_result(&ora_result);
+			zbx_db_clean_result(&ora_ver_result);
 		}
 		else
 		{
@@ -1297,7 +1309,7 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 	char						*oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_dbname;
 	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
-	struct zbx_db_result		ora_result;
+	struct zbx_db_result		ora_ver_result, ora_result;
 	const char					*query = ORACLE_V11_DB_INFO_DBS;
 
 	if (NULL == CONFIG_ORACLE_USER)
@@ -1360,9 +1372,9 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (oracle_conn != NULL)
 	{
-		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_VERSION_DBS, oracle_instance))
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_ver_result, ORACLE_VERSION_DBS, oracle_instance))
 		{
-			ora_version = get_str_one_result(request, result, 0, 0, ora_result);
+			ora_version = get_str_one_result(request, result, 0, 0, ora_ver_result);
 
 			if (NULL != ora_version)
 			{
@@ -1380,7 +1392,7 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 				}
 			}
 
-			zbx_db_clean_result(&ora_result);
+			zbx_db_clean_result(&ora_ver_result);
 		}
 		else
 		{
