@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-29T08:22:48Z</date>
+    <date>2020-01-30T12:52:52Z</date>
     <groups>
         <group>
-            <name>DBS.Templates/Modules</name>
+            <name>DBS.Templates/Operating Systems</name>
         </group>
     </groups>
     <templates>
         <template>
             <template>DBS_Template App Zabbix Agent DBMON Active Windows</template>
-            <name>App Zabbix Agent for Windows (Active, DBMON)</name>
-            <description>Template for monitoring Zabbix Agent for Windows (Active, DBMON, Memory)</description>
+            <name>App Zabbix Agent for Windows (Active, DBMON, Memory)</name>
+            <description>Template for monitoring memory usage for Zabbix Agent (Active, DBMON, Windows)</description>
             <groups>
                 <group>
-                    <name>DBS.Templates/Modules</name>
+                    <name>DBS.Templates/Operating Systems</name>
                 </group>
             </groups>
             <applications>
@@ -24,12 +24,12 @@
             </applications>
             <items>
                 <item>
-                    <name>[DBMON] Agent memory usage</name>
+                    <name>[DBMON] Agent memory usage (vmsize)</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},vmsize]</key>
                     <history>30d</history>
                     <units>B</units>
-                    <description>Size of process virtual memory</description>
+                    <description>Size of process virtual memory in Bytes</description>
                     <applications>
                         <application>
                             <name>Zabbix agent (DBMON)</name>
@@ -44,6 +44,8 @@
                     <triggers>
                         <trigger>
                             <expression>{max(10m)}&gt;{$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(5m)}&lt;={$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</recovery_expression>
                             <name>Zabbix agent for database monitoring is high memory usage</name>
                             <opdata>(current usage: {ITEM.LASTVALUE}, threshold: {$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}, alert started: {ITEM.VALUE})</opdata>
                             <priority>WARNING</priority>
@@ -58,6 +60,25 @@
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[DBMON] Agent memory usage (wkset)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},wkset]</key>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Size of process working set (amount of physical memory used by process) in Bytes</description>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>return Math.round(value*1024);</params>
+                        </step>
+                    </preprocessing>
                 </item>
             </items>
             <macros>

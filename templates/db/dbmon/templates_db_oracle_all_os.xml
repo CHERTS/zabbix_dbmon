@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-29T13:20:13Z</date>
+    <date>2020-01-30T12:52:41Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -193,7 +193,10 @@
                             <name>No archived log backups</name>
                             <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_WARN})</opdata>
                             <priority>WARNING</priority>
-                            <description>Давно не выполнялся бэкап архивных логов экземпляра. Актуально только если экземпляр в режиме ARCHIVELOG. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <description>Давно не выполнялся бэкап архивных логов экземпляра.&#13;
+Актуально только если экземпляр в режиме ARCHIVELOG.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Довести информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -240,7 +243,9 @@
                             <name>No control file backups</name>
                             <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_CRIT})</opdata>
                             <priority>HIGH</priority>
-                            <description>Очень давно не выполнялся бэкап контрол файла (control file) экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <description>Очень давно не выполнялся бэкап контрол файла (control file) экземпляра.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Довести информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -266,7 +271,9 @@
                             <name>No control file backups</name>
                             <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_WARN})</opdata>
                             <priority>WARNING</priority>
-                            <description>Давно не выполнялся бэкап контрол файла (control file) экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <description>Давно не выполнялся бэкап контрол файла (control file) экземпляра.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Довести информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -313,7 +320,9 @@
                             <name>No full database backups</name>
                             <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_CRIT})</opdata>
                             <priority>HIGH</priority>
-                            <description>Очень давно не выполнялся полный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <description>Очень давно не выполнялся полный бэкап экземпляра.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Довести информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -339,7 +348,9 @@
                             <name>No full database backups</name>
                             <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_WARN})</opdata>
                             <priority>WARNING</priority>
-                            <description>Давно не выполнялся полный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+                            <description>Давно не выполнялся полный бэкап экземпляра.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Довести информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -412,7 +423,8 @@
                             <name>Number of zombie processes is too high</name>
                             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>HIGH</priority>
-                            <description>Количество зомби процессов достигло критического уровня. Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
+                            <description>Количество зомби процессов достигло критического уровня.&#13;
+Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -438,7 +450,8 @@
                             <name>Number of zombie processes is too high</name>
                             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>WARNING</priority>
-                            <description>Количество зомби процессов достигло угрожающего уровня. Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
+                            <description>Количество зомби процессов достигло угрожающего уровня.&#13;
+Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -697,6 +710,8 @@
                             <name>Resumable sessions suspended due to lack of space in tablespace</name>
                             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_RESUMABLE_COUNT_CRIT}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>DISASTER</priority>
+                            <description>Одно или несколько табличных пространств полностью заполнены.&#13;
+Срочно доведите информацию до эксперта!</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -738,7 +753,9 @@
                             <name>Version of Oracle has been changed</name>
                             <opdata>(current: {ITEM.VALUE})</opdata>
                             <priority>INFO</priority>
-                            <description>Версия экземпляра Oracle была изменена. Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
+                            <description>Версия экземпляра Oracle была изменена.&#13;
+Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.).&#13;
+Передать данные эксперту.</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
@@ -956,7 +973,9 @@ INSTANCE RECOVERY</description>
                             <name>Size for FRA has been changed</name>
                             <opdata>(current: {ITEM.VALUE})</opdata>
                             <priority>INFO</priority>
-                            <description>Размер области Fast Recovery Area (FRA) был изменен. Необходимо выяснить кто менял размер FRA и какие были причины.</description>
+                            <description>Размер области Fast Recovery Area (FRA) был изменен.&#13;
+Необходимо выяснить кто изменил размер FRA и какие были причины.&#13;
+Доведите информацию до эксперта.</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <dependencies>
@@ -1212,6 +1231,9 @@ INSTANCE RECOVERY</description>
                             <name>Instance status has been changed</name>
                             <opdata>(current: {ITEM.VALUE})</opdata>
                             <priority>DISASTER</priority>
+                            <description>Статус экземпляр был изменен.&#13;
+Выясните причину изменения состояния экземпляра.&#13;
+Доведите информацию до эксперта.</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
@@ -1256,7 +1278,9 @@ INSTANCE RECOVERY</description>
                             <name>Instance '{$DBS_ORACLE_INSTANCE}' has just been restarted</name>
                             <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
                             <priority>DISASTER</priority>
-                            <description>Экземпляр был перезапущен. Необходимо убедиться в том, что он действительно был перезапущен, если так, то проверить alert.log на предмет причин перезапуска, уведомить заказчика и передать данные эксперту.</description>
+                            <description>Экземпляр был перезапущен.&#13;
+Необходимо убедиться в том, что он действительно был перезапущен, если так, то проверить alert.log на предмет причин перезапуска.&#13;
+Уведомить заказчика и передать данные эксперту.</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
@@ -4272,6 +4296,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Current number of data files is near its limit</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2})</opdata>
             <priority>WARNING</priority>
+            <description>Текущее количество дата-файлов близко к лимиту.&#13;
+Доведите информацию до эксперта.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -4354,7 +4380,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>No incremental database backups</name>
             <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_CRIT})</opdata>
             <priority>HIGH</priority>
-            <description>Очень давно не выполнялся инкрементальный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+            <description>Очень давно не выполнялся инкрементальный бэкап экземпляра.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Довести информацию до эксперта.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -4380,7 +4408,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>No incremental database backups</name>
             <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_WARN})</opdata>
             <priority>WARNING</priority>
-            <description>Давно не выполнялся инкрементальный бэкап экземпляра. Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования. Довести информацию до эксперта.</description>
+            <description>Давно не выполнялся инкрементальный бэкап экземпляра.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Довести информацию до эксперта.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -4488,6 +4518,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Too many processes</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
+            <description>Слишком много работающих процессов.&#13;
+Доведите информацию до эксперта.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -4543,6 +4575,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Too many sessions</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
+            <description>Слишком много открытых сессий.&#13;
+Доведите информацию до эксперта.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
