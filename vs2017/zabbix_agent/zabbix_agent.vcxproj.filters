@@ -294,9 +294,6 @@
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon.c">
       <Filter>Исходные файлы\zbxdbmon</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\strptime.c">
-      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_mysql.c">
       <Filter>Исходные файлы\zbxdbmon</Filter>
     </ClCompile>
@@ -304,6 +301,9 @@
       <Filter>Исходные файлы\zbxdbmon</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_oracle.c">
+      <Filter>Исходные файлы\zbxdbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxdbmon\strptime.c">
       <Filter>Исходные файлы\zbxdbmon</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\dbmon_common.c">

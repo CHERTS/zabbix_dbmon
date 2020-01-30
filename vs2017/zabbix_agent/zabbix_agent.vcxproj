@@ -48,6 +48,7 @@
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_mysql.c" />
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_oracle.c" />
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_pgsql.c" />
+    <ClCompile Include="..\..\src\libs\zbxdbmon\strptime.c" />
     <ClCompile Include="..\..\src\libs\zbxexec\execute.c" />
     <ClCompile Include="..\..\src\libs\zbxhttp\http.c" />
     <ClCompile Include="..\..\src\libs\zbxhttp\punycode.c" />
@@ -79,7 +80,6 @@
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\mysql_info.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\oracle_info.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\pgsql_info.c" />
-    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\strptime.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\simple\ntp.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\simple\simple.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\sysinfo.c" />
