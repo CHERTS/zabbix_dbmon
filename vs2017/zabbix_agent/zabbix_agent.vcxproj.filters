@@ -294,13 +294,7 @@
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon.c">
       <Filter>Исходные файлы\zbxdbmon</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\gmtime_r.c">
-      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\strptime.c">
-      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\timelocal.c">
       <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon_mysql.c">

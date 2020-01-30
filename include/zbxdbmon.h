@@ -4,10 +4,6 @@
 #include "common.h"
 #include <pthread.h>
 
-#ifdef _WINDOWS
-#include <bsdshim.h>
-#endif
-
 #ifdef HAVE_MYSQL
 #define ZBX_DB_TYPE_MYSQL 1
 #endif

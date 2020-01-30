@@ -23,7 +23,7 @@
 #include "zbxdbmon.h"
 
 #ifdef _WINDOWS
-extern int bsd_strptime(const char *s, const char *format, struct tm *tm);
+extern char *strptime(const char *buf, const char *fmt, struct tm *tm);
 #else
 #include <time.h>
 #endif

@@ -24,7 +24,6 @@
 
 #ifdef _WINDOWS
 #include "strptime.h"
-#define strptime bsd_strptime
 #endif
 
 #if defined(HAVE_MYSQL)
