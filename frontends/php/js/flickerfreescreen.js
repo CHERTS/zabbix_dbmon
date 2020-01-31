@@ -1,6 +1,6 @@
 /*
  ** Zabbix
- ** Copyright (C) 2001-2019 Zabbix SIA
+ ** Copyright (C) 2001-2020 Zabbix SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -425,7 +425,7 @@
 		},
 
 		/**
-		 * Getting shadow box height of graph image, asynchronious. Only for line graphs on dashboard.
+		 * Getting shadow box height of graph image, asynchronous. Only for line graphs on dashboard.
 		 * Will return xhr request for line graphs.
 		 *
 		 * @param {Curl}     url  Curl object for image request.

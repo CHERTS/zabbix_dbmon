@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1542,3 +1542,19 @@ int	zbx_execute_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *re
 	return WAIT_OBJECT_0 == rc ? metric_args.agent_ret : SYSINFO_RET_FAIL;
 }
 #endif
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_mpoints_free                                                 *
+ *                                                                            *
+ * Purpose: frees previously allocated mount-point structure                  *
+ *                                                                            *
+ * Parameters: mpoint - [IN] pointer to structure from vector                 *
+ *                                                                            *
+ * Return value:                                                              *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_mpoints_free(zbx_mpoint_t *mpoint)
+{
+	zbx_free(mpoint);
+}

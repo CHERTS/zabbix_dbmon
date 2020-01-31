@@ -1,6 +1,6 @@
 dnl
 dnl Zabbix
-dnl Copyright (C) 2001-2019 Zabbix SIA
+dnl Copyright (C) 2001-2020 Zabbix SIA
 dnl
 dnl This program is free software; you can redistribute it and/or modify
 dnl it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([Zabbix],[4.4.4])
+AC_INIT([Zabbix],[4.4.5])
 AC_CONFIG_SRCDIR(src/zabbix_server/server.c)
 AM_INIT_AUTOMAKE([subdir-objects  filename-length-max=99])
 
@@ -1593,6 +1593,9 @@ ZBXGET_LIBS="$ZBXGET_LIBS $ZLIB_LIBS $LIBPTHREAD_LIBS"
 SENDER_LDFLAGS="$SENDER_LDFLAGS $ZLIB_LDFLAGS $LIBPTHREAD_LDFLAGS"
 SENDER_LIBS="$SENDER_LIBS $ZLIB_LIBS $LIBPTHREAD_LIBS"
 
+ZBXJS_LDFLAGS="$ZBXJS_LDFLAGS $ZLIB_LDFLAGS $LIBPTHREAD_LDFLAGS"
+ZBXJS_LIBS="$ZBXJS_LIBS $ZLIB_LIBS $LIBPTHREAD_LIBS"
+
 AM_CONDITIONAL(HAVE_IPMI, [test "x$have_ipmi" = "xyes"])
 AM_CONDITIONAL(HAVE_LIBXML2, test "x$have_libxml2" = "xyes")
 
@@ -1701,6 +1704,9 @@ ZBXGET_LIBS="$ZBXGET_LIBS $TLS_LIBS"
 SENDER_LDFLAGS="$SENDER_LDFLAGS $TLS_LDFLAGS"
 SENDER_LIBS="$SENDER_LIBS $TLS_LIBS"
 
+ZBXJS_LDFLAGS="$ZBXJS_LDFLAGS $TLS_LDFLAGS"
+ZBXJS_LIBS="$ZBXJS_LIBS $TLS_LIBS"
+
 if test "x$agent2" = "xyes"; then
 	AC_CHECK_PROGS([GO], [go], [no])
 	if test "x$GO" = "xno"; then
@@ -1762,6 +1768,9 @@ AM_CONDITIONAL(HAVE_LIBCURL, test "x$found_curl" = "xyes")
 dnl Starting from 2.0 agent can do web monitoring
 AGENT_LDFLAGS="$AGENT_LDFLAGS $LIBCURL_LDFLAGS"
 AGENT_LIBS="$AGENT_LIBS $LIBCURL_LIBS"
+
+ZBXJS_LDFLAGS="$ZBXJS_LDFLAGS $LIBCURL_LDFLAGS"
+ZBXJS_LIBS="$ZBXJS_LIBS $LIBCURL_LIBS"
 
 dnl Check for libpcre, used by Zabbix for regular expressions
 if test "x$server" = "xyes" || test "x$proxy" = "xyes" || test "x$agent" = "xyes" || test "x$agent2" = "xyes"; then
@@ -1851,6 +1860,9 @@ AC_SUBST(ZBXGET_LIBS)
 
 AC_SUBST(SENDER_LDFLAGS)
 AC_SUBST(SENDER_LIBS)
+
+AC_SUBST(ZBXJS_LDFLAGS)
+AC_SUBST(ZBXJS_LIBS)
 
 AC_SUBST(SERVER_CONFIG_FILE)
 AC_SUBST(PROXY_CONFIG_FILE)
@@ -1963,6 +1975,7 @@ AC_OUTPUT([
 	src/zabbix_agent/Makefile
 	src/zabbix_agent/logfiles/Makefile
 	src/zabbix_get/Makefile
+	src/zabbix_js/Makefile
 	src/zabbix_sender/Makefile
 	src/zabbix_server/Makefile
 	src/zabbix_server/alerter/Makefile

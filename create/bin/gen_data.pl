@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 #
 # Zabbix
-# Copyright (C) 2001-2019 Zabbix SIA
+# Copyright (C) 2001-2020 Zabbix SIA
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
@@ -26,7 +26,7 @@ my %ibm_db2 = (
 	"database"	=>	"ibm_db2",
 	"before"	=>	"",
 	"after"		=>	"",
-	"exec_cmd"	=>	";\n"
+	"exec_cmd"	=>	";;\n"
 );
 
 my %mysql = (

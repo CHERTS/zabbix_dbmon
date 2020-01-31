@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -212,6 +212,7 @@ extern "C" static int	parse_all(IEnumWbemClassObject *pEnumerator, zbx_vector_wm
 	{
 		IWbemClassObject	*pclsObj;
 		ULONG			uReturn = 0;
+		HRESULT			hres;
 		zbx_vector_wmi_prop_t	*inst_val = NULL;
 
 		hres = pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);

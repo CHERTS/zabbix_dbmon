@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -189,13 +189,13 @@ class testPageReportsAudit extends CLegacyWebTest {
 	public function testPageReportsAudit_UpdateMacroDescription() {
 		// Update Macro description.
 		$this->page->login()->open('adm.macros.php');
-		$form = $this->query('name:macrosForm')->asForm()->one();
+		$form = $this->query('name:macrosForm')->waitUntilVisible()->asForm()->one();
 
 		$macros = [
 			[
 				'action' => USER_ACTION_UPDATE,
 				'index' => 0,
-				'Description' => 'New Updated Description'
+				'description' => 'New Updated Description'
 			]
 		];
 
@@ -207,6 +207,7 @@ class testPageReportsAudit extends CLegacyWebTest {
 
 		// Check Audit record about global macro update.
 		$this->page->open('auditlogs.php');
+		$this->query('button:Reset')->waitUntilVisible()->one()->click();
 		$rows = $this->query('class:list-table')->asTable()->one()->getRows();
 		// Get first row data.
 		$row = $rows->get(0);

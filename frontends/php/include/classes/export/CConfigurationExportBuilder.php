@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1322,7 +1322,7 @@ class CConfigurationExportBuilder {
 			$link['selementpos1'] = $flipped_selements[$link['selementid1']];
 			$link['selementpos2'] = $flipped_selements[$link['selementid2']];
 
-			// Sort selements positons asc.
+			// Sort selements by position asc.
 			if ($link['selementpos2'] < $link['selementpos1']) {
 				zbx_swap($link['selementpos1'], $link['selementpos2']);
 			}

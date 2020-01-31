@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -111,7 +111,7 @@ if (hasRequest('update')) {
 $data = [];
 
 if (hasRequest('form_refresh')) {
-	$data['macros'] = getRequest('macros', []);
+	$data['macros'] = array_values(getRequest('macros', []));
 }
 else {
 	$data['macros'] = API::UserMacro()->get([

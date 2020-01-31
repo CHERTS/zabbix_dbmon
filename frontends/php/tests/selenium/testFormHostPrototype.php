@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ class testFormHostPrototype extends CLegacyWebTest {
 		];
 
 		// Write macros rows from Frontend to array.
-		$table = $this->query('id:tbl_macros')->asTable()->one();
+		$table = $this->query('id:tbl_macros')->waitUntilVisible()->asTable()->one();
 		$count = $table->getRows()->count() - 1;
 		for ($i = 0; $i < $count; $i += 2) {
 			$macro = [];
@@ -449,7 +449,7 @@ class testFormHostPrototype extends CLegacyWebTest {
 
 		if (array_key_exists('template', $data)) {
 			$this->zbxTestTabSwitch('Templates');
-			$this->zbxTestClickXpathWait('//div[@id="templateTab"]//button[text()="Add"]');
+			$this->zbxTestClickButtonMultiselect('add_templates_');
 			$this->zbxTestLaunchOverlayDialog('Templates');
 			$this->zbxTestDropdownSelectWait('groupid', 'Templates');
 			$this->zbxTestClickLinkTextWait($data['template']);
@@ -563,7 +563,7 @@ class testFormHostPrototype extends CLegacyWebTest {
 		if (array_key_exists('template', $data)) {
 			$this->zbxTestTabSwitch('Templates');
 			$this->zbxTestClickXpathWait('//button[contains(@onclick,"unlink")]');
-			$this->zbxTestClickXpathWait('//div[@id="templateTab"]//button[text()="Add"]');
+			$this->zbxTestClickButtonMultiselect('add_templates_');
 			$this->zbxTestLaunchOverlayDialog('Templates');
 			$this->zbxTestDropdownSelectWait('groupid', 'Templates');
 			$this->zbxTestClickLinkText($data['template']);
@@ -833,7 +833,7 @@ class testFormHostPrototype extends CLegacyWebTest {
 		if (array_key_exists('template', $data)) {
 			$this->zbxTestTabSwitch('Templates');
 			$this->zbxTestWaitForPageToLoad();
-			$this->zbxTestClickXpathWait('//div[@id="templateTab"]//button[text()="Add"]');
+			$this->zbxTestClickButtonMultiselect('add_templates_');
 			$this->zbxTestLaunchOverlayDialog('Templates');
 			$this->zbxTestDropdownSelectWait('groupid', 'Templates');
 			$this->zbxTestClickLinkTextWait($data['template']);

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -223,14 +223,10 @@ static void	threads_kill(ZBX_THREAD_HANDLE *threads, int threads_num, int ret)
 		if (!threads[i])
 			continue;
 
-#if defined(_WINDOWS) || defined(__MINGW32__)
-		zbx_thread_kill(threads[i]);
-#else	/* not _WINDOWS */
 		if (SUCCEED != ret)
 			zbx_thread_kill_fatal(threads[i]);
 		else
 			zbx_thread_kill(threads[i]);
-#endif	/* _WINDOWS */
 	}
 }
 

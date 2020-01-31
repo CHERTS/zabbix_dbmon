@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -821,11 +821,11 @@ if (!empty($data['new_operation'])) {
 			$data['new_operation']['opcommand']['script'] = '';
 			if (!zbx_empty($data['new_operation']['opcommand']['scriptid'])) {
 				$userScripts = API::Script()->get([
-					'scriptids' => $data['new_operation']['opcommand']['scriptid'],
-					'output' => API_OUTPUT_EXTEND
+					'output' => ['name'],
+					'scriptids' => $data['new_operation']['opcommand']['scriptid']
 				]);
-				if ($userScript = reset($userScripts)) {
-					$data['new_operation']['opcommand']['script'] = $userScript['name'];
+				if ($userScripts) {
+					$data['new_operation']['opcommand']['script'] = $userScripts[0]['name'];
 				}
 			}
 
@@ -1583,11 +1583,11 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVE
 				$data['new_recovery_operation']['opcommand']['script'] = '';
 				if (!zbx_empty($data['new_recovery_operation']['opcommand']['scriptid'])) {
 					$userScripts = API::Script()->get([
-						'scriptids' => $data['new_recovery_operation']['opcommand']['scriptid'],
-						'output' => API_OUTPUT_EXTEND
+						'output' => ['name'],
+						'scriptids' => $data['new_recovery_operation']['opcommand']['scriptid']
 					]);
-					if ($userScript = reset($userScripts)) {
-						$data['new_recovery_operation']['opcommand']['script'] = $userScript['name'];
+					if ($userScripts) {
+						$data['new_recovery_operation']['opcommand']['script'] = $userScripts[0]['name'];
 					}
 				}
 
@@ -2074,8 +2074,7 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS) {
 				]);
 
 				if ($user_scripts) {
-					$user_script = reset($user_scripts);
-					$script_name = $user_script['name'];
+					$script_name = $user_scripts[0]['name'];
 				}
 			}
 			$data['new_ack_operation']['opcommand']['script'] = $script_name;

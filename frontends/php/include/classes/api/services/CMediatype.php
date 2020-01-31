@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -222,7 +222,7 @@ class CMediatype extends CApiService {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s('Media type "%1$s" already exists.', $mediatype['name']));
 			}
 
-			// Check additional fields and values depeding on type.
+			// Check additional fields and values depending on media type.
 			$this->checkRequiredFieldsByType($mediatype);
 
 			switch ($mediatype['type']) {

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -99,7 +99,7 @@ class CPage {
 		$this->driver->manage()->deleteAllCookies();
 		try {
 			$this->driver->executeScript('sessionStorage.clear();');
-		} catch (Exception $exeption) {
+		} catch (Exception $exception) {
 			// Code is not missing here.
 		}
 
@@ -427,5 +427,16 @@ class CPage {
 	 */
 	public function getDriver() {
 		return $this->driver;
+	}
+
+	/**
+	 * Remove focus from the element.
+	 */
+	public function removeFocus() {
+		try {
+			$this->driver->executeScript('document.activeElement.blur();');
+		} catch (Exception $ex) {
+			// Code is not missing here.
+		}
 	}
 }

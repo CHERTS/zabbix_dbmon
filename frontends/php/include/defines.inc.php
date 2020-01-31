@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,13 +18,13 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-define('ZABBIX_VERSION',		'4.4.4');
-define('ZABBIX_API_VERSION',	'4.4.4');
+define('ZABBIX_VERSION',		'4.4.5');
+define('ZABBIX_API_VERSION',	'4.4.5');
 define('ZABBIX_EXPORT_VERSION',	'4.4');
 define('ZABBIX_DB_VERSION',		4040000);
 
 define('ZABBIX_COPYRIGHT_FROM',	'2001');
-define('ZABBIX_COPYRIGHT_TO',	'2019');
+define('ZABBIX_COPYRIGHT_TO',	'2020');
 
 define('ZBX_LOGIN_ATTEMPTS',	5);
 define('ZBX_LOGIN_BLOCK',		30); // sec
@@ -48,7 +48,7 @@ define('ZBX_PERIOD_DEFAULT_TO',		'now');
 define('ZBX_MIN_TIMESHIFT',	-788400000); // Min valid timeshift value in seconds (25 years).
 define('ZBX_MAX_TIMESHIFT',	788400000); // Max valid timeshift value in seconds (25 years).
 
-// Date and time format seperators must be synced with setSDateFromOuterObj() in class.calendar.js.
+// Date and time format separators must be synced with setSDateFromOuterObj() in class.calendar.js.
 define('ZBX_FULL_DATE_TIME',	'Y-m-d H:i:s'); // Time selector full date and time presentation format.
 define('ZBX_DATE_TIME',			'Y-m-d H:i'); // Time selector date and time without seconds presentation format.
 
@@ -1167,7 +1167,7 @@ define('ZBX_PREG_ITEM_KEY_PARAMETER_FORMAT', '(
 		)*? # match \" or any character except "
 	\")
 	|
-	[^\"\[\],][^,\]]*? #match unquoted string - any character except " [ ] and , at begining and any character except , and ] afterwards
+	[^\"\[\],][^,\]]*? #match unquoted string - any character except " [ ] and , at beginning and any character except , and ] afterwards
 	|
 	() # match empty and only empty part
 )');

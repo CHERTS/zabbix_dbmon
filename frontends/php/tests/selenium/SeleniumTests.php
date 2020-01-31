@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -199,7 +199,7 @@ class SeleniumTests {
 		$suite->addTestSuite('testPageUsers');
 		$suite->addTestSuite('testPageWeb');
 		$suite->addTestSuite('testProblemsBySeverityWidget');
-//		$suite->addTestSuite('testHostAvailabilityWidget');
+		$suite->addTestSuite('testHostAvailabilityWidget');
 		$suite->addTestSuite('testFormAction');
 		$suite->addTestSuite('testFormAdministrationAuthenticationHttp');
 		$suite->addTestSuite('testFormAdministrationAuthenticationLdap');

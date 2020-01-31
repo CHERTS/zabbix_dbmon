@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -419,10 +419,7 @@ ZBX_THREAD_ENTRY(collector_thread, args)
 #endif
 
 	if (SUCCEED != init_cpu_collector(&(collector->cpus)))
-	{
-		if (NULL != (&collector->cpus))
-			free_cpu_collector(&(collector->cpus));
-	}
+		free_cpu_collector(&(collector->cpus));
 
 	while (ZBX_IS_RUNNING())
 	{

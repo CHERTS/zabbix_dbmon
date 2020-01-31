@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -133,7 +133,7 @@ if (hasRequest('form')) {
 	}
 	else {
 		$data['name'] = getRequest('name', '');
-		$data['mappings'] = getRequest('mappings', []);
+		$data['mappings'] = array_values(getRequest('mappings', []));
 	}
 
 	if ($data['valuemapid'] != 0) {

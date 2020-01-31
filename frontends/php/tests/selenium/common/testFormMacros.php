@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -364,7 +364,7 @@ abstract class testFormMacros extends CWebTest {
 			->asSegmentedRadio()->one()->fill('Inherited and '.$host_type.' macros');
 
 		for ($i = 0; $i < $count; $i += 1) {
-			$this->query('id:macros_'.$i.'_change')->one()->click();
+			$this->query('id:macros_'.$i.'_change')->waitUntilVisible()->one()->click();
 		}
 
 		$form->submit();
@@ -437,7 +437,7 @@ abstract class testFormMacros extends CWebTest {
 		];
 
 		// Write macros rows from Frontend to array.
-		$table = $this->query('id:tbl_macros')->asTable()->one();
+		$table = $this->query('id:tbl_macros')->waitUntilVisible()->asTable()->one();
 		$count = $table->getRows()->count() - 1;
 		for ($i = 0; $i < $count; $i += 2) {
 			$macro = [];

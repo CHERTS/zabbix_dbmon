@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2019 Zabbix SIA
+** Copyright (C) 2001-2020 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ function discovery_object2str($object = null) {
  *
  * For action condition types such as: hosts, host groups, templates, proxies, triggers, discovery rules
  * and discovery checks, action condition values contain IDs. All unique IDs are first collected and then queried.
- * For other action condition types values are returned as they are or converted using simple string convertion
+ * For other action condition types values are returned as they are or converted using simple string conversion
  * functions according to action condition type.
  *
  * @param array $actions							array of actions
@@ -540,7 +540,7 @@ function getActionOperationDescriptions(array $actions, $type) {
 		]);
 	}
 
-	// format the HTML ouput
+	// Format the HTML output.
 	foreach ($actions as $i => $action) {
 		if ($type == ACTION_OPERATION) {
 			foreach ($action['operations'] as $j => $operation) {
