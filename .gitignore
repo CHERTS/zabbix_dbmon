@@ -205,10 +205,13 @@ build/win32/include/messages.rc
 vs2017/Release
 vs2017/zabbix_agent/MSG00001.bin
 vs2017/zabbix_agent/Release
+vs2017/zabbix_agent/*.PVS-Studio.*
 vs2017/zabbix_sender/MSG00001.bin
 vs2017/zabbix_sender/Release
+vs2017/zabbix_sender/*.PVS-Studio.*
 vs2017/zabbix_get/MSG00001.bin
 vs2017/zabbix_get/Release
+vs2017/zabbix_get/*.PVS-Studio.*
 vs2017/zabbix_agent/messages.h
 vs2017/zabbix_agent/messages.rc
 vs2017/zabbix_sender/messages.h

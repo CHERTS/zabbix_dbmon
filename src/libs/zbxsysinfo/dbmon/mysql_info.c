@@ -202,10 +202,10 @@ static int	mysql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned 
 		if (0 == ver_mode)
 		{
 			version = zbx_db_version(mysql_conn);
-			zbx_snprintf(mysql_ver, sizeof(mysql_ver), "%d.%d.%d", version / 10000, (version % 10000) / 100, (version % 10000) % 100);
 
-			if (NULL != mysql_ver)
+			if (0 != version)
 			{
+				zbx_snprintf(mysql_ver, sizeof(mysql_ver), "%d.%d.%d", version / 10000, (version % 10000) / 100, (version % 10000) % 100);
 				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): MySQL version: %s", __func__, request->key, mysql_ver);
 				SET_TEXT_RESULT(result, zbx_strdup(NULL, mysql_ver));
 				ret = SYSINFO_RET_OK;

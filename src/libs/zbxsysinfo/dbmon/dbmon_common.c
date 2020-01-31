@@ -100,7 +100,7 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 {
 	int				ret = SYSINFO_RET_FAIL;
 	unsigned int	col, row;
-	char			buf[64];
+	char			date_buf[64];
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Rows: %u, Cols: %u", __func__, request->key, db_result.nb_rows, db_result.nb_columns);
@@ -139,9 +139,9 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 					ret = SYSINFO_RET_OK;
 					break;
 				case ZBX_COL_TYPE_DATE:
-					strftime(buf, 64, "%Y-%m-%d %H:%M:%S", &((struct zbx_db_type_datetime *)db_result.data[row][col].t_data)->value);
-					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(DATE): %d, Value: %s", __func__, request->key, row, col, buf);
-					SET_STR_RESULT(result, buf);
+					strftime(date_buf, 64, "%Y-%m-%d %H:%M:%S", &((struct zbx_db_type_datetime *)db_result.data[row][col].t_data)->value);
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Row: %d, Col(DATE): %d, Value: %s", __func__, request->key, row, col, date_buf);
+					SET_STR_RESULT(result, zbx_strdup(NULL, date_buf));
 					ret = SYSINFO_RET_OK;
 					break;
 				case ZBX_COL_TYPE_BLOB:

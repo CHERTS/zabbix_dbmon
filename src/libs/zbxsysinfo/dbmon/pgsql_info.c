@@ -161,17 +161,17 @@ static int	pgsql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned 
 			*/
 			version = zbx_db_version(pgsql_conn);
 
-			if (version < 100000)
+			if (0 != version)
 			{
-				zbx_snprintf(pgsql_ver, sizeof(pgsql_ver), "%d.%d.%d", version / 10000, (version % 10000) / 100, (version % 10000) % 100);
-			}
-			else
-			{
-				zbx_snprintf(pgsql_ver, sizeof(pgsql_ver), "%d.%d.%d", version / 10000, ((version % 10000) / 100) == 0 ? (version % 10000) % 100 : (version % 10000) / 100, ((version % 10000) / 100) == 0 ? (version % 10000) / 100 : (version % 10000) % 100);
-			}
+				if (version < 100000)
+				{
+					zbx_snprintf(pgsql_ver, sizeof(pgsql_ver), "%d.%d.%d", version / 10000, (version % 10000) / 100, (version % 10000) % 100);
+				}
+				else
+				{
+					zbx_snprintf(pgsql_ver, sizeof(pgsql_ver), "%d.%d.%d", version / 10000, ((version % 10000) / 100) == 0 ? (version % 10000) % 100 : (version % 10000) / 100, ((version % 10000) / 100) == 0 ? (version % 10000) / 100 : (version % 10000) % 100);
+				}
 
-			if (NULL != pgsql_ver)
-			{
 				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %s", __func__, request->key, pgsql_ver);
 				SET_TEXT_RESULT(result, zbx_strdup(NULL, pgsql_ver));
 				ret = SYSINFO_RET_OK;

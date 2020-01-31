@@ -95,6 +95,7 @@ static const char *zbx_db_oci_error(const struct zbx_db_connection *conn, sword 
 	switch (status)
 	{
 		case OCI_SUCCESS_WITH_INFO:
+		case OCI_ERROR:
 			OCIErrorGet((void *)((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)1, (text *)NULL, perrcode,
 						(text *)errbuf, (ub4)sizeof(errbuf), (ub4)OCI_HTYPE_ERROR);
 			break;
@@ -103,10 +104,6 @@ static const char *zbx_db_oci_error(const struct zbx_db_connection *conn, sword 
 			break;
 		case OCI_NO_DATA:
 			zbx_snprintf(errbuf, sizeof(errbuf), "%s", "OCI_NODATA");
-			break;
-		case OCI_ERROR:
-			OCIErrorGet((void *)((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)1, (text *)NULL, perrcode,
-						(text *)errbuf, (ub4)sizeof(errbuf), (ub4)OCI_HTYPE_ERROR);
 			break;
 		case OCI_INVALID_HANDLE:
 			zbx_snprintf(errbuf, sizeof(errbuf), "%s", "OCI_INVALID_HANDLE");
