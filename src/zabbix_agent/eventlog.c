@@ -776,7 +776,7 @@ int	process_eventslog6(const char *server, unsigned short port, const char *even
 {
 #	define EVT_ARRAY_SIZE	100
 
-	const char	*str_severity;
+	const char	*str_severity = INFORMATION_TYPE;
 	zbx_uint64_t	keywords, i, reading_startpoint = 0;
 	wchar_t		*eventlog_name_w = NULL;
 	int		s_count = 0, p_count = 0, send_err = SUCCEED, ret = FAIL, match = SUCCEED;
@@ -1432,7 +1432,7 @@ int	process_eventslog(const char *server, unsigned short port, const char *event
 			/* we look for using '=' */
 			if (0 != timestamp || (DWORD)FirstID == ((PEVENTLOGRECORD)pELR)->RecordNumber)
 			{
-				const char	*str_severity;
+				const char	*str_severity = INFORMATION_TYPE;
 				unsigned short	severity;
 				unsigned long	logeventid;
 				char		*value, str_logeventid[8];

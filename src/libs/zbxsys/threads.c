@@ -223,10 +223,14 @@ static void	threads_kill(ZBX_THREAD_HANDLE *threads, int threads_num, int ret)
 		if (!threads[i])
 			continue;
 
+#if defined(_WINDOWS) || defined(__MINGW32__)
+		zbx_thread_kill(threads[i]);
+#else	/* not _WINDOWS */
 		if (SUCCEED != ret)
 			zbx_thread_kill_fatal(threads[i]);
 		else
 			zbx_thread_kill(threads[i]);
+#endif	/* _WINDOWS */
 	}
 }
 

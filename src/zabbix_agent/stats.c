@@ -419,7 +419,10 @@ ZBX_THREAD_ENTRY(collector_thread, args)
 #endif
 
 	if (SUCCEED != init_cpu_collector(&(collector->cpus)))
-		free_cpu_collector(&(collector->cpus));
+	{
+		if (NULL != (&collector->cpus))
+			free_cpu_collector(&(collector->cpus));
+	}
 
 	while (ZBX_IS_RUNNING())
 	{
