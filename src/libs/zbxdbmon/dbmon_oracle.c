@@ -559,6 +559,9 @@ int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx
 	return ZBX_DB_OK;
 }
 
+/**
+ * Close connection to Oracle database
+ */
 void zbx_db_close_conn_oracle(struct zbx_db_connection *conn)
 {
 	sword	err = OCI_SUCCESS;
@@ -868,7 +871,7 @@ out:
 }
 
 /**
- * Close connection to Oracle database
+ * Close connection to Oracle database and destroy mutex
  */
 void zbx_db_close_oracle(struct zbx_db_connection *conn)
 {
