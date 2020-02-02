@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-30T15:11:18Z</date>
+    <date>2020-02-02T13:36:49Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Operating Systems</name>
@@ -27,6 +27,7 @@
                     <name>[DBMON] Agent memory usage (vmsize)</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},vmsize]</key>
+                    <delay>5m</delay>
                     <history>30d</history>
                     <units>B</units>
                     <description>Size of process virtual memory in Bytes</description>
@@ -45,7 +46,7 @@
                         <trigger>
                             <expression>{max(10m)}&gt;{$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{min(5m)}&lt;={$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</recovery_expression>
+                            <recovery_expression>{min(10m)}&lt;={$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</recovery_expression>
                             <name>Zabbix agent for database monitoring is high memory usage</name>
                             <opdata>(current usage: {ITEM.LASTVALUE}, threshold: {$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}, alert started: {ITEM.VALUE})</opdata>
                             <priority>WARNING</priority>
@@ -56,7 +57,7 @@
                                 <dependency>
                                     <name>Zabbix agent for database monitoring is very high memory usage</name>
                                     <expression>{DBS_Template App Zabbix Agent DBMON Active Windows:proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},vmsize].max(10m)}&gt;{$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}</expression>
-                                    <recovery_expression>{DBS_Template App Zabbix Agent DBMON Active Windows:proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},vmsize].min(5m)}&lt;={$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}</recovery_expression>
+                                    <recovery_expression>{DBS_Template App Zabbix Agent DBMON Active Windows:proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},vmsize].min(10m)}&lt;={$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -69,7 +70,7 @@
                         <trigger>
                             <expression>{max(10m)}&gt;{$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{min(5m)}&lt;={$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}</recovery_expression>
+                            <recovery_expression>{min(10m)}&lt;={$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}</recovery_expression>
                             <name>Zabbix agent for database monitoring is very high memory usage</name>
                             <opdata>(current usage: {ITEM.LASTVALUE}, threshold: {$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}, alert started: {ITEM.VALUE})</opdata>
                             <priority>HIGH</priority>
@@ -89,6 +90,7 @@
                     <name>[DBMON] Agent memory usage (wkset)</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},wkset]</key>
+                    <delay>5m</delay>
                     <history>30d</history>
                     <units>B</units>
                     <description>Size of process working set (amount of physical memory used by process) in Bytes</description>
