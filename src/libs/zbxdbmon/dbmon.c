@@ -272,6 +272,7 @@ int zbx_db_clean_data(struct zbx_db_data * e_data)
 		{
 			zbx_db_free(((struct zbx_db_type_blob *)e_data->t_data)->value);
 		}
+
 		if (NULL != e_data->t_data)
 		{
 			zbx_db_free(e_data->t_data);
@@ -314,6 +315,12 @@ int zbx_db_clean_fields(struct zbx_db_fields *e_data)
 	if (NULL != e_data)
 	{
 		zbx_db_free(((struct zbx_db_type_text *)e_data->t_data)->value);
+
+		if (NULL != e_data->t_data)
+		{
+			zbx_db_free(e_data->t_data);
+		}
+
 		return ZBX_DB_OK;
 	}
 	else
@@ -975,6 +982,7 @@ int zbx_db_clean_connection(struct zbx_db_connection * conn)
 	{
 		zbx_db_free(conn->connection);
 		zbx_db_free(conn);
+		conn = NULL;
 		return ZBX_DB_OK;
 	}
 	else
@@ -1007,8 +1015,10 @@ int zbx_db_clean_result(struct zbx_db_result *e_result)
 				}
 				zbx_db_free(e_result->data[row]);
 			}
+
 			zbx_db_free(e_result->data);
 		}
+
 		if (NULL != e_result->fields)
 		{
 			for (col = 0; col < e_result->nb_columns; col++) 
@@ -1018,6 +1028,7 @@ int zbx_db_clean_result(struct zbx_db_result *e_result)
 					return ZBX_DB_ERROR_MEMORY;
 				}
 			}
+
 			zbx_db_free(e_result->fields);
 		}
 		return ZBX_DB_OK;
@@ -1138,8 +1149,6 @@ char *zbx_check_oracle_conn_string(char *conn_string)
 
 	if (NULL == oracle_service_name)
 	{
-		//oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", conn_string);
-
 		zabbix_log(LOG_LEVEL_TRACE, "In %s(): In connection string '%s' not found service name, use default 'orcl'", __func__, conn_string);
 
 		// Check port number in connection string
@@ -1177,8 +1186,6 @@ char *zbx_check_oracle_conn_string(char *conn_string)
 	}
 	else
 	{
-		//oracle_conn_string = zbx_strdcatf(oracle_conn_string, "//%s", oracle_full_host);
-
 		if ('\0' == *oracle_service_name)
 		{
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): In connection string '%s' found empty service name, use default 'orcl'", __func__, conn_string);

@@ -319,7 +319,7 @@ struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *use
 
 	if (NULL != host && NULL != dbname)
 	{
-		conn = malloc(sizeof(struct zbx_db_connection));
+		conn = (struct zbx_db_connection *)zbx_db_malloc(sizeof(struct zbx_db_connection));
 		if (NULL == conn)
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error allocating memory for conn", __func__);
@@ -327,20 +327,21 @@ struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *use
 		}
 
 		conn->type = ZBX_DB_TYPE_MYSQL;
-		conn->connection = malloc(sizeof(struct zbx_db_mysql));
+		conn->connection = (struct zbx_db_mysql *)zbx_db_malloc(sizeof(struct zbx_db_mysql));
 
 		if (NULL == conn->connection)
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error allocating memory for conn->connection", __func__);
-			free(conn);
+			zbx_db_free(conn);
+			conn = NULL;
 			return NULL;
 		}
 
 		if (mysql_library_init(0, NULL, NULL))
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): mysql_library_init error, aborting", __func__);
-			free(conn->connection);
-			free(conn);
+			zbx_db_free(conn->connection);
+			zbx_db_free(conn);
 			return NULL;
 		}
 
@@ -359,8 +360,8 @@ struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *use
 		{
 			zbx_db_err_log(ZBX_DB_TYPE_MYSQL, ERR_Z3001, mysql_errno(((struct zbx_db_mysql *)conn->connection)->db_handle), mysql_error(((struct zbx_db_mysql *)conn->connection)->db_handle), dbname);
 			mysql_close(((struct zbx_db_mysql *)conn->connection)->db_handle);
-			free(conn->connection);
-			free(conn);
+			zbx_db_free(conn->connection);
+			zbx_db_free(conn);
 			return NULL;
 		}
 		else

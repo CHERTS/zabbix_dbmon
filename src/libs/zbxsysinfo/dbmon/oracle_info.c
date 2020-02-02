@@ -36,6 +36,16 @@ extern char	*CONFIG_ORACLE_INSTANCE;
 #define ORACLE_DEFAULT_PASSWORD	"sys"
 #define ORACLE_DEFAULT_INSTANCE	"orcl"
 
+#define ORACLE_CHECK_SUSPEND_MODE_DBS "\
+SELECT decode(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY', 3, 0) DBSTATUS \
+FROM v$instance \
+WHERE instance_name = '%s'"
+
+#define ORACLE_CHECK_ARCHIVELOG_MODE_DBS "\
+SELECT decode(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER, \
+FROM v$instance \
+WHERE instance_name = '%s'"
+
 #define ORACLE_VERSION_DBS "\
 SELECT version AS VERSION \
 FROM v$instance \
@@ -583,11 +593,6 @@ SELECT i.instance_name AS INSTANCE, regexp_replace(value, '(.*)([/\\])(trace|bdu
 FROM gv$instance i, gv$diag_info d \
 WHERE i.inst_id = d.inst_id \
 	AND d.name = 'Diag Trace'"
-
-#define ORACLE_CHECK_SUSPEND_MODE_DBS "\
-SELECT decode(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY', 3, 0) DBSTATUS \
-FROM v$instance \
-WHERE instance_name = '%s'"
 
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */

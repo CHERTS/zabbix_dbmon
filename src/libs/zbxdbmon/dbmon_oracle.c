@@ -559,6 +559,85 @@ int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx
 	return ZBX_DB_OK;
 }
 
+void zbx_db_close_conn_oracle(struct zbx_db_connection *conn)
+{
+	sword	err = OCI_SUCCESS;
+
+	if (NULL != ((struct zbx_db_oracle *)conn->connection)->authp && NULL != ((struct zbx_db_oracle *)conn->connection)->svchp)
+	{
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 1] OCISessionEnd - start", __func__);
+
+		err = OCISessionEnd(((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+			((struct zbx_db_oracle *)conn->connection)->authp, (ub4)OCI_DEFAULT);
+
+		if (OCI_SUCCESS != err)
+		{
+			zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3004, err, zbx_db_oci_error(conn, err, NULL), NULL);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 1] Logged off - done", __func__);
+		}
+	}
+
+	if (NULL != ((struct zbx_db_oracle *)conn->connection)->srvhp)
+	{
+		/* OCIServerDetach */
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] OCIServerDetach - start", __func__);
+
+		err = OCIServerDetach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)OCI_DEFAULT);
+
+		if (OCI_SUCCESS != err)
+		{
+			zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3004, err, zbx_db_oci_error(conn, err, NULL), NULL);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] Detached from server - done", __func__);
+		}
+	}
+
+	/* Deallocate error handle */
+	if (NULL != ((struct zbx_db_oracle *)conn->connection)->errhp)
+	{
+		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->errhp, OCI_HTYPE_ERROR);
+		((struct zbx_db_oracle *)conn->connection)->errhp = NULL;
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 3] Deallocate error handle - done", __func__);
+	}
+
+	/* Deallocate server handle */
+	if (NULL != ((struct zbx_db_oracle *)conn->connection)->srvhp)
+	{
+		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->srvhp, OCI_HTYPE_SERVER);
+		((struct zbx_db_oracle *)conn->connection)->srvhp = NULL;
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 4] Deallocate server handle - done", __func__);
+	}
+
+	/* Deallocate service handle */
+	if (NULL != ((struct zbx_db_oracle *)conn->connection)->svchp)
+	{
+		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX);
+		((struct zbx_db_oracle *)conn->connection)->svchp = NULL;
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 5] Deallocate service handle - done", __func__);
+	}
+
+	/* Deallocate session handle */
+	if (NULL != ((struct zbx_db_oracle *)conn->connection)->authp)
+	{
+		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION);
+		((struct zbx_db_oracle *)conn->connection)->authp = NULL;
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 6] Deallocate session handle - done", __func__);
+	}
+
+	/* Delete the environment handle, which deallocates all other handles associated with it */
+	if (NULL != ((struct zbx_db_oracle *)conn->connection)->envhp)
+	{
+		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->envhp, OCI_HTYPE_ENV);
+		((struct zbx_db_oracle *)conn->connection)->envhp = NULL;
+		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 7] Deallocate environment handle - done", __func__);
+	}
+}
+
 /**
  * zbx_db_connect_oracle
  * Opens a database connection to a Oracle database
@@ -645,11 +724,11 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle connection string: %s", __func__, oracle_conn_string);
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle username: %s", __func__, oracle_user);
-	zabbix_log(LOG_LEVEL_TRACE, "In %s(): Oracle password: %s", __func__, oracle_password);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle password: ******", __func__);
 
 	if (NULL != oracle_conn_string)
 	{
-		conn = (struct zbx_db_connection *)malloc(sizeof(struct zbx_db_connection));
+		conn = (struct zbx_db_connection *)zbx_db_malloc(sizeof(struct zbx_db_connection));
 
 		if (NULL == conn)
 		{
@@ -658,12 +737,13 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 		}
 
 		conn->type = ZBX_DB_TYPE_ORACLE;
-		conn->connection = (struct zbx_db_oracle *)malloc(sizeof(struct zbx_db_oracle));
+		conn->connection = (struct zbx_db_oracle *)zbx_db_malloc(sizeof(struct zbx_db_oracle));
 
 		if (NULL == conn->connection)
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error allocating memory for conn->connection", __func__);
-			free(conn);
+			zbx_db_free(conn);
+			conn = NULL;
 			return NULL;
 		}
 
@@ -777,80 +857,7 @@ out:
 		}
 		else
 		{
-			if (NULL != ((struct zbx_db_oracle *)conn->connection)->authp && NULL != ((struct zbx_db_oracle *)conn->connection)->svchp)
-			{
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 1] OCISessionEnd - start", __func__);
-
-				err = OCISessionEnd(((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
-					((struct zbx_db_oracle *)conn->connection)->authp, (ub4)OCI_DEFAULT);
-
-				if (OCI_SUCCESS != err)
-				{
-					zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3004, err, zbx_db_oci_error(conn, err, NULL), NULL);
-				}
-				else
-				{
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 1] Logged off - done", __func__);
-				}
-			}
-
-			if (NULL != ((struct zbx_db_oracle *)conn->connection)->srvhp)
-			{
-				/* OCIServerDetach */
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] OCIServerDetach - start", __func__);
-
-				err = OCIServerDetach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)OCI_DEFAULT);
-
-				if (OCI_SUCCESS != err)
-				{
-					zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3004, err, zbx_db_oci_error(conn, err, NULL), NULL);
-				}
-				else
-				{
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] Detached from server - done", __func__);
-				}
-			}
-
-			/* Deallocate error handle */
-			if (NULL != ((struct zbx_db_oracle *)conn->connection)->errhp)
-			{
-				OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->errhp, OCI_HTYPE_ERROR);
-				((struct zbx_db_oracle *)conn->connection)->errhp = NULL;
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 3] Deallocate error handle - done", __func__);
-			}
-
-			/* Deallocate server handle */
-			if (NULL != ((struct zbx_db_oracle *)conn->connection)->srvhp)
-			{
-				OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->srvhp, OCI_HTYPE_SERVER);
-				((struct zbx_db_oracle *)conn->connection)->srvhp = NULL;
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 4] Deallocate server handle - done", __func__);
-			}
-
-			/* Deallocate service handle */
-			if (NULL != ((struct zbx_db_oracle *)conn->connection)->svchp)
-			{
-				OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX);
-				((struct zbx_db_oracle *)conn->connection)->svchp = NULL;
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 5] Deallocate service handle - done", __func__);
-			}
-
-			/* Deallocate session handle */
-			if (NULL != ((struct zbx_db_oracle *)conn->connection)->authp)
-			{
-				OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION);
-				((struct zbx_db_oracle *)conn->connection)->authp = NULL;
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 6] Deallocate session handle - done", __func__);
-			}
-
-			/* Delete the environment handle, which deallocates all other handles associated with it */
-			if (NULL != ((struct zbx_db_oracle *)conn->connection)->envhp)
-			{
-				OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->envhp, OCI_HTYPE_ENV);
-				((struct zbx_db_oracle *)conn->connection)->envhp = NULL;
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 7] Deallocate environment handle - done", __func__);
-			}
-
+			zbx_db_close_conn_oracle(conn);
 			zbx_db_free(conn->connection);
 			zbx_db_free(conn);
 			conn = NULL;
@@ -865,82 +872,7 @@ out:
  */
 void zbx_db_close_oracle(struct zbx_db_connection *conn)
 {
-	sword	err = OCI_SUCCESS;
-
-	if (NULL != ((struct zbx_db_oracle *)conn->connection)->authp && NULL != ((struct zbx_db_oracle *)conn->connection)->svchp)
-	{
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 1] OCISessionEnd - start", __func__);
-
-		err = OCISessionEnd(((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
-			((struct zbx_db_oracle *)conn->connection)->authp, (ub4)OCI_DEFAULT);
-
-		if (OCI_SUCCESS != err)
-		{
-			zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3004, err, zbx_db_oci_error(conn, err, NULL), NULL);
-		}
-		else
-		{
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 1] Logged off - done", __func__);
-		}
-	}
-
-	if (NULL != ((struct zbx_db_oracle *)conn->connection)->srvhp)
-	{
-		/* OCIServerDetach */
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] OCIServerDetach - start", __func__);
-
-		err = OCIServerDetach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp, (ub4)OCI_DEFAULT);
-
-		if (OCI_SUCCESS != err)
-		{
-			zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3004, err, zbx_db_oci_error(conn, err, NULL), NULL);
-		}
-		else
-		{
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 2] Detached from server - done", __func__);
-		}
-	}
-
-	/* Deallocate error handle */
-	if (NULL != ((struct zbx_db_oracle *)conn->connection)->errhp)
-	{
-		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->errhp, OCI_HTYPE_ERROR);
-		((struct zbx_db_oracle *)conn->connection)->errhp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 3] Deallocate error handle - done", __func__);
-	}
-
-	/* Deallocate server handle */
-	if (NULL != ((struct zbx_db_oracle *)conn->connection)->srvhp)
-	{
-		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->srvhp, OCI_HTYPE_SERVER);
-		((struct zbx_db_oracle *)conn->connection)->srvhp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 4] Deallocate server handle - done", __func__);
-	}
-
-	/* Deallocate service handle */
-	if (NULL != ((struct zbx_db_oracle *)conn->connection)->svchp)
-	{
-		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX);
-		((struct zbx_db_oracle *)conn->connection)->svchp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 5] Deallocate service handle - done", __func__);
-	}
-
-	/* Deallocate session handle */
-	if (NULL != ((struct zbx_db_oracle *)conn->connection)->authp)
-	{
-		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION);
-		((struct zbx_db_oracle *)conn->connection)->authp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 6] Deallocate session handle - done", __func__);
-	}
-
-	/* Delete the environment handle, which deallocates all other handles associated with it */
-	if (NULL != ((struct zbx_db_oracle *)conn->connection)->envhp)
-	{
-		OCIHandleFree((void *)((struct zbx_db_oracle *)conn->connection)->envhp, OCI_HTYPE_ENV);
-		((struct zbx_db_oracle *)conn->connection)->envhp = NULL;
-		zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Free 7] Deallocate environment handle - done", __func__);
-	}
-
+	zbx_db_close_conn_oracle(conn);
 	pthread_mutex_destroy(&((struct zbx_db_oracle *)conn->connection)->lock);
 }
 

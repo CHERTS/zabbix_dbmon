@@ -249,14 +249,14 @@ unsigned long	zbx_db_get_version_pgsql(const struct zbx_db_connection *conn)
  */
 struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 {
-	struct zbx_db_connection * conn = NULL;
+	struct zbx_db_connection* conn = NULL;
 	int ntuples, i;
 	PGresult *res;
 	pthread_mutexattr_t mutexattr;
 
 	if (NULL != conn_string)
 	{
-		conn = malloc(sizeof(struct zbx_db_connection));
+		conn = (struct zbx_db_connection *)zbx_db_malloc(sizeof(struct zbx_db_connection));
 
 		if (NULL == conn)
 		{
@@ -265,12 +265,13 @@ struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 		}
 
 		conn->type = ZBX_DB_TYPE_POSTGRESQL;
-		conn->connection = malloc(sizeof(struct zbx_db_pgsql));
+		conn->connection = (struct zbx_db_pgsql *)zbx_db_malloc(sizeof(struct zbx_db_pgsql));
 
 		if (NULL == conn->connection)
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error allocating memory for conn->connection", __func__);
-			free(conn);
+			zbx_db_free(conn);
+			conn = NULL;
 			return NULL;
 		}
 
@@ -356,8 +357,8 @@ struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 				{
 					zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error allocating resources for list_type", __func__);
 					PQfinish(((struct zbx_db_pgsql *)conn->connection)->db_handle);
-					free(conn->connection);
-					free(conn);
+					zbx_db_free(conn->connection);
+					zbx_db_free(conn);
 					conn = NULL;
 				}
 
