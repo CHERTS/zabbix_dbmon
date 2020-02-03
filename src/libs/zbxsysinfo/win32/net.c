@@ -591,12 +591,14 @@ int	NET_IF_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 			continue;
 		}
 
-		zbx_json_addobject(&j, NULL);
-
 		utf8_descr = zbx_ifrow_get_utf8_description(&ifrow);
+
+		if (NULL == utf8_descr || '\0' == *utf8_descr)
+			continue;
+
+		zbx_json_addobject(&j, NULL);
 		zbx_json_addstring(&j, "{#IFNAME}", utf8_descr, ZBX_JSON_TYPE_STRING);
 		zbx_free(utf8_descr);
-
 		zbx_json_close(&j);
 	}
 
@@ -712,6 +714,11 @@ int	NET_IF_LIST(AGENT_REQUEST *request, AGENT_RESULT *result)
 				continue;
 			}
 
+			utf8_descr = zbx_ifrow_get_utf8_description(&ifrow);
+
+			if (NULL == utf8_descr || '\0' == *utf8_descr)
+				continue;
+
 			zbx_snprintf_alloc(&buf, &buf_alloc, &buf_offset,
 					"%-25s", get_if_type_string(zbx_ifrow_get_type(&ifrow)));
 
@@ -730,7 +737,6 @@ int	NET_IF_LIST(AGENT_REQUEST *request, AGENT_RESULT *result)
 			if (j == pIPAddrTable->dwNumEntries)
 				zbx_strcpy_alloc(&buf, &buf_alloc, &buf_offset, " -");
 
-			utf8_descr = zbx_ifrow_get_utf8_description(&ifrow);
 			zbx_snprintf_alloc(&buf, &buf_alloc, &buf_offset, " %s\n", utf8_descr);
 			zbx_free(utf8_descr);
 		}
