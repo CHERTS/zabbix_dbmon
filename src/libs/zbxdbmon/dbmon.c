@@ -623,7 +623,7 @@ int zbx_db_row_add_fields(struct zbx_db_fields **row, struct zbx_db_fields *e_da
 	}
 	else
 	{
-		tmp[cols].t_data = zbx_db_malloc(sizeof(struct zbx_db_type_text));
+		tmp[cols].t_data = (void *)zbx_db_malloc(sizeof(struct zbx_db_type_text));
 		if (NULL == tmp[cols].t_data)
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error allocating memory for tmp[cols].t_data", __func__);

@@ -236,7 +236,7 @@ int zbx_db_execute_query_mysql(const struct zbx_db_connection *conn, struct zbx_
 				return res;
 			}
 
-			zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Col_name: %s, Col_lenght: %d", __func__, fields[col].name, fields[col].name_length);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): Col_name: %s, Col_lenght: %d", __func__, fields[col].name, fields[col].name_length);
 		}
 
 		res = zbx_db_result_add_fields(m_result, cur_field);
@@ -279,6 +279,7 @@ int zbx_db_execute_query_mysql(const struct zbx_db_connection *conn, struct zbx_
 				return res;
 			}
 		}
+
 		mysql_free_result(result);
 	}
 
@@ -298,7 +299,7 @@ unsigned long	zbx_db_get_version_mysql(const struct zbx_db_connection *conn)
 
 	version = mysql_get_server_version(((struct zbx_db_mysql *)conn->connection)->db_handle);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): MySQL version: %lu", __func__, version);
+	zabbix_log(LOG_LEVEL_TRACE, "In %s(): MySQL version: %lu", __func__, version);
 
 	pthread_mutex_unlock(&(((struct zbx_db_mysql *)conn->connection)->lock));
 
@@ -342,6 +343,7 @@ struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *use
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): mysql_library_init error, aborting", __func__);
 			zbx_db_free(conn->connection);
 			zbx_db_free(conn);
+			conn = NULL;
 			return NULL;
 		}
 
@@ -350,8 +352,9 @@ struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *use
 		if (NULL == ((struct zbx_db_mysql *)conn->connection)->db_handle)
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): mysql_init error, aborting", __func__);
-			free(conn->connection);
-			free(conn);
+			zbx_db_free(conn->connection);
+			zbx_db_free(conn);
+			conn = NULL;
 			return NULL;
 		}
 
@@ -362,6 +365,7 @@ struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *use
 			mysql_close(((struct zbx_db_mysql *)conn->connection)->db_handle);
 			zbx_db_free(conn->connection);
 			zbx_db_free(conn);
+			conn = NULL;
 			return NULL;
 		}
 		else

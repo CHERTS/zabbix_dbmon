@@ -283,9 +283,10 @@ struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 		{
 			zbx_db_err_log(ZBX_DB_TYPE_POSTGRESQL, ERR_Z3001, 0, PQerrorMessage(((struct zbx_db_pgsql *)conn->connection)->db_handle), conn_string);
 			PQfinish(((struct zbx_db_pgsql *)conn->connection)->db_handle);
-			free(conn->connection);
-			free(conn);
+			zbx_db_free(conn->connection);
+			zbx_db_free(conn);
 			conn = NULL;
+			return NULL;
 		}
 		else
 		{
@@ -295,9 +296,10 @@ struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 			{
 				zbx_db_err_log(ZBX_DB_TYPE_POSTGRESQL, ERR_Z3005, 0, PQerrorMessage(((struct zbx_db_pgsql *)conn->connection)->db_handle), "\"select oid, typname from pg_type\"");
 				PQfinish(((struct zbx_db_pgsql *)conn->connection)->db_handle);
-				free(conn->connection);
-				free(conn);
+				zbx_db_free(conn->connection);
+				zbx_db_free(conn);
 				conn = NULL;
+				return NULL;
 			}
 			else
 			{
@@ -309,7 +311,7 @@ struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 					((struct zbx_db_pgsql *)conn->connection)->nb_type = ntuples;
 					for (i = 0; i < ntuples; i++)
 					{
-						char * cur_type_name = PQgetvalue(res, i, 1);
+						char *cur_type_name = PQgetvalue(res, i, 1);
 						((struct zbx_db_pgsql *)conn->connection)->list_type[i].pg_type = strtol(PQgetvalue(res, i, 0), NULL, 10);
 
 						if (zbx_db_strcmp(cur_type_name, "bool") == 0)
@@ -360,6 +362,7 @@ struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 					zbx_db_free(conn->connection);
 					zbx_db_free(conn);
 					conn = NULL;
+					return NULL;
 				}
 
 				PQclear(res);
