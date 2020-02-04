@@ -162,17 +162,17 @@ static void	zbx_db_oci_clean_result(ORA_DB_RESULT result)
 
 	if (NULL != result->values)
 	{
-		unsigned int	i;
+		unsigned int	j;
 
-		for (i = 0; i < result->ncolumn; i++)
+		for (j = 0; j < result->ncolumn; j++)
 		{
-			zbx_free(result->values[i]);
+			zbx_free(result->values[j]);
 
 			/* deallocate the lob locator variable */
-			if (NULL != result->clobs[i])
+			if (NULL != result->clobs[j])
 			{
-				OCIDescriptorFree((void *)result->clobs[i], OCI_DTYPE_LOB);
-				result->clobs[i] = NULL;
+				OCIDescriptorFree((void *)result->clobs[j], OCI_DTYPE_LOB);
+				result->clobs[j] = NULL;
 			}
 		}
 
