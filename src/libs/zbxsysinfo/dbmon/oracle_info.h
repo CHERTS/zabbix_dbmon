@@ -26,7 +26,7 @@ extern ZBX_METRIC	parameters_dbmon_oracle[];
 
 typedef enum
 {
-	ORA_ANY = 0,
+	ORA_ANY_ROLE = 0,
 	ORA_STANDBY, // Include 'SNAPSHOT STANDBY','LOGICAL STANDBY','PHYSICAL STANDBY'
 	ORA_PRIMARY
 }
@@ -45,6 +45,22 @@ typedef enum
 	ORA_TS_UNDO,
 }
 zbx_db_oracle_ts_type;
+
+typedef enum
+{
+	ORA_ANY_STATUS = 0,
+	ORA_ACTIVE,
+	ORA_SUSPENDED,
+	ORA_INSTANCE_RECOVERY
+}
+zbx_db_oracle_db_status;
+
+static char *ORA_DB_STATUS[] = {
+	"ANY",
+	"ACTIVE",
+	"SUSPENDED",
+	"INSTANCE RECOVERY"
+};
 
 int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result);

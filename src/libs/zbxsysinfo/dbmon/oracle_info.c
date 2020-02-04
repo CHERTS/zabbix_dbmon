@@ -719,11 +719,11 @@ int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 	//return oracle_instance_ping(request, result, NULL);
 }
 
-static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode)
+static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode, zbx_db_oracle_db_status oracle_need_dbstatus)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *oracle_dbname;
-	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_db_open_mode = 0;
+	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_db_open_mode = 0, oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
 
@@ -795,20 +795,52 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 
 	if (NULL != oracle_conn)
 	{
+		if (ORA_ANY_STATUS != oracle_need_dbstatus)
+		{
+			if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_CHECK_SUSPEND_MODE_DBS, oracle_instance))
+			{
+				oracle_db_status = get_int_one_result(request, result, 0, 0, ora_result);
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Instance: %s, Need_DBStatus: %s, Current_DBStatus: %s", __func__, request->key, oracle_instance, ORA_DB_STATUS[oracle_need_dbstatus], ORA_DB_STATUS[oracle_db_status]);
+				zbx_db_clean_result(&ora_result);
+
+				if (oracle_db_status == ORA_ACTIVE)
+					goto next;
+				else
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode.", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode."));
+					ret = SYSINFO_RET_FAIL;
+					zbx_db_close_db(oracle_conn);
+					zbx_db_clean_connection(oracle_conn);
+					goto out;
+				}
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+				ret = SYSINFO_RET_FAIL;
+				zbx_db_close_db(oracle_conn);
+				zbx_db_clean_connection(oracle_conn);
+				goto out;
+			}
+		}
+next:
 		if (NULL == oracle_dbname || '\0' == *oracle_dbname)
 		{
-			if (ORA_ANY != oracle_need_db_role)
+			if (ORA_ANY_ROLE != oracle_need_db_role)
 			{
 				if (ORA_STANDBY == oracle_need_db_role)
 				{
 					if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_CHECK_STANDBY_INST_OPEN_MODE_DBS, oracle_instance))
 					{
 						oracle_db_open_mode = get_int_one_result(request, result, 0, 0, ora_result);
-
-						zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Instance: %s, Need_Role: %s, Need_Open_Mode: %u, Current_Open_Mode: %u", __func__, request->key, oracle_instance, ORA_DB_ROLE[oracle_need_db_role], oracle_need_open_mode, oracle_db_open_mode);
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Instance: %s, Need_Role: %s, Need_Open_Mode: %u, Current_Open_Mode: %u", __func__, request->key, oracle_instance, ORA_DB_ROLE[oracle_need_db_role], oracle_need_open_mode, oracle_db_open_mode);
+						zbx_db_clean_result(&ora_result);
 
 						if (oracle_db_open_mode > oracle_need_open_mode)
 						{
+							
 							goto exec_inst_query;
 						}
 						else
@@ -816,8 +848,6 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 							SET_MSG_RESULT(result, zbx_strdup(NULL, "Database closed for reading information (may be not standby or open mode not mounted or read-only or read-only-with-apply)"));
 							ret = SYSINFO_RET_FAIL;
 						}
-
-						zbx_db_clean_result(&ora_result);
 					}
 					else
 					{
@@ -831,8 +861,8 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 					if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_CHECK_INST_OPEN_MODE_DBS, ORA_DB_ROLE[oracle_need_db_role], oracle_instance))
 					{
 						oracle_db_open_mode = get_int_one_result(request, result, 0, 0, ora_result);
-
-						zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Instance: %s, Need_Role: %s, Need_Open_Mode: %u, Current_Open_Mode: %u", __func__, request->key, oracle_instance, ORA_DB_ROLE[oracle_need_db_role], oracle_need_open_mode, oracle_db_open_mode);
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Instance: %s, Need_Role: %s, Need_Open_Mode: %u, Current_Open_Mode: %u", __func__, request->key, oracle_instance, ORA_DB_ROLE[oracle_need_db_role], oracle_need_open_mode, oracle_db_open_mode);
+						zbx_db_clean_result(&ora_result);
 
 						if (oracle_db_open_mode > oracle_need_open_mode)
 						{
@@ -843,8 +873,6 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 							SET_MSG_RESULT(result, zbx_strdup(NULL, "Instance closed for reading information (may be database not primary or not open with read-only or read-write)"));
 							ret = SYSINFO_RET_FAIL;
 						}
-
-						zbx_db_clean_result(&ora_result);
 					}
 					else
 					{
@@ -886,7 +914,7 @@ exec_inst_query:
 		}
 		else
 		{
-			if (ORA_ANY != oracle_need_db_role)
+			if (ORA_ANY_ROLE != oracle_need_db_role)
 			{
 				if (ORA_STANDBY == oracle_need_db_role)
 				{
@@ -894,7 +922,7 @@ exec_inst_query:
 					{
 						oracle_db_open_mode = get_int_one_result(request, result, 0, 0, ora_result);
 
-						zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Instance: %s, Database: %s, Need_Role: %s, Need_Open_Mode: %u, Current_Open_Mode: %u", __func__, request->key, oracle_instance, oracle_dbname, ORA_DB_ROLE[oracle_need_db_role], oracle_need_open_mode, oracle_db_open_mode);
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Instance: %s, Database: %s, Need_Role: %s, Need_Open_Mode: %u, Current_Open_Mode: %u", __func__, request->key, oracle_instance, oracle_dbname, ORA_DB_ROLE[oracle_need_db_role], oracle_need_open_mode, oracle_db_open_mode);
 
 						zbx_db_clean_result(&ora_result);
 
@@ -983,7 +1011,7 @@ exec_db_query:
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
-
+out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
 
 	return ret;
@@ -1007,91 +1035,91 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 
 	if (0 == strcmp(request->key, "oracle.instance.version"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_VERSION_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_VERSION_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.info"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.parameter"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETER_INFO_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETER_INFO_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.patch_info"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_LASTPATCH_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_PRIMARY, 0);
+		ret = oracle_make_result(request, result, ORACLE_LASTPATCH_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_PRIMARY, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.resource"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESOURCE_INFO_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESOURCE_INFO_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.dbfiles"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_DB_FILES_CURRENT_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_DB_FILES_CURRENT_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.resumable"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESUMABLE_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_RESUMABLE_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.bad_processes"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_COUNT_BAD_PROCESSES_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_COUNT_BAD_PROCESSES_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.fra"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FRA_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FRA_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.redolog_switch_rate"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SWITCH_RATE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SWITCH_RATE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.redolog_size_per_hour"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SIZE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SIZE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.backup.archivelog"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_ARCHIVE_LOG_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_ARCHIVE_LOG_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.backup.full"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FULL_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_FULL_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.backup.incr"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INCR_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INCR_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.backup.incr_file_num"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INCR_BACKUP_FILE_NUM_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_INCR_BACKUP_FILE_NUM_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.backup.cf"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_CF_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_CF_BACKUP_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.db.incarnation"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_DB_INCARNATION_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_DB_INCARNATION_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.db.size"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_DB_SIZE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_DB_SIZE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.standby.lag"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_STANDBY_LAG_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_STANDBY, 0);
+		ret = oracle_make_result(request, result, ORACLE_STANDBY_LAG_DBS, ZBX_DB_RES_TYPE_TWOCOLL, ORA_STANDBY, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.standby.mrp_status"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_STANDBY_MRP_STATUS_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_STANDBY, 0);
+		ret = oracle_make_result(request, result, ORACLE_STANDBY_MRP_STATUS_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_STANDBY, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.archlogdest.info"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_ARLDEST_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_ARLDEST_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.parameters"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETERS_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY, 0);
+		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETERS_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else
 	{
@@ -1107,7 +1135,7 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	return zbx_execute_threaded_metric(oracle_get_instance_result, request, result);
-	return oracle_get_instance_result(request, result, NULL);
+	//return oracle_get_instance_result(request, result, NULL);
 }
 
 #if !defined(_WINDOWS) && !defined(__MINGW32__)
@@ -1118,9 +1146,9 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version;
-	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
-	struct zbx_db_result		ora_ver_result, ora_result;
+	struct zbx_db_result		ora_ver_result, ora_dbstatus_result, ora_result;
 	const char					*query = ORACLE_V11_DISCOVER_DB_DBS;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
@@ -1186,9 +1214,38 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 
 	if (oracle_conn != NULL)
 	{
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_dbstatus_result, ORACLE_CHECK_SUSPEND_MODE_DBS, oracle_instance))
+		{
+			oracle_db_status = get_int_one_result(request, result, 0, 0, ora_dbstatus_result);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Instance: %s, Need_DBStatus: %s, Current_DBStatus: %s", __func__, request->key, oracle_instance, ORA_DB_STATUS[1], ORA_DB_STATUS[oracle_db_status]);
+			zbx_db_clean_result(&ora_dbstatus_result);
+
+			if (oracle_db_status == ORA_ACTIVE)
+				goto next;
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode."));
+				ret = SYSINFO_RET_FAIL;
+				zbx_db_close_db(oracle_conn);
+				zbx_db_clean_connection(oracle_conn);
+				goto out;
+			}
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
+			zbx_db_close_db(oracle_conn);
+			zbx_db_clean_connection(oracle_conn);
+			goto out;
+		}
+next:
 		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_ver_result, ORACLE_VERSION_DBS, oracle_instance))
 		{
 			ora_version = get_str_one_result(request, result, 0, 0, ora_ver_result);
+			zbx_db_clean_result(&ora_ver_result);
 
 			if (NULL != ora_version)
 			{
@@ -1259,15 +1316,19 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 			{
 				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get Oracle version in discovery procedure"));
 				ret = SYSINFO_RET_FAIL;
+				zbx_db_close_db(oracle_conn);
+				zbx_db_clean_connection(oracle_conn);
+				goto out;
 			}
-
-			zbx_db_clean_result(&ora_ver_result);
 		}
 		else
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
 			ret = SYSINFO_RET_FAIL;
+			zbx_db_close_db(oracle_conn);
+			zbx_db_clean_connection(oracle_conn);
+			goto out;
 		}
 
 		zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle instance '%s'", __func__, request->key, oracle_instance);
@@ -1296,7 +1357,7 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
-
+out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
 
 	return ret;
@@ -1312,9 +1373,9 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_dbname;
-	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
-	struct zbx_db_result		ora_ver_result, ora_result;
+	struct zbx_db_result		ora_ver_result, ora_dbstatus_result, ora_result;
 	const char					*query = ORACLE_V11_DB_INFO_DBS;
 
 	if (NULL == CONFIG_ORACLE_USER)
@@ -1377,9 +1438,38 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (oracle_conn != NULL)
 	{
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_dbstatus_result, ORACLE_CHECK_SUSPEND_MODE_DBS, oracle_instance))
+		{
+			oracle_db_status = get_int_one_result(request, result, 0, 0, ora_dbstatus_result);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Instance: %s, Need_DBStatus: %s, Current_DBStatus: %s", __func__, request->key, oracle_instance, ORA_DB_STATUS[1], ORA_DB_STATUS[oracle_db_status]);
+			zbx_db_clean_result(&ora_dbstatus_result);
+
+			if (oracle_db_status == ORA_ACTIVE)
+				goto next;
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode."));
+				ret = SYSINFO_RET_FAIL;
+				zbx_db_close_db(oracle_conn);
+				zbx_db_clean_connection(oracle_conn);
+				goto out;
+			}
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
+			zbx_db_close_db(oracle_conn);
+			zbx_db_clean_connection(oracle_conn);
+			goto out;
+		}
+next:
 		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_ver_result, ORACLE_VERSION_DBS, oracle_instance))
 		{
 			ora_version = get_str_one_result(request, result, 0, 0, ora_ver_result);
+			zbx_db_clean_result(&ora_ver_result);
 
 			if (NULL != ora_version)
 			{
@@ -1388,20 +1478,31 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 				if (0 > zbx_strcmp_natural(ora_version, "12.0.0.0.0"))
 				{
 					query = ORACLE_V11_DB_INFO_DBS;
-					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
 				}
 				else
 				{
 					query = ORACLE_V12_DB_INFO_DBS;
-					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version >= 12, use query '%s'", __func__, request->key, query);
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle version >= 12, use query '%s'", __func__, request->key, query);
 				}
 			}
-
-			zbx_db_clean_result(&ora_ver_result);
+			else
+			{
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get Oracle version in db_info procedure"));
+				ret = SYSINFO_RET_FAIL;
+				zbx_db_close_db(oracle_conn);
+				zbx_db_clean_connection(oracle_conn);
+				goto out;
+			}
 		}
 		else
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
+			zbx_db_close_db(oracle_conn);
+			zbx_db_clean_connection(oracle_conn);
+			goto out;
 		}
 
 		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_dbname))
@@ -1425,7 +1526,7 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
-
+out:
 	return ret;
 }
 
@@ -1550,7 +1651,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 							query = ORACLE_V11_PERMANENT_TS_INFO_DBS;
 							break;
 					}
-					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
 				}
 				else
 				{
@@ -1569,13 +1670,13 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 							query = ORACLE_V12_PERMANENT_TS_INFO_DBS;
 							break;
 					}
-					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version >= 12, use query '%s'", __func__, request->key, query);
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle version >= 12, use query '%s'", __func__, request->key, query);
 				}
 			}
 
 			zbx_db_clean_result(&ora_result);
 
-			ret = oracle_make_result(request, result, query, ZBX_DB_RES_TYPE_MULTIROW, ORA_PRIMARY, 0);
+			ret = oracle_make_result(request, result, query, ZBX_DB_RES_TYPE_MULTIROW, ORA_PRIMARY, 0, ORA_ACTIVE);
 		}
 		else
 		{
