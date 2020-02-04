@@ -260,7 +260,7 @@ void zbx_db_err_log(int db_type, zbx_err_codes_t zbx_errno, int db_errno, const 
  * Free memory allocated by the struct zbx_db_data
  * Return ZBX_DB_OK on success
  */
-int zbx_db_clean_data(struct zbx_db_data * e_data)
+int zbx_db_clean_data(struct zbx_db_data *e_data)
 {
 	if (NULL != e_data)
 	{

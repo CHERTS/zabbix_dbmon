@@ -147,6 +147,19 @@ static void	zbx_db_oci_clean_result(ORA_DB_RESULT result)
 	if (NULL == result)
 		return;
 
+	if (NULL != result->colname)
+	{
+		unsigned int	i;
+
+		for (i = 0; i < result->ncolumn; i++)
+		{
+			zbx_free(result->colname[i]);
+		}
+
+		zbx_free(result->colname);
+		zbx_free(result->colname_alloc);
+	}
+
 	if (NULL != result->values)
 	{
 		unsigned int	i;
@@ -507,19 +520,21 @@ int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx
 
 			for (i = 0; i < result->ncolumn; i++)
 			{
-				data = zbx_db_new_data_text(row[i], result->values_alloc[i]);
-
-				db_fields = zbx_db_fields_value((char *)result->colname[i], result->colname_alloc[i]);
-				f_res = zbx_db_row_add_fields(&cur_field, db_fields, i);
-				zbx_db_clean_fields_full(db_fields);
-
-				if (ZBX_DB_OK != f_res)
+				if (0 == cur_row_num)
 				{
-					zbx_db_free_result_oracle(result);
-					pthread_mutex_unlock(&(((struct zbx_db_oracle *)conn->connection)->lock));
-					return f_res;
+					db_fields = zbx_db_fields_value((char *)result->colname[i], result->colname_alloc[i]);
+					f_res = zbx_db_row_add_fields(&cur_field, db_fields, i);
+					zbx_db_clean_fields_full(db_fields);
+
+					if (ZBX_DB_OK != f_res)
+					{
+						zbx_db_free_result_oracle(result);
+						pthread_mutex_unlock(&(((struct zbx_db_oracle *)conn->connection)->lock));
+						return f_res;
+					}
 				}
 
+				data = zbx_db_new_data_text(row[i], result->values_alloc[i]);
 				res = zbx_db_row_add_data(&cur_row, data, i);
 				zbx_db_clean_data_full(data);
 
@@ -531,13 +546,16 @@ int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx
 				}
 			}
 
-			f_res = zbx_db_result_add_fields(o_result, cur_field);
-
-			if (ZBX_DB_OK != f_res)
+			if (0 == cur_row_num)
 			{
-				zbx_db_free_result_oracle(result);
-				pthread_mutex_unlock(&(((struct zbx_db_oracle *)conn->connection)->lock));
-				return f_res;
+				f_res = zbx_db_result_add_fields(o_result, cur_field);
+
+				if (ZBX_DB_OK != f_res)
+				{
+					zbx_db_free_result_oracle(result);
+					pthread_mutex_unlock(&(((struct zbx_db_oracle *)conn->connection)->lock));
+					return f_res;
+				}
 			}
 
 			res = zbx_db_result_add_row(o_result, cur_row, cur_row_num);
