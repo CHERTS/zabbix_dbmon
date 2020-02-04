@@ -42,16 +42,16 @@ SELECT /*DBS_002*/ @@server_id AS SERVER_ID, \
 	UUID() AS SERVER_UUID, \
 	VERSION() AS VERSION, \
 	CAST(SUM(TRUNCATE(UNIX_TIMESTAMP()-VARIABLE_VALUE, 0))/COUNT(TRUNCATE(UNIX_TIMESTAMP()-VARIABLE_VALUE, 0)) AS UNSIGNED) AS STARTUPTIME \
-FROM %s.GLOBAL_STATUS \
+FROM %s.global_status \
 WHERE VARIABLE_NAME='UPTIME';"
 
 #define MYSQL_GLOBAL_STATUS_DBS "\
 SELECT /*DBS_003*/ LOWER(VARIABLE_NAME), VARIABLE_VALUE \
-FROM %s.GLOBAL_STATUS;"
+FROM %s.global_status;"
 
 #define MYSQL_GLOBAL_VARIABLES_DBS "\
 SELECT /*DBS_004*/ LOWER(VARIABLE_NAME), VARIABLE_VALUE \
-FROM %s.GLOBAL_VARIABLES;"
+FROM %s.global_variables;"
 
 #define MYSQL_DB_DISCOVERY_DBS "\
 SELECT /*DBS_005*/ SCHEMA_NAME AS DBNAME, \
@@ -68,17 +68,23 @@ SELECT /*DBS_006*/ s.SCHEMA_NAME AS DBNAME, \
 FROM information_schema.schemata s INNER JOIN information_schema.tables t ON s.SCHEMA_NAME = t.TABLE_SCHEMA \
 WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema)' GROUP BY s.SCHEMA_NAME;"
 
+#define MYSQL_ERRORLOG_DISCOVERY_DBS "\
+SELECT /*DBS_007*/ VARIABLE_VALUE AS LOG_ERROR \
+FROM %s.global_variables \
+WHERE VARIABLE_NAME = 'log_error';"
+
 ZBX_METRIC	parameters_dbmon_mysql[] =
-/*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
+/*	KEY								FLAG				FUNCTION			TEST PARAMETERS */
 {
-	{"mysql.ping",				CF_HAVEPARAMS,		MYSQL_PING,			NULL},
-	{"mysql.version",			CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
-	{"mysql.version.full",		CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
-	{"mysql.server.info",		CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
-	{"mysql.global.status",		CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
-	{"mysql.global.variables",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
-	{"mysql.db.discovery",		CF_HAVEPARAMS,		MYSQL_DB_DISCOVERY,	NULL},
-	{"mysql.db.info",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.ping",					CF_HAVEPARAMS,		MYSQL_PING,			NULL},
+	{"mysql.version",				CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
+	{"mysql.version.full",			CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
+	{"mysql.server.info",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.global.status",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.global.variables",		CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.db.discovery",			CF_HAVEPARAMS,		MYSQL_DISCOVERY,	NULL},
+	{"mysql.db.info",				CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.errorlog.discovery",	CF_HAVEPARAMS,		MYSQL_DISCOVERY,	NULL},
 	{NULL}
 };
 
@@ -270,13 +276,19 @@ int	MYSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return ret;
 }
 
-int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query)
+#if !defined(_WINDOWS) && !defined(__MINGW32__)
+static int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
+#else
+static int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
+#endif
 {
 	int							ret = SYSINFO_RET_FAIL;
 	char						*mysql_host, *mysql_str_port, *c = NULL;
 	unsigned short				mysql_port = 0;
 	struct zbx_db_connection	*mysql_conn;
 	struct zbx_db_result		mysql_result;
+	const char					*query = MYSQL_DB_DISCOVERY_DBS, *mysql_schema;
+	unsigned long				mysql_version;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 
@@ -312,11 +324,39 @@ int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, const char
 		return SYSINFO_RET_FAIL;
 	}
 
+#if defined(_WINDOWS) && defined(__MINGW32__)
+	/* 'timeout_event' argument is here to make the mysql_get_discovery() prototype as required by */
+	/* zbx_execute_threaded_metric() on MS Windows */
+	ZBX_UNUSED(timeout_event);
+#endif
+
 	mysql_conn = zbx_db_connect_mysql(mysql_host, CONFIG_MYSQL_USER, CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_DBNAME, mysql_port, NULL);
 
 	if (NULL != mysql_conn)
 	{
-		if (ZBX_DB_OK == zbx_db_query_select(mysql_conn, &mysql_result, query))
+		mysql_version = zbx_db_version(mysql_conn);
+
+		if (mysql_version > 50700 && mysql_version < 100000)
+			mysql_schema = "performance_schema";
+		else
+			mysql_schema = "information_schema";
+
+		if (0 == strcmp(request->key, "mysql.db.discovery"))
+		{
+			ret = zbx_db_query_select(mysql_conn, &mysql_result, MYSQL_DB_DISCOVERY_DBS);
+		}
+		else if (0 == strcmp(request->key, "mysql.errorlog.discovery"))
+		{
+			ret = zbx_db_query_select(mysql_conn, &mysql_result, MYSQL_ERRORLOG_DISCOVERY_DBS, mysql_schema);
+		}
+		else
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown discovery request key"));
+			ret = SYSINFO_RET_FAIL;
+			goto out;
+		}
+
+		if (ZBX_DB_OK == ret)
 		{
 			ret = make_discovery_result(request, result, mysql_result);
 			zbx_db_clean_result(&mysql_result);
@@ -334,7 +374,7 @@ int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, const char
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
-
+out:
 	zbx_db_close_db(mysql_conn);
 	zbx_db_clean_connection(mysql_conn);
 
@@ -343,17 +383,10 @@ int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, const char
 	return ret;
 }
 
-int	MYSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
+int	MYSQL_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	int ret = SYSINFO_RET_FAIL;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
-
-	ret = mysql_get_discovery(request, result, MYSQL_DB_DISCOVERY_DBS);
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
-
-	return ret;
+	//return zbx_execute_threaded_metric(mysql_get_discovery, request, result);
+	return mysql_get_discovery(request, result, NULL);
 }
 
 static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type)
@@ -463,7 +496,7 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	int ret = SYSINFO_RET_FAIL;
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
-	/* 'timeout_event' argument is here to make the oracle_get_instance_result() prototype as required by */
+	/* 'timeout_event' argument is here to make the mysql_get_result() prototype as required by */
 	/* zbx_execute_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
