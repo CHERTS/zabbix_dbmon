@@ -71,11 +71,11 @@ WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema)' GROUP B
 #define MYSQL_ERRORLOG_DISCOVERY_DBS "\
 SELECT /*DBS_007*/ ( \
 	CASE \
-	WHEN VARIABLE_VALUE REGEXP '^.\\\\' THEN CONCAT(@@datadir,REPLACE(VARIABLE_VALUE, '.\\', '')) \
+	WHEN VARIABLE_VALUE REGEXP '^.\\\\\\\\' THEN CONCAT(@@datadir,REPLACE(VARIABLE_VALUE, '.\\\\', '')) \
 	ELSE VARIABLE_VALUE \
 	END) AS LOG_ERROR \
 	FROM %s.global_variables \
-WHERE VARIABLE_NAME = 'log_error';
+WHERE VARIABLE_NAME = 'log_error';"
 
 ZBX_METRIC	parameters_dbmon_mysql[] =
 /*	KEY								FLAG				FUNCTION			TEST PARAMETERS */
@@ -389,8 +389,8 @@ out:
 
 int	MYSQL_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	//return zbx_execute_threaded_metric(mysql_get_discovery, request, result);
-	return mysql_get_discovery(request, result, NULL);
+	return zbx_execute_threaded_metric(mysql_get_discovery, request, result);
+	//return mysql_get_discovery(request, result, NULL);
 }
 
 static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type)
