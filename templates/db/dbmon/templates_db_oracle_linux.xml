@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-05T09:42:55Z</date>
+    <date>2020-02-05T09:44:44Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -9,12 +9,11 @@
     </groups>
     <templates>
         <template>
-            <template>DBS_Template MySQL for Linux</template>
-            <name>MySQL for Linux (Active, DBMON)</name>
-            <description>Template for monitoring MySQL DB for Linux (active agent)</description>
+            <template>DBS_Template Oracle for Linux</template>
+            <name>Oracle for Linux (Active, DBMON)</name>
             <templates>
                 <template>
-                    <name>DBS_Template DB MySQL</name>
+                    <name>DBS_Template DB Oracle</name>
                 </template>
             </templates>
             <groups>

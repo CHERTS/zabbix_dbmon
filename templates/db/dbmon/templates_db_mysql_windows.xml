@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-30T12:57:15Z</date>
+    <date>2020-02-05T09:42:51Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -28,12 +28,6 @@
                     <value>Windows</value>
                 </tag>
             </tags>
-            <macros>
-                <macro>
-                    <macro>{$DBS_MYSQL_ERROR_LOG}</macro>
-                    <value>&quot;C:\Users\All Users\MySQL\MySQL Server 5.7\error.log&quot;</value>
-                </macro>
-            </macros>
         </template>
     </templates>
 </zabbix_export>
