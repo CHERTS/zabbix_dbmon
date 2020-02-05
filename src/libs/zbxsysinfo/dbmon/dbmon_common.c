@@ -26,7 +26,6 @@
 
 int make_discovery_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_result db_result)
 {
-	int				ret = SYSINFO_RET_FAIL;
 	unsigned int	col, row;
 	struct			zbx_json j;
 	char			buffer[MAX_STRING_LEN];
@@ -36,8 +35,9 @@ int make_discovery_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct z
 
 	zabbix_log(LOG_LEVEL_DEBUG, "Start in %s(%s)", __func__, request->key);
 
-	zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
-	zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+	//zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
+	//zbx_json_addarray(&j, ZBX_PROTO_TAG_DATA);
+	zbx_json_initarray(&j, ZBX_JSON_STAT_BUF_LEN);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Rows: %u, Cols: %u", __func__, request->key, db_result.nb_rows, db_result.nb_columns);
 
@@ -86,14 +86,14 @@ int make_discovery_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct z
 	}
 
 	zbx_json_close(&j);
-	SET_STR_RESULT(result, strdup(j.buffer));
-	zbx_json_free(&j);
 
-	ret = SYSINFO_RET_OK;
+	SET_STR_RESULT(result, zbx_strdup(NULL, j.buffer));
+
+	zbx_json_free(&j);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
 
-	return ret;
+	return SYSINFO_RET_OK;
 }
 
 int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_result db_result)
