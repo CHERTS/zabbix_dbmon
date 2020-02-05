@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-05T09:28:58Z</date>
+    <date>2020-02-05T09:36:33Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -215,7 +215,9 @@
                             <expression>{nodata({$DBS_MYSQL_PING_NODATA_CRIT})}=1</expression>
                             <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
                             <priority>HIGH</priority>
-                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_MYSQL_PING_NODATA_CRIT} (минут). Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent. Сообщить о проблеме эксперту в  соответствующий чат.</description>
+                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_MYSQL_PING_NODATA_CRIT} (минут).&#13;
+Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.&#13;
+Сообщить о проблеме эксперту в  соответствующий чат.</description>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
@@ -231,7 +233,9 @@
                             <expression>{nodata({$DBS_MYSQL_PING_NODATA_WARN})}=1</expression>
                             <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
                             <priority>WARNING</priority>
-                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_MYSQL_PING_NODATA_WARN} (минут). Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent. Сообщить о проблеме эксперту в  соответствующий чат.</description>
+                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_MYSQL_PING_NODATA_WARN} (минут).&#13;
+Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.&#13;
+Сообщить о проблеме эксперту в  соответствующий чат.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
@@ -1491,7 +1495,10 @@
                             <name>Instance '{$DBS_MYSQL_INSTANCE}' has just been restarted</name>
                             <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
                             <priority>DISASTER</priority>
-                            <description>Процесс (сервис) mysqld был перезапущен. Необходимо проверить факт перезапуска на сервере заказчика, проверить логи (error.log), далее уточнить в чате кто произвел перезапуск. Возможно, что перезапуск произошел в результате краха процесса в автоматическом режиме.</description>
+                            <description>Процесс (сервис) mysqld был перезапущен.&#13;
+Необходимо проверить факт перезапуска на сервере заказчика, проверить логи (error.log), далее уточнить в чате кто произвел перезапуск.&#13;
+Возможно, что перезапуск произошел в результате краха процесса в автоматическом режиме.&#13;
+Доведите информацию до заказчика и эксперта.</description>
                             <manual_close>YES</manual_close>
                             <tags>
                                 <tag>
@@ -2493,7 +2500,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Log of '{#LOG_ERROR}'</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>logrt[{#LOG_ERROR},&quot;PANIC|FATAL|ERROR|[Ee]rror&quot;]</key>
+                            <key>logrt[&quot;{#LOG_ERROR}&quot;,&quot;PANIC|FATAL|ERROR|[Ee]rror&quot;]</key>
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>LOG</value_type>
