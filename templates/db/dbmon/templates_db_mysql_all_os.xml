@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-01-30T13:01:26Z</date>
+    <date>2020-02-05T09:28:58Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -38,37 +38,6 @@
                 </application>
             </applications>
             <items>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Log of '{$DBS_MYSQL_ERROR_LOG}'</name>
-                    <type>ZABBIX_ACTIVE</type>
-                    <key>logrt[&quot;{$DBS_MYSQL_ERROR_LOG}&quot;,&quot;PANIC|FATAL|ERROR|[Ee]rror&quot;]</key>
-                    <trends>0</trends>
-                    <value_type>LOG</value_type>
-                    <applications>
-                        <application>
-                            <name>MySQL: Info</name>
-                        </application>
-                    </applications>
-                    <logtimefmt>yyyy-MM-ddThh:mm:ss</logtimefmt>
-                    <triggers>
-                        <trigger>
-                            <expression>{iregexp(InnoDB)}=1</expression>
-                            <name>{{ITEM.VALUE}.iregsub(&quot;InnoDB: ([a-zA-Z0-9 &gt;]+)&quot;, &quot;Fatal error in MySQL InnoDB (Error: '\1')&quot;)}</name>
-                            <priority>HIGH</priority>
-                            <description>В лог-файле &quot;{$DBS_MYSQL_ERROR_LOG}&quot; обнаружена критическая ошибка в работе InnoDB, как можно скорее просмотрите лог-файл на сервере, передайте информацию эксперту.</description>
-                            <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
-                                    <tag>Instance</tag>
-                                    <value>{$DBS_MYSQL_INSTANCE}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
-                    </triggers>
-                </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get database info</name>
                     <type>ZABBIX_ACTIVE</type>
@@ -2514,6 +2483,36 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <params>1h</params>
                         </step>
                     </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>MySQL error log discovery</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>mysql.errorlog.discovery[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    <delay>5m</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Log of '{#LOG_ERROR}'</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>logrt[{#LOG_ERROR},&quot;PANIC|FATAL|ERROR|[Ee]rror&quot;]</key>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>LOG</value_type>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Info</name>
+                                </application>
+                            </applications>
+                            <logtimefmt>yyyy-MM-ddThh:mm:ss</logtimefmt>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{iregexp(InnoDB)}=1</expression>
+                                    <name>{{ITEM.VALUE}.iregsub(&quot;InnoDB: ([a-zA-Z0-9 &gt;]+)&quot;, &quot;Fatal error in MySQL InnoDB (Error: '\1')&quot;)}</name>
+                                    <priority>HIGH</priority>
+                                    <description>В лог-файле &quot;{#LOG_ERROR}&quot; обнаружена критическая ошибка в работе InnoDB, как можно скорее просмотрите лог-файл на сервере, передайте информацию эксперту.</description>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
                 </discovery_rule>
             </discovery_rules>
             <macros>
