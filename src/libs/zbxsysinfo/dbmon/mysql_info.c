@@ -69,9 +69,13 @@ FROM information_schema.schemata s INNER JOIN information_schema.tables t ON s.S
 WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema)' GROUP BY s.SCHEMA_NAME;"
 
 #define MYSQL_ERRORLOG_DISCOVERY_DBS "\
-SELECT /*DBS_007*/ VARIABLE_VALUE AS LOG_ERROR \
-FROM %s.global_variables \
-WHERE VARIABLE_NAME = 'log_error';"
+SELECT /*DBS_007*/ ( \
+	CASE \
+	WHEN VARIABLE_VALUE REGEXP '^.\\\\' THEN CONCAT(@@datadir,REPLACE(VARIABLE_VALUE, '.\\', '')) \
+	ELSE VARIABLE_VALUE \
+	END) AS LOG_ERROR \
+	FROM %s.global_variables \
+WHERE VARIABLE_NAME = 'log_error';
 
 ZBX_METRIC	parameters_dbmon_mysql[] =
 /*	KEY								FLAG				FUNCTION			TEST PARAMETERS */
