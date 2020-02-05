@@ -77,6 +77,14 @@ SELECT /*DBS_007*/ ( \
 	FROM %s.global_variables \
 WHERE VARIABLE_NAME = 'log_error';"
 
+#define MYSQL_TOP10_TABLE_BY_SIZE_DBS "\
+SELECT /*DBS_008*/ CAST(@rn:=@rn+1 AS DECIMAL(0)) AS TOP, TABLE_SCHEMA AS DB_NAME, TABLE_NAME, ENGINE AS TABLE_ENGINE, IFNULL(TABLE_ROWS,0) AS TABLE_ROWS, DATA_LENGTH AS DATA_SIZE, INDEX_LENGTH AS INDEX_SIZE ,(DATA_LENGTH + INDEX_LENGTH) AS TOTAL_SIZE \
+FROM( \
+    SELECT TABLE_SCHEMA, TABLE_NAME, ENGINE, TABLE_ROWS, DATA_LENGTH, INDEX_LENGTH, (DATA_LENGTH + INDEX_LENGTH) AS TOTAL_SIZE \
+	FROM information_schema.tables \
+	ORDER BY (DATA_LENGTH + INDEX_LENGTH) DESC LIMIT 10 \
+) t1, (SELECT @rn:=0) t2;"
+
 ZBX_METRIC	parameters_dbmon_mysql[] =
 /*	KEY								FLAG				FUNCTION			TEST PARAMETERS */
 {
@@ -89,6 +97,7 @@ ZBX_METRIC	parameters_dbmon_mysql[] =
 	{"mysql.db.discovery",			CF_HAVEPARAMS,		MYSQL_DISCOVERY,	NULL},
 	{"mysql.db.info",				CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.errorlog.discovery",	CF_HAVEPARAMS,		MYSQL_DISCOVERY,	NULL},
+	{"mysql.top10_table_by_size",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -522,6 +531,10 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "mysql.db.info"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_DB_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+	}
+	else if (0 == strcmp(request->key, "mysql.top10_table_by_size"))
+	{
+		ret = mysql_make_result(request, result, MYSQL_TOP10_TABLE_BY_SIZE_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else
 	{
