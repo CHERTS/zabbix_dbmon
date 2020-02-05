@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-02T13:36:56Z</date>
+    <date>2020-02-05T12:18:51Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Operating Systems</name>
@@ -135,6 +135,7 @@
                 <macro>
                     <macro>{$DBS_ZABBIX_DBMON_PROCESS_NAME}</macro>
                     <value>zabbix_agentd_dbmon</value>
+                    <description>zabbix-agent process name</description>
                 </macro>
             </macros>
         </template>
