@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-05T12:18:51Z</date>
+    <date>2020-02-07T04:23:55Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Operating Systems</name>
@@ -74,7 +74,7 @@
                             <priority>WARNING</priority>
                             <description>Агент мониторинга баз данных ({$DBS_ZABBIX_DBMON_PROCESS_NAME}) потребляет много оперативной памяти (более {$DBS_ZABBIX_DBMON_MEM_USAGE_WARN} (МБайт)).&#13;
 Возможно агент делает слишком много и часто проверки, так же возможно существует утечка памяти в агенте.&#13;
-Доведите информацию до эксперта.</description>
+Перезапустите агента мониторинга. Доведите информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Zabbix agent for database monitoring is very high memory usage</name>
@@ -98,7 +98,7 @@
                             <priority>HIGH</priority>
                             <description>Агент мониторинга баз данных ({$DBS_ZABBIX_DBMON_PROCESS_NAME}) потребляет много оперативной памяти (более {$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT} (МБайт)).&#13;
 Возможно агент делает слишком много и часто проверки, так же возможно существует утечка памяти в агенте.&#13;
-Доведите информацию до эксперта.</description>
+Перезапустите агента мониторинга. Доведите информацию до эксперта.</description>
                             <tags>
                                 <tag>
                                     <tag>Service</tag>
