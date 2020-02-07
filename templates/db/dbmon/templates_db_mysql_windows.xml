@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T07:31:20Z</date>
+    <date>2020-02-07T07:48:58Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -24,9 +24,9 @@
             </groups>
             <items>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME:&quot;{$DBS_MYSQL_INSTANCE}&quot;}', state</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', state</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>service.info[{$DBS_MYSQL_SERVICE_NAME:&quot;{$DBS_MYSQL_INSTANCE}&quot;},state]</key>
+                    <key>service.info[{$DBS_MYSQL_SERVICE_NAME},state]</key>
                     <applications>
                         <application>
                             <name>MySQL: Info</name>
@@ -40,10 +40,10 @@
                             <expression>{last()}&lt;&gt;0</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{max(3m)}=0</recovery_expression>
-                            <name>Service '{$DBS_MYSQL_SERVICE_NAME:&quot;{$DBS_MYSQL_INSTANCE}&quot;}' is not running</name>
+                            <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is not running</name>
                             <opdata>(current state: {ITEM.LASTVALUE1})</opdata>
                             <priority>DISASTER</priority>
-                            <description>Служба '{$DBS_MYSQL_SERVICE_NAME:&quot;{$DBS_MYSQL_INSTANCE}&quot;}' была остановлена или аварийно завершила работу (crash).&#13;
+                            <description>Служба '{$DBS_MYSQL_SERVICE_NAME}' была остановлена или аварийно завершила работу (crash).&#13;
 Зайдите на сервер и проверьте состояние службы, проверьте журнал событий Windows на предмет ошибок работы службы.&#13;
 Доведите информацию до заказчика и эксперта.</description>
                             <tags>
