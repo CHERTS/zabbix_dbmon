@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T13:52:03Z</date>
+    <date>2020-02-07T18:08:50Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3424,9 +3424,6 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
         <value_map>
             <name>Zabbix agent ping status</name>
             <mappings>
-                <mapping>
-                    <newvalue>Down</newvalue>
-                </mapping>
                 <mapping>
                     <value>1</value>
                     <newvalue>Up</newvalue>
