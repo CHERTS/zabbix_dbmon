@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T07:48:58Z</date>
+    <date>2020-02-07T08:01:25Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -24,9 +24,24 @@
             </groups>
             <items>
                 <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', startup type</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>service.info[{$DBS_MYSQL_SERVICE_NAME},startup]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>Windows service startup type</name>
+                    </valuemap>
+                </item>
+                <item>
                     <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', state</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>service.info[{$DBS_MYSQL_SERVICE_NAME},state]</key>
+                    <history>30d</history>
                     <applications>
                         <application>
                             <name>MySQL: Info</name>
@@ -35,25 +50,23 @@
                     <valuemap>
                         <name>Windows service state</name>
                     </valuemap>
-                    <triggers>
-                        <trigger>
-                            <expression>{last()}&lt;&gt;0</expression>
-                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{max(3m)}=0</recovery_expression>
-                            <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is not running</name>
-                            <opdata>(current state: {ITEM.LASTVALUE1})</opdata>
-                            <priority>DISASTER</priority>
-                            <description>Служба '{$DBS_MYSQL_SERVICE_NAME}' была остановлена или аварийно завершила работу (crash).&#13;
-Зайдите на сервер и проверьте состояние службы, проверьте журнал событий Windows на предмет ошибок работы службы.&#13;
-Доведите информацию до заказчика и эксперта.</description>
-                            <tags>
-                                <tag>
-                                    <tag>Service</tag>
-                                    <value>{$DBS_MYSQL_SERVICE_NAME:&quot;{$DBS_MYSQL_INSTANCE}&quot;}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
-                    </triggers>
+                </item>
+                <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', account</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>service.info[{$DBS_MYSQL_SERVICE_NAME},user]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>Windows service startup type</name>
+                    </valuemap>
                 </item>
             </items>
             <tags>
@@ -70,7 +83,51 @@
             </macros>
         </template>
     </templates>
+    <triggers>
+        <trigger>
+            <expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].last()}&lt;&gt;0 and {DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},startup].last()}&lt;&gt;3</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].max(3m)}=0 or {DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},startup].last()}=3</recovery_expression>
+            <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is not running</name>
+            <opdata>(current state: {ITEM.LASTVALUE1}, startup type: {ITEM.LASTVALUE2})</opdata>
+            <priority>DISASTER</priority>
+            <description>Служба '{$DBS_MYSQL_SERVICE_NAME}' была остановлена или аварийно завершила работу (crash).&#13;
+Зайдите на сервер и проверьте состояние службы, проверьте журнал событий Windows на предмет ошибок работы службы.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+            <tags>
+                <tag>
+                    <tag>Service</tag>
+                    <value>{$DBS_MYSQL_SERVICE_NAME:&quot;{$DBS_MYSQL_INSTANCE}&quot;}</value>
+                </tag>
+            </tags>
+        </trigger>
+    </triggers>
     <value_maps>
+        <value_map>
+            <name>Windows service startup type</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>Automatic</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Automatic delayed</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>Manual</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>Disabled</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>Unknown</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
         <value_map>
             <name>Windows service state</name>
             <mappings>
