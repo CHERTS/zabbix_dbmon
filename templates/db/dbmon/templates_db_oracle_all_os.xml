@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-05T09:29:10Z</date>
+    <date>2020-02-07T13:52:09Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -69,7 +69,8 @@
 2. Zabbix-agent-dbmon на сервере заказчика остановлен;&#13;
 3. Проблемы на сервере заказчика (сервер завис, перезагружен, умер или еще что-то);&#13;
 &#13;
-Срочно проверить доступность сервера заказчика, далее проверить работу zabbix-agent-dbmon, сообщить в чат &quot;Дежурства&quot;.</description>
+Срочно проверить доступность сервера заказчика, далее проверить работу zabbix-agent-dbmon.&#13;
+Доведите информацию до заказчика и эксперта.</description>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
@@ -94,7 +95,8 @@
 2. Zabbix-agent-dbmon на сервере заказчика остановлен;&#13;
 3. Проблемы на сервере заказчика (сервер завис, перезагружен, умер или еще что-то);&#13;
 &#13;
-Срочно проверить доступность сервера заказчика, далее проверить работу zabbix-agent-dbmon, сообщить в чат &quot;Дежурства&quot;.</description>
+Срочно проверить доступность сервера заказчика, далее проверить работу zabbix-agent-dbmon.&#13;
+Доведите информацию до заказчика и эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_CRIT} (minutes)</name>
@@ -582,7 +584,9 @@
                             <expression>{nodata({$DBS_ORACLE_PING_NODATA_CRIT})}=1</expression>
                             <name>Database test connection data not received for more than {$DBS_ORACLE_PING_NODATA_CRIT} (minutes)</name>
                             <priority>HIGH</priority>
-                            <description>Данные о доступности экземпляра БД Oracle не поступали более {$DBS_ORACLE_PING_NODATA_CRIT} (минут). Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_ORACLE_PING_NODATA_CRIT} (минут).&#13;
+Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.&#13;
+Сообщить о проблеме эксперту в  соответствующий чат.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_CRIT} (minutes)</name>
@@ -604,7 +608,9 @@
                             <expression>{nodata({$DBS_ORACLE_PING_NODATA_WARN})}=1</expression>
                             <name>Database test connection data not received for more than {$DBS_ORACLE_PING_NODATA_WARN} (minutes)</name>
                             <priority>WARNING</priority>
-                            <description>Данные о доступности экземпляра БД Oracle не поступали более {$DBS_ORACLE_PING_NODATA_WARN} (минут). Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <description>Данные о доступности экземпляра БД Oracle не поступали более {$DBS_ORACLE_PING_NODATA_WARN} (минут).&#13;
+Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent-dbmon.&#13;
+Сообщить о проблеме эксперту в  соответствующий чат.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Database test connection data not received for more than {$DBS_ORACLE_PING_NODATA_CRIT} (minutes)</name>
@@ -632,7 +638,8 @@
                             <recovery_expression>{min(#2)}=1</recovery_expression>
                             <name>Instance access failed</name>
                             <priority>DISASTER</priority>
-                            <description>Тестовое подключение к экземпляру БД Oracle не успешно. Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
+                            <description>Тестовое подключение к экземпляру БД Oracle не успешно.&#13;
+Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Database test connection data not received for more than {$DBS_ORACLE_PING_NODATA_WARN} (minutes)</name>
@@ -3062,6 +3069,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
                                             <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
+                                        <dependency>
+                                            <name>MRP process is Down or Blocked</name>
+                                            <expression>{DBS_Template DB Oracle:oracle.standby[{#INSTANCE},{#DBNAME},mrp_cnt].last()}=0 and {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.standby[{#INSTANCE},{#DBNAME},mrp_cnt].last()}&gt;0 or {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=1</recovery_expression>
+                                        </dependency>
                                     </dependencies>
                                     <tags>
                                         <tag>
@@ -3099,6 +3111,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <name>Instance access failed</name>
                                             <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
                                             <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>MRP process is Down or Blocked</name>
+                                            <expression>{DBS_Template DB Oracle:oracle.standby[{#INSTANCE},{#DBNAME},mrp_cnt].last()}=0 and {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.standby[{#INSTANCE},{#DBNAME},mrp_cnt].last()}&gt;0 or {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -3262,6 +3279,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
                                             <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
                                         </dependency>
+                                        <dependency>
+                                            <name>MRP process is Down or Blocked</name>
+                                            <expression>{DBS_Template DB Oracle:oracle.standby[{#INSTANCE},{#DBNAME},mrp_cnt].last()}=0 and {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.standby[{#INSTANCE},{#DBNAME},mrp_cnt].last()}&gt;0 or {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=1</recovery_expression>
+                                        </dependency>
                                     </dependencies>
                                     <tags>
                                         <tag>
@@ -3294,6 +3316,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <name>Instance access failed</name>
                                             <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
                                             <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>MRP process is Down or Blocked</name>
+                                            <expression>{DBS_Template DB Oracle:oracle.standby[{#INSTANCE},{#DBNAME},mrp_cnt].last()}=0 and {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.standby[{#INSTANCE},{#DBNAME},mrp_cnt].last()}&gt;0 or {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=1</recovery_expression>
                                         </dependency>
                                         <dependency>
                                             <name>Transport lag is too high</name>

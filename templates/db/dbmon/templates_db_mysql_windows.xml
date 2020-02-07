@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T12:55:16Z</date>
+    <date>2020-02-07T13:52:15Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -64,9 +64,6 @@
                             <name>MySQL: Info</name>
                         </application>
                     </applications>
-                    <valuemap>
-                        <name>Windows service startup type</name>
-                    </valuemap>
                 </item>
             </items>
             <tags>
@@ -88,7 +85,7 @@
             <expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].last()}=255</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].max(2m)}=0 or {DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},startup].last()}=3</recovery_expression>
-            <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is found</name>
+            <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is not found</name>
             <priority>HIGH</priority>
             <description>Служба '{$DBS_MYSQL_SERVICE_NAME}' не найдена.&#13;
 Создайте или исправьте макрос DBS_MYSQL_SERVICE_NAME у хоста, содержащий корректное имя службы MySQL.&#13;

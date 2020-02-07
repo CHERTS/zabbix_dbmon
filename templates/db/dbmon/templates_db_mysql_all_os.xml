@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T12:52:39Z</date>
+    <date>2020-02-07T13:52:03Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -36,8 +36,113 @@
                 <application>
                     <name>stubs</name>
                 </application>
+                <application>
+                    <name>Zabbix agent (DBMON)</name>
+                </application>
             </applications>
             <items>
+                <item>
+                    <name>[DBMON] Host name of zabbix_agentd running ({$DBS_MYSQL_INSTANCE})</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>dbmon.agent.hostname[{$DBS_MYSQL_INSTANCE}]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[DBMON] Agent ping ({$DBS_MYSQL_INSTANCE})</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>dbmon.agent.ping[{$DBS_MYSQL_INSTANCE}]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>Zabbix agent ping status</name>
+                    </valuemap>
+                    <triggers>
+                        <trigger>
+                            <expression>{nodata({$DBS_DBMON_AGENTD_NODATA_CRIT})}=1</expression>
+                            <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_CRIT} (minutes)</name>
+                            <priority>HIGH</priority>
+                            <description>Не приходят данные об активности zabbix-agent для мониторинга базы данных более {$DBS_DBMON_AGENTD_NODATA_CRIT} (минут). Возможные причины:&#13;
+1. Потеряна связь zabbix-agent-dbmon с нашим zabbix-proxy;&#13;
+2. Zabbix-agent-dbmon на сервере заказчика остановлен;&#13;
+3. Проблемы на сервере заказчика (сервер завис, перезагружен, умер или еще что-то);&#13;
+&#13;
+Срочно проверить доступность сервера заказчика, далее проверить работу zabbix-agent-dbmon.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Service</tag>
+                                    <value>zabbix-agent-dbmon</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                            <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                            <priority>WARNING</priority>
+                            <description>Не приходят данные об активности zabbix-agent для мониторинга базы данных более {$DBS_DBMON_AGENTD_NODATA_WARN} (минут). Возможные причины:&#13;
+1. Потеряна связь zabbix-agent-dbmon с нашим zabbix-proxy;&#13;
+2. Zabbix-agent-dbmon на сервере заказчика остановлен;&#13;
+3. Проблемы на сервере заказчика (сервер завис, перезагружен, умер или еще что-то);&#13;
+&#13;
+Срочно проверить доступность сервера заказчика, далее проверить работу zabbix-agent-dbmon.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_CRIT} (minutes)</name>
+                                    <expression>{DBS_Template DB MySQL:dbmon.agent.ping[{$DBS_MYSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_CRIT})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Service</tag>
+                                    <value>zabbix-agent-dbmon</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[DBMON] Version of zabbix_agent(d) running ({$DBS_MYSQL_INSTANCE})</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>dbmon.agent.version[{$DBS_MYSQL_INSTANCE}]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get database info</name>
                     <type>ZABBIX_ACTIVE</type>
@@ -188,17 +293,16 @@
                     </valuemap>
                     <triggers>
                         <trigger>
-                            <expression>{max(#2)}=0</expression>
-                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{min(#2)}=1</recovery_expression>
-                            <name>Instance access failed</name>
-                            <priority>DISASTER</priority>
-                            <description>Тестовое подключение к экземпляру БД MySQL не успешно.&#13;
-Необходимо проверить работу экземпляра БД, посмотреть error.log, далее проверить работу и настройки zabbix-agent.</description>
+                            <expression>{nodata({$DBS_MYSQL_PING_NODATA_CRIT})}=1</expression>
+                            <name>Database test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
+                            <priority>HIGH</priority>
+                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_MYSQL_PING_NODATA_CRIT} (минут).&#13;
+Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.&#13;
+Сообщить о проблеме эксперту в  соответствующий чат.</description>
                             <dependencies>
                                 <dependency>
-                                    <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
-                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].nodata({$DBS_MYSQL_PING_NODATA_WARN})}=1</expression>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_CRIT} (minutes)</name>
+                                    <expression>{DBS_Template DB MySQL:dbmon.agent.ping[{$DBS_MYSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_CRIT})}=1</expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -213,12 +317,22 @@
                             </tags>
                         </trigger>
                         <trigger>
-                            <expression>{nodata({$DBS_MYSQL_PING_NODATA_CRIT})}=1</expression>
-                            <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
-                            <priority>HIGH</priority>
-                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_MYSQL_PING_NODATA_CRIT} (минут).&#13;
-Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.&#13;
+                            <expression>{nodata({$DBS_MYSQL_PING_NODATA_WARN})}=1</expression>
+                            <name>Database test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
+                            <priority>WARNING</priority>
+                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_MYSQL_PING_NODATA_WARN} (минут).&#13;
+Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent-dbmon.&#13;
 Сообщить о проблеме эксперту в  соответствующий чат.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Database test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].nodata({$DBS_MYSQL_PING_NODATA_CRIT})}=1</expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB MySQL:dbmon.agent.ping[{$DBS_MYSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>DBType</tag>
@@ -231,16 +345,17 @@
                             </tags>
                         </trigger>
                         <trigger>
-                            <expression>{nodata({$DBS_MYSQL_PING_NODATA_WARN})}=1</expression>
-                            <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
-                            <priority>WARNING</priority>
-                            <description>Данные о доступности экземпляра БД MySQL не поступали более {$DBS_MYSQL_PING_NODATA_WARN} (минут).&#13;
-Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.&#13;
-Сообщить о проблеме эксперту в  соответствующий чат.</description>
+                            <expression>{max(#2)}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(#2)}=1</recovery_expression>
+                            <name>Instance access failed</name>
+                            <priority>DISASTER</priority>
+                            <description>Тестовое подключение к экземпляру БД MySQL не успешно.&#13;
+Необходимо проверить работу экземпляра БД, посмотреть error.log, далее проверить работу и настройки zabbix-agent.</description>
                             <dependencies>
                                 <dependency>
-                                    <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_CRIT} (minutes)</name>
-                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].nodata({$DBS_MYSQL_PING_NODATA_CRIT})}=1</expression>
+                                    <name>Database test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].nodata({$DBS_MYSQL_PING_NODATA_WARN})}=1</expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -2537,6 +2652,14 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </discovery_rules>
             <macros>
                 <macro>
+                    <macro>{$DBS_DBMON_AGENTD_NODATA_CRIT}</macro>
+                    <value>15m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_DBMON_AGENTD_NODATA_WARN}</macro>
+                    <value>8m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_MYSQL_ABORTED_CONN_MAX_WARN}</macro>
                     <value>3</value>
                 </macro>
@@ -3295,6 +3418,18 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <mapping>
                     <value>1</value>
                     <newvalue>ON</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>Zabbix agent ping status</name>
+            <mappings>
+                <mapping>
+                    <newvalue>Down</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Up</newvalue>
                 </mapping>
             </mappings>
         </value_map>
