@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T04:24:07Z</date>
+    <date>2020-02-07T12:52:39Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -193,7 +193,8 @@
                             <recovery_expression>{min(#2)}=1</recovery_expression>
                             <name>Instance access failed</name>
                             <priority>DISASTER</priority>
-                            <description>Тестовое подключение к экземпляру БД MySQL не успешно. Необходимо проверить работу экземпляра БД, посмотреть error.log, далее проверить работу и настройки zabbix-agent.</description>
+                            <description>Тестовое подключение к экземпляру БД MySQL не успешно.&#13;
+Необходимо проверить работу экземпляра БД, посмотреть error.log, далее проверить работу и настройки zabbix-agent.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
@@ -698,6 +699,7 @@
                         <trigger>
                             <expression>{last()}&gt;0</expression>
                             <name>Refused connections (max_connections limit reached)</name>
+                            <status>DISABLED</status>
                             <priority>AVERAGE</priority>
                             <description>Обнаружены множественные отклоненные соединения. Скорее всего достигнут предел максимального количества соединений (max_connections). Доведите информацию до эксперта.</description>
                             <dependencies>
@@ -2247,37 +2249,10 @@ innodb_flush_log_at_trx_commit=1.</description>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Version of MySQL has been changed</name>
                             <opdata>(current: {ITEM.VALUE})</opdata>
-                            <priority>HIGH</priority>
-                            <description>Версия экземпляра MySQL была изменена. Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
-                            <type>MULTIPLE</type>
-                            <manual_close>YES</manual_close>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                            </dependencies>
-                            <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
-                                    <tag>Instance</tag>
-                                    <value>{$DBS_MYSQL_INSTANCE}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
-                        <trigger>
-                            <expression>{diff()}&gt;0</expression>
-                            <recovery_mode>NONE</recovery_mode>
-                            <name>Version of MySQL has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
                             <priority>INFO</priority>
-                            <description>Произошла смена версии MySQL.&#13;
-Необходимо проверить в истории какая была раньше версия и какая сейчас.&#13;
-Если смена версии действительно произошла, то уточнить у эксперта о работах по обновлению MySQL.</description>
+                            <description>Версия экземпляра MySQL была изменена.&#13;
+Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
+                            <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
                                 <tag>
@@ -2380,7 +2355,9 @@ innodb_flush_log_at_trx_commit=1.</description>
                                     <expression>{nodata({$DBS_MYSQL_DB_NODATA_WARN:&quot;{#DBNAME}&quot;})}=1</expression>
                                     <name>Database '{#DBNAME}' is not available</name>
                                     <priority>HIGH</priority>
-                                    <description>Более {$DBS_MYSQL_DB_NODATA_WARN} (минут) не поступает информация о базе данных '{#DBNAME}'. Зайдите на сервер и проверьте наличие этой базы данных, возможно она была удалена. Доведите информацию до эксперта.</description>
+                                    <description>Более {$DBS_MYSQL_DB_NODATA_WARN} (минут) не поступает информация о базе данных '{#DBNAME}'.&#13;
+Зайдите на сервер и проверьте наличие этой базы данных, возможно она была удалена.&#13;
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -2512,11 +2489,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <logtimefmt>yyyy-MM-ddThh:mm:ss</logtimefmt>
                             <trigger_prototypes>
                                 <trigger_prototype>
-                                    <expression>{iregexp(&quot;Deadlock&quot;,5m)}&gt;0</expression>
+                                    <expression>{iregexp(&quot;Event Scheduler:.*Deadlock found when trying to get lock;.*&quot;,5m)}&gt;0 and {$DBS_MYSQL_DISABLE_SCHEDULER_DEADLOCK_DETECT}=0</expression>
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                                    <recovery_expression>{nodata(10m)}&lt;&gt;1</recovery_expression>
-                                    <name>{{ITEM.VALUE}.iregsub(&quot;Event Scheduler: \[(.*)\]\[(.*)\] Deadlock found when trying to get lock; (.*)&quot;, &quot;Deadlock found (User: '\1', Procedure: '\2', Action: '\3')&quot;)}</name>
-                                    <status>DISABLED</status>
+                                    <recovery_expression>{nodata(10m)}&lt;&gt;1 or {$DBS_MYSQL_DISABLE_SCHEDULER_DEADLOCK_DETECT}=1</recovery_expression>
+                                    <name>{{ITEM.VALUE}.iregsub(&quot;Event Scheduler: \[(.*)\]\[(.*)\] Deadlock found when trying to get lock;.*&quot;, &quot;Deadlock detected during event scheduler is running (User: '\1', Event: '\2')&quot;)}</name>
                                     <priority>WARNING</priority>
                                     <description>В лог-файле &quot;{#LOG_ERROR}&quot; обнаружена взаимная блокировка при выполнении процедуры.&#13;
 Сообщите заказчику детали блокировки из аларма (это название процедуры и логин пользователя который ее запустил).&#13;
@@ -2528,19 +2504,29 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <tag>DBType</tag>
                                             <value>MySQL</value>
                                         </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Scheduler</value>
+                                        </tag>
                                     </tags>
                                 </trigger_prototype>
                                 <trigger_prototype>
                                     <expression>{iregexp(&quot;InnoDB&quot;,5m)}&gt;0</expression>
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{nodata(10m)}&lt;&gt;1</recovery_expression>
-                                    <name>{{ITEM.VALUE}.iregsub(&quot;InnoDB: ([a-zA-Z0-9 &gt;]+)&quot;, &quot;Fatal error in MySQL InnoDB (Error: '\1')&quot;)}</name>
+                                    <name>{{ITEM.VALUE}.iregsub(&quot;InnoDB: (.*)&quot;, &quot;Fatal error in InnoDB engine (Error: '\1')&quot;)}</name>
                                     <priority>HIGH</priority>
-                                    <description>В лог-файле &quot;{#LOG_ERROR}&quot; обнаружена критическая ошибка в работе InnoDB, как можно скорее просмотрите лог-файл на сервере, передайте информацию эксперту.</description>
+                                    <description>В лог-файле &quot;{#LOG_ERROR}&quot; обнаружена критическая ошибка в работе InnoDB.&#13;
+Как можно скорее просмотрите лог-файл на сервере.&#13;
+Передайте информацию эксперту.</description>
                                     <tags>
                                         <tag>
                                             <tag>DBType</tag>
                                             <value>MySQL</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>InnoDB</value>
                                         </tag>
                                     </tags>
                                 </trigger_prototype>
@@ -2573,6 +2559,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_MYSQL_DB_NODATA_WARN}</macro>
                     <value>1h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_DISABLE_SCHEDULER_DEADLOCK_DETECT}</macro>
+                    <value>0</value>
+                    <description>Disable trigger &quot;Deadlock detected during event scheduler is running&quot;</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_ERROR_LOG}</macro>
