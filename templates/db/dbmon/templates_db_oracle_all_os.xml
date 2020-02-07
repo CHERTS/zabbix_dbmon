@@ -5104,9 +5104,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Zabbix agent ping status</name>
             <mappings>
                 <mapping>
-                    <newvalue>Down</newvalue>
-                </mapping>
-                <mapping>
                     <value>1</value>
                     <newvalue>Up</newvalue>
                 </mapping>
