@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T13:52:09Z</date>
+    <date>2020-02-07T14:42:50Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3171,7 +3171,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <recovery_expression>{last()}&gt;0 or {$DBS_ORACLE_DISABLE_MRP_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=1</recovery_expression>
                                     <name>MRP process is Down or Blocked</name>
                                     <priority>HIGH</priority>
-                                    <description>Процесс MRP был остановлен или аварийно завершился. Пока процесс MRP не будет запущен, резервная база будет не актуальна.</description>
+                                    <description>Процесс MRP был остановлен или аварийно завершился.&#13;
+Пока процесс MRP не будет запущен, резервная база будет не актуальна.&#13;
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
