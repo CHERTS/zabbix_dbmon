@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T12:51:00Z</date>
+    <date>2020-02-07T12:55:16Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -96,7 +96,7 @@
             <tags>
                 <tag>
                     <tag>Service</tag>
-                    <value>{$DBS_MYSQL_SERVICE_NAME:&quot;{$DBS_MYSQL_INSTANCE}&quot;}</value>
+                    <value>{$DBS_MYSQL_SERVICE_NAME}</value>
                 </tag>
             </tags>
         </trigger>
@@ -113,7 +113,7 @@
             <tags>
                 <tag>
                     <tag>Service</tag>
-                    <value>{$DBS_MYSQL_SERVICE_NAME:&quot;{$DBS_MYSQL_INSTANCE}&quot;}</value>
+                    <value>{$DBS_MYSQL_SERVICE_NAME}</value>
                 </tag>
             </tags>
         </trigger>
