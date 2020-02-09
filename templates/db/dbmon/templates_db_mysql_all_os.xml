@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T18:08:50Z</date>
+    <date>2020-02-09T11:51:28Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -516,6 +516,34 @@
                             <name>MySQL: Performance</name>
                         </application>
                     </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(5m)}&lt;{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}</expression>
+                            <name>Buffer pool utilization is too low</name>
+                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}, alert started: {ITEM.VALUE1})</opdata>
+                            <priority>WARNING</priority>
+                            <description>Использование пула буферов InnoDB составляет менее {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}% за последние 5 минут.&#13;
+Это означает, что для пула буферов InnoDB выделено много оперативной памяти, которая в данный момент не используется и которую Вы можете легко перераспределить.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Bytes received</name>
@@ -2389,6 +2417,22 @@ innodb_flush_log_at_trx_commit=1.</description>
                     <type>DEPENDENT</type>
                     <key>mysql.database.discovery</key>
                     <delay>0</delay>
+                    <filter>
+                        <evaltype>AND</evaltype>
+                        <conditions>
+                            <condition>
+                                <macro>{#DBNAME}</macro>
+                                <value>{$DBS_MYSQL_LLD_FILTER_DB_MATCHES}</value>
+                                <formulaid>A</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#DBNAME}</macro>
+                                <value>{$DBS_MYSQL_LLD_FILTER_DB_NOT_MATCHES}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>B</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
                     <item_prototypes>
                         <item_prototype>
                             <name>[MySQL] Database '{#DBNAME}': Character set</name>
@@ -2662,6 +2706,12 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_MYSQL_ABORTED_CONN_MAX_WARN}</macro>
                     <value>3</value>
+                    <description>The number of failed attempts to connect to the MySQL server for trigger expression</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}</macro>
+                    <value>50</value>
+                    <description>The minimum buffer pool utilization in percent for trigger expression</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_CONNECTION_PRC_CRIT}</macro>
@@ -2689,16 +2739,24 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <description>Disable trigger &quot;Deadlock detected during event scheduler is running&quot;</description>
                 </macro>
                 <macro>
-                    <macro>{$DBS_MYSQL_ERROR_LOG}</macro>
-                    <value>&quot;c:\error.log&quot;</value>
-                </macro>
-                <macro>
                     <macro>{$DBS_MYSQL_HOST}</macro>
                     <value>127.0.0.1</value>
+                    <description>MySQL host address</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_INSTANCE}</macro>
                     <value>mysql_3306</value>
+                    <description>Unique instance name of MySQL</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_LLD_FILTER_DB_MATCHES}</macro>
+                    <value>.*</value>
+                    <description>Filter of discoverable databases</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_LLD_FILTER_DB_NOT_MATCHES}</macro>
+                    <value>CHANGE_IF_NEEDED</value>
+                    <description>Filter to exclude discovered databases</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_PING_NODATA_CRIT}</macro>
@@ -2711,6 +2769,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_MYSQL_PORT}</macro>
                     <value>3306</value>
+                    <description>MySQL port number</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}</macro>
