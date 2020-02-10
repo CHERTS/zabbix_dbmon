@@ -85,6 +85,14 @@ FROM( \
 	ORDER BY (DATA_LENGTH + INDEX_LENGTH) DESC LIMIT 10 \
 ) t1, (SELECT @rn:=0) t2;"
 
+#define MYSQL_TOP10_TABLE_BY_ROWS_DBS "\
+SELECT /*DBS_008*/ CAST(@rn:=@rn+1 AS DECIMAL(0)) AS TOP, TABLE_SCHEMA AS DB_NAME, TABLE_NAME, ENGINE AS TABLE_ENGINE, IFNULL(TABLE_ROWS,0) AS TABLE_ROWS, DATA_LENGTH AS DATA_SIZE, INDEX_LENGTH AS INDEX_SIZE ,(DATA_LENGTH + INDEX_LENGTH) AS TOTAL_SIZE \
+FROM( \
+    SELECT TABLE_SCHEMA, TABLE_NAME, ENGINE, TABLE_ROWS, DATA_LENGTH, INDEX_LENGTH, (DATA_LENGTH + INDEX_LENGTH) AS TOTAL_SIZE \
+	FROM information_schema.tables \
+	ORDER BY TABLE_ROWS DESC LIMIT 10 \
+) t1, (SELECT @rn:=0) t2;"
+
 ZBX_METRIC	parameters_dbmon_mysql[] =
 /*	KEY								FLAG				FUNCTION			TEST PARAMETERS */
 {
@@ -98,6 +106,7 @@ ZBX_METRIC	parameters_dbmon_mysql[] =
 	{"mysql.db.info",				CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.errorlog.discovery",	CF_HAVEPARAMS,		MYSQL_DISCOVERY,	NULL},
 	{"mysql.top10_table_by_size",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.top10_table_by_rows",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -284,7 +293,7 @@ int	MYSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 		ret = SYSINFO_RET_FAIL;
 	}
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 
 	return ret;
 }
@@ -391,7 +400,7 @@ out:
 	zbx_db_close_db(mysql_conn);
 	zbx_db_clean_connection(mysql_conn);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 
 	return ret;
 }
@@ -536,13 +545,17 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	{
 		ret = mysql_make_result(request, result, MYSQL_TOP10_TABLE_BY_SIZE_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
+	else if (0 == strcmp(request->key, "mysql.top10_table_by_rows"))
+	{
+		ret = mysql_make_result(request, result, MYSQL_TOP10_TABLE_BY_ROWS_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+	}
 	else
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key"));
 		ret = SYSINFO_RET_FAIL;
 	}
 
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 
 	return ret;
 }

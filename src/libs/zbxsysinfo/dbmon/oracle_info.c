@@ -1011,7 +1011,7 @@ exec_db_query:
 		ret = SYSINFO_RET_FAIL;
 	}
 out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 
 	return ret;
 }
@@ -1356,7 +1356,7 @@ next:
 		ret = SYSINFO_RET_FAIL;
 	}
 out:
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s)", __func__, request->key);
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 
 	return ret;
 }
