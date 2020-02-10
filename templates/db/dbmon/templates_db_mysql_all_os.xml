@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-10T05:50:34Z</date>
+    <date>2020-02-10T17:44:30Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1659,6 +1659,20 @@
                     </triggers>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get TOP10 table by size</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    <delay>5m</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Binary log format</name>
                     <type>DEPENDENT</type>
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_format]</key>
@@ -2765,6 +2779,216 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>MySQL TOP10 table by size discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.top10_table_by_size.discovery</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[MySQL] TOP{#TOP}: Data size</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.top10_table_by_size[{#TOP},data_size]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: TOP10 by table size</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TOP== &quot;{#TOP}&quot;)].DATA_SIZE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] TOP{#TOP}: Database name</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.top10_table_by_size[{#TOP},db_name]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: TOP10 by table size</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TOP== &quot;{#TOP}&quot;)].DB_NAME.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] TOP{#TOP}: Index size</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.top10_table_by_size[{#TOP},index_size]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: TOP10 by table size</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TOP== &quot;{#TOP}&quot;)].INDEX_SIZE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] TOP{#TOP}: Table engine</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.top10_table_by_size[{#TOP},table_engine]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: TOP10 by table size</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TOP== &quot;{#TOP}&quot;)].TABLE_ENGINE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] TOP{#TOP}: Table name</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.top10_table_by_size[{#TOP},table_name]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: TOP10 by table size</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TOP== &quot;{#TOP}&quot;)].TABLE_NAME.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] TOP{#TOP}: Table rows</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.top10_table_by_size[{#TOP},table_rows]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: TOP10 by table size</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TOP== &quot;{#TOP}&quot;)].TABLE_ROWS.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] TOP{#TOP}: Total size</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.top10_table_by_size[{#TOP},total_size]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: TOP10 by table size</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.TOP== &quot;{#TOP}&quot;)].TOTAL_SIZE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(tops){
+    return {
+        &quot;{#TOP}&quot;: tops.TOP,
+        &quot;{#DB_NAME}&quot;: tops.DB_NAME
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
                 </discovery_rule>
             </discovery_rules>
             <macros>
