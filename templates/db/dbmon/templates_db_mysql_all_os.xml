@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-10T17:44:30Z</date>
+    <date>2020-02-10T18:07:27Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1662,7 +1662,7 @@
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get TOP10 table by size</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
-                    <delay>5m</delay>
+                    <delay>10m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -2509,13 +2509,13 @@ innodb_flush_log_at_trx_commit=1.</description>
                         <conditions>
                             <condition>
                                 <macro>{#DBNAME}</macro>
-                                <value>{$DBS_MYSQL_LLD_FILTER_DB_MATCHES}</value>
+                                <value>{$DBS_MYSQL_LLD_FILTER_DB_NOT_MATCHES}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
                                 <formulaid>A</formulaid>
                             </condition>
                             <condition>
                                 <macro>{#DBNAME}</macro>
-                                <value>{$DBS_MYSQL_LLD_FILTER_DB_NOT_MATCHES}</value>
-                                <operator>NOT_MATCHES_REGEX</operator>
+                                <value>{$DBS_MYSQL_LLD_FILTER_DB_MATCHES}</value>
                                 <formulaid>B</formulaid>
                             </condition>
                         </conditions>
