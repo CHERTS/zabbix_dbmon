@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-09T11:51:28Z</date>
+    <date>2020-02-10T05:50:34Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1703,6 +1703,30 @@
                     <master_item>
                         <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Setting 'binlog_format' has been changed</name>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <priority>INFO</priority>
+                            <description>Настройка 'binlog_format' была изменена.&#13;
+Данная настройка отвечает за формат бинарного лога и важна при репликации.&#13;
+Доведите информацию до эксперту.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Binary log row image</name>
@@ -1857,6 +1881,30 @@ ON: Both new and replicated transactions must be GTID transactions.</description
                     <master_item>
                         <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Setting 'gtid_mode' has been changed</name>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <priority>INFO</priority>
+                            <description>Настройка 'gtid_mode' была изменена.&#13;
+Данная настройка отвечает за включение/отключение режима GTID и важна при репликации.&#13;
+Доведите информацию до эксперту.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Have query cache</name>
@@ -2028,6 +2076,31 @@ If max_relay_log_size is 0, the value of max_binlog_size applies to relay logs a
                     <master_item>
                         <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1 and {last()}&gt;0</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Setting 'max_connections' has been changed</name>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <priority>INFO</priority>
+                            <description>Настройка 'max_connections' была изменена.&#13;
+Данная настройка отвечает за максимальное количество соединений к экземпляру MySQL и является очень важной.&#13;
+Необдуманное завышение настройки может послужить причиной роста нагрузки на экземпляр, а так же стать причиной высокого потребления памяти при росте числа подключений.&#13;
+Доведите информацию до эксперту.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Query cache limit</name>
