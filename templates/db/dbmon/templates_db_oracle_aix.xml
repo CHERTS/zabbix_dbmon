@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2020-02-05T09:44:44Z</date>
+    <groups>
+        <group>
+            <name>DBS.Templates/Databases</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>DBS_Template Oracle for AIX</template>
+            <name>Oracle for AIX (Active, DBMON)</name>
+            <templates>
+                <template>
+                    <name>DBS_Template DB Oracle</name>
+                </template>
+            </templates>
+            <groups>
+                <group>
+                    <name>DBS.Templates/Databases</name>
+                </group>
+            </groups>
+            <tags>
+                <tag>
+                    <tag>OS</tag>
+                    <value>AIX</value>
+                </tag>
+            </tags>
+        </template>
+    </templates>
+</zabbix_export>
