@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T14:42:50Z</date>
+    <date>2020-02-12T06:40:23Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1552,9 +1552,26 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                 <trigger_prototype>
                                     <expression>{iregexp(&quot;ORA-00600:&quot;)}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
-                                    <name>{{ITEM.VALUE}.iregsub(&quot;ORA-00600: (.*): (\[.*\])&quot;, &quot;Found ORA-00600: \2&quot;)}</name>
+                                    <name>{{ITEM.VALUE}.iregsub(&quot;ORA-00600: (.*): (\[.*\])&quot;, &quot;Found ORA-00600 error: \2&quot;)}</name>
                                     <priority>WARNING</priority>
                                     <description>У экземпляра &quot;{#INSTANCE}&quot; обнаружена ошибка ORA-00600.&#13;
+Проверьте лог-файл &quot;{#ALERTLOG}&quot; для детального анализа ошибки.</description>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{iregexp(&quot;ORA-19909:&quot;)}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>{{ITEM.VALUE}.iregsub(&quot;ORA-19909: datafile (.*) belongs to an orphan incarnation&quot;, &quot;Found ORA-19909 error (datafile: '\1'&quot;)}</name>
+                                    <priority>WARNING</priority>
+                                    <description>У экземпляра &quot;{#INSTANCE}&quot; обнаружена ошибка ORA-19909.&#13;
+Ошибка указывает на то, что инкарнация одного из дата-файлов отличается от инкарнации базы данных.&#13;
 Проверьте лог-файл &quot;{#ALERTLOG}&quot; для детального анализа ошибки.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
