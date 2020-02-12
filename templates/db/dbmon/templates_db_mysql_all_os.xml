@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-12T10:52:28Z</date>
+    <date>2020-02-12T18:13:43Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1203,6 +1203,57 @@
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Base memory usage (possible)</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},mysql_base_memory_usage]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <params>last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},key_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_additional_mem_pool_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_log_buffer_size]&quot;)</params>
+                    <description>Possible use of MySQL memory (for all base buffers).&#13;
+&#13;
+Base memory usage = key_buffer_size +  query_cache_size +  innodb_buffer_pool_size +  innodb_additional_mem_pool_size +  innodb_log_buffer_size</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Memory per connection (possible)</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},mysql_per_connection_memory_usage]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <params>last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},sort_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},read_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},read_rnd_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},join_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},thread_stack]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_cache_size]&quot;)</params>
+                    <description>Possible use of MySQL memory per one connection.&#13;
+&#13;
+Memory per connection = sort_buffer_size  +  read_buffer_size +  read_rnd_buffer_size  + join_buffer_size  +  thread_stack  +  binlog_cache_size</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Total memory usage (possible)</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},mysql_total_memory_usage]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},mysql_base_memory_usage]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},mysql_per_connection_memory_usage]&quot;) * last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections]&quot;))</params>
+                    <description>Possible full use of MySQL memory.&#13;
+&#13;
+Total memory usage = Base memory usage + (Memory per connection * variable[max_connections])</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Open files</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},open_files]</key>
@@ -1496,6 +1547,33 @@
                     </triggers>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Sort merge passes per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},sort_merge_passes_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>The number of merge passes that the sort algorithm has had to do. If this value is large, you should consider increasing the value of the sort_buffer_size system variable.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SORT_MERGE_PASSES </params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads cached</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_cached]</key>
@@ -1643,6 +1721,37 @@
                             <name>stubs</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Binlog cache size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_cache_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>The size of the cache to hold changes to the binary log during a transaction. A binary log cache is allocated for each client if the server supports any transactional storage engines and if the server has the binary log enabled (--log-bin option). If you often use large transactions, you can increase this cache size to get better performance. The Binlog_cache_use and Binlog_cache_disk_use status variables can be useful for tuning the size of this variable.&#13;
+&#13;
+binlog_cache_size sets the size for the transaction cache only; the size of the statement cache is governed by the binlog_stmt_cache_size system variable.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/binary-log.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.BINLOG_CACHE_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Binary log format</name>
@@ -1964,6 +2073,371 @@ ON: Both new and replicated transactions must be GTID transactions.</description
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB additional mem pool size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_additional_mem_pool_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>The size in bytes of a memory pool InnoDB uses to store data dictionary information and other internal data structures. The more tables you have in your application, the more memory you allocate here. If InnoDB runs out of memory in this pool, it starts to allocate memory from the operating system and writes warning messages to the MySQL error log. The default value is 8MB.&#13;
+&#13;
+Removed in MySQL 5.7.4.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_ADDITIONAL_MEM_POOL_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB buffer pool dump at shutdown</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_dump_at_shutdown]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Specifies whether to record the pages cached in the InnoDB buffer pool when the MySQL server is shut down, to shorten the warmup process at the next restart. Typically used in combination with innodb_buffer_pool_load_at_startup.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-preload-buffer-pool.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MySQL (ON-OFF)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_BUFFER_POOL_DUMP_AT_SHUTDOWN</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;OFF&quot;:
+    return 0;
+    break;
+  case &quot;ON&quot;:
+    return 1;
+    break;
+  default:
+    return value;
+    break;
+}</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB buffer pool instances</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_instances]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of regions that the InnoDB buffer pool is divided into. For systems with buffer pools in the multi-gigabyte range, dividing the buffer pool into separate instances can improve concurrency, by reducing contention as different threads read and write to cached pages. Each page that is stored in or read from the buffer pool is assigned to one of the buffer pool instances randomly, using a hashing function. Each buffer pool manages its own free lists, flush lists, LRUs, and all other data structures connected to a buffer pool, and is protected by its own buffer pool mutex.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_buffer_pool_instances</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_BUFFER_POOL_INSTANCES</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB buffer pool load at startup</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_load_at_startup]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Specifies that, on MySQL server startup, the InnoDB buffer pool is automatically warmed up by loading the same pages it held at an earlier time. Typically used in combination with innodb_buffer_pool_dump_at_shutdown.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-preload-buffer-pool.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MySQL (ON-OFF)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_BUFFER_POOL_LOAD_AT_STARTUP</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;OFF&quot;:
+    return 0;
+    break;
+  case &quot;ON&quot;:
+    return 1;
+    break;
+  default:
+    return value;
+    break;
+}</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB buffer pool size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>The size in bytes of the buffer pool, the memory area where InnoDB caches table and index data. The default value is 134217728 bytes (128MB).&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_buffer_pool_size</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_BUFFER_POOL_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB file per table</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_file_per_table]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>When innodb_file_per_table is enabled, tables are created in file-per-table tablespaces. When disabled, tables are created in the system tablespace.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_file_per_table</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MySQL (ON-OFF)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_FILE_PER_TABLE</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;OFF&quot;:
+    return 0;
+    break;
+  case &quot;ON&quot;:
+    return 1;
+    break;
+  default:
+    return value;
+    break;
+}</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB log buffer size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_log_buffer_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>The size in bytes of the buffer that InnoDB uses to write to the log files on disk. The default value changed from 8MB to 16MB with the introduction of 32KB and 64KB innodb_page_size values. A large log buffer enables large transactions to run without the need to write the log to disk before the transactions commit. Thus, if you have transactions that update, insert, or delete many rows, making the log buffer larger saves disk I/O.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_LOG_BUFFER_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB max dirty pages pct</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_max_dirty_pages_pct]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>InnoDB tries to flush data from the buffer pool so that the percentage of dirty pages does not exceed this value. Specify an integer in the range from 0 to 99. The default value is 75.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_MAX_DIRTY_PAGES_PCT</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB read IO threads</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_read_io_threads]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of I/O threads for read operations in InnoDB. Its counterpart for write threads is innodb_write_io_threads&#13;
+&#13;
+See more info:&#13;
+https://dev.mysql.com/doc/refman/5.7/en/innodb-performance-multiple_io_threads.html&#13;
+and&#13;
+https://dev.mysql.com/doc/refman/5.7/en/optimizing-innodb-diskio.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_READ_IO_THREADS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB sort buffer size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_sort_buffer_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Specifies the size of sort buffers used to sort data during creation of an InnoDB index. The specified size defines the amount of data that is read into memory for internal sorting and then written out to disk. This process is referred to as a “run”. During the merge phase, pairs of buffers of the specified size are read and merged. The larger the setting, the fewer runs and merges there are.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_sort_buffer_size</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_SORT_BUFFER_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB write IO threads</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_write_io_threads]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of I/O threads for write operations in InnoDB. The default value is 4. Its counterpart for read threads is innodb_read_io_threads&#13;
+&#13;
+See more info:&#13;
+https://dev.mysql.com/doc/refman/5.7/en/innodb-performance-multiple_io_threads.html&#13;
+and&#13;
+https://dev.mysql.com/doc/refman/5.7/en/optimizing-innodb-diskio.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_WRITE_IO_THREADS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Interactive timeout</name>
                     <type>DEPENDENT</type>
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},interactive_timeout]</key>
@@ -1980,6 +2454,64 @@ ON: Both new and replicated transactions must be GTID transactions.</description
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INTERACTIVE_TIMEOUT</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Join buffer size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},join_buffer_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>The minimum size of the buffer that is used for plain index scans, range index scans, and joins that do not use indexes and thus perform full table scans. Normally, the best way to get fast joins is to add indexes. Increase the value of join_buffer_size to get a faster full join when adding indexes is not possible. One join buffer is allocated for each full join between two tables. For a complex join between several tables for which indexes are not used, multiple join buffers might be necessary.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_join_buffer_size</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.JOIN_BUFFER_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Key buffer size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},key_buffer_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Index blocks for MyISAM tables are buffered and are shared by all threads. key_buffer_size is the size of the buffer used for index blocks. The key buffer is also known as the key cache.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_key_buffer_size</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.KEY_BUFFER_SIZE</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -2246,6 +2778,66 @@ If max_relay_log_size is 0, the value of max_binlog_size applies to relay logs a
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Read buffer size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},read_buffer_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Each thread that does a sequential scan for a MyISAM table allocates a buffer of this size (in bytes) for each table it scans. If you do many sequential scans, you might want to increase this value, which defaults to 131072. The value of this variable should be a multiple of 4KB. If it is set to a value that is not a multiple of 4KB, its value will be rounded down to the nearest multiple of 4KB.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_read_buffer_size</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.READ_BUFFER_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Read rnd buffer size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},read_rnd_buffer_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>This variable is used for reads from MyISAM tables, and, for any storage engine, for Multi-Range Read optimization.&#13;
+&#13;
+When reading rows from a MyISAM table in sorted order following a key-sorting operation, the rows are read through this buffer to avoid disk seeks. See Section 8.2.1.14, “ORDER BY Optimization”. Setting the variable to a large value can improve ORDER BY performance by a lot. However, this is a buffer allocated for each client, so you should not set the global variable to a large value. Instead, change the session variable only from within those clients that need to run large queries.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/mrr-optimization.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.READ_RND_BUFFER_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Slave parallel type</name>
                     <type>DEPENDENT</type>
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},slave_parallel_type]</key>
@@ -2397,6 +2989,37 @@ See more: https://dev.mysql.com/doc/refman/5.7/en/replication-options-slave.html
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Sort buffer size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},sort_buffer_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Each session that must perform a sort allocates a buffer of this size. sort_buffer_size is not specific to any storage engine and applies in a general manner for optimization. At minimum the sort_buffer_size value must be large enough to accommodate fifteen tuples in the sort buffer. Also, increasing the value of max_sort_length may require increasing the value of sort_buffer_size.&#13;
+&#13;
+If you see many Sort_merge_passes per second in SHOW GLOBAL STATUS output, you can consider increasing the sort_buffer_size value to speed up ORDER BY or GROUP BY operations that cannot be improved with query optimization or improved indexing.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_sort_buffer_size</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SORT_BUFFER_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Sync binlog</name>
                     <type>DEPENDENT</type>
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},sync_binlog]</key>
@@ -2448,6 +3071,62 @@ innodb_flush_log_at_trx_commit=1.</description>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.TABLE_OPEN_CACHE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Thread cache size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},thread_cache_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>How many threads the server should cache for reuse. When a client disconnects, the client's threads are put in the cache if there are fewer than thread_cache_size threads there. Requests for threads are satisfied by reusing threads taken from the cache if possible, and only when the cache is empty is a new thread created. This variable can be increased to improve performance if you have a lot of new connections. Normally, this does not provide a notable performance improvement if you have a good thread implementation. However, if your server sees hundreds of connections per second you should normally set thread_cache_size high enough so that most new connections use cached threads.&#13;
+&#13;
+The default value is based on the following formula, capped to a limit of 100:&#13;
+8 + (max_connections / 100)</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.THREAD_CACHE_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Thread stack</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},thread_stack]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>The stack size for each thread. The default is large enough for normal operation. If the thread stack size is too small, it limits the complexity of the SQL statements that the server can handle, the recursion depth of stored procedures, and other memory-consuming actions.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.THREAD_STACK</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3258,11 +3937,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
     </templates>
     <triggers>
         <trigger>
-            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization].max(5m)}&lt;{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN} and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&gt;6h</expression>
+            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization].max(5m)}&lt;{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN} and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&gt;24h</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&lt;6h</recovery_expression>
+            <recovery_expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&lt;24h</recovery_expression>
             <name>Buffer pool utilization is too low</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}%, alert started: {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
             <description>Использование пула буферов InnoDB составляет менее {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}% за последние 5 минут.&#13;
 Это означает, что для пула буферов InnoDB выделено много оперативной памяти, которая в данный момент не используется и которую Вы можете легко перераспределить.&#13;
@@ -3783,6 +4462,19 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <mapping>
                     <value>2</value>
                     <newvalue>UNKNOWN</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS MySQL (ON-OFF)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>OFF</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>ON</newvalue>
                 </mapping>
             </mappings>
         </value_map>
