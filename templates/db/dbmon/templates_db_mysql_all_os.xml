@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-10T18:07:27Z</date>
+    <date>2020-02-12T07:52:43Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -516,34 +516,6 @@
                             <name>MySQL: Performance</name>
                         </application>
                     </applications>
-                    <triggers>
-                        <trigger>
-                            <expression>{max(5m)}&lt;{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}</expression>
-                            <name>Buffer pool utilization is too low</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}, alert started: {ITEM.VALUE1})</opdata>
-                            <priority>WARNING</priority>
-                            <description>Использование пула буферов InnoDB составляет менее {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}% за последние 5 минут.&#13;
-Это означает, что для пула буферов InnoDB выделено много оперативной памяти, которая в данный момент не используется и которую Вы можете легко перераспределить.&#13;
-Доведите информацию до эксперта.</description>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                            </dependencies>
-                            <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
-                                    <tag>Instance</tag>
-                                    <value>{$DBS_MYSQL_INSTANCE}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
-                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Bytes received</name>
@@ -3229,6 +3201,34 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         </template>
     </templates>
     <triggers>
+        <trigger>
+            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization].max(5m)}&lt;{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN} and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&gt;6h</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&lt;6h</recovery_expression>
+            <name>Buffer pool utilization is too low</name>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}, alert started: {ITEM.VALUE1})</opdata>
+            <priority>WARNING</priority>
+            <description>Использование пула буферов InnoDB составляет менее {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}% за последние 5 минут.&#13;
+Это означает, что для пула буферов InnoDB выделено много оперативной памяти, которая в данный момент не используется и которую Вы можете легко перераспределить.&#13;
+Доведите информацию до эксперта.</description>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>MySQL</value>
+                </tag>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
         <trigger>
             <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency].avg(30m)}&lt;{$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_limit].last()}&gt;0 and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_type].last()}&gt;0</expression>
             <name>Query cache efficiency is very low</name>
