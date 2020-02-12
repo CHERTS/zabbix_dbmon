@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-12T07:52:43Z</date>
+    <date>2020-02-12T10:42:27Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3263,9 +3263,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Too many connections</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
-            <description>Текущее количество открытых соединений очень велико.&#13;
+            <description>Текущее количество открытых соединений очень велико (потоков в состоянии connected).&#13;
 Зайдите в консоль mysql и выполните SHOW PROCESSLIST;&#13;
-Проанализируйте кто занимает больше всего соединений, желательно уменьшить их количество. Передайте данные эксперту для анализа.</description>
+Проанализируйте кто занимает больше всего соединений, желательно уменьшить их количество.&#13;
+Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -3289,9 +3290,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Too many connections</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
-            <description>Текущее количество открытых соединений велико.&#13;
+            <description>Текущее количество открытых соединений велико (потоков в состоянии connected).&#13;
 Зайдите в консоль mysql и выполните SHOW PROCESSLIST;&#13;
-Проанализируйте кто занимает больше всего соединений, желательно уменьшить их количество. Передайте данные эксперту для анализа.</description>
+Проанализируйте кто занимает больше всего соединений, желательно уменьшить их количество.&#13;
+Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -3319,10 +3321,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Too many threads running</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_CRIT}, alert started {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
-            <description>Текущее количество работающих тредов велико.&#13;
+            <description>Текущее количество работающих потоков очень велико.&#13;
 Зайдите в консоль mysql и выполните:&#13;
 SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|Sleep|Binlog Dump|Binlog Dump GTID)' AND ID != CONNECTION_ID() AND USER NOT REGEXP '(system user)' AND STATE NOT REGEXP '(slave|relay|event)';&#13;
-Проанализируйте кто занимает больше всего работающих соединений, желательно уменьшить их количество. Передайте данные эксперту для анализа.</description>
+Проанализируйте кто занимает больше всего работающих соединений, желательно уменьшить их количество.&#13;
+Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -3346,10 +3349,11 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
             <name>Too many threads running</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_WARN}, alert started {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
-            <description>Текущее количество работающих тредов велико.&#13;
+            <description>Текущее количество работающих тредов (потоков) велико.&#13;
 Зайдите в консоль mysql и выполните:&#13;
 SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|Sleep|Binlog Dump|Binlog Dump GTID)' AND ID != CONNECTION_ID() AND USER NOT REGEXP '(system user)' AND STATE NOT REGEXP '(slave|relay|event)';&#13;
-Проанализируйте кто занимает больше всего работающих соединений, желательно уменьшить их количество. Передайте данные эксперту для анализа.</description>
+Проанализируйте кто занимает больше всего работающих соединений, желательно уменьшить их количество.&#13;
+Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
