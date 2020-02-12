@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-12T18:13:43Z</date>
+    <date>2020-02-12T18:28:57Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -473,7 +473,7 @@
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool dirty</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_dirty_ratio]</key>
-                    <delay>2m</delay>
+                    <delay>10m</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>%</units>
@@ -489,7 +489,7 @@
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool efficiency</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_efficiency]</key>
-                    <delay>2m</delay>
+                    <delay>10m</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>%</units>
@@ -505,7 +505,7 @@
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool utilization</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization]</key>
-                    <delay>2m</delay>
+                    <delay>10m</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>%</units>
@@ -1206,7 +1206,7 @@
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Base memory usage (possible)</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},mysql_base_memory_usage]</key>
-                    <delay>5m</delay>
+                    <delay>10m</delay>
                     <history>30d</history>
                     <units>B</units>
                     <params>last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},key_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_additional_mem_pool_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_log_buffer_size]&quot;)</params>
@@ -1218,12 +1218,18 @@ Base memory usage = key_buffer_size +  query_cache_size +  innodb_buffer_pool_si
                             <name>MySQL: Performance</name>
                         </application>
                     </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Memory per connection (possible)</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},mysql_per_connection_memory_usage]</key>
-                    <delay>5m</delay>
+                    <delay>10m</delay>
                     <history>30d</history>
                     <units>B</units>
                     <params>last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},sort_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},read_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},read_rnd_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},join_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},thread_stack]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_cache_size]&quot;)</params>
@@ -1235,12 +1241,18 @@ Memory per connection = sort_buffer_size  +  read_buffer_size +  read_rnd_buffer
                             <name>MySQL: Performance</name>
                         </application>
                     </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Total memory usage (possible)</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},mysql_total_memory_usage]</key>
-                    <delay>5m</delay>
+                    <delay>10m</delay>
                     <history>30d</history>
                     <units>B</units>
                     <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},mysql_base_memory_usage]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},mysql_per_connection_memory_usage]&quot;) * last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections]&quot;))</params>
@@ -1252,6 +1264,12 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                             <name>MySQL: Performance</name>
                         </application>
                     </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Open files</name>
@@ -1301,7 +1319,7 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Query cache efficiency</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency]</key>
-                    <delay>2m</delay>
+                    <delay>10m</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>%</units>
@@ -1317,7 +1335,7 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Query cache efficiency (2)</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency_2]</key>
-                    <delay>2m</delay>
+                    <delay>10m</delay>
                     <history>30d</history>
                     <status>DISABLED</status>
                     <value_type>FLOAT</value_type>
