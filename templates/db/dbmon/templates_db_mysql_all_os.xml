@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-13T05:55:12Z</date>
+    <date>2020-02-13T08:20:33Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1585,6 +1585,28 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Sort merge passes</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},sort_merge_passes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of merge passes that the sort algorithm has had to do. If this value is large, you should consider increasing the value of the sort_buffer_size system variable.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SORT_MERGE_PASSES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Sort merge passes per second</name>
