@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-12T18:28:57Z</date>
+    <date>2020-02-13T05:55:12Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1088,6 +1088,28 @@
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_BUFFER_POOL_READ_REQUESTS</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB log waits</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_log_waits]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of times that the log buffer was too small and a wait was required for it to be flushed before continuing.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_LOG_WAITS</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -2301,6 +2323,34 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sy
     return value;
     break;
 }</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: InnoDB flush log at trx commit</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_flush_log_at_trx_commit]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Controls the balance between strict ACID compliance for commit operations and higher performance that is possible when commit-related I/O operations are rearranged and done in batches. You can achieve better performance by changing the default value but then you can lose transactions in a crash.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_flush_log_at_trx_commit</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.INNODB_FLUSH_LOG_AT_TRX_COMMIT</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
