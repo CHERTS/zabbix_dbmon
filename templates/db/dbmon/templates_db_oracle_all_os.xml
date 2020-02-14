@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-14T05:22:11Z</date>
+    <date>2020-02-14T05:27:06Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -64,7 +64,8 @@
                             <expression>{nodata({$DBS_DBMON_AGENTD_NODATA_CRIT})}=1</expression>
                             <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_CRIT} (minutes)</name>
                             <priority>HIGH</priority>
-                            <description>Не приходят данные об активности zabbix-agent для мониторинга базы данных более {$DBS_DBMON_AGENTD_NODATA_CRIT} (минут). Возможные причины:&#13;
+                            <description>Не приходят данные об активности zabbix-agent для мониторинга базы данных более {$DBS_DBMON_AGENTD_NODATA_CRIT} (минут).&#13;
+Возможные причины:&#13;
 1. Потеряна связь zabbix-agent-dbmon с нашим zabbix-proxy;&#13;
 2. Zabbix-agent-dbmon на сервере заказчика остановлен;&#13;
 3. Проблемы на сервере заказчика (сервер завис, перезагружен, умер или еще что-то);&#13;
@@ -90,7 +91,8 @@
                             <expression>{nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
                             <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
                             <priority>WARNING</priority>
-                            <description>Не приходят данные об активности zabbix-agent для мониторинга базы данных более {$DBS_DBMON_AGENTD_NODATA_WARN} (минут). Возможные причины:&#13;
+                            <description>Не приходят данные об активности zabbix-agent для мониторинга базы данных более {$DBS_DBMON_AGENTD_NODATA_WARN} (минут).&#13;
+Возможные причины:&#13;
 1. Потеряна связь zabbix-agent-dbmon с нашим zabbix-proxy;&#13;
 2. Zabbix-agent-dbmon на сервере заказчика остановлен;&#13;
 3. Проблемы на сервере заказчика (сервер завис, перезагружен, умер или еще что-то);&#13;
