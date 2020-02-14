@@ -86,10 +86,10 @@ static unsigned short zbx_db_get_type_from_oid(const struct zbx_db_connection * 
  */
 int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_db_result *p_result, const char *query)
 {
-	PGresult * res;
+	PGresult *res;
 	int nfields, ntuples, i, j, h_res, f_res, ret = ZBX_DB_OK;
-	struct zbx_db_data * data, *cur_row = NULL;
-	struct zbx_db_fields * db_fields, *cur_field = NULL;
+	struct zbx_db_data *data, *cur_row = NULL;
+	struct zbx_db_fields *db_fields, *cur_field = NULL;
 	char *error = NULL;
 
 	if (pthread_mutex_lock(&(((struct zbx_db_pgsql *)conn->connection)->lock)))
@@ -112,26 +112,27 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 		}
 		else
 		{
-			nfields = PQnfields(res);
-			ntuples = PQntuples(res);
-
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): nfields = %d, ntuples = %d", __func__, nfields, ntuples);
-
 			if (NULL != p_result)
 			{
+				nfields = PQnfields(res);
+				ntuples = PQntuples(res);
+
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(): nfields = %d, ntuples = %d", __func__, nfields, ntuples);
+
 				p_result->nb_rows = 0;
 				p_result->nb_columns = nfields;
 				p_result->fields = NULL;
 				p_result->data = NULL;
+
 				for (i = 0; ret == ZBX_DB_OK && i < ntuples; i++)
 				{
 					cur_row = NULL;
 					cur_field = NULL;
 					for (j = 0; ret == ZBX_DB_OK && j < nfields; j++)
 					{
-						char * val = PQgetvalue(res, i, j);
-
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(): PQgetvalue = %s", __func__, val);
+						char *val = NULL;
+						
+						val = PQgetvalue(res, i, j);
 
 						if (NULL == val)
 						{
@@ -139,9 +140,6 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 						}
 						else
 						{
-
-							zabbix_log(LOG_LEVEL_TRACE, "In %s(): zbx_db_get_type_from_oid = %d", __func__, zbx_db_get_type_from_oid(conn, PQftype(res, j)));
-
 							switch (zbx_db_get_type_from_oid(conn, PQftype(res, j)))
 							{
 								case ZBX_COL_TYPE_INT:
@@ -175,17 +173,22 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 							}
 						}
 
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(): PQfname=%s, PQgetlength=%d", __func__, PQfname(res, j), PQgetlength(res, i, j));
-
-						db_fields = zbx_db_fields_value(PQfname(res, j), PQgetlength(res, i, j));
-						f_res = zbx_db_row_add_fields(&cur_field, db_fields, j);
-						zbx_db_clean_fields_full(db_fields);
-
-						if (ZBX_DB_OK != f_res)
+						if (0 == i)
 						{
-							PQclear(res);
-							ret = f_res;
+							zabbix_log(LOG_LEVEL_TRACE, "In %s(): PQfsize=%d, PQfsize=%d, PQfname=%s", __func__, PQfsize(res, j), strlen((const char*)PQfname(res, j)), PQfname(res, j));
+
+							db_fields = zbx_db_fields_value(PQfname(res, j), strlen((const char*)PQfname(res, j)));
+							f_res = zbx_db_row_add_fields(&cur_field, db_fields, j);
+							zbx_db_clean_fields_full(db_fields);
+
+							if (ZBX_DB_OK != f_res)
+							{
+								PQclear(res);
+								ret = f_res;
+							}
 						}
+
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(): OID=%d, PQgetlength=%d, PQgetvalue=%s", __func__, zbx_db_get_type_from_oid(conn, PQftype(res, j)), PQgetlength(res, i, j), val);
 
 						h_res = zbx_db_row_add_data(&cur_row, data, j);
 						zbx_db_clean_data_full(data);
@@ -197,12 +200,15 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 						}
 					}
 
-					f_res = zbx_db_result_add_fields(p_result, cur_field);
-
-					if (ZBX_DB_OK != f_res)
+					if (0 == i)
 					{
-						PQclear(res);
-						ret = f_res;
+						f_res = zbx_db_result_add_fields(p_result, cur_field);
+
+						if (ZBX_DB_OK != f_res)
+						{
+							PQclear(res);
+							ret = f_res;
+						}
 					}
 
 					h_res = zbx_db_result_add_row(p_result, cur_row, i);

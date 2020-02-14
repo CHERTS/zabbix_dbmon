@@ -27,5 +27,6 @@ extern ZBX_METRIC	parameters_dbmon_pgsql[];
 int	PGSQL_PING(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	PGSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	PGSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	PGSQL_GET_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result);
 
 #endif /* ZABBIX_PGINFO_H */
