@@ -17,3 +17,10 @@
 4. Откройте зависимости в триггере из п.3
 5. Добавьте зависимость от триггера "Service '{$DBS_ORACLE_SERVICE_NAME}' is not running" (Service 'OracleServiceORCL' is not running)
 
+Дополнительные действия по связыванию триггеров для PostgreSQL for Windows:
+1. Зайдите в шаблон "PostgreSQL for Windows (Active, DBMON)"
+2. Перейдите в список триггеров
+3. Откройте триггер "Instance access failed" (он наследуется из шаблона "DB PostgreSQL (Active, DBMON, for all OS)")
+4. Откройте зависимости в триггере из п.3
+5. Добавьте зависимость от триггера "Service '{$DBS_PGSQL_SERVICE_NAME}' is not running" (Service 'postgresql-12' is not running)
+

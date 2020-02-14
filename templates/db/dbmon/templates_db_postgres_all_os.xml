@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2020-02-14T06:06:19Z</date>
+    <groups>
+        <group>
+            <name>DBS.Templates/Modules</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>DBS_Template DB PostgreSQL</template>
+            <name>DB PostgreSQL (Active, DBMON, for all OS)</name>
+            <description>Template for monitoring PostgreSQL DB for all OS (active agent)</description>
+            <groups>
+                <group>
+                    <name>DBS.Templates/Modules</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>PgSQL: Connections</name>
+                </application>
+                <application>
+                    <name>PgSQL: Info</name>
+                </application>
+                <application>
+                    <name>PgSQL: Performance</name>
+                </application>
+                <application>
+                    <name>PgSQL: Throughput</name>
+                </application>
+                <application>
+                    <name>PgSQL: Variables</name>
+                </application>
+                <application>
+                    <name>stubs</name>
+                </application>
+                <application>
+                    <name>Zabbix agent (DBMON)</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>[DBMON] Host name of zabbix_agentd running ({$DBS_PGSQL_INSTANCE})</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>dbmon.agent.hostname[{$DBS_PGSQL_INSTANCE}]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[DBMON] Agent ping ({$DBS_PGSQL_INSTANCE})</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>Zabbix agent ping status</name>
+                    </valuemap>
+                    <triggers>
+                        <trigger>
+                            <expression>{nodata({$DBS_DBMON_AGENTD_NODATA_CRIT})}=1</expression>
+                            <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_CRIT} (minutes)</name>
+                            <priority>HIGH</priority>
+                            <description>Не приходят данные об активности zabbix-agent для мониторинга базы данных более {$DBS_DBMON_AGENTD_NODATA_CRIT} (минут).&#13;
+Возможные причины:&#13;
+1. Потеряна связь zabbix-agent-dbmon с нашим zabbix-proxy;&#13;
+2. Zabbix-agent-dbmon на сервере заказчика остановлен;&#13;
+3. Проблемы на сервере заказчика (сервер завис, перезагружен, умер или еще что-то);&#13;
+&#13;
+Срочно проверить доступность сервера заказчика, далее проверить работу zabbix-agent-dbmon.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>PostgreSQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Service</tag>
+                                    <value>zabbix-agent-dbmon</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                            <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                            <priority>WARNING</priority>
+                            <description>Не приходят данные об активности zabbix-agent для мониторинга базы данных более {$DBS_DBMON_AGENTD_NODATA_WARN} (минут).&#13;
+Возможные причины:&#13;
+1. Потеряна связь zabbix-agent-dbmon с нашим zabbix-proxy;&#13;
+2. Zabbix-agent-dbmon на сервере заказчика остановлен;&#13;
+3. Проблемы на сервере заказчика (сервер завис, перезагружен, умер или еще что-то);&#13;
+&#13;
+Срочно проверить доступность сервера заказчика, далее проверить работу zabbix-agent-dbmon.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_CRIT} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_CRIT})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>PostgreSQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Service</tag>
+                                    <value>zabbix-agent-dbmon</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[DBMON] Version of zabbix_agent(d) running ({$DBS_PGSQL_INSTANCE})</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>dbmon.agent.version[{$DBS_PGSQL_INSTANCE}]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Ping</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.ping[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>30d</history>
+                    <description>Test connection with an instance of PostgreSQL.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (Instance ping)</name>
+                    </valuemap>
+                    <triggers>
+                        <trigger>
+                            <expression>{nodata({$DBS_PGSQL_PING_NODATA_CRIT})}=1</expression>
+                            <name>Database test connection data not received for more than {$DBS_PGSQL_PING_NODATA_CRIT} (minutes)</name>
+                            <priority>HIGH</priority>
+                            <description>Данные о доступности экземпляра БД PostgreSQL не поступали более {$DBS_PGSQL_PING_NODATA_CRIT} (минут).&#13;
+Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent.&#13;
+Сообщить о проблеме эксперту в  соответствующий чат.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_CRIT} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_CRIT})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>PostgreSQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{nodata({$DBS_PGSQL_PING_NODATA_WARN})}=1</expression>
+                            <name>Database test connection data not received for more than {$DBS_PGSQL_PING_NODATA_WARN} (minutes)</name>
+                            <priority>WARNING</priority>
+                            <description>Данные о доступности экземпляра БД PostgreSQL не поступали более {$DBS_PGSQL_PING_NODATA_WARN} (минут).&#13;
+Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent-dbmon.&#13;
+Сообщить о проблеме эксперту в  соответствующий чат.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Database test connection data not received for more than {$DBS_PGSQL_PING_NODATA_CRIT} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].nodata({$DBS_PGSQL_PING_NODATA_CRIT})}=1</expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>PostgreSQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{max(#2)}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(#2)}=1</recovery_expression>
+                            <name>Instance access failed</name>
+                            <priority>DISASTER</priority>
+                            <description>Тестовое подключение к экземпляру БД PostgreSQL не успешно.&#13;
+Необходимо проверить работу экземпляра БД, посмотреть error.log, далее проверить работу и настройки zabbix-agent.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Database test connection data not received for more than {$DBS_PGSQL_PING_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].nodata({$DBS_PGSQL_PING_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>PostgreSQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Version</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.version[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Version of PostgreSQL instance.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Info</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1 and {strlen()}&gt;0</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Version of PostgreSQL has been changed</name>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <priority>INFO</priority>
+                            <description>Версия экземпляра PostgreSQL была изменена.&#13;
+Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>PostgreSQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <macros>
+                <macro>
+                    <macro>{$DBS_DBMON_AGENTD_NODATA_CRIT}</macro>
+                    <value>15m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_DBMON_AGENTD_NODATA_WARN}</macro>
+                    <value>8m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_CONNECTION_PRC_CRIT}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_CONNECTION_PRC_WARN}</macro>
+                    <value>80</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_CONN_STRING}</macro>
+                    <value>host=localhost port=5432 dbname=template1 user=postgres password=postgres connect_timeout=10</value>
+                    <description>PgSQL connection string</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_DBSIZE_CRIT}</macro>
+                    <value>70G</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_DBSIZE_WARN}</macro>
+                    <value>50G</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_DB_NODATA_WARN}</macro>
+                    <value>1h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_INSTANCE}</macro>
+                    <value>pgsql_5432</value>
+                    <description>Unique instance name of PgSQL</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_LLD_FILTER_DB_MATCHES}</macro>
+                    <value>.*</value>
+                    <description>Filter of discoverable databases</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_LLD_FILTER_DB_NOT_MATCHES}</macro>
+                    <value>CHANGE_IF_NEEDED</value>
+                    <description>Filter to exclude discovered databases</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_PING_NODATA_CRIT}</macro>
+                    <value>12m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_PING_NODATA_WARN}</macro>
+                    <value>6m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_PXACT_PRC_CRIT}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_PXACT_PRC_WARN}</macro>
+                    <value>80</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_XID_CRIT}</macro>
+                    <value>2146483648</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_XID_WARN}</macro>
+                    <value>2137483648</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <value_maps>
+        <value_map>
+            <name>DBS PostgreSQL (Instance ping)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>ERROR</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>CONNECTED</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>Zabbix agent ping status</name>
+            <mappings>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Up</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
+</zabbix_export>
