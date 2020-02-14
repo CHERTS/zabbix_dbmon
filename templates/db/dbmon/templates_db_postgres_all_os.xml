@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-14T06:06:19Z</date>
+    <date>2020-02-14T09:14:11Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -146,6 +146,108 @@
                     </applications>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Startup time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance[{$DBS_PGSQL_INSTANCE},startup_time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>unixtime</units>
+                    <description>The time at which PostgreSQL was started.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.STARTUPTIME</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.server.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Uptime</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance[{$DBS_PGSQL_INSTANCE},uptime]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>The number of seconds that the server has been up.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.UPTIME</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.server.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{change()}&lt;0</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Instance '{$DBS_PGSQL_INSTANCE}' has just been restarted</name>
+                            <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
+                            <priority>DISASTER</priority>
+                            <description>Процесс (сервис) postgres был перезапущен.&#13;
+Необходимо проверить факт перезапуска на сервере заказчика, проверить логи (postgres.log), далее уточнить в чате кто произвел перезапуск.&#13;
+Возможно, что перезапуск произошел в результате краха процесса в автоматическом режиме.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+                            <manual_close>YES</manual_close>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>PostgreSQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Version full</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance[{$DBS_PGSQL_INSTANCE},version_full]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Full PostgreSQL version information (number and vendor).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.VERSION</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.server.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Ping</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.ping[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -238,6 +340,19 @@
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get server info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.server.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Version</name>
