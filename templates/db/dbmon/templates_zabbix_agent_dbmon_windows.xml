@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T04:23:49Z</date>
+    <date>2020-02-14T06:20:19Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Operating Systems</name>
