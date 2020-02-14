@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-14T05:26:34Z</date>
+    <date>2020-02-14T10:48:55Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -262,7 +262,7 @@
                     <delay>0</delay>
                     <history>30d</history>
                     <trends>0</trends>
-                    <value_type>TEXT</value_type>
+                    <value_type>CHAR</value_type>
                     <description>Full MySQL version information (number and vendor).</description>
                     <applications>
                         <application>
@@ -1726,7 +1726,7 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Uptime</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Uptime</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},uptime]</key>
                     <delay>0</delay>
