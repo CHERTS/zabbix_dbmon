@@ -13,12 +13,14 @@ DIST_SUBDIRS = \
 	osx \
 	simple \
 	solaris \
+	dbmon \
 	unknown
 
 SUBDIRS = \
 	agent \
 	common \
 	simple \
+	dbmon \
 	@ARCH@
 
 EXTRA_DIST = \
@@ -41,6 +43,7 @@ noinst_LIBRARIES = \
 
 # AGENT version of sysinfo library
 libzbxagentsysinfo_a_CFLAGS = \
+	@DBMON_CFLAGS@ \
 	-DWITH_AGENT_METRICS \
 	-DWITH_COMMON_METRICS \
 	-DWITH_SIMPLE_METRICS \

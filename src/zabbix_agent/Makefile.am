@@ -23,6 +23,7 @@ libzbxagent_a_SOURCES = \
 	metrics.h
 
 libzbxagent_a_CFLAGS = \
+	@DBMON_CFLAGS@ \
 	-DZABBIX_DAEMON
 
 zabbix_agentd_SOURCES = zabbix_agentd.c
@@ -36,6 +37,8 @@ zabbix_agentd_LDADD = \
 	$(top_srcdir)/src/libs/zbxsysinfo/agent/libagentsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
+	$(top_srcdir)/src/libs/zbxsysinfo/dbmon/libzbxdbmoninfo.a \
+	$(top_srcdir)/src/libs/zbxdbmon/libzbxdbmon.a \
 	$(top_srcdir)/src/libs/zbxlog/libzbxlog.a \
 	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
 	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
@@ -56,6 +59,7 @@ zabbix_agentd_LDADD += @AGENT_LIBS@
 zabbix_agentd_LDFLAGS = @AGENT_LDFLAGS@
 
 zabbix_agentd_CFLAGS = \
+	@DBMON_CFLAGS@ \
 	-DZABBIX_DAEMON \
 	-DDEFAULT_CONFIG_FILE="\"@AGENT_CONFIG_FILE@\"" \
 	-DDEFAULT_LOAD_MODULE_PATH="\"@LOAD_MODULE_PATH@\""

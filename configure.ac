@@ -1313,6 +1313,42 @@ esac],
 [ipv6=no])
 AM_CONDITIONAL(IPV6, test "x$ipv6" = "xyes")
 
+AC_ARG_ENABLE(dbmon,[  --enable-dbmon          Turn on support of database monitoring in Agent],
+[case "${enableval}" in
+  yes) dbmon=yes ;;
+  no)  dbmon=no ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-dbmon]) ;;
+esac],
+[dbmon=no])
+AM_CONDITIONAL(DBMON, test "x$dbmon" = "xyes")
+
+AC_ARG_ENABLE(dbmon_mysql,[  --enable-dbmon-mysql          Turn on support of MySQL database monitoring in Zabbix Agent],
+[case "${enableval}" in
+  yes) dbmon_mysql=yes ;;
+  no)  dbmon_mysql=no ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-dbmon-mysql]) ;;
+esac],
+[dbmon_mysql=no])
+AM_CONDITIONAL(DBMON_MYSQL, test "x$dbmon_mysql" = "xyes")
+
+AC_ARG_ENABLE(dbmon_postgresql,[  --enable-dbmon-postgresql          Turn on support of PostgreSQL database monitoring in Zabbix Agent],
+[case "${enableval}" in
+  yes) dbmon_postgresql=yes ;;
+  no)  dbmon_postgresql=no ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-dbmon-postgresql]) ;;
+esac],
+[dbmon_postgresql=no])
+AM_CONDITIONAL(DBMON_POSTGRESQL, test "x$dbmon_postgresql" = "xyes")
+
+AC_ARG_ENABLE(dbmon_oracle,[  --enable-dbmon-oracle          Turn on support of Oracle database monitoring in Zabbix Agent],
+[case "${enableval}" in
+  yes) dbmon_oracle=yes ;;
+  no)  dbmon_oracle=no ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-dbmon-oracle]) ;;
+esac],
+[dbmon_oracle=no])
+AM_CONDITIONAL(DBMON_ORACLE, test "x$dbmon_oracle" = "xyes")
+
 AM_CONDITIONAL([DBSCHEMA], [test -d create])
 
 AM_CONDITIONAL([ZBXCMOCKA], [(test -d tests/) && (test "x$server" = "xyes" || test "x$proxy" = "xyes" || test "x$agent" = "xyes")])
@@ -1325,7 +1361,88 @@ have_ipmi="no"
 have_ipv6="no"
 have_ssh2="no"
 have_tls="no"
+have_dbmon="no"
+have_dbmon_mysql="no"
+have_dbmon_postgresql="no"
+have_dbmon_oracle="no"
 
+if test "x$agent" = "xyes" && test "x$dbmon" = "xyes"; then
+
+	have_dbmon="yes"
+
+	if test "x$dbmon_mysql" = "xyes"; then
+		want_mysql="yes"
+	fi
+
+	have_multirow_insert="yes"
+
+	dnl Checking for MySQL support
+	AX_LIB_MYSQL()
+	if test "x$want_mysql" = "xyes"; then
+		if test "x$found_mysql" = "xyes"; then
+               have_dbmon_mysql="yes"
+			have_mysql="yes"
+			DBMON_CFLAGS="-DHAVE_MYSQL"
+		else
+			AC_MSG_ERROR([MySQL library not found])
+		fi
+	fi
+
+	dnl Checking for PostgreSQL support
+	AX_LIB_POSTGRESQL("8.1")
+	if test "x$want_postgresql" = "xyes"; then
+		if test "x$found_postgresql" = "xyes"; then
+			if test "$postgresql_version_check" != "1"; then
+				AC_MSG_ERROR([PostgreSQL version mismatch])
+			fi
+
+			have_dbmon_postgresql="yes"
+			have_postgresql="yes"
+			DBMON_CFLAGS="-DHAVE_POSTGRESQL $DBMON_CFLAGS"
+
+			if test "$postgresql_version_number" -ge 8002000; then
+				have_multirow_insert="yes"
+			fi
+		else
+			AC_MSG_ERROR([PostgreSQL library not found])
+		fi
+	fi
+
+	dnl Checking for Oracle support
+	#AX_LIB_ORACLE_OCI([10.0])
+	#if test "x$want_oracle_oci" = "xyes"; then
+#		if test "x$HAVE_ORACLE_OCI" = "xyes"; then
+#			have_dbmon_oracle="yes"
+#			have_oracle="yes"
+#			DBMON_CFLAGS="-DHAVE_ORACLE $DBMON_CFLAGS"
+
+#			ORACLE_CPPFLAGS="$ORACLE_OCI_CFLAGS"
+#			ORACLE_LDFLAGS="$ORACLE_OCI_LDFLAGS"
+#			ORACLE_LIBS="$ORACLE_OCI_LIBS"
+
+#			AC_DEFINE(HAVE_ORACLE,1,[Define to 1 if Oracle should be enabled.])
+#		else
+#			AC_MSG_ERROR([Oracle OCI library not found])
+#		fi
+#	fi
+
+	DBMON_CFLAGS="-DHAVE_DBMON $DBMON_CFLAGS $MYSQL_CFLAGS $POSTGRESQL_CFLAGS $ORACLE_CFLAGS"
+	DBMON_LDFLAGS="$MYSQL_LDFLAGS $POSTGRESQL_LDFLAGS $ORACLE_LDFLAGS"
+	DBMON_LIBS="$MYSQL_LIBS $ORACLE_LIBS $POSTGRESQL_LIBS"
+
+	AC_SUBST(DBMON_CFLAGS)
+	AC_SUBST(DBMON_LDFLAGS)
+	AC_SUBST(DBMON_LIBS)
+
+	AGENT_LDFLAGS="${AGENT_LDFLAGS} ${DBMON_LDFLAGS}"
+	AGENT_LIBS="${AGENT_LIBS} ${DBMON_LIBS}"
+
+	dnl Check for 'libpthread' library that supports PTHREAD_PROCESS_SHARED flag
+	LIBPTHREAD_CHECK_CONFIG([no])
+	if test "x$found_libpthread" != "xyes"; then
+		AC_MSG_ERROR([Unable to use libpthread (libpthread check failed)])
+	fi
+fi
 
 if test "x$ipv6" = "xyes"; then
 	AC_DEFINE(HAVE_IPV6,1,[Define to 1 if IPv6 should be enabled.])
@@ -1952,6 +2069,7 @@ AC_OUTPUT([
 	src/libs/zbxsysinfo/osf/Makefile
 	src/libs/zbxsysinfo/netbsd/Makefile
 	src/libs/zbxsysinfo/unknown/Makefile
+	src/libs/zbxsysinfo/dbmon/Makefile
 	src/libs/zbxnix/Makefile
 	src/libs/zbxsys/Makefile
 	src/libs/zbxcomms/Makefile
@@ -1972,6 +2090,7 @@ AC_OUTPUT([
 	src/libs/zbxcompress/Makefile
 	src/libs/zbxembed/Makefile
 	src/libs/zbxprometheus/Makefile
+	src/libs/zbxdbmon/Makefile
 	src/zabbix_agent/Makefile
 	src/zabbix_agent/logfiles/Makefile
 	src/zabbix_get/Makefile
@@ -2058,6 +2177,10 @@ Configuration:
 
 if test "x$DB_CFLAGS" != "x"; then
 	echo "    database:              ${DB_CFLAGS}"
+fi
+
+if test "x$DBMON_CFLAGS" != "x"; then
+	echo "    databases monitor:     ${DBMON_CFLAGS}"
 fi
 
 if test "x$LIBXML2_CFLAGS" != "x"; then
@@ -2158,6 +2281,10 @@ if test "x$agent" != "xno"; then
 
 echo "  Agent details:
     TLS:                   ${have_tls}
+    Database monitoring:   ${have_dbmon}
+    |- support MySQL       ${have_dbmon_mysql}
+    |- support PgSQL       ${have_dbmon_postgresql}
+    |- support Oracle      ${have_dbmon_oracle}
     Linker flags:          ${AGENT_LDFLAGS} ${LDFLAGS}
     Libraries:             ${AGENT_LIBS} ${LIBS}
     Configuration file:    ${AGENT_CONFIG_FILE}

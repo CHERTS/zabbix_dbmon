@@ -30,6 +30,7 @@ DIST_SUBDIRS = \
 	zbxhistory \
 	zbxcompress \
 	zbxembed \
+	zbxdbmon \
 	zbxprometheus
 
 if SERVER
@@ -71,6 +72,11 @@ PROXY_SUBDIRS = \
 endif
 endif
 
+if DBMON
+DBMON_SUBDIRS = \
+	zbxdbmon
+endif
+
 SUBDIRS = \
 	zbxcrypto \
 	zbxcommon \
@@ -90,6 +96,7 @@ SUBDIRS = \
 	zbxcompress \
 	$(PROXY_SUBDIRS) \
 	$(SERVER_SUBDIRS) \
+	$(DBMON_SUBDIRS) \
 	$(AGENT_SUBDIRS)
 
 EXTRA_DIST = zbxwin32

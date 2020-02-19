@@ -2,4 +2,4 @@
 
 [По-русски / In Russian](README.ru.md)
 
-[How-to build from source code](BUILD.md)
+[Instructions for the quick start of native monitoring DBMS using zabbix-agent](HOWTO_START_DBMON.md)
