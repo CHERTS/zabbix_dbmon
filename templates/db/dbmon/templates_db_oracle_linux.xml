@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-05T09:44:44Z</date>
+    <date>2020-02-19T20:12:42Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -21,12 +21,82 @@
                     <name>DBS.Templates/Databases</name>
                 </group>
             </groups>
+            <items>
+                <item>
+                    <name>[Oracle] Listener service '{$DBS_ORACLE_LSNR_SERVICE_NAME}', state</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME}]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(3m)}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(2m)}&gt;0</recovery_expression>
+                            <name>Listener service '{$DBS_ORACLE_LSNR_SERVICE_NAME}' is not running</name>
+                            <priority>DISASTER</priority>
+                            <description>Листенер '{$DBS_ORACLE_LSNR_SERVICE_NAME}' была остановлен или аварийно завершил работу (crash).&#13;
+Зайдите на сервер и проверьте состояние листенера, проверьте журнал работы на предмет ошибок.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>Service</tag>
+                                    <value>{$DBS_ORACLE_LSNR_SERVICE_NAME}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Service '{$DBS_ORACLE_SERVICE_NAME}_{$DBS_ORACLE_INSTANCE}', state</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc.num[{$DBS_ORACLE_SERVICE_NAME}_{$DBS_ORACLE_INSTANCE}]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(2m)}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(3m)}&gt;0</recovery_expression>
+                            <name>Instance '{$DBS_ORACLE_INSTANCE}' is not running</name>
+                            <priority>DISASTER</priority>
+                            <description>Основной процесс '{$DBS_ORACLE_SERVICE_NAME}_{$DBS_ORACLE_INSTANCE}' экземпляра '{$DBS_ORACLE_INSTANCE}' был остановлен или аварийно завершил работу (crash).&#13;
+Зайдите на сервер и проверьте состояние экземпляра, проверьте журнал alert_{$DBS_ORACLE_INSTANCE}.log на предмет ошибок работы.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
             <tags>
                 <tag>
                     <tag>OS</tag>
                     <value>Linux</value>
                 </tag>
             </tags>
+            <macros>
+                <macro>
+                    <macro>{$DBS_ORACLE_LSNR_SERVICE_NAME}</macro>
+                    <value>tnslsnr</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_SERVICE_NAME}</macro>
+                    <value>ora_smon</value>
+                </macro>
+            </macros>
         </template>
     </templates>
 </zabbix_export>
