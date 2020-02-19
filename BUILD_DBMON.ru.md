@@ -1,17 +1,17 @@
-# Как собрать Zabbix-agent с поддержкой мониторинга СУБД из данного репозитария
+# РљР°Рє СЃРѕР±СЂР°С‚СЊ Zabbix-agent СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РјРѕРЅРёС‚РѕСЂРёРЅРіР° РЎРЈР‘Р” РёР· РґР°РЅРЅРѕРіРѕ СЂРµРїРѕР·РёС‚Р°СЂРёСЏ
 
-[In English / По-английски](BUILD.md)
+[In English / РџРѕ-Р°РЅРіР»РёР№СЃРєРё](BUILD.md)
 
-[Сборка на Oracle Linux 7 с поддержкой MySQL (MariaDB) и PostgreSQL](#oracle-linux-7)
+[РЎР±РѕСЂРєР° РЅР° Oracle Linux 7 СЃ РїРѕРґРґРµСЂР¶РєРѕР№ MySQL (MariaDB) Рё PostgreSQL](#oracle-linux-7)
 
-[Сборка на Red Hat Enterprise Linux 8 с поддержкой MySQL (MariaDB) и PostgreSQL](#red-hat-enterprise-linux-8)
+[РЎР±РѕСЂРєР° РЅР° Red Hat Enterprise Linux 8 СЃ РїРѕРґРґРµСЂР¶РєРѕР№ MySQL (MariaDB) Рё PostgreSQL](#red-hat-enterprise-linux-8)
 
-[Сборка на Ubuntu 18.04 LTS (Bionic Beaver) с поддержкой MySQL (MariaDB) и PostgreSQL](#ubuntu)
+[РЎР±РѕСЂРєР° РЅР° Ubuntu 18.04 LTS (Bionic Beaver) СЃ РїРѕРґРґРµСЂР¶РєРѕР№ MySQL (MariaDB) Рё PostgreSQL](#ubuntu)
 
 # Oracle Linux 7
-## Сборка на Oracle Linux 7 с поддержкой MySQL (MariaDB) и PostgreSQL
+## РЎР±РѕСЂРєР° РЅР° Oracle Linux 7 СЃ РїРѕРґРґРµСЂР¶РєРѕР№ MySQL (MariaDB) Рё PostgreSQL
 
-### 1. Для подготовки к сборки на Oracle Linux 7 нужно установить дополнительные пакеты:
+### 1. Р”Р»СЏ РїРѕРґРіРѕС‚РѕРІРєРё Рє СЃР±РѕСЂРєРё РЅР° Oracle Linux 7 РЅСѓР¶РЅРѕ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РїР°РєРµС‚С‹:
 
 ~~~~
 yum group install "Development Tools"
@@ -22,7 +22,7 @@ yum install -y MariaDB-client MariaDB-devel MariaDB-shared
 yum install -y postgresql-devel postgresql-libs
 ~~~~
 
-### 2. Скачать и распаковать свежую версию исходного кода:
+### 2. РЎРєР°С‡Р°С‚СЊ Рё СЂР°СЃРїР°РєРѕРІР°С‚СЊ СЃРІРµР¶СѓСЋ РІРµСЂСЃРёСЋ РёСЃС…РѕРґРЅРѕРіРѕ РєРѕРґР°:
 
 ~~~~
 wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v4.4.5/zabbix-4.4.5.tar.gz
@@ -30,30 +30,30 @@ tar -zxf zabbix-4.4.5.tar.gz
 cd zabbix-4.4.5
 ~~~~
 
-### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:
+### 3. РЎР±РѕСЂРєР° zabbix-agent СЃ РїРѕРґРґРµСЂР¶РєРѕР№ (MariaDB) MySQL Рё PostgreSQL:
 
 ~~~~
 ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
 make
 ~~~~
 
-### 4. После успешной сборки на шаге 3 можно использовать бинарные файлы zabbix, проверим факт наличия файла агента:
+### 4. РџРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕР№ СЃР±РѕСЂРєРё РЅР° С€Р°РіРµ 3 РјРѕР¶РЅРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р±РёРЅР°СЂРЅС‹Рµ С„Р°Р№Р»С‹ zabbix, РїСЂРѕРІРµСЂРёРј С„Р°РєС‚ РЅР°Р»РёС‡РёСЏ С„Р°Р№Р»Р° Р°РіРµРЅС‚Р°:
 
 ~~~~
 ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
 -rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd_v4.4.5
 ~~~~
 
-### 5. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
+### 5. РўРµРїРµСЂСЊ Р’С‹ РјРѕР¶РµС‚Рµ РѕСЃС‚Р°РЅРѕРІРёС‚СЊ zabbix-agent Рё Р·Р°РјРµРЅРёС‚СЊ РµРіРѕ РґР°РЅРЅРѕР№ СЃР±РѕСЂРєРѕР№, РєР°Рє РїСЂР°РІРёР»Рѕ СЌС‚Рѕ 2 РєРѕРјР°РЅРґС‹:
 ~~~~
 systemctl stop zabbix-agent
 cp src/zabbix_agent/zabbix_agentd /sbin
 ~~~~
 
 # Red Hat Enterprise Linux 8
-## Сборка на Red Hat Enterprise Linux 8 с поддержкой MySQL (MariaDB) и PostgreSQL
+## РЎР±РѕСЂРєР° РЅР° Red Hat Enterprise Linux 8 СЃ РїРѕРґРґРµСЂР¶РєРѕР№ MySQL (MariaDB) Рё PostgreSQL
 
-### 1. Для подготовки к сборки на Red Hat Enterprise Linux 8 нужно установить дополнительные пакеты:
+### 1. Р”Р»СЏ РїРѕРґРіРѕС‚РѕРІРєРё Рє СЃР±РѕСЂРєРё РЅР° Red Hat Enterprise Linux 8 РЅСѓР¶РЅРѕ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РїР°РєРµС‚С‹:
 
 ~~~~
 dnf group install "Development Tools"
@@ -61,7 +61,7 @@ dnf install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre
 dnf install -y mariadb-devel
 ~~~~
 
-### 2. Скачать и распаковать свежую версию исходного кода:
+### 2. РЎРєР°С‡Р°С‚СЊ Рё СЂР°СЃРїР°РєРѕРІР°С‚СЊ СЃРІРµР¶СѓСЋ РІРµСЂСЃРёСЋ РёСЃС…РѕРґРЅРѕРіРѕ РєРѕРґР°:
 
 ~~~~
 wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v4.4.5/zabbix-4.4.5.tar.gz
@@ -69,37 +69,37 @@ tar -zxf zabbix-4.4.5.tar.gz
 cd zabbix-4.4.5
 ~~~~
 
-### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:
+### 3. РЎР±РѕСЂРєР° zabbix-agent СЃ РїРѕРґРґРµСЂР¶РєРѕР№ (MariaDB) MySQL Рё PostgreSQL:
 
 ~~~~
 ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
 make
 ~~~~
 
-### 4. После успешной сборки на шаге 3 можно использовать бинарные файлы zabbix, проверим факт наличия файла агента:
+### 4. РџРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕР№ СЃР±РѕСЂРєРё РЅР° С€Р°РіРµ 3 РјРѕР¶РЅРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р±РёРЅР°СЂРЅС‹Рµ С„Р°Р№Р»С‹ zabbix, РїСЂРѕРІРµСЂРёРј С„Р°РєС‚ РЅР°Р»РёС‡РёСЏ С„Р°Р№Р»Р° Р°РіРµРЅС‚Р°:
 
 ~~~~
 ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
 -rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd_v4.4.5
 ~~~~
 
-### 5. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
+### 5. РўРµРїРµСЂСЊ Р’С‹ РјРѕР¶РµС‚Рµ РѕСЃС‚Р°РЅРѕРІРёС‚СЊ zabbix-agent Рё Р·Р°РјРµРЅРёС‚СЊ РµРіРѕ РґР°РЅРЅРѕР№ СЃР±РѕСЂРєРѕР№, РєР°Рє РїСЂР°РІРёР»Рѕ СЌС‚Рѕ 2 РєРѕРјР°РЅРґС‹:
 ~~~~
 systemctl stop zabbix-agent
 cp src/zabbix_agent/zabbix_agentd /sbin
 ~~~~
 
 # Ubuntu
-## Сборка на Ubuntu 18.04 LTS (Bionic Beaver) с поддержкой MariaDB и PostgreSQL
+## РЎР±РѕСЂРєР° РЅР° Ubuntu 18.04 LTS (Bionic Beaver) СЃ РїРѕРґРґРµСЂР¶РєРѕР№ MariaDB Рё PostgreSQL
 
-### 1. Для подготовки к сборки на Ubuntu 18.04 нужно установить дополнительные пакеты:
+### 1. Р”Р»СЏ РїРѕРґРіРѕС‚РѕРІРєРё Рє СЃР±РѕСЂРєРё РЅР° Ubuntu 18.04 РЅСѓР¶РЅРѕ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РїР°РєРµС‚С‹:
 
 ~~~~
 sudo apt-get update
 sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libmariadbclient-dev-compat
 ~~~~
 
-### 2. Скачать и распаковать свежую версию исходного кода:
+### 2. РЎРєР°С‡Р°С‚СЊ Рё СЂР°СЃРїР°РєРѕРІР°С‚СЊ СЃРІРµР¶СѓСЋ РІРµСЂСЃРёСЋ РёСЃС…РѕРґРЅРѕРіРѕ РєРѕРґР°:
 
 ~~~~
 wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v4.4.5/zabbix-4.4.5.tar.gz
@@ -107,21 +107,21 @@ tar -zxf zabbix-4.4.5.tar.gz
 cd zabbix-4.4.5
 ~~~~
 
-### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:
+### 3. РЎР±РѕСЂРєР° zabbix-agent СЃ РїРѕРґРґРµСЂР¶РєРѕР№ (MariaDB) MySQL Рё PostgreSQL:
 
 ~~~~
 ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
 make
 ~~~~
 
-### 4. После успешной сборки на шаге 3 можно использовать бинарные файлы zabbix, проверим факт наличия файла агента:
+### 4. РџРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕР№ СЃР±РѕСЂРєРё РЅР° С€Р°РіРµ 3 РјРѕР¶РЅРѕ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ Р±РёРЅР°СЂРЅС‹Рµ С„Р°Р№Р»С‹ zabbix, РїСЂРѕРІРµСЂРёРј С„Р°РєС‚ РЅР°Р»РёС‡РёСЏ С„Р°Р№Р»Р° Р°РіРµРЅС‚Р°:
 
 ~~~~
 ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
 -rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd_v4.4.5
 ~~~~
 
-### 5. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
+### 5. РўРµРїРµСЂСЊ Р’С‹ РјРѕР¶РµС‚Рµ РѕСЃС‚Р°РЅРѕРІРёС‚СЊ zabbix-agent Рё Р·Р°РјРµРЅРёС‚СЊ РµРіРѕ РґР°РЅРЅРѕР№ СЃР±РѕСЂРєРѕР№, РєР°Рє РїСЂР°РІРёР»Рѕ СЌС‚Рѕ 2 РєРѕРјР°РЅРґС‹:
 ~~~~
 systemctl stop zabbix-agent
 cp src/zabbix_agent/zabbix_agentd /sbin

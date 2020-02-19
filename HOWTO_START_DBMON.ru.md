@@ -1,32 +1,32 @@
-# Как собрать zabbix-agent с поддержкой мониторинга СУБД из данного репозитария и начать нативный мониторинг СУБД с помощью zabbix-agent
+# РљР°Рє СЃРѕР±СЂР°С‚СЊ zabbix-agent СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РјРѕРЅРёС‚РѕСЂРёРЅРіР° РЎРЈР‘Р” РёР· РґР°РЅРЅРѕРіРѕ СЂРµРїРѕР·РёС‚Р°СЂРёСЏ Рё РЅР°С‡Р°С‚СЊ РЅР°С‚РёРІРЅС‹Р№ РјРѕРЅРёС‚РѕСЂРёРЅРі РЎРЈР‘Р” СЃ РїРѕРјРѕС‰СЊСЋ zabbix-agent
 
-[Сборка zabbix-agent под разные ОС Linux описана в отдельном документе](BUILD_DBMON.ru.md)
+[РЎР±РѕСЂРєР° zabbix-agent РїРѕРґ СЂР°Р·РЅС‹Рµ РћРЎ Linux РѕРїРёСЃР°РЅР° РІ РѕС‚РґРµР»СЊРЅРѕРј РґРѕРєСѓРјРµРЅС‚Рµ](BUILD_DBMON.ru.md)
 
-После сборки и установки агента Вам необходимо сделать:
+РџРѕСЃР»Рµ СЃР±РѕСЂРєРё Рё СѓСЃС‚Р°РЅРѕРІРєРё Р°РіРµРЅС‚Р° Р’Р°Рј РЅРµРѕР±С…РѕРґРёРјРѕ СЃРґРµР»Р°С‚СЊ:
 
-1. Настроить подключение агента к MySQL или PostgreSQL (создать пользователя и назначить ему права);
+1. РќР°СЃС‚СЂРѕРёС‚СЊ РїРѕРґРєР»СЋС‡РµРЅРёРµ Р°РіРµРЅС‚Р° Рє MySQL РёР»Рё PostgreSQL (СЃРѕР·РґР°С‚СЊ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Рё РЅР°Р·РЅР°С‡РёС‚СЊ РµРјСѓ РїСЂР°РІР°);
 
-Пример создания пользователя и назначения прав для MySQL есть в файле templates\db\dbmon\mysql_grants.sql
+РџСЂРёРјРµСЂ СЃРѕР·РґР°РЅРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Рё РЅР°Р·РЅР°С‡РµРЅРёСЏ РїСЂР°РІ РґР»СЏ MySQL РµСЃС‚СЊ РІ С„Р°Р№Р»Рµ templates\db\dbmon\mysql_grants.sql
 
-Пример создания пользователя и назначения прав для PostgreSQL есть в файле templates\db\dbmon\pgsql_grants.sql
+РџСЂРёРјРµСЂ СЃРѕР·РґР°РЅРёСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ Рё РЅР°Р·РЅР°С‡РµРЅРёСЏ РїСЂР°РІ РґР»СЏ PostgreSQL РµСЃС‚СЊ РІ С„Р°Р№Р»Рµ templates\db\dbmon\pgsql_grants.sql
 
-2. Для MySQL прописать в файле zabbix_agentd.conf новые настройки:
+2. Р”Р»СЏ MySQL РїСЂРѕРїРёСЃР°С‚СЊ РІ С„Р°Р№Р»Рµ zabbix_agentd.conf РЅРѕРІС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё:
 ~~~~
 MySQLUser=zabbixmon
 MySQLPassword=zabbixmon
 ~~~~
 
-3. Запустить нового агента:
+3. Р—Р°РїСѓСЃС‚РёС‚СЊ РЅРѕРІРѕРіРѕ Р°РіРµРЅС‚Р°:
 ~~~~
 systemctl start zabbix-agent
 ~~~~
 
-4. Проверить лог агента:
+4. РџСЂРѕРІРµСЂРёС‚СЊ Р»РѕРі Р°РіРµРЅС‚Р°:
 ~~~~
 tail -n20 /var/log/zabbix/zabbix_agentd.log
 ~~~~
 
-Лог старта должен быть примерто таким:
+Р›РѕРі СЃС‚Р°СЂС‚Р° РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РїСЂРёРјРµСЂС‚Рѕ С‚Р°РєРёРј:
 ~~~~
  22646:20200219:211042.119 Starting Zabbix Agent [XXXXXX]. Zabbix 4.4.5 (revision b93f5c4fc0).
  22646:20200219:211042.119 **** Enabled features ****
@@ -44,55 +44,55 @@ tail -n20 /var/log/zabbix/zabbix_agentd.log
  22649:20200219:211042.120 agent #3 started [active checks #1]
 ~~~~
 
-В нем Вы увидите с поддержкой мониторинга каких СУБД собран агент.
+Р’ РЅРµРј Р’С‹ СѓРІРёРґРёС‚Рµ СЃ РїРѕРґРґРµСЂР¶РєРѕР№ РјРѕРЅРёС‚РѕСЂРёРЅРіР° РєР°РєРёС… РЎРЈР‘Р” СЃРѕР±СЂР°РЅ Р°РіРµРЅС‚.
 
-5. Теперь Вы можете импортировать в Zabbix web-frontend новые шаблоны из папки templates\db\dbmon в следующей последовательности:
+5. РўРµРїРµСЂСЊ Р’С‹ РјРѕР¶РµС‚Рµ РёРјРїРѕСЂС‚РёСЂРѕРІР°С‚СЊ РІ Zabbix web-frontend РЅРѕРІС‹Рµ С€Р°Р±Р»РѕРЅС‹ РёР· РїР°РїРєРё templates\db\dbmon РІ СЃР»РµРґСѓСЋС‰РµР№ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё:
 
-Последовательность импорта шаблонов (НЕ НАРУШАЙТЕ ЕЕ!):
+РџРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊ РёРјРїРѕСЂС‚Р° С€Р°Р±Р»РѕРЅРѕРІ (РќР• РќРђР РЈРЁРђР™РўР• Р•Р•!):
 ~~~~
 1. templates_db_mysql_all_os.xml, templates_db_postgres_all_os.xml, templates_db_oracle_all_os.xml
-2. templates_db_mysql_linux.xml, templates_db_mysql_windows.xml, templates_db_postgres_linux.xml, templates_db_postgres_windows.xml, templates_db_oracle_linux.xml и templates_db_oracle_windows.xml
-3. templates_zabbix_agent_dbmon_linux.xml и templates_zabbix_agent_dbmon_windows.xml
+2. templates_db_mysql_linux.xml, templates_db_mysql_windows.xml, templates_db_postgres_linux.xml, templates_db_postgres_windows.xml, templates_db_oracle_linux.xml Рё templates_db_oracle_windows.xml
+3. templates_zabbix_agent_dbmon_linux.xml Рё templates_zabbix_agent_dbmon_windows.xml
 ~~~~
 
-Дополнительные действия по связыванию триггеров для MySQL for Windows:
+Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РґРµР№СЃС‚РІРёСЏ РїРѕ СЃРІСЏР·С‹РІР°РЅРёСЋ С‚СЂРёРіРіРµСЂРѕРІ РґР»СЏ MySQL for Windows:
 ~~~~
-1. Зайдите в шаблон "MySQL for Windows (Active, DBMON)"
-2. Перейдите в список триггеров
-3. Откройте триггер "Instance access failed" (он наследуется из шаблона "DB MySQL (Active, DBMON, for all OS)")
-4. Откройте зависимости в триггере из п.3
-5. Добавьте зависимость от триггера "Service '{$DBS_MYSQL_SERVICE_NAME}' is not running" (Service 'MySQL' is not running)
-~~~~
-
-Дополнительные действия по связыванию триггеров для Oracle for Windows:
-~~~~
-1. Зайдите в шаблон "Oracle for Windows (Active, DBMON)"
-2. Перейдите в список триггеров
-3. Откройте триггер "Instance access failed" (он наследуется из шаблона "DB Oracle (Active, DBMON, for all OS)")
-4. Откройте зависимости в триггере из п.3
-5. Добавьте зависимость от триггера "Service '{$DBS_ORACLE_SERVICE_NAME}' is not running" (Service 'OracleServiceORCL' is not running)
+1. Р—Р°Р№РґРёС‚Рµ РІ С€Р°Р±Р»РѕРЅ "MySQL for Windows (Active, DBMON)"
+2. РџРµСЂРµР№РґРёС‚Рµ РІ СЃРїРёСЃРѕРє С‚СЂРёРіРіРµСЂРѕРІ
+3. РћС‚РєСЂРѕР№С‚Рµ С‚СЂРёРіРіРµСЂ "Instance access failed" (РѕРЅ РЅР°СЃР»РµРґСѓРµС‚СЃСЏ РёР· С€Р°Р±Р»РѕРЅР° "DB MySQL (Active, DBMON, for all OS)")
+4. РћС‚РєСЂРѕР№С‚Рµ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РІ С‚СЂРёРіРіРµСЂРµ РёР· Рї.3
+5. Р”РѕР±Р°РІСЊС‚Рµ Р·Р°РІРёСЃРёРјРѕСЃС‚СЊ РѕС‚ С‚СЂРёРіРіРµСЂР° "Service '{$DBS_MYSQL_SERVICE_NAME}' is not running" (Service 'MySQL' is not running)
 ~~~~
 
-Дополнительные действия по связыванию триггеров для PostgreSQL for Windows:
+Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РґРµР№СЃС‚РІРёСЏ РїРѕ СЃРІСЏР·С‹РІР°РЅРёСЋ С‚СЂРёРіРіРµСЂРѕРІ РґР»СЏ Oracle for Windows:
 ~~~~
-1. Зайдите в шаблон "PostgreSQL for Windows (Active, DBMON)"
-2. Перейдите в список триггеров
-3. Откройте триггер "Instance access failed" (он наследуется из шаблона "DB PostgreSQL (Active, DBMON, for all OS)")
-4. Откройте зависимости в триггере из п.3
-5. Добавьте зависимость от триггера "Service '{$DBS_PGSQL_SERVICE_NAME}' is not running" (Service 'postgresql-12' is not running)
+1. Р—Р°Р№РґРёС‚Рµ РІ С€Р°Р±Р»РѕРЅ "Oracle for Windows (Active, DBMON)"
+2. РџРµСЂРµР№РґРёС‚Рµ РІ СЃРїРёСЃРѕРє С‚СЂРёРіРіРµСЂРѕРІ
+3. РћС‚РєСЂРѕР№С‚Рµ С‚СЂРёРіРіРµСЂ "Instance access failed" (РѕРЅ РЅР°СЃР»РµРґСѓРµС‚СЃСЏ РёР· С€Р°Р±Р»РѕРЅР° "DB Oracle (Active, DBMON, for all OS)")
+4. РћС‚РєСЂРѕР№С‚Рµ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РІ С‚СЂРёРіРіРµСЂРµ РёР· Рї.3
+5. Р”РѕР±Р°РІСЊС‚Рµ Р·Р°РІРёСЃРёРјРѕСЃС‚СЊ РѕС‚ С‚СЂРёРіРіРµСЂР° "Service '{$DBS_ORACLE_SERVICE_NAME}' is not running" (Service 'OracleServiceORCL' is not running)
 ~~~~
 
-6. Теперь подключите шаблон мониторинга к Вашему хосту в Zabbix web-frontend:
+Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РґРµР№СЃС‚РІРёСЏ РїРѕ СЃРІСЏР·С‹РІР°РЅРёСЋ С‚СЂРёРіРіРµСЂРѕРІ РґР»СЏ PostgreSQL for Windows:
+~~~~
+1. Р—Р°Р№РґРёС‚Рµ РІ С€Р°Р±Р»РѕРЅ "PostgreSQL for Windows (Active, DBMON)"
+2. РџРµСЂРµР№РґРёС‚Рµ РІ СЃРїРёСЃРѕРє С‚СЂРёРіРіРµСЂРѕРІ
+3. РћС‚РєСЂРѕР№С‚Рµ С‚СЂРёРіРіРµСЂ "Instance access failed" (РѕРЅ РЅР°СЃР»РµРґСѓРµС‚СЃСЏ РёР· С€Р°Р±Р»РѕРЅР° "DB PostgreSQL (Active, DBMON, for all OS)")
+4. РћС‚РєСЂРѕР№С‚Рµ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РІ С‚СЂРёРіРіРµСЂРµ РёР· Рї.3
+5. Р”РѕР±Р°РІСЊС‚Рµ Р·Р°РІРёСЃРёРјРѕСЃС‚СЊ РѕС‚ С‚СЂРёРіРіРµСЂР° "Service '{$DBS_PGSQL_SERVICE_NAME}' is not running" (Service 'postgresql-12' is not running)
+~~~~
 
-Для мониторинга MySQL в Linux шаблон "MySQL for Linux (Active, DBMON)"
+6. РўРµРїРµСЂСЊ РїРѕРґРєР»СЋС‡РёС‚Рµ С€Р°Р±Р»РѕРЅ РјРѕРЅРёС‚РѕСЂРёРЅРіР° Рє Р’Р°С€РµРјСѓ С…РѕСЃС‚Сѓ РІ Zabbix web-frontend:
 
-Для мониторинга MySQL в Windows шаблон "MySQL for Windows (Active, DBMON)"
+Р”Р»СЏ РјРѕРЅРёС‚РѕСЂРёРЅРіР° MySQL РІ Linux С€Р°Р±Р»РѕРЅ "MySQL for Linux (Active, DBMON)"
 
-Для мониторинга PostgreSQL в Linux шаблон "PostgreSQL for Linux (Active, DBMON)"
+Р”Р»СЏ РјРѕРЅРёС‚РѕСЂРёРЅРіР° MySQL РІ Windows С€Р°Р±Р»РѕРЅ "MySQL for Windows (Active, DBMON)"
 
-Для мониторинга PostgreSQL в Windows шаблон "PostgreSQL for Windows (Active, DBMON)"
+Р”Р»СЏ РјРѕРЅРёС‚РѕСЂРёРЅРіР° PostgreSQL РІ Linux С€Р°Р±Р»РѕРЅ "PostgreSQL for Linux (Active, DBMON)"
 
-Для мониторинга Oracle в Linux шаблон "Oracle for Linux (Active, DBMON)"
+Р”Р»СЏ РјРѕРЅРёС‚РѕСЂРёРЅРіР° PostgreSQL РІ Windows С€Р°Р±Р»РѕРЅ "PostgreSQL for Windows (Active, DBMON)"
 
-Для мониторинга Oracle в Windows шаблон "Oracle for Windows (Active, DBMON)"
+Р”Р»СЏ РјРѕРЅРёС‚РѕСЂРёРЅРіР° Oracle РІ Linux С€Р°Р±Р»РѕРЅ "Oracle for Linux (Active, DBMON)"
+
+Р”Р»СЏ РјРѕРЅРёС‚РѕСЂРёРЅРіР° Oracle РІ Windows С€Р°Р±Р»РѕРЅ "Oracle for Windows (Active, DBMON)"
 
