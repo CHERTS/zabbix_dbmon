@@ -1369,7 +1369,11 @@ out:
 int	ORACLE_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	//return zbx_execute_threaded_metric(oracle_get_discovery, request, result);
+#if !defined(_WINDOWS) && !defined(__MINGW32__)
+	return oracle_get_discovery(request, result);
+#else
 	return oracle_get_discovery(request, result, NULL);
+#endif
 }
 
 int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)

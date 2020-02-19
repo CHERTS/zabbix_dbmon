@@ -1,19 +1,41 @@
 # Как собрать zabbix-agent с поддержкой мониторинга СУБД из данного репозитария и начать нативный мониторинг СУБД с помощью zabbix-agent
 
-[Сборка zabbix-agent под разные ОС Linux описана в отдельном документе](BUILD_DBMON.ru.md)
+[Сборка zabbix-agent под разные ОС Linux с поддержкой MySQL и PostgreSQL](BUILD_DBMON.ru.md)
+
+[Сборка zabbix-agent под Oracle Linux (RedHat) с поддержкой СУБД Oracle](BUILD_DBMON_ORACLE.ru.md)
 
 После сборки и установки агента Вам необходимо сделать:
 
-1. Настроить подключение агента к MySQL или PostgreSQL (создать пользователя и назначить ему права);
+1. Настроить подключение агента к MySQL/PostgreSQL или Oracle (создать пользователя и назначить ему права);
 
 Пример создания пользователя и назначения прав для MySQL есть в файле templates\db\dbmon\mysql_grants.sql
 
 Пример создания пользователя и назначения прав для PostgreSQL есть в файле templates\db\dbmon\pgsql_grants.sql
 
-2. Для MySQL прописать в файле zabbix_agentd.conf новые настройки:
+Пример создания пользователя и назначения прав для Oracle есть в файле templates\db\dbmon\oracle_grants.sql
+
+2. Прописать в файле zabbix_agentd.conf новые настройки:
+
+~~~~
+Alias=dbmon.vfs.fs.discovery[*]:vfs.fs.discovery
+Alias=dbmon.vfs.fs.size[*]:vfs.fs.size
+Alias=dbmon.service.discovery[*]:service.discovery
+Alias=dbmon.service.info[*]:service.info
+Alias=dbmon.agent.ping[*]:agent.ping
+Alias=dbmon.agent.version[*]:agent.version
+Alias=dbmon.agent.hostname[*]:agent.hostname
+~~~~
+
+Для MySQL прописать в файле zabbix_agentd.conf новые настройки:
 ~~~~
 MySQLUser=zabbixmon
 MySQLPassword=zabbixmon
+~~~~
+
+Для Oracle прописать в файле zabbix_agentd.conf новые настройки:
+~~~~
+OracleUser=zabbixmon
+OraclePassword=zabbixmon
 ~~~~
 
 3. Запустить нового агента:
@@ -34,7 +56,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd.log
  22646:20200219:211042.119 TLS support:           YES
  22646:20200219:211042.119 MySQL support:         YES
  22646:20200219:211042.119 PostgreSQL support:    YES
- 22646:20200219:211042.119 Oracle support:        NO
+ 22646:20200219:211042.119 Oracle support:        YES
  22646:20200219:211042.119 MSSQL support:         NO
  22646:20200219:211042.119 **************************
  22646:20200219:211042.119 using configuration file: /etc/zabbix/zabbix_agentd.conf

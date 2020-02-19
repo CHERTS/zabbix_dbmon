@@ -1409,26 +1409,26 @@ if test "x$agent" = "xyes" && test "x$dbmon" = "xyes"; then
 	fi
 
 	dnl Checking for Oracle support
-	#AX_LIB_ORACLE_OCI([10.0])
-	#if test "x$want_oracle_oci" = "xyes"; then
-#		if test "x$HAVE_ORACLE_OCI" = "xyes"; then
-#			have_dbmon_oracle="yes"
-#			have_oracle="yes"
-#			DBMON_CFLAGS="-DHAVE_ORACLE $DBMON_CFLAGS"
+	AX_LIB_ORACLE_OCI([10.0])
+	if test "x$want_oracle_oci" = "xyes"; then
+		if test "x$HAVE_ORACLE_OCI" = "xyes"; then
+			have_dbmon_oracle="yes"
+			have_oracle="yes"
+			DBMON_CFLAGS="-DHAVE_ORACLE $DBMON_CFLAGS"
 
-#			ORACLE_CPPFLAGS="$ORACLE_OCI_CFLAGS"
-#			ORACLE_LDFLAGS="$ORACLE_OCI_LDFLAGS"
-#			ORACLE_LIBS="$ORACLE_OCI_LIBS"
+			ORACLE_CPPFLAGS="$ORACLE_OCI_CFLAGS"
+			ORACLE_LDFLAGS="$ORACLE_OCI_LDFLAGS"
+			ORACLE_LIBS="$ORACLE_OCI_LIBS"
 
-#			AC_DEFINE(HAVE_ORACLE,1,[Define to 1 if Oracle should be enabled.])
-#		else
-#			AC_MSG_ERROR([Oracle OCI library not found])
-#		fi
-#	fi
+			AC_DEFINE(HAVE_ORACLE,1,[Define to 1 if Oracle should be enabled.])
+		else
+			AC_MSG_ERROR([Oracle OCI library not found])
+		fi
+	fi
 
-	DBMON_CFLAGS="-DHAVE_DBMON $DBMON_CFLAGS $MYSQL_CFLAGS $POSTGRESQL_CFLAGS $ORACLE_CFLAGS"
+	DBMON_CFLAGS="-DHAVE_DBMON $DBMON_CFLAGS $MYSQL_CFLAGS $POSTGRESQL_CFLAGS $ORACLE_CPPFLAGS"
 	DBMON_LDFLAGS="$MYSQL_LDFLAGS $POSTGRESQL_LDFLAGS $ORACLE_LDFLAGS"
-	DBMON_LIBS="$MYSQL_LIBS $ORACLE_LIBS $POSTGRESQL_LIBS"
+	DBMON_LIBS="$MYSQL_LIBS $POSTGRESQL_LIBS $ORACLE_LIBS"
 
 	AC_SUBST(DBMON_CFLAGS)
 	AC_SUBST(DBMON_LDFLAGS)
