@@ -1,10 +1,8 @@
-# Как собрать Zabbix-agent с поддержкой мониторинга СУБД Oracle 18c из данного репозитария
+# Как собрать Zabbix-agent с поддержкой мониторинга MySQL (MariaDB) + PostgreSQL + Oracle 18c из данного репозитария
 
-[In English / По-английски](BUILD.md)
+[Сборка на Oracle Linux 7 с поддержкой MySQL (MariaDB) + PostgreSQL + Oracle 18c](#oracle-linux-7)
 
-[Сборка на Oracle Linux 7 с поддержкой MySQL (MariaDB) и PostgreSQL](#oracle-linux-7)
-
-[Сборка на Red Hat Enterprise Linux 8 с поддержкой MySQL (MariaDB) и PostgreSQL](#red-hat-enterprise-linux-8)
+[Сборка на Red Hat Enterprise Linux 8 с поддержкой MySQL (MariaDB) + PostgreSQL + Oracle 18c](#red-hat-enterprise-linux-8)
 
 # Oracle Linux 7
 ## Сборка на Oracle Linux 7 с поддержкой MySQL (MariaDB) + PostgreSQL + Oracle 18c
