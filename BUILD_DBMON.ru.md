@@ -41,7 +41,7 @@ make
 
 ~~~~
 ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
--rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd_v4.4.5
+-rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd
 ~~~~
 
 ### 5. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
@@ -80,7 +80,7 @@ make
 
 ~~~~
 ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
--rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd_v4.4.5
+-rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd
 ~~~~
 
 ### 5. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
@@ -118,7 +118,7 @@ make
 
 ~~~~
 ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
--rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd_v4.4.5
+-rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd
 ~~~~
 
 ### 5. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
