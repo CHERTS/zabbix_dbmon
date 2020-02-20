@@ -214,17 +214,17 @@ SELECT nvl(count(pp.addr), 0) AS COUNT_BAD_PROCESSES FROM \
 (SELECT p.addr, inst_id \
 	FROM gv$process p \
 	WHERE p.program <> 'PSEUDO' \
-	AND p.program NOT LIKE '%(D00%' AND p.program NOT LIKE '%(S0%' \
-	AND p.program NOT LIKE '%(S1%' AND p.program NOT LIKE '%(P0%' \
-	AND p.program NOT LIKE '%(P1%' AND p.program NOT LIKE '%(P2%' \
-	AND p.program NOT LIKE '%(P3%' AND p.program NOT LIKE '%(P4%' \
-	AND p.program NOT LIKE '%(P5%' AND p.program NOT LIKE '%(P6%' \
-	AND p.program NOT LIKE '%(P7%' AND p.program NOT LIKE '%(P8%' \
-	AND p.program NOT LIKE '%(P9%' \
-	AND p.program NOT LIKE '%(J0%' \
+	AND p.program NOT LIKE '%%(D00%%' AND p.program NOT LIKE '%%(S0%%' \
+	AND p.program NOT LIKE '%%(S1%%' AND p.program NOT LIKE '%%(P0%%' \
+	AND p.program NOT LIKE '%%(P1%%' AND p.program NOT LIKE '%%(P2%%' \
+	AND p.program NOT LIKE '%%(P3%%' AND p.program NOT LIKE '%%(P4%%' \
+	AND p.program NOT LIKE '%%(P5%%' AND p.program NOT LIKE '%%(P6%%' \
+	AND p.program NOT LIKE '%%(P7%%' AND p.program NOT LIKE '%%(P8%%' \
+	AND p.program NOT LIKE '%%(P9%%' \
+	AND p.program NOT LIKE '%%(J0%%' \
 	MINUS SELECT paddr, inst_id FROM gv$session \
 	MINUS SELECT paddr, inst_id FROM gv$bgprocess) pp \
-RIGHT JOIN gv$instance i ON i.INST_ID = pp.INST_ID  \
+RIGHT JOIN gv$instance i ON i.INST_ID = pp.INST_ID \
 GROUP BY i.INSTANCE_NAME"
 
 #define ORACLE_INSTANCE_FRA_INFO_DBS "\
