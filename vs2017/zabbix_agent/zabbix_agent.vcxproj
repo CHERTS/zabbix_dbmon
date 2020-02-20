@@ -276,7 +276,7 @@
       </OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x86;$(ProjectDir)..\openssl\lib\x86;$(ProjectDir)..\$(MYSQL_VENDOR)\lib\x86;$(ProjectDir)..\oracle_$(ORACLE_VER)\lib;$(ProjectDir)..\postgresql_$(PG_VER)\lib\x86;$(ProjectDir)..\freetds\lib\x86;$(ProjectDir)..\pthreads4w\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVCE3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVC3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>true</EnableUAC>
       <TargetMachine>MachineX86</TargetMachine>
       <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
@@ -348,7 +348,7 @@ copy $(SolutionDir)openssl\bin\x86\ssleay32.dll $(SolutionDir)..\bin\win32</Comm
       </OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x64;$(ProjectDir)..\openssl\lib\x64;$(ProjectDir)..\$(MYSQL_VENDOR)\lib\x64;$(ProjectDir)..\oracle_$(ORACLE_VER)\lib;$(ProjectDir)..\postgresql_$(PG_VER)\lib\x64;$(ProjectDir)..\freetds\lib\x64;$(ProjectDir)..\pthreads4w\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVCE3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVC3.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>true</EnableUAC>
       <TargetMachine>MachineX64</TargetMachine>
       <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
