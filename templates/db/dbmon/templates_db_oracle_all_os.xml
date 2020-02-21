@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-20T04:18:06Z</date>
+    <date>2020-02-21T06:39:34Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2569,6 +2569,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$.SWITCHOVER_NUMBER</params>
+                                </step>
+                                <step>
+                                    <type>IN_RANGE</type>
+                                    <params>1
+999999999999</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
