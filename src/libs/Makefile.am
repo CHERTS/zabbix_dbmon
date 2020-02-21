@@ -72,11 +72,6 @@ PROXY_SUBDIRS = \
 endif
 endif
 
-if DBMON
-DBMON_SUBDIRS = \
-	zbxdbmon
-endif
-
 SUBDIRS = \
 	zbxcrypto \
 	zbxcommon \
@@ -94,9 +89,9 @@ SUBDIRS = \
 	zbxregexp \
 	zbxipcservice \
 	zbxcompress \
+	zbxdbmon \
 	$(PROXY_SUBDIRS) \
 	$(SERVER_SUBDIRS) \
-	$(DBMON_SUBDIRS) \
 	$(AGENT_SUBDIRS)
 
 EXTRA_DIST = zbxwin32
