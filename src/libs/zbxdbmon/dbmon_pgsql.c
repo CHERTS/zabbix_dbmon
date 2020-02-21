@@ -22,6 +22,7 @@
 #include "log.h"
 #include "zbxdbmon.h"
 
+#if defined(HAVE_DBMON)
 #if defined(HAVE_POSTGRESQL)
 #include <libpq-fe.h>
 
@@ -391,4 +392,5 @@ void zbx_db_close_pgsql(struct zbx_db_connection *conn)
 	pthread_mutex_destroy(&((struct zbx_db_pgsql *)conn->connection)->lock);
 }
 
+#endif
 #endif

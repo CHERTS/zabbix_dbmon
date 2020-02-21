@@ -22,6 +22,7 @@
 #include "log.h"
 #include "zbxdbmon.h"
 
+#if defined(HAVE_DBMON)
 #if defined(HAVE_MYSQL)
 #include "mysql.h"
 #include "errmsg.h"
@@ -1229,4 +1230,5 @@ char *zbx_check_oracle_conn_string(char *conn_string)
 
 	return oracle_conn_string;
 }
+#endif
 #endif

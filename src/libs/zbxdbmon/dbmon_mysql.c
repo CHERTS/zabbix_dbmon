@@ -22,6 +22,7 @@
 #include "log.h"
 #include "zbxdbmon.h"
 
+#if defined(HAVE_DBMON)
 #if defined(HAVE_MYSQL)
 #include "mysql.h"
 #include "errmsg.h"
@@ -405,4 +406,5 @@ void zbx_db_close_mysql(struct zbx_db_connection *conn)
 	pthread_mutex_destroy(&((struct zbx_db_mysql *)conn->connection)->lock);
 }
 
+#endif
 #endif

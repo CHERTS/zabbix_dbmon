@@ -22,6 +22,7 @@
 #include "log.h"
 #include "zbxdbmon.h"
 
+#if defined(HAVE_DBMON)
 #if defined(HAVE_ORACLE)
 #include "oci.h"
 
@@ -897,4 +898,5 @@ void zbx_db_close_oracle(struct zbx_db_connection *conn)
 	pthread_mutex_destroy(&((struct zbx_db_oracle *)conn->connection)->lock);
 }
 
+#endif
 #endif
