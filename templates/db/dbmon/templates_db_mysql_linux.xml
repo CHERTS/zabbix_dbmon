@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-05T09:42:55Z</date>
+    <date>2020-02-22T14:39:46Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -22,12 +22,57 @@
                     <name>DBS.Templates/Databases</name>
                 </group>
             </groups>
+            <items>
+                <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', state</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc.num[{$DBS_MYSQL_SERVICE_NAME},{$DBS_MYSQL_SERVICE_USER},,{$DBS_MYSQL_SERVICE_CMD}]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(2m)}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(3m)}&gt;0</recovery_expression>
+                            <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is not running</name>
+                            <priority>DISASTER</priority>
+                            <description>Основной процесс '{$DBS_MYSQL_SERVICE_NAME}' экземпляра '{$DBS_MYSQL_INSTANCE}' был остановлен или аварийно завершил работу (crash).&#13;
+Зайдите на сервер и проверьте состояние экземпляра, проверьте журнал error.log на предмет ошибок работы.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
             <tags>
                 <tag>
                     <tag>OS</tag>
                     <value>Linux</value>
                 </tag>
             </tags>
+            <macros>
+                <macro>
+                    <macro>{$DBS_MYSQL_SERVICE_CMD}</macro>
+                    <value>&quot;&quot;</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_SERVICE_NAME}</macro>
+                    <value>mysqld</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_SERVICE_USER}</macro>
+                    <value>mysql</value>
+                </macro>
+            </macros>
         </template>
     </templates>
 </zabbix_export>

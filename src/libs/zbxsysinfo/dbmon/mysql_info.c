@@ -68,13 +68,10 @@ SELECT /*DBS_006*/ s.SCHEMA_NAME AS DBNAME, \
 FROM information_schema.schemata s INNER JOIN information_schema.tables t ON s.SCHEMA_NAME = t.TABLE_SCHEMA \
 WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema)' GROUP BY s.SCHEMA_NAME;"
 
+// SELECT /*DBS_007*/ IF(VARIABLE_VALUE = '', CONCAT(@@datadir,'error.log'), CASE WHEN VARIABLE_VALUE REGEXP '^.\\\\' THEN CONCAT(@@datadir,REPLACE(VARIABLE_VALUE, '.\\', ''))  ELSE VARIABLE_VALUE END) AS LOG_ERROR FROM information_schema.global_variables WHERE VARIABLE_NAME = 'log_error';
 #define MYSQL_ERRORLOG_DISCOVERY_DBS "\
-SELECT /*DBS_007*/ ( \
-	CASE \
-	WHEN VARIABLE_VALUE REGEXP '^.\\\\\\\\' THEN CONCAT(@@datadir,REPLACE(VARIABLE_VALUE, '.\\\\', '')) \
-	ELSE VARIABLE_VALUE \
-	END) AS LOG_ERROR \
-	FROM %s.global_variables \
+SELECT /*DBS_007*/ IF(VARIABLE_VALUE = '', CONCAT(@@datadir,'error.log'), CASE WHEN VARIABLE_VALUE REGEXP '^.\\\\\\\\' THEN CONCAT(@@datadir,REPLACE(VARIABLE_VALUE, '.\\\\', '')) ELSE VARIABLE_VALUE END) AS LOG_ERROR \
+FROM %s.global_variables \
 WHERE VARIABLE_NAME = 'log_error';"
 
 #define MYSQL_TOP10_TABLE_BY_SIZE_DBS "\
