@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-07T13:52:15Z</date>
+    <date>2020-02-24T14:23:27Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -23,6 +23,44 @@
                 </group>
             </groups>
             <items>
+                <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}' memory usage (vmsize)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc_info[{$DBS_MYSQL_SERVICE_EXE_NAME},vmsize]</key>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Size of process virtual memory in Bytes</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}' memory usage (wkset)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc_info[{$DBS_MYSQL_SERVICE_EXE_NAME},wkset]</key>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Size of process working set (amount of physical memory used by process) in Bytes</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                </item>
                 <item>
                     <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', startup type</name>
                     <type>ZABBIX_ACTIVE</type>
@@ -73,6 +111,10 @@
                 </tag>
             </tags>
             <macros>
+                <macro>
+                    <macro>{$DBS_MYSQL_SERVICE_EXE_NAME}</macro>
+                    <value>mysqld.exe</value>
+                </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_SERVICE_NAME}</macro>
                     <value>MySQL</value>
