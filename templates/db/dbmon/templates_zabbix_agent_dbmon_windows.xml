@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-14T06:20:19Z</date>
+    <date>2020-02-24T18:07:56Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Operating Systems</name>
@@ -23,6 +23,36 @@
                 </application>
             </applications>
             <items>
+                <item>
+                    <name>[DBMON] Agent memory usage (Private Bytes)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>perf_counter_en[&quot;\Process({$DBS_ZABBIX_DBMON_PROCESS_EXE_NAME})\Private Bytes&quot;]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>B</units>
+                    <description>Size of process private set in bytes.</description>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[DBMON] Agent memory usage (Working Set)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>perf_counter_en[&quot;\Process({$DBS_ZABBIX_DBMON_PROCESS_EXE_NAME})\Working Set&quot;]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>B</units>
+                    <description>Size of process working set in bytes.</description>
+                    <applications>
+                        <application>
+                            <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
                 <item>
                     <name>[DBMON] Agent memory usage (vmsize)</name>
                     <type>ZABBIX_ACTIVE</type>
@@ -115,6 +145,11 @@
                 <macro>
                     <macro>{$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</macro>
                     <value>50M</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ZABBIX_DBMON_PROCESS_EXE_NAME}</macro>
+                    <value>zabbix_agentd_dbmon</value>
+                    <description>zabbix-agent process name from perf counter (without extention)</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_ZABBIX_DBMON_PROCESS_NAME}</macro>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-24T14:23:27Z</date>
+    <date>2020-02-24T18:07:49Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -24,12 +24,12 @@
             </groups>
             <items>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}' memory usage (vmsize)</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}': CPU usage (% Processor Time)</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>proc_info[{$DBS_MYSQL_SERVICE_EXE_NAME},vmsize]</key>
+                    <key>perf_counter_en[&quot;\Process({$DBS_MYSQL_SERVICE_EXE_NAME})\% Processor Time&quot;]</key>
                     <history>30d</history>
-                    <units>B</units>
-                    <description>Size of process virtual memory in Bytes</description>
+                    <value_type>FLOAT</value_type>
+                    <description>Processor Time shows the amount of CPU usage that the process is using, note that a multi-threaded process on a multi-core server could drive this counter above 100%.</description>
                     <applications>
                         <application>
                             <name>MySQL: Info</name>
@@ -38,17 +38,17 @@
                     <preprocessing>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                 </item>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}' memory usage (wkset)</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}': Memory usage (Working Set)</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>proc_info[{$DBS_MYSQL_SERVICE_EXE_NAME},wkset]</key>
+                    <key>perf_counter_en[&quot;\Process({$DBS_MYSQL_SERVICE_EXE_NAME})\Working Set&quot;]</key>
                     <history>30d</history>
                     <units>B</units>
-                    <description>Size of process working set (amount of physical memory used by process) in Bytes</description>
+                    <description>Working Set shows the amount of physical memory the process is using.</description>
                     <applications>
                         <application>
                             <name>MySQL: Info</name>
@@ -57,12 +57,12 @@
                     <preprocessing>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                 </item>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', startup type</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}': startup type</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>service.info[{$DBS_MYSQL_SERVICE_NAME},startup]</key>
                     <history>30d</history>
@@ -76,7 +76,7 @@
                     </valuemap>
                 </item>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', state</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}': state</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>service.info[{$DBS_MYSQL_SERVICE_NAME},state]</key>
                     <history>30d</history>
@@ -90,7 +90,7 @@
                     </valuemap>
                 </item>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', account</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}': account</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>service.info[{$DBS_MYSQL_SERVICE_NAME},user]</key>
                     <delay>1h</delay>
@@ -113,7 +113,7 @@
             <macros>
                 <macro>
                     <macro>{$DBS_MYSQL_SERVICE_EXE_NAME}</macro>
-                    <value>mysqld.exe</value>
+                    <value>mysqld</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_SERVICE_NAME}</macro>
