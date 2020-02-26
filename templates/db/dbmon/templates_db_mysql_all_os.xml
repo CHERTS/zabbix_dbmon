@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-14T10:48:55Z</date>
+    <date>2020-02-26T05:26:41Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -4057,7 +4057,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency].avg(30m)}&lt;{$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_limit].last()}&gt;0 and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_type].last()}&gt;0</expression>
+            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency].avg(30m)}&lt;{$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_limit].last()}&gt;0 and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_type].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&gt;24h</expression>
             <name>Query cache efficiency is very low</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}%, alert started: {ITEM.VALUE1})</opdata>
             <url>https://dev.mysql.com/doc/refman/5.7/en/query-cache-status-and-maintenance.html</url>

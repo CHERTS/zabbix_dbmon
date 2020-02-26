@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-24T18:07:56Z</date>
+    <date>2020-02-25T05:49:30Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Operating Systems</name>
@@ -37,41 +37,6 @@
                             <name>Zabbix agent (DBMON)</name>
                         </application>
                     </applications>
-                </item>
-                <item>
-                    <name>[DBMON] Agent memory usage (Working Set)</name>
-                    <type>ZABBIX_ACTIVE</type>
-                    <key>perf_counter_en[&quot;\Process({$DBS_ZABBIX_DBMON_PROCESS_EXE_NAME})\Working Set&quot;]</key>
-                    <delay>5m</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>B</units>
-                    <description>Size of process working set in bytes.</description>
-                    <applications>
-                        <application>
-                            <name>Zabbix agent (DBMON)</name>
-                        </application>
-                    </applications>
-                </item>
-                <item>
-                    <name>[DBMON] Agent memory usage (vmsize)</name>
-                    <type>ZABBIX_ACTIVE</type>
-                    <key>proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},vmsize]</key>
-                    <delay>5m</delay>
-                    <history>30d</history>
-                    <units>B</units>
-                    <description>Size of process virtual memory in Bytes</description>
-                    <applications>
-                        <application>
-                            <name>Zabbix agent (DBMON)</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JAVASCRIPT</type>
-                            <params>return Math.round(value*1024);</params>
-                        </step>
-                    </preprocessing>
                     <triggers>
                         <trigger>
                             <expression>{max(10m)}&gt;{$DBS_ZABBIX_DBMON_MEM_USAGE_WARN}</expression>
@@ -86,8 +51,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Zabbix agent for database monitoring is very high memory usage</name>
-                                    <expression>{DBS_Template App Zabbix Agent DBMON Active Windows:proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},vmsize].max(10m)}&gt;{$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}</expression>
-                                    <recovery_expression>{DBS_Template App Zabbix Agent DBMON Active Windows:proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},vmsize].min(10m)}&lt;={$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}</recovery_expression>
+                                    <expression>{DBS_Template App Zabbix Agent DBMON Active Windows:perf_counter_en[&quot;\Process({$DBS_ZABBIX_DBMON_PROCESS_EXE_NAME})\Private Bytes&quot;].max(10m)}&gt;{$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}</expression>
+                                    <recovery_expression>{DBS_Template App Zabbix Agent DBMON Active Windows:perf_counter_en[&quot;\Process({$DBS_ZABBIX_DBMON_PROCESS_EXE_NAME})\Private Bytes&quot;].min(10m)}&lt;={$DBS_ZABBIX_DBMON_MEM_USAGE_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -117,24 +82,19 @@
                     </triggers>
                 </item>
                 <item>
-                    <name>[DBMON] Agent memory usage (wkset)</name>
+                    <name>[DBMON] Agent memory usage (Working Set)</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>proc_info[{$DBS_ZABBIX_DBMON_PROCESS_NAME},wkset]</key>
+                    <key>perf_counter_en[&quot;\Process({$DBS_ZABBIX_DBMON_PROCESS_EXE_NAME})\Working Set&quot;]</key>
                     <delay>5m</delay>
                     <history>30d</history>
+                    <value_type>FLOAT</value_type>
                     <units>B</units>
-                    <description>Size of process working set (amount of physical memory used by process) in Bytes</description>
+                    <description>Size of process working set in bytes.</description>
                     <applications>
                         <application>
                             <name>Zabbix agent (DBMON)</name>
                         </application>
                     </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JAVASCRIPT</type>
-                            <params>return Math.round(value*1024);</params>
-                        </step>
-                    </preprocessing>
                 </item>
             </items>
             <macros>
