@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-26T10:06:40Z</date>
+    <date>2020-02-26T10:39:09Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1601,14 +1601,6 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                         </application>
                     </applications>
                     <preprocessing>
-                        <step>
-                            <type>JAVASCRIPT</type>
-                            <params>if (value.indexOf(&quot;SORT_MERGE_PASSES&quot;) &gt; -1) {
-  return value;
-} else {
-  return &quot;{\&quot;SORT_MERGE_PASSES\&quot;:\&quot;0\&quot;}&quot;;
-}</params>
-                        </step>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SORT_MERGE_PASSES</params>
