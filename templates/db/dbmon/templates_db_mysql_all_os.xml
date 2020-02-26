@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-26T09:27:42Z</date>
+    <date>2020-02-26T10:06:40Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1602,6 +1602,14 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     </applications>
                     <preprocessing>
                         <step>
+                            <type>JAVASCRIPT</type>
+                            <params>if (value.indexOf(&quot;SORT_MERGE_PASSES&quot;) &gt; -1) {
+  return value;
+} else {
+  return &quot;{\&quot;SORT_MERGE_PASSES\&quot;:\&quot;0\&quot;}&quot;;
+}</params>
+                        </step>
+                        <step>
                             <type>JSONPATH</type>
                             <params>$.SORT_MERGE_PASSES</params>
                         </step>
@@ -1617,7 +1625,6 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>The number of merge passes that the sort algorithm has had to do. If this value is large, you should consider increasing the value of the sort_buffer_size system variable.</description>
                     <applications>
                         <application>
                             <name>MySQL: Throughput</name>
@@ -1625,16 +1632,12 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     </applications>
                     <preprocessing>
                         <step>
-                            <type>JSONPATH</type>
-                            <params>$.SORT_MERGE_PASSES </params>
-                        </step>
-                        <step>
                             <type>CHANGE_PER_SECOND</type>
                             <params/>
                         </step>
                     </preprocessing>
                     <master_item>
-                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                        <key>mysql.status[{$DBS_MYSQL_INSTANCE},sort_merge_passes]</key>
                     </master_item>
                 </item>
                 <item>
@@ -3416,13 +3419,13 @@ On thread startup, the session wait_timeout value is initialized from the global
                         <conditions>
                             <condition>
                                 <macro>{#DBNAME}</macro>
-                                <value>{$DBS_MYSQL_LLD_FILTER_DB_NOT_MATCHES}</value>
-                                <operator>NOT_MATCHES_REGEX</operator>
+                                <value>{$DBS_MYSQL_LLD_FILTER_DB_MATCHES}</value>
                                 <formulaid>A</formulaid>
                             </condition>
                             <condition>
                                 <macro>{#DBNAME}</macro>
-                                <value>{$DBS_MYSQL_LLD_FILTER_DB_MATCHES}</value>
+                                <value>{$DBS_MYSQL_LLD_FILTER_DB_NOT_MATCHES}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
                                 <formulaid>B</formulaid>
                             </condition>
                         </conditions>
@@ -4755,10 +4758,6 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <mapping>
                     <value>1</value>
                     <newvalue>ON</newvalue>
-                </mapping>
-                <mapping>
-                    <value>2</value>
-                    <newvalue>UNKNOWN</newvalue>
                 </mapping>
             </mappings>
         </value_map>
