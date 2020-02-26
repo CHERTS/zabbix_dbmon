@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 4.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-01-19 01:48+0200\n"
-"PO-Revision-Date: 2019-12-09 09:46+0300\n"
-"Last-Translator: Anonymous Pootle User\n"
+"POT-Creation-Date: 2020-02-17 12:03+0200\n"
+"PO-Revision-Date: 2020-02-12 07:23+0300\n"
+"Last-Translator: baardisk <baardisk@gmail.com>\n"
 "Language-Team: none\n"
 "Language: nb\n"
 "MIME-Version: 1.0\n"
@@ -17,7 +17,14 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.5.1.3\n"
-"X-POOTLE-MTIME: 1575877585.000000\n"
+"X-POOTLE-MTIME: 1581484993.000000\n"
+
+#: include/classes/db/MysqlDbBackend.php:67
+#: include/classes/db/OracleDbBackend.php:87
+#: include/classes/db/PostgresqlDbBackend.php:76
+#, fuzzy, c-format
+msgid "\"%1$s\" instead \"%2$s\""
+msgstr "\"%1$s\" i stedet for \"%2$s\""
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -27,7 +34,7 @@ msgstr ""
 #: include/classes/import/validators/C34XmlValidator.php:1111
 #: include/classes/import/validators/C40XmlValidator.php:1290
 #: include/classes/import/validators/C42XmlValidator.php:1350
-#: include/classes/import/validators/C44XmlValidator.php:1755
+#: include/classes/import/validators/C44XmlValidator.php:1757
 #, c-format
 msgid "\"%1$s\" is expected"
 msgstr "\"%1$s\" er forventet"
@@ -35,7 +42,7 @@ msgstr "\"%1$s\" er forventet"
 #: include/classes/api/services/CItemGeneral.php:1417
 #, c-format
 msgid "\"%1$s\" value must be less than or equal to \"%2$s\" value"
-msgstr ""
+msgstr "Verdien til \"%1$s\" må være mindre eller lik verdien til \"%2$s\""
 
 #: include/classes/api/services/CMaintenance.php:351
 #: include/classes/api/services/CMaintenance.php:356
@@ -58,8 +65,9 @@ msgstr "\"host:key\" par er forventet"
 #: include/views/configuration.host.discovery.edit.php:753
 #: include/views/js/configuration.host.discovery.edit.js.php:59
 #: include/views/js/item.preprocessing.js.php:195
+#, fuzzy
 msgid "$.path.to.node"
-msgstr ""
+msgstr "$.path.to.node"
 
 #: include/classes/api/services/CDRule.php:548
 #, c-format
@@ -77,7 +85,7 @@ msgstr[1] "%1$d dager"
 #, c-format
 msgctxt "screen reader"
 msgid "%1$d matches for %2$s found"
-msgstr ""
+msgstr "%1$d treff funnet for %2$s"
 
 #: app/controllers/CControllerWidgetProblemsView.php:56
 #: include/classes/screens/CScreenHostTriggers.php:204
@@ -96,8 +104,8 @@ msgstr "%1$s (år %2$s)"
 #, c-format
 msgid "%1$s Item"
 msgid_plural "%1$s Items"
-msgstr[0] "%1$s Artikkel"
-msgstr[1] "%1$s Artikler"
+msgstr[0] "%1$s Element"
+msgstr[1] "%1$s Elementer"
 
 #: include/classes/api/services/CItemGeneral.php:2321
 #: include/classes/import/readers/CXmlImportReader.php:46
@@ -110,8 +118,8 @@ msgstr "%1$s [Linje: %2$s | Kolonne: %3$s]"
 msgctxt "screen reader"
 msgid "%1$s action"
 msgid_plural "%1$s actions"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%1$s handling"
+msgstr[1] "%1$s handlinger"
 
 #: app/views/monitoring.acknowledge.edit.php:51
 #: app/views/monitoring.acknowledge.edit.php:56
@@ -126,16 +134,16 @@ msgstr[1] "%1$s hendelser"
 #, c-format
 msgid "%1$s item"
 msgid_plural "%1$s items"
-msgstr[0] "%1$s artikkel"
-msgstr[1] "%1$s artikler"
+msgstr[0] "%1$s element"
+msgstr[1] "%1$s elementer"
 
 #: include/actions.inc.php:1782
 #, c-format
 msgctxt "screen reader"
 msgid "%1$s message"
 msgid_plural "%1$s messages"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%1$s melding"
+msgstr[1] "%1$s meldinger"
 
 #: include/classes/widgets/CWidgetConfig.php:162
 #: include/classes/widgets/CWidgetConfig.php:163
@@ -152,28 +160,28 @@ msgstr[1] "%1$s minutter"
 #, c-format
 msgid "%1$s of %2$s element in problem state"
 msgid_plural "%1$s of %2$s elements in problem state"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%1$s av %2$s element er i en feilstatus"
+msgstr[1] "%1$s av %2$s elementer er i en feilstatus"
 
 #: jsLoader.php:256
 #, c-format
 msgctxt "screen reader"
 msgid "%1$s preselected, use down,up arrow keys and enter to select"
-msgstr ""
+msgstr "%1$s forhåndsvalgt, bruk piltaster og enter for å velge"
 
 #: include/maps.inc.php:1109
 #, c-format
 msgid "%1$s problem"
 msgid_plural "%1$s problems"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%1$s feil"
+msgstr[1] "%1$s feil"
 
 #: include/classes/helpers/CMapHelper.php:316
 #, c-format
 msgid "%1$s problem in total"
 msgid_plural "%1$s problems in total"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%1$s feil totalt"
+msgstr[1] "%1$s feil totalt"
 
 #: app/views/monitoring.widget.actionlog.view.php:41
 #: include/actions.inc.php:2214 include/classes/screens/CScreenActions.php:129
@@ -197,34 +205,34 @@ msgstr[1] "%1$s sekunder"
 #: jsLoader.php:237
 #, c-format
 msgid "%1$s symbols remaining"
-msgstr ""
+msgstr "%1$s symboler gjenstår"
 
 #: app/views/monitoring.widget.problems.view.php:280
 #, c-format
 msgctxt "screen reader"
 msgid "%1$s widget"
-msgstr ""
+msgstr "%1$s widget"
 
 #: app/views/monitoring.widget.problemhosts.view.php:98
 #: app/views/monitoring.widget.problems.view.php:194
 #, c-format
 msgctxt "screen reader"
 msgid "%1$s, Severity, %2$s"
-msgstr ""
+msgstr "%1$s, Alvorlighet, %2$s"
 
 #: jsLoader.php:250
 #, c-format
 msgctxt "screen reader"
 msgid "%1$s, read only"
-msgstr ""
+msgstr "%1$s, skrivebeskyttet"
 
 #: jsLoader.php:300
 #, c-format
 msgctxt "screen reader"
 msgid "%1$s, selected"
-msgstr ""
+msgstr "%1$s, valgt"
 
-#: app/views/layout.htmlpage.php:106 include/page_header.php:284
+#: app/views/layout.htmlpage.php:107 include/page_header.php:264
 #, c-format
 msgid "%4$s failed login attempt logged. Last failed attempt was from %1$s on %2$s at %3$s."
 msgid_plural "%4$s failed login attempts logged. Last failed attempt was from %1$s on %2$s at %3$s."
@@ -306,11 +314,11 @@ msgstr "500 siste verdier"
 #: app/views/popup.preproctestedit.view.js.php:34
 #: app/views/popup.preproctestedit.view.js.php:41
 msgid "<empty string>"
-msgstr ""
+msgstr "<tom streng>"
 
 #: include/forms.inc.php:1361 include/views/js/item.preprocessing.js.php:244
 msgid "<label name>"
-msgstr ""
+msgstr "<etikettnavn>"
 
 #: include/views/monitoring.sysmap.edit.php:116
 msgid "<manual>"
@@ -367,7 +375,7 @@ msgstr[0] "Konto er blokkert for %1$s sekund."
 msgstr[1] "Konto er blokkert for %1$s sekunder."
 
 #: app/views/monitoring.widget.problems.view.php:64
-#: include/actions.inc.php:157 include/blocks.inc.php:741
+#: include/actions.inc.php:157 include/blocks.inc.php:749
 #: include/classes/screens/CScreenHostTriggers.php:223
 #: include/classes/screens/CScreenProblem.php:910
 #: include/classes/screens/CScreenProblem.php:935
@@ -523,7 +531,7 @@ msgid "Action updated"
 msgstr "Handling oppdatert"
 
 #: app/views/monitoring.dashboard.view.php:86
-#: app/views/monitoring.widget.problems.view.php:65 include/blocks.inc.php:742
+#: app/views/monitoring.widget.problems.view.php:65 include/blocks.inc.php:750
 #: include/classes/screens/CScreenHostTriggers.php:223
 #: include/classes/screens/CScreenProblem.php:911
 #: include/classes/screens/CScreenProblem.php:936
@@ -890,7 +898,7 @@ msgstr "Alle"
 
 #: app/views/monitoring.dashboard.breadcrumbs.php:25
 msgid "All dashboards"
-msgstr "Alle dashboard"
+msgstr "Alle panel"
 
 #: app/views/administration.user.edit.php:323
 #: app/views/administration.user.edit.php:329
@@ -1179,11 +1187,11 @@ msgstr ""
 #: include/classes/api/services/CMaintenance.php:700
 #: include/views/configuration.maintenance.edit.php:233
 msgid "At least one host group or host must be selected."
-msgstr ""
+msgstr "Minst en vertsgruppe eller vert må velges."
 
 #: include/views/configuration.host.edit.php:195
 msgid "At least one interface must exist."
-msgstr ""
+msgstr "Det må være minst ett grensesnitt."
 
 #: include/classes/api/services/CMaintenance.php:367
 #: include/classes/api/services/CMaintenance.php:375
@@ -1198,7 +1206,7 @@ msgstr "Minst en av MySQL, PostgreSQL, Oracle eller IBM DB2 skal støttes."
 
 #: include/views/configuration.action.edit.php:1262
 msgid "At least one operation must exist."
-msgstr ""
+msgstr "Det må være minst én handling."
 
 #: include/views/configuration.action.edit.php:1266
 msgid "At least one operation or recovery operation must exist."
@@ -1811,7 +1819,7 @@ msgstr "Kan ikke legge til webscenario"
 
 #: jsLoader.php:134
 msgid "Cannot add widget: not enough free space on the dashboard."
-msgstr ""
+msgstr "Kan ikke legge til widget: ikke nok ledig plass på panelet."
 
 #: jsLoader.php:123
 msgid "Cannot add widgets in kiosk mode"
@@ -1846,7 +1854,7 @@ msgstr "Kan ikke klone vertsprototyper."
 #: include/classes/api/services/CDiscoveryRule.php:1813
 #: include/classes/api/services/CDiscoveryRule.php:1831
 msgid "Cannot clone item prototypes."
-msgstr "Kan ikke klone vare prototyper."
+msgstr "Kan ikke klone elementprototyper."
 
 #: include/classes/api/services/CDiscoveryRule.php:808
 msgid "Cannot clone trigger prototypes."
@@ -1962,7 +1970,7 @@ msgstr "Kan ikke slette korrelasjon"
 msgid "Cannot delete dashboard"
 msgid_plural "Cannot delete dashboards"
 msgstr[0] "Kan ikke slette dashbordet"
-msgstr[1] "Kan ikke slette dashbordene"
+msgstr[1] "Kan ikke slette panelet"
 
 #: include/classes/api/services/CTrigger.php:867
 #: include/classes/api/services/CTriggerPrototype.php:588
@@ -1972,7 +1980,7 @@ msgstr "Kan ikke slette avhengighet"
 #: include/classes/api/services/CApplication.php:461
 #, c-format
 msgid "Cannot delete discovered application \"%1$s\"."
-msgstr "Kan ikke slette oppdaget søknad \"%1$s\"."
+msgstr "Kan ikke slette oppdaget applikasjon \"%1$s\"."
 
 #: discoveryconf.php:188 host_discovery.php:299
 msgid "Cannot delete discovery rule"
@@ -2792,7 +2800,7 @@ msgstr "Kan ikke oppdatere feilsøkingsmodus"
 #: include/classes/api/services/CApplication.php:363
 #, c-format
 msgid "Cannot update discovered application \"%1$s\"."
-msgstr "Kan ikke oppdatere oppdaget søknad \"%1$s\"."
+msgstr "Kan ikke oppdatere oppdaget applikasjon \"%1$s\"."
 
 #: discoveryconf.php:157 host_discovery.php:595
 msgid "Cannot update discovery rule"
@@ -3516,7 +3524,7 @@ msgstr "Konfigurasjon av makroer"
 msgid "Configuration of maintenance periods"
 msgstr "Konfigurasjon av vedlikeholdsperioder"
 
-#: app/controllers/CControllerMediatypeEdit.php:230
+#: app/controllers/CControllerMediatypeEdit.php:231
 #: app/controllers/CControllerMediatypeList.php:139
 msgid "Configuration of media types"
 msgstr "Konfigurasjon av medietyper"
@@ -3896,11 +3904,11 @@ msgstr "Lag handling"
 
 #: include/views/configuration.application.list.php:42
 msgid "Create application"
-msgstr "Opprett søknad"
+msgstr "Opprett applikasjon"
 
 #: include/views/configuration.application.list.php:41
 msgid "Create application (select host first)"
-msgstr "Opprett søknad (velg verten først)"
+msgstr "Opprett applikasjon (velg vert først)"
 
 #: include/views/administration.general.image.list.php:40
 msgid "Create background"
@@ -3912,7 +3920,7 @@ msgstr "Lag korrelasjon"
 
 #: app/views/monitoring.dashboard.list.php:34
 msgid "Create dashboard"
-msgstr "Opprett dashbord"
+msgstr "Opprett panel"
 
 #: jsLoader.php:266
 msgid "Create dependent discovery rule"
@@ -4184,7 +4192,7 @@ msgstr "DES"
 
 #: include/maps.inc.php:334 include/maps.inc.php:426
 msgid "DISABLED"
-msgstr "FUNKSJONSHEMMET"
+msgstr "DEAKTIVERT"
 
 #: app/views/administration.proxy.edit.php:50 app/views/search.php:28
 #: include/views/configuration.host.list.php:124
@@ -4215,50 +4223,50 @@ msgstr "Mørk"
 #: app/controllers/CControllerDashboardView.php:157 include/audit.inc.php:56
 #: include/menu.inc.php:46
 msgid "Dashboard"
-msgstr "dashbord"
+msgstr "Panel"
 
 #: include/classes/api/services/CDashboard.php:435
 #, c-format
 msgid "Dashboard \"%1$s\" already exists."
-msgstr "Dashboard \"%1$s\" eksisterer allerede."
+msgstr "Panelet \"%1$s\" eksisterer allerede."
 
 #: include/classes/api/services/CDashboard.php:558
 #, c-format
 msgid "Dashboard \"%1$s\" cell X - %2$s Y - %3$s is already taken."
-msgstr "Dashboard \"%1$s\" celle X - %2$s Y - %3$s er allerede tatt."
+msgstr "Panelet \"%1$s\" celle X - %2$s Y - %3$s er allerede tatt."
 
 #: include/classes/api/services/CDashboard.php:571
-#, c-format
+#, fuzzy, c-format
 msgid "Dashboard \"%1$s\" widget in cell X - %2$s Y - %3$s is out of bounds."
-msgstr ""
+msgstr "Panelet \"%1$s\" widget i celle X - %2$s Y - %3$s er utenfor området."
 
 #: app/controllers/CControllerDashboardUpdate.php:246
 msgid "Dashboard created"
-msgstr "Dashboard opprettet"
+msgstr "Panel opprettet"
 
 #: app/controllers/CControllerDashboardDelete.php:59
 msgid "Dashboard deleted"
 msgid_plural "Dashboards deleted"
-msgstr[0] "Dashboard slettet"
-msgstr[1] "Dashboards slettet"
+msgstr[0] "Panel slettet"
+msgstr[1] "Panelene slettet"
 
 #: app/views/dashboard.properties.edit.php:60
 msgid "Dashboard properties"
-msgstr "Dashboard egenskaper"
+msgstr "Panelegenskaper"
 
 #: app/views/dashboard.sharing.edit.php:92
 msgid "Dashboard sharing"
-msgstr "Dashboard deling"
+msgstr "Paneldeling"
 
 #: app/controllers/CControllerDashboardShareUpdate.php:88
 #: app/controllers/CControllerDashboardUpdate.php:241
 msgid "Dashboard updated"
-msgstr "Dashboard oppdatert"
+msgstr "Panel oppdatert"
 
 #: app/controllers/CControllerDashboardList.php:91
 #: app/views/monitoring.dashboard.list.php:30
 msgid "Dashboards"
-msgstr "oversikter"
+msgstr "Panel"
 
 #: include/graphs.inc.php:63 include/views/js/monitoring.sysmaps.js.php:697
 #: include/views/js/monitoring.sysmaps.js.php:785
@@ -4369,7 +4377,7 @@ msgstr "Dato HW kjøpt"
 msgid "Day"
 msgstr "Dag"
 
-#: include/func.inc.php:2664
+#: include/func.inc.php:2655
 msgid "Day before yesterday"
 msgstr ""
 
@@ -4540,7 +4548,7 @@ msgstr "Slett og fjern mal? (Advarsel: alle tilknyttede verter blir ryddet!)"
 
 #: include/views/configuration.application.edit.php:53
 msgid "Delete application?"
-msgstr "Slett søknad?"
+msgstr "Slett applikasjon?"
 
 #: include/views/configuration.action.edit.php:2365
 msgid "Delete current action?"
@@ -4552,7 +4560,7 @@ msgstr "Slett nåværende korrelasjon?"
 
 #: jsLoader.php:268
 msgid "Delete dashboard?"
-msgstr "Slett dashbord?"
+msgstr "Slett panel?"
 
 #: include/views/configuration.discovery.edit.php:136
 #: include/views/configuration.host.discovery.edit.php:810
@@ -4640,7 +4648,7 @@ msgstr "Slett utvalgte korrelasjoner?"
 
 #: app/views/monitoring.dashboard.list.php:76
 msgid "Delete selected dashboards?"
-msgstr "Slett valgte dashboards?"
+msgstr "Slett valgte panel?"
 
 #: include/views/configuration.discovery.list.php:99
 #: include/views/configuration.host.discovery.list.php:177
@@ -5037,7 +5045,7 @@ msgstr "Deaktiver valgte webscenarier?"
 #: include/views/configuration.host.prototype.edit.php:361
 #: include/views/js/monitoring.sysmaps.js.php:232
 msgid "Disabled"
-msgstr "Funksjonshemmet"
+msgstr "Deaktivert"
 
 #: adm.triggerseverities.php:41 adm.triggerseverities.php:42
 #: include/views/administration.general.trigseverity.edit.php:78
@@ -5415,7 +5423,7 @@ msgstr "Dupliser usrgrpid \"%1$s\" i brukergrupper for kart \"%2$s\"."
 msgid "Duplicate usrgrpid \"%1$s\" in user groups for screen \"%2$s\"."
 msgstr "Dupliser usrgrpid \"%1$s\" i brukergrupper for skjermbildet \"%2$s\"."
 
-#: app/views/monitoring.widget.problems.view.php:63 include/blocks.inc.php:740
+#: app/views/monitoring.widget.problems.view.php:63 include/blocks.inc.php:748
 #: include/classes/screens/CScreenProblem.php:909
 #: include/classes/screens/CScreenProblem.php:934
 #: include/classes/screens/CScreenProblem.php:1189 include/events.inc.php:258
@@ -5465,7 +5473,7 @@ msgstr "Redigerer"
 
 #: app/views/monitoring.dashboard.view.php:79
 msgid "Edit dashboard"
-msgstr "Rediger dashbordet"
+msgstr "Rediger panelet"
 
 #: app/views/monitoring.map.view.php:46
 msgid "Edit map"
@@ -5812,7 +5820,7 @@ msgstr "aktivert"
 #: include/views/configuration.host.massupdate.php:301
 #: include/views/configuration.host.prototype.edit.php:417
 msgid "Encryption"
-msgstr "kryptering"
+msgstr "Kryptering"
 
 #: app/views/administration.autoreg.edit.php:50
 msgid "Encryption level"
@@ -6114,7 +6122,7 @@ msgstr "mislyktes"
 
 #: app/controllers/CControllerDashboardUpdate.php:247
 msgid "Failed to create dashboard"
-msgstr "Kunne ikke opprette dashbordet"
+msgstr "Kunne ikke opprette panelet"
 
 #: include/views/js/common.item.edit.js.php:302
 #: include/views/js/configuration.httpconf.edit.js.php:76
@@ -6123,7 +6131,7 @@ msgstr "Kunne ikke analysere nettadressen."
 
 #: app/controllers/CControllerDashboardUpdate.php:242
 msgid "Failed to update dashboard"
-msgstr "Kunne ikke oppdatere oversikten"
+msgstr "Kunne ikke oppdatere panelet"
 
 #: include/classes/api/services/CTemplate.php:537
 msgid "Failed to update template."
@@ -6543,7 +6551,7 @@ msgstr "Gå til"
 
 #: app/views/system.warning.php:26 include/func.inc.php:1793
 msgid "Go to dashboard"
-msgstr "Gå til Dashboard"
+msgstr "Gå til panel"
 
 #: include/httptest.inc.php:413
 msgid "Google Chrome"
@@ -7073,7 +7081,7 @@ msgstr "Horisontal justering"
 #: app/views/popup.generic.php:53 app/views/popup.generic.php:98
 #: app/views/popup.generic.php:137 app/views/search.php:26 httpconf.php:189
 #: httpconf.php:497 include/actions.inc.php:50 include/audit.inc.php:27
-#: include/blocks.inc.php:737 include/classes/screens/CScreenEvents.php:32
+#: include/blocks.inc.php:745 include/classes/screens/CScreenEvents.php:32
 #: include/classes/screens/CScreenHostgroupTriggers.php:135
 #: include/classes/screens/CScreenHostTriggers.php:67
 #: include/classes/screens/CScreenHostTriggers.php:135
@@ -7448,7 +7456,7 @@ msgstr "Vert med samme synlige navn \"%s\" eksisterer allerede."
 #: include/views/conf.import.php:29 include/views/reports.toptriggers.php:50
 #: latest.php:340
 msgid "Hosts"
-msgstr "verter"
+msgstr "Verter"
 
 #: include/views/configuration.maintenance.edit.php:277
 msgid "Hosts and groups"
@@ -7460,7 +7468,7 @@ msgstr ""
 #: include/views/monitoring.overview.triggers.php:98
 #: include/views/monitoring.screen.constructor.edit.php:765
 msgid "Hosts location"
-msgstr "Verter plassering"
+msgstr "Vertsplassering"
 
 #: hosts.php:546
 msgid "Hosts updated"
@@ -8166,6 +8174,12 @@ msgstr "Feil tilpasset uttrykk \"%2$s\" for oppdagelsesregel \"%1$s\": %3$s."
 msgid "Incorrect data."
 msgstr "Feil data."
 
+#: include/classes/db/MysqlDbBackend.php:66
+#: include/classes/db/PostgresqlDbBackend.php:75
+#, c-format
+msgid "Incorrect default charset for Zabbix database: %1$s."
+msgstr ""
+
 #: include/classes/api/services/CEvent.php:527
 #: include/classes/api/services/CProblem.php:394
 msgid "Incorrect evaltype value."
@@ -8319,7 +8333,7 @@ msgstr "Feil element for akseverdi."
 #: include/classes/api/services/CTriggerGeneral.php:1392
 #, c-format
 msgid "Incorrect item key \"%1$s\" provided for trigger expression on \"%2$s\"."
-msgstr "Feil varenøkkel \"%1$s\" gitt for utløserkonsept på \"%2$s\"."
+msgstr "Feil elementnøkkel \"%1$s\" gitt for utløseruttrykk på \"%2$s\"."
 
 #: include/classes/api/services/CScreenItem.php:693
 #, c-format
@@ -8399,6 +8413,11 @@ msgstr "Feil metode \"%1$s.%2$s\"."
 #: include/classes/api/services/CProblem.php:382
 msgid "Incorrect object value."
 msgstr "Feil objektverdien."
+
+#: include/classes/db/OracleDbBackend.php:86
+#, c-format
+msgid "Incorrect parameter \"%1$s\" value: %2$s."
+msgstr ""
 
 #: include/classes/api/services/CAction.php:2824
 #, c-format
@@ -8918,7 +8937,7 @@ msgstr "Indonesisk (id_ID)"
 #: app/views/monitoring.widget.actionlog.view.php:35
 #: app/views/monitoring.widget.problems.view.php:55
 #: include/actions.inc.php:1887 include/actions.inc.php:1971
-#: include/blocks.inc.php:736 include/classes/screens/CScreenActions.php:117
+#: include/blocks.inc.php:744 include/classes/screens/CScreenActions.php:117
 #: include/classes/screens/CScreenHostTriggers.php:223
 #: include/classes/screens/CScreenProblem.php:904
 #: include/classes/screens/CScreenProblem.php:928
@@ -9353,7 +9372,7 @@ msgid "Invalid second parameter."
 msgstr "Ugyldig andre parameter."
 
 #: include/classes/export/CConfigurationExportBuilder.php:76
-#: include/classes/export/CConfigurationExportBuilder.php:103
+#: include/classes/export/CConfigurationExportBuilder.php:104
 #: include/classes/import/converters/CConstantImportConverter.php:60
 #: include/classes/import/readers/CXmlImportReader.php:77
 #: include/classes/import/readers/CXmlImportReader.php:116
@@ -9371,13 +9390,13 @@ msgstr "Ugyldig andre parameter."
 #: include/classes/import/validators/C34XmlValidator.php:1111
 #: include/classes/import/validators/C40XmlValidator.php:1290
 #: include/classes/import/validators/C42XmlValidator.php:1350
-#: include/classes/import/validators/C44XmlValidator.php:1755
-#: include/classes/import/validators/C44XmlValidator.php:2037
-#: include/classes/import/validators/C44XmlValidator.php:2171
-#: include/classes/import/validators/C44XmlValidator.php:2191
-#: include/classes/import/validators/C44XmlValidator.php:2215
-#: include/classes/import/validators/C44XmlValidator.php:2244
-#: include/classes/import/validators/C44XmlValidator.php:2305
+#: include/classes/import/validators/C44XmlValidator.php:1757
+#: include/classes/import/validators/C44XmlValidator.php:2039
+#: include/classes/import/validators/C44XmlValidator.php:2149
+#: include/classes/import/validators/C44XmlValidator.php:2169
+#: include/classes/import/validators/C44XmlValidator.php:2193
+#: include/classes/import/validators/C44XmlValidator.php:2222
+#: include/classes/import/validators/C44XmlValidator.php:2283
 #: include/classes/import/validators/CXmlValidatorGeneral.php:98
 #: include/classes/import/validators/CXmlValidatorGeneral.php:118
 #: include/classes/import/validators/CXmlValidatorGeneral.php:137
@@ -9478,7 +9497,7 @@ msgstr "Italiensk (it_IT)"
 #: include/views/monitoring.screen.constructor.edit.php:721 items.php:996
 #: items.php:1412
 msgid "Item"
-msgstr "artikkel"
+msgstr "Element"
 
 #: include/classes/api/services/CHostPrototype.php:994
 #: include/classes/api/services/CItem.php:51
@@ -9534,7 +9553,7 @@ msgstr[1] "Elementer kopiert"
 
 #: app/views/administration.proxy.list.php:70
 msgid "Item count"
-msgstr "Varenummer"
+msgstr "Antall elementer"
 
 #: items.php:539
 msgid "Item deleted"
@@ -9558,7 +9577,7 @@ msgstr "Element i \"ikke støttet\" tilstand"
 
 #: app/controllers/CControllerPopupTriggerExpr.php:686
 msgid "Item not selected"
-msgstr "Varen er ikke valgt"
+msgstr "Element ikke valgt"
 
 #: include/classes/api/services/CItemGeneral.php:1281
 #, c-format
@@ -9627,7 +9646,7 @@ msgstr ""
 
 #: items.php:958
 msgid "Item updated"
-msgstr "Varen er oppdatert"
+msgstr "Elementet er oppdatert"
 
 #: include/classes/api/services/CItemGeneral.php:397
 msgid "Item uses host interface from non-parent host."
@@ -9709,7 +9728,7 @@ msgstr "Element med nøkkel \"%1$s\" eksisterer allerede på \"%2$s\"."
 #: include/views/conf.import.php:34 include/views/inventory.host.view.php:155
 #: include/views/inventory.host.view.php:174 items.php:1801 queue.php:109
 msgid "Items"
-msgstr "elementer"
+msgstr "Elementer"
 
 #: items.php:1435
 msgid "Items deleted"
@@ -9850,7 +9869,7 @@ msgstr ""
 #: include/views/configuration.item.prototype.list.php:53
 #: include/views/js/configuration.discovery.edit.js.php:78 items.php:49
 msgid "Key"
-msgstr "Tast"
+msgstr "Nøkkel"
 
 #: include/classes/api/services/CItemGeneral.php:449
 #, c-format
@@ -9945,42 +9964,42 @@ msgctxt "page navigation"
 msgid "Last"
 msgstr "Siste"
 
-#: include/func.inc.php:2717
+#: include/func.inc.php:2708
 #, c-format
 msgid "Last %1$d day"
 msgid_plural "Last %1$d days"
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/func.inc.php:2711
+#: include/func.inc.php:2702
 #, c-format
 msgid "Last %1$d hour"
 msgid_plural "Last %1$d hours"
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/func.inc.php:2704
+#: include/func.inc.php:2695
 #, c-format
 msgid "Last %1$d minute"
 msgid_plural "Last %1$d minutes"
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/func.inc.php:2720
+#: include/func.inc.php:2711
 #, c-format
 msgid "Last %1$d month"
 msgid_plural "Last %1$d months"
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/func.inc.php:2697
+#: include/func.inc.php:2688
 #, c-format
 msgid "Last %1$d second"
 msgid_plural "Last %1$d seconds"
 msgstr[0] ""
 msgstr[1] ""
 
-#: include/func.inc.php:2723
+#: include/func.inc.php:2714
 #, c-format
 msgid "Last %1$d year"
 msgid_plural "Last %1$d years"
@@ -10398,7 +10417,7 @@ msgstr "Makro med hostmacroid \"%1$s\" eksisterer ikke."
 #: include/views/configuration.host.prototype.edit.php:343
 #: include/views/configuration.template.edit.php:421
 msgid "Macros"
-msgstr "makroer"
+msgstr "Makroer"
 
 #: adm.macros.php:101
 msgid "Macros updated"
@@ -11278,7 +11297,7 @@ msgstr "Ny"
 #: include/views/configuration.item.edit.php:884
 #: include/views/configuration.item.prototype.edit.php:725
 msgid "New application"
-msgstr "Ny søknad"
+msgstr "Ny applikasjon"
 
 #: include/views/configuration.item.prototype.edit.php:739
 msgid "New application prototype"
@@ -11291,7 +11310,7 @@ msgstr "Ny tilstand"
 
 #: app/controllers/CControllerDashboardView.php:385
 msgid "New dashboard"
-msgstr "Nytt dashbord"
+msgstr "Nytt panel"
 
 #: jsLoader.php:200
 msgid "New element"
@@ -11339,7 +11358,7 @@ msgstr "Neste steg"
 #: app/views/administration.user.list.php:115
 #: app/views/monitoring.widget.problems.view.php:261
 #: include/actions.inc.php:33 include/blocks.inc.php:622
-#: include/blocks.inc.php:847
+#: include/blocks.inc.php:855
 #: include/classes/screens/CScreenHostTriggers.php:273
 #: include/classes/screens/CScreenProblem.php:1134
 #: include/classes/screens/CScreenProblem.php:1270 include/events.inc.php:183
@@ -11468,7 +11487,7 @@ msgstr "Ingen agentgrensesnitt funnet."
 
 #: include/views/configuration.httpconf.edit.php:69
 msgid "No applications found."
-msgstr "Ingen søknader funnet."
+msgstr "Ingen applikasjoner funnet."
 
 #: include/classes/api/services/CAction.php:1818
 #, c-format
@@ -11643,7 +11662,7 @@ msgstr "Ingen lagermodus spesifisert for handlingsoperasjon."
 #: include/classes/api/services/CScreenItem.php:511
 #: include/classes/api/services/CScreenItem.php:521
 msgid "No item ID provided for screen element."
-msgstr "Ingen artikkel ID angitt for skjermelement."
+msgstr "Ingen element-ID angitt for skjermelement."
 
 #: include/classes/api/services/CScreenItem.php:501
 msgid "No item prototype ID provided for screen element."
@@ -12420,7 +12439,7 @@ msgstr "Bare superadministratorer kan slette verdikart."
 
 #: include/classes/api/services/CDashboard.php:462
 msgid "Only super admins can set dashboard owner."
-msgstr ""
+msgstr "Kun superadministratorer kan endre paneleier."
 
 #: include/classes/api/services/CCorrelation.php:689
 msgid "Only super admins can update correlations."
@@ -12483,7 +12502,7 @@ msgstr "Operasjonen har ingen mal å betjene."
 msgid "Operation type"
 msgstr "Operasjonstype"
 
-#: app/views/monitoring.widget.problems.view.php:62 include/blocks.inc.php:739
+#: app/views/monitoring.widget.problems.view.php:62 include/blocks.inc.php:747
 #: include/classes/screens/CScreenProblem.php:932
 #: include/classes/screens/CScreenProblem.php:1188 include/events.inc.php:170
 #: include/views/configuration.trigger.prototype.edit.php:68
@@ -13228,7 +13247,7 @@ msgstr "Pre-installasjon sammendrag"
 #: include/views/configuration.item.prototype.edit.php:767
 #: include/views/configuration.item.prototype.massupdate.php:614
 msgid "Preprocessing"
-msgstr "forbehandling"
+msgstr "Forbehandling"
 
 #: app/views/popup.preproctestedit.view.php:129
 #: include/views/configuration.host.discovery.edit.php:787
@@ -13255,7 +13274,7 @@ msgstr ""
 msgid "Preview"
 msgstr "Forh"
 
-#: include/func.inc.php:2667
+#: include/func.inc.php:2658
 msgid "Previous month"
 msgstr ""
 
@@ -13268,11 +13287,11 @@ msgstr ""
 msgid "Previous value"
 msgstr ""
 
-#: include/func.inc.php:2666
+#: include/func.inc.php:2657
 msgid "Previous week"
 msgstr ""
 
-#: include/func.inc.php:2668
+#: include/func.inc.php:2659
 msgid "Previous year"
 msgstr ""
 
@@ -13347,7 +13366,7 @@ msgid "Privilege level"
 msgstr "Privilege nivå"
 
 #: app/views/monitoring.problem.view.php:163
-#: app/views/monitoring.widget.problems.view.php:58 include/blocks.inc.php:738
+#: app/views/monitoring.widget.problems.view.php:58 include/blocks.inc.php:746
 #: include/classes/screens/CScreenProblem.php:907
 #: include/classes/screens/CScreenProblem.php:930
 #: include/classes/screens/CScreenProblem.php:1101
@@ -13430,7 +13449,7 @@ msgstr "Problem, hvis minst ett barn har et problem"
 #: include/views/common.filter.trigger.php:42
 #: include/views/inventory.host.view.php:135 jsLoader.php:285 report2.php:455
 msgid "Problems"
-msgstr "problemer"
+msgstr "Problemer"
 
 #: include/classes/screens/CScreenSystemStatus.php:54
 #: include/classes/widgets/CWidgetConfig.php:48 include/screens.inc.php:40
@@ -13477,7 +13496,7 @@ msgstr ""
 #: app/views/administration.proxy.edit.php:24
 #: app/views/administration.proxy.list.php:27 include/menu.inc.php:260
 msgid "Proxies"
-msgstr "fullmakter"
+msgstr "Proxy"
 
 #: app/views/administration.proxy.edit.php:83
 #: app/views/administration.proxy.edit.php:118 include/actions.inc.php:63
@@ -14235,7 +14254,7 @@ msgstr "Returnerer prosentandelen av tapte ICMP pingpakker."
 #: include/views/monitoring.screen.constructor.edit.php:821
 #: include/views/monitoring.sysmap.edit.php:205
 msgid "Right"
-msgstr "Ikke sant"
+msgstr "Høyre"
 
 #: include/classes/widgets/forms/CWidgetFormSvgGraph.php:190
 #: include/classes/widgets/forms/CWidgetFormSvgGraph.php:203
@@ -15210,7 +15229,7 @@ msgstr "Vis elementer uten data"
 #: include/classes/widgets/forms/CWidgetFormSvgGraph.php:279
 #: include/views/configuration.graph.edit.php:100
 msgid "Show legend"
-msgstr "Vis legenden"
+msgstr "Vis forklaring"
 
 #: include/classes/widgets/forms/CWidgetFormActionLog.php:48
 #: include/classes/widgets/forms/CWidgetFormPlainText.php:55
@@ -15544,7 +15563,7 @@ msgstr "Stablet"
 #: include/classes/widgets/CWidgetHelper.php:765
 #: include/classes/widgets/CWidgetHelper.php:1009
 msgid "Staircase"
-msgstr ""
+msgstr "Trappetrinn"
 
 #: app/controllers/CControllerPopupGeneric.php:217
 msgid "Standard items"
@@ -15929,7 +15948,7 @@ msgid "Tag value"
 msgstr "Merkverdien"
 
 #: app/views/monitoring.problem.view.php:283
-#: app/views/monitoring.widget.problems.view.php:66 include/blocks.inc.php:743
+#: app/views/monitoring.widget.problems.view.php:66 include/blocks.inc.php:751
 #: include/classes/screens/CScreenProblem.php:881
 #: include/classes/screens/CScreenProblem.php:937
 #: include/classes/screens/CScreenProblem.php:1192
@@ -16114,7 +16133,7 @@ msgstr "Mal med det samme synlige navnet \"%s\" eksisterer allerede."
 #: include/views/configuration.template.massupdate.php:24
 #: include/views/conf.import.php:30
 msgid "Templates"
-msgstr "maler"
+msgstr "Maler"
 
 #: include/classes/api/services/CHostBase.php:238
 #, c-format
@@ -16211,7 +16230,7 @@ msgstr "Programmet blir ikke oppdaget lenger og vil bli slettet i %1$s (på %2$s
 
 #: include/html.inc.php:701
 msgid "The application is not discovered anymore and will be deleted the next time discovery rule is processed."
-msgstr "Søknaden blir ikke oppdaget lenger, og vil bli slettet neste gang registreringsregelen blir behandlet."
+msgstr "Applikasjonen blir ikke oppdaget lenger, og vil bli slettet neste gang registreringsregelen blir behandlet."
 
 #: include/classes/db/Db2DbBackend.php:41
 #: include/classes/db/MysqlDbBackend.php:35
@@ -16220,7 +16239,7 @@ msgstr "Søknaden blir ikke oppdaget lenger, og vil bli slettet neste gang regis
 msgid "The frontend does not match Zabbix database."
 msgstr "Frontenden stemmer ikke overens med Zabbix-databasen."
 
-#: include/classes/db/DbBackend.php:48
+#: include/classes/db/DbBackend.php:50
 #, c-format
 msgid "The frontend does not match Zabbix database. Current database version (mandatory/optional): %d/%d. Required mandatory version: %d. Contact your system administrator."
 msgstr "Frontenden stemmer ikke overens med Zabbix-databasen. Gjeldende databaseversjon (obligatorisk / valgfritt): %d / %d. Nødvendig obligatorisk versjon: %d. Kontakt systemadministratoren din."
@@ -16287,7 +16306,7 @@ msgstr "Webscenario-applikasjonen tilhører en annen vert enn webscenarverten."
 msgid "Theme"
 msgstr "Tema"
 
-#: include/func.inc.php:2665
+#: include/func.inc.php:2656
 msgid "This day last week"
 msgstr ""
 
@@ -16300,11 +16319,11 @@ msgstr "Dette feltet er automatisk befolket av elementet \"%s\"."
 msgid "This is the test message from Zabbix"
 msgstr ""
 
-#: include/func.inc.php:2673 srv_status.php:41
+#: include/func.inc.php:2664 srv_status.php:41
 msgid "This month"
 msgstr "Denne måneden"
 
-#: include/func.inc.php:2674
+#: include/func.inc.php:2665
 msgid "This month so far"
 msgstr ""
 
@@ -16316,19 +16335,19 @@ msgstr "Denne skjermkolonnen er ikke tom. Slett det?"
 msgid "This screen row is not empty. Delete it?"
 msgstr "Denne skjermraden er ikke tom. Slett det?"
 
-#: include/func.inc.php:2671 srv_status.php:40
+#: include/func.inc.php:2662 srv_status.php:40
 msgid "This week"
 msgstr "Denne uken"
 
-#: include/func.inc.php:2672
+#: include/func.inc.php:2663
 msgid "This week so far"
 msgstr ""
 
-#: include/func.inc.php:2675 srv_status.php:42
+#: include/func.inc.php:2666 srv_status.php:42
 msgid "This year"
 msgstr "Dette året"
 
-#: include/func.inc.php:2676
+#: include/func.inc.php:2667
 msgid "This year so far"
 msgstr ""
 
@@ -16364,7 +16383,7 @@ msgstr "Inntil"
 #: app/views/popup.triggerexpr.php:128 app/views/popup.triggerexpr.php:132
 #: include/actions.inc.php:1752 include/actions.inc.php:1806
 #: include/actions.inc.php:1887 include/actions.inc.php:1971
-#: include/actions.inc.php:2021 include/blocks.inc.php:718
+#: include/actions.inc.php:2021 include/blocks.inc.php:726
 #: include/classes/screens/CScreenActions.php:111
 #: include/classes/screens/CScreenEvents.php:32
 #: include/classes/screens/CScreenProblem.php:858
@@ -16454,12 +16473,12 @@ msgstr "Til"
 msgid "To set a host interface select a single item type for all items"
 msgstr "For å angi et vertsgrensesnitt, velg en enkelt gjenstandstype for alle elementer"
 
-#: include/classes/screens/CScreenProblem.php:749 include/func.inc.php:2669
+#: include/classes/screens/CScreenProblem.php:749 include/func.inc.php:2660
 #: srv_status.php:39
 msgid "Today"
 msgstr "I dag"
 
-#: include/func.inc.php:2670
+#: include/func.inc.php:2661
 msgid "Today so far"
 msgstr ""
 
@@ -16541,7 +16560,7 @@ msgstr "Transportfeil."
 #: include/classes/widgets/CWidgetHelper.php:1062
 msgctxt "missing data function"
 msgid "Treat as 0"
-msgstr ""
+msgstr "Behandle som 0"
 
 #: adm.housekeeper.php:62
 msgid "Trend data storage period"
@@ -17033,7 +17052,7 @@ msgstr "Kan ikke opprette konfigurasjonsfilen."
 msgid "Unable to overwrite the existing configuration file."
 msgstr "Kan ikke overskrive den eksisterende konfigurasjonsfilen."
 
-#: include/classes/db/DbBackend.php:63
+#: include/classes/db/DbBackend.php:65
 msgid "Unable to select configuration."
 msgstr "Kan ikke velge konfigurasjon."
 
@@ -17204,6 +17223,13 @@ msgstr "Ukoblet: Webscenario \"%1$s\" på \"%2$s\"."
 #: jsLoader.php:216
 msgid "Unmute"
 msgstr "Mikrofon"
+
+#: include/classes/db/MysqlDbBackend.php:95
+#: include/classes/db/PostgresqlDbBackend.php:111
+#, c-format
+msgid "Unsupported charset or collation for table: %1$s."
+msgid_plural "Unsupported charset or collation for tables: %1$s."
+msgstr[0] ""
 
 #: include/classes/import/readers/CImportReaderFactory.php:65
 #, c-format
@@ -17419,7 +17445,7 @@ msgstr "Bruker \"%1$s\" kan ikke være uten brukergruppe."
 #: include/classes/api/services/CUser.php:1064
 #, c-format
 msgid "User \"%1$s\" is dashboard \"%2$s\" owner."
-msgstr "Bruker \"%1$s\" er dashbordet \"%2$s\" eier."
+msgstr "Bruker \"%1$s\" er eier av panel \"%2$s\"."
 
 #: include/classes/api/services/CUser.php:1021
 #, c-format
@@ -18490,7 +18516,7 @@ msgstr ""
 #: include/classes/import/validators/C34XmlValidator.php:1111
 #: include/classes/import/validators/C40XmlValidator.php:1290
 #: include/classes/import/validators/C42XmlValidator.php:1350
-#: include/classes/import/validators/C44XmlValidator.php:1755
+#: include/classes/import/validators/C44XmlValidator.php:1757
 msgctxt "XML date and time format"
 msgid "YYYY-MM-DDThh:mm:ssZ"
 msgstr "ÅÅÅÅ-MM-DDThh: mm: ssZ"
@@ -18507,7 +18533,7 @@ msgstr "Årlig"
 #: app/views/administration.user.list.php:109
 #: app/views/monitoring.widget.problems.view.php:261
 #: include/actions.inc.php:32 include/blocks.inc.php:622
-#: include/blocks.inc.php:847
+#: include/blocks.inc.php:855
 #: include/classes/screens/CScreenHostTriggers.php:273
 #: include/classes/screens/CScreenProblem.php:1134
 #: include/classes/screens/CScreenProblem.php:1270 include/events.inc.php:183
@@ -18526,7 +18552,7 @@ msgstr "Årlig"
 msgid "Yes"
 msgstr "Ja"
 
-#: include/classes/screens/CScreenProblem.php:757 include/func.inc.php:2663
+#: include/classes/screens/CScreenProblem.php:757 include/func.inc.php:2654
 msgid "Yesterday"
 msgstr "I går"
 
@@ -18594,7 +18620,7 @@ msgstr "Du har ikke tilgang til å opprette brukere."
 
 #: jsLoader.php:124
 msgid "You do not have permissions to edit dashboard"
-msgstr ""
+msgstr "Du har ikke tilgang til å endre på panelet"
 
 #: include/func.inc.php:1782
 msgid "You have no permissions to access this page."
@@ -18616,7 +18642,7 @@ msgstr "Databasen fungerer ikke som den skal. Vennligst vent noen minutter og pr
 msgid "ZABBIX"
 msgstr "ZABBIX"
 
-#: include/page_header.php:156
+#: include/page_header.php:136
 msgid "Zabbix"
 msgstr "Zabbix"
 
@@ -18814,7 +18840,7 @@ msgstr ""
 
 #: app/controllers/CControllerPopupHttpStep.php:94
 #: include/classes/validators/CApiInputValidator.php:1434
-#: include/validate.inc.php:227 include/validate.inc.php:590
+#: include/validate.inc.php:227 include/validate.inc.php:591
 msgid "a time unit is expected"
 msgstr "en tidsenhet er forventet"
 
@@ -18866,9 +18892,9 @@ msgstr "alle medier"
 #: include/classes/api/services/CDRule.php:474
 #: include/classes/api/services/CItemGeneral.php:2253
 #: include/classes/api/services/CItemGeneral.php:2277
-#: include/classes/import/validators/C44XmlValidator.php:2171
-#: include/classes/import/validators/C44XmlValidator.php:2191
-#: include/classes/import/validators/C44XmlValidator.php:2305
+#: include/classes/import/validators/C44XmlValidator.php:2149
+#: include/classes/import/validators/C44XmlValidator.php:2169
+#: include/classes/import/validators/C44XmlValidator.php:2283
 #: include/classes/import/validators/CXmlValidatorGeneral.php:216
 #: include/classes/validators/CApiInputValidator.php:394
 #: include/classes/validators/CApiInputValidator.php:526
@@ -19708,7 +19734,7 @@ msgstr ""
 msgid "problem pattern"
 msgstr ""
 
-#: include/page_header.php:159 include/views/general.warning.php:21
+#: include/page_header.php:139 include/views/general.warning.php:21
 #, c-format
 msgid "refreshed every %1$s sec."
 msgstr "oppdateres hver %1$s sek."
@@ -19728,7 +19754,7 @@ msgstr "husk valgte"
 
 #: include/classes/graphdraw/CLineGraphDraw.php:1990
 msgid "right"
-msgstr "Ikke sant"
+msgstr "høyre"
 
 #: app/views/popup.services.php:55 app/views/popup.services.php:58
 #: app/views/popup.services.php:60 app/views/popup.services.php:61
@@ -19887,7 +19913,7 @@ msgid "the parameter \"%1$s\" is missing"
 msgstr "parameteren \"%1$s\" mangler"
 
 #: include/classes/export/CConfigurationExportBuilder.php:77
-#: include/classes/import/validators/C44XmlValidator.php:2037
+#: include/classes/import/validators/C44XmlValidator.php:2039
 #: include/classes/import/validators/CXmlValidatorGeneral.php:119
 #: include/classes/import/validators/CXmlValidatorGeneral.php:138
 #, c-format
@@ -19948,15 +19974,15 @@ msgstr "skriv her for å søke"
 msgid "unacceptable URL"
 msgstr ""
 
-#: include/classes/import/validators/C44XmlValidator.php:2245
+#: include/classes/import/validators/C44XmlValidator.php:2223
 #: include/classes/import/validators/CXmlValidatorGeneral.php:231
 #, c-format
 msgid "unexpected constant \"%1$s\""
 msgstr ""
 
-#: include/classes/export/CConfigurationExportBuilder.php:104
+#: include/classes/export/CConfigurationExportBuilder.php:105
 #: include/classes/import/converters/CConstantImportConverter.php:60
-#: include/classes/import/validators/C44XmlValidator.php:2216
+#: include/classes/import/validators/C44XmlValidator.php:2194
 #, c-format
 msgid "unexpected constant value \"%1$s\""
 msgstr ""
@@ -20108,7 +20134,7 @@ msgstr "verdien er for lang"
 #: include/classes/api/services/CMap.php:1146
 #: include/classes/validators/CApiInputValidator.php:356
 #: include/classes/validators/CApiInputValidator.php:664
-#: include/validate.inc.php:583
+#: include/validate.inc.php:584
 #, c-format
 msgid "value must be one of %1$s"
 msgstr "verdien må være en av %1$s"

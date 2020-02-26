@@ -57,6 +57,7 @@ function local_generateHeader($data) {
 	// construct menu
 	$main_menu = [];
 	$sub_menus = [];
+	$page = (array) $page;
 
 	zbx_construct_menu($main_menu, $sub_menus, $page, $data['controller']['action']);
 

@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Zabbix 4.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-01-19 01:48+0200\n"
-"PO-Revision-Date: 2019-12-09 09:46+0300\n"
+"POT-Creation-Date: 2020-02-17 12:03+0200\n"
+"PO-Revision-Date: 2020-02-10 08:06+0300\n"
 "Last-Translator: Anonymous Pootle User\n"
 "Language-Team: Zabbix <info@zabbix.com>\n"
 "Language: pt_BR\n"
@@ -13,7 +13,14 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Pootle 2.5.1.3\n"
 "X-Poedit-Basepath: ../../\n"
-"X-POOTLE-MTIME: 1575877596.000000\n"
+"X-POOTLE-MTIME: 1581314793.000000\n"
+
+#: include/classes/db/MysqlDbBackend.php:67
+#: include/classes/db/OracleDbBackend.php:87
+#: include/classes/db/PostgresqlDbBackend.php:76
+#, c-format
+msgid "\"%1$s\" instead \"%2$s\""
+msgstr ""
 
 #: include/classes/import/validators/C10XmlValidator.php:358
 #: include/classes/import/validators/C10XmlValidator.php:375
@@ -23,7 +30,7 @@ msgstr ""
 #: include/classes/import/validators/C34XmlValidator.php:1111
 #: include/classes/import/validators/C40XmlValidator.php:1290
 #: include/classes/import/validators/C42XmlValidator.php:1350
-#: include/classes/import/validators/C44XmlValidator.php:1755
+#: include/classes/import/validators/C44XmlValidator.php:1757
 #, c-format
 msgid "\"%1$s\" is expected"
 msgstr "\"%1$s\" é aguardado"
@@ -220,7 +227,7 @@ msgctxt "screen reader"
 msgid "%1$s, selected"
 msgstr "%1$s, selecionado"
 
-#: app/views/layout.htmlpage.php:106 include/page_header.php:284
+#: app/views/layout.htmlpage.php:107 include/page_header.php:264
 #, c-format
 msgid "%4$s failed login attempt logged. Last failed attempt was from %1$s on %2$s at %3$s."
 msgid_plural "%4$s failed login attempts logged. Last failed attempt was from %1$s on %2$s at %3$s."
@@ -363,7 +370,7 @@ msgstr[0] "Conta bloqueada por %1$s segundo."
 msgstr[1] "Conta bloqueada por %1$s segundos."
 
 #: app/views/monitoring.widget.problems.view.php:64
-#: include/actions.inc.php:157 include/blocks.inc.php:741
+#: include/actions.inc.php:157 include/blocks.inc.php:749
 #: include/classes/screens/CScreenHostTriggers.php:223
 #: include/classes/screens/CScreenProblem.php:910
 #: include/classes/screens/CScreenProblem.php:935
@@ -519,7 +526,7 @@ msgid "Action updated"
 msgstr "Ação atualizada"
 
 #: app/views/monitoring.dashboard.view.php:86
-#: app/views/monitoring.widget.problems.view.php:65 include/blocks.inc.php:742
+#: app/views/monitoring.widget.problems.view.php:65 include/blocks.inc.php:750
 #: include/classes/screens/CScreenHostTriggers.php:223
 #: include/classes/screens/CScreenProblem.php:911
 #: include/classes/screens/CScreenProblem.php:936
@@ -3514,7 +3521,7 @@ msgstr "Configuração das macros"
 msgid "Configuration of maintenance periods"
 msgstr "Configuração dos períodos de manutenção"
 
-#: app/controllers/CControllerMediatypeEdit.php:230
+#: app/controllers/CControllerMediatypeEdit.php:231
 #: app/controllers/CControllerMediatypeList.php:139
 msgid "Configuration of media types"
 msgstr "Configuração dos tipos de mídia"
@@ -4367,7 +4374,7 @@ msgstr "Data de aquisição do HW"
 msgid "Day"
 msgstr "Dia"
 
-#: include/func.inc.php:2664
+#: include/func.inc.php:2655
 msgid "Day before yesterday"
 msgstr "Anteontem"
 
@@ -5416,7 +5423,7 @@ msgstr "O usrgrpid \"%1$s\" está duplicado nos grupos de usuários do mapa \"%2
 msgid "Duplicate usrgrpid \"%1$s\" in user groups for screen \"%2$s\"."
 msgstr "O usrgrpid \"%1$s\" está duplicado nos grupos de usuários da tela \"%2$s\"."
 
-#: app/views/monitoring.widget.problems.view.php:63 include/blocks.inc.php:740
+#: app/views/monitoring.widget.problems.view.php:63 include/blocks.inc.php:748
 #: include/classes/screens/CScreenProblem.php:909
 #: include/classes/screens/CScreenProblem.php:934
 #: include/classes/screens/CScreenProblem.php:1189 include/events.inc.php:258
@@ -7073,7 +7080,7 @@ msgstr "Alinhamento horizontal"
 #: app/views/popup.generic.php:53 app/views/popup.generic.php:98
 #: app/views/popup.generic.php:137 app/views/search.php:26 httpconf.php:189
 #: httpconf.php:497 include/actions.inc.php:50 include/audit.inc.php:27
-#: include/blocks.inc.php:737 include/classes/screens/CScreenEvents.php:32
+#: include/blocks.inc.php:745 include/classes/screens/CScreenEvents.php:32
 #: include/classes/screens/CScreenHostgroupTriggers.php:135
 #: include/classes/screens/CScreenHostTriggers.php:67
 #: include/classes/screens/CScreenHostTriggers.php:135
@@ -8166,6 +8173,12 @@ msgstr "A expressão personalizada \"%2$s\" é inválida para a regra de descobe
 msgid "Incorrect data."
 msgstr "Dado incorreto."
 
+#: include/classes/db/MysqlDbBackend.php:66
+#: include/classes/db/PostgresqlDbBackend.php:75
+#, c-format
+msgid "Incorrect default charset for Zabbix database: %1$s."
+msgstr ""
+
 #: include/classes/api/services/CEvent.php:527
 #: include/classes/api/services/CProblem.php:394
 msgid "Incorrect evaltype value."
@@ -8399,6 +8412,11 @@ msgstr "Método incorreto \"%1$s.%2$s\"."
 #: include/classes/api/services/CProblem.php:382
 msgid "Incorrect object value."
 msgstr "Valor inválido para o objeto."
+
+#: include/classes/db/OracleDbBackend.php:86
+#, c-format
+msgid "Incorrect parameter \"%1$s\" value: %2$s."
+msgstr ""
 
 #: include/classes/api/services/CAction.php:2824
 #, c-format
@@ -8918,7 +8936,7 @@ msgstr "Indonésio (id_ID)"
 #: app/views/monitoring.widget.actionlog.view.php:35
 #: app/views/monitoring.widget.problems.view.php:55
 #: include/actions.inc.php:1887 include/actions.inc.php:1971
-#: include/blocks.inc.php:736 include/classes/screens/CScreenActions.php:117
+#: include/blocks.inc.php:744 include/classes/screens/CScreenActions.php:117
 #: include/classes/screens/CScreenHostTriggers.php:223
 #: include/classes/screens/CScreenProblem.php:904
 #: include/classes/screens/CScreenProblem.php:928
@@ -9355,7 +9373,7 @@ msgid "Invalid second parameter."
 msgstr "O segundo parâmetro é inválido."
 
 #: include/classes/export/CConfigurationExportBuilder.php:76
-#: include/classes/export/CConfigurationExportBuilder.php:103
+#: include/classes/export/CConfigurationExportBuilder.php:104
 #: include/classes/import/converters/CConstantImportConverter.php:60
 #: include/classes/import/readers/CXmlImportReader.php:77
 #: include/classes/import/readers/CXmlImportReader.php:116
@@ -9373,13 +9391,13 @@ msgstr "O segundo parâmetro é inválido."
 #: include/classes/import/validators/C34XmlValidator.php:1111
 #: include/classes/import/validators/C40XmlValidator.php:1290
 #: include/classes/import/validators/C42XmlValidator.php:1350
-#: include/classes/import/validators/C44XmlValidator.php:1755
-#: include/classes/import/validators/C44XmlValidator.php:2037
-#: include/classes/import/validators/C44XmlValidator.php:2171
-#: include/classes/import/validators/C44XmlValidator.php:2191
-#: include/classes/import/validators/C44XmlValidator.php:2215
-#: include/classes/import/validators/C44XmlValidator.php:2244
-#: include/classes/import/validators/C44XmlValidator.php:2305
+#: include/classes/import/validators/C44XmlValidator.php:1757
+#: include/classes/import/validators/C44XmlValidator.php:2039
+#: include/classes/import/validators/C44XmlValidator.php:2149
+#: include/classes/import/validators/C44XmlValidator.php:2169
+#: include/classes/import/validators/C44XmlValidator.php:2193
+#: include/classes/import/validators/C44XmlValidator.php:2222
+#: include/classes/import/validators/C44XmlValidator.php:2283
 #: include/classes/import/validators/CXmlValidatorGeneral.php:98
 #: include/classes/import/validators/CXmlValidatorGeneral.php:118
 #: include/classes/import/validators/CXmlValidatorGeneral.php:137
@@ -9948,42 +9966,42 @@ msgctxt "page navigation"
 msgid "Last"
 msgstr "Último"
 
-#: include/func.inc.php:2717
+#: include/func.inc.php:2708
 #, c-format
 msgid "Last %1$d day"
 msgid_plural "Last %1$d days"
 msgstr[0] "Último %1$d dia"
 msgstr[1] "Último %1$d dias"
 
-#: include/func.inc.php:2711
+#: include/func.inc.php:2702
 #, c-format
 msgid "Last %1$d hour"
 msgid_plural "Last %1$d hours"
 msgstr[0] "Última %1$d hora"
 msgstr[1] "Últimas %1$d horas"
 
-#: include/func.inc.php:2704
+#: include/func.inc.php:2695
 #, c-format
 msgid "Last %1$d minute"
 msgid_plural "Last %1$d minutes"
 msgstr[0] "Último %1$d minuto"
 msgstr[1] "Últimos %1$d minutos"
 
-#: include/func.inc.php:2720
+#: include/func.inc.php:2711
 #, c-format
 msgid "Last %1$d month"
 msgid_plural "Last %1$d months"
 msgstr[0] "Último %1$d mês"
 msgstr[1] "Últimos %1$d meses"
 
-#: include/func.inc.php:2697
+#: include/func.inc.php:2688
 #, c-format
 msgid "Last %1$d second"
 msgid_plural "Last %1$d seconds"
 msgstr[0] "Último %1$d segundo"
 msgstr[1] "Últimos %1$d segundos"
 
-#: include/func.inc.php:2723
+#: include/func.inc.php:2714
 #, c-format
 msgid "Last %1$d year"
 msgid_plural "Last %1$d years"
@@ -11341,7 +11359,7 @@ msgstr "Próximo passo"
 #: app/views/administration.user.list.php:115
 #: app/views/monitoring.widget.problems.view.php:261
 #: include/actions.inc.php:33 include/blocks.inc.php:622
-#: include/blocks.inc.php:847
+#: include/blocks.inc.php:855
 #: include/classes/screens/CScreenHostTriggers.php:273
 #: include/classes/screens/CScreenProblem.php:1134
 #: include/classes/screens/CScreenProblem.php:1270 include/events.inc.php:183
@@ -12489,7 +12507,7 @@ msgstr "A operação não possui template para operar."
 msgid "Operation type"
 msgstr "Tipo da operação"
 
-#: app/views/monitoring.widget.problems.view.php:62 include/blocks.inc.php:739
+#: app/views/monitoring.widget.problems.view.php:62 include/blocks.inc.php:747
 #: include/classes/screens/CScreenProblem.php:932
 #: include/classes/screens/CScreenProblem.php:1188 include/events.inc.php:170
 #: include/views/configuration.trigger.prototype.edit.php:68
@@ -13261,7 +13279,7 @@ msgstr ""
 msgid "Preview"
 msgstr "Visualizar"
 
-#: include/func.inc.php:2667
+#: include/func.inc.php:2658
 msgid "Previous month"
 msgstr "Mês anterior"
 
@@ -13274,11 +13292,11 @@ msgstr ""
 msgid "Previous value"
 msgstr ""
 
-#: include/func.inc.php:2666
+#: include/func.inc.php:2657
 msgid "Previous week"
 msgstr "Semana anterior"
 
-#: include/func.inc.php:2668
+#: include/func.inc.php:2659
 msgid "Previous year"
 msgstr "Ano anterior"
 
@@ -13353,7 +13371,7 @@ msgid "Privilege level"
 msgstr "Nível de acesso"
 
 #: app/views/monitoring.problem.view.php:163
-#: app/views/monitoring.widget.problems.view.php:58 include/blocks.inc.php:738
+#: app/views/monitoring.widget.problems.view.php:58 include/blocks.inc.php:746
 #: include/classes/screens/CScreenProblem.php:907
 #: include/classes/screens/CScreenProblem.php:930
 #: include/classes/screens/CScreenProblem.php:1101
@@ -15935,7 +15953,7 @@ msgid "Tag value"
 msgstr "Valor da etiqueta"
 
 #: app/views/monitoring.problem.view.php:283
-#: app/views/monitoring.widget.problems.view.php:66 include/blocks.inc.php:743
+#: app/views/monitoring.widget.problems.view.php:66 include/blocks.inc.php:751
 #: include/classes/screens/CScreenProblem.php:881
 #: include/classes/screens/CScreenProblem.php:937
 #: include/classes/screens/CScreenProblem.php:1192
@@ -16226,7 +16244,7 @@ msgstr "A aplicação não foi mais descoberta e será excluída na próxima exe
 msgid "The frontend does not match Zabbix database."
 msgstr "A interface web não consegue se conectar ao banco de dados do Zabbix."
 
-#: include/classes/db/DbBackend.php:48
+#: include/classes/db/DbBackend.php:50
 #, c-format
 msgid "The frontend does not match Zabbix database. Current database version (mandatory/optional): %d/%d. Required mandatory version: %d. Contact your system administrator."
 msgstr "A interface web não consegue se conectar ao banco de dados do Zabbix. Versão do banco de dados (obrigatório/opcional) %d/%d. Versão obrigatória: %d. Contate o administrador do seu sistema."
@@ -16293,7 +16311,7 @@ msgstr "A aplicação do cenário web pertence à um host diferente do que o do 
 msgid "Theme"
 msgstr "Tema"
 
-#: include/func.inc.php:2665
+#: include/func.inc.php:2656
 msgid "This day last week"
 msgstr "Este dia na semana passada"
 
@@ -16306,11 +16324,11 @@ msgstr "Este campo é automaticamente preenchido pelo item \"%s\"."
 msgid "This is the test message from Zabbix"
 msgstr ""
 
-#: include/func.inc.php:2673 srv_status.php:41
+#: include/func.inc.php:2664 srv_status.php:41
 msgid "This month"
 msgstr "Este mês"
 
-#: include/func.inc.php:2674
+#: include/func.inc.php:2665
 msgid "This month so far"
 msgstr "Até agora neste mês"
 
@@ -16322,19 +16340,19 @@ msgstr "Esta coluna da tela não está vazia. Excluir ela?"
 msgid "This screen row is not empty. Delete it?"
 msgstr "Esta linha da tela não está vazia. Excluir ela?"
 
-#: include/func.inc.php:2671 srv_status.php:40
+#: include/func.inc.php:2662 srv_status.php:40
 msgid "This week"
 msgstr "Esta semana"
 
-#: include/func.inc.php:2672
+#: include/func.inc.php:2663
 msgid "This week so far"
 msgstr "Até agora nesta semana"
 
-#: include/func.inc.php:2675 srv_status.php:42
+#: include/func.inc.php:2666 srv_status.php:42
 msgid "This year"
 msgstr "Este ano"
 
-#: include/func.inc.php:2676
+#: include/func.inc.php:2667
 msgid "This year so far"
 msgstr "Até agora neste ano"
 
@@ -16370,7 +16388,7 @@ msgstr "Até"
 #: app/views/popup.triggerexpr.php:128 app/views/popup.triggerexpr.php:132
 #: include/actions.inc.php:1752 include/actions.inc.php:1806
 #: include/actions.inc.php:1887 include/actions.inc.php:1971
-#: include/actions.inc.php:2021 include/blocks.inc.php:718
+#: include/actions.inc.php:2021 include/blocks.inc.php:726
 #: include/classes/screens/CScreenActions.php:111
 #: include/classes/screens/CScreenEvents.php:32
 #: include/classes/screens/CScreenProblem.php:858
@@ -16460,12 +16478,12 @@ msgstr "Para"
 msgid "To set a host interface select a single item type for all items"
 msgstr "Para configurar a interface do host selecione somente itens do mesmo tipo"
 
-#: include/classes/screens/CScreenProblem.php:749 include/func.inc.php:2669
+#: include/classes/screens/CScreenProblem.php:749 include/func.inc.php:2660
 #: srv_status.php:39
 msgid "Today"
 msgstr "Hoje"
 
-#: include/func.inc.php:2670
+#: include/func.inc.php:2661
 msgid "Today so far"
 msgstr "Até agora hoje"
 
@@ -17039,7 +17057,7 @@ msgstr "Não foi possível criar o arquivo de configuração."
 msgid "Unable to overwrite the existing configuration file."
 msgstr "Não foi possível sobrescrever o arquivo de configuração existente."
 
-#: include/classes/db/DbBackend.php:63
+#: include/classes/db/DbBackend.php:65
 msgid "Unable to select configuration."
 msgstr "Não foi possível selecionar a configuração."
 
@@ -17210,6 +17228,13 @@ msgstr "Desvinculado: Cenário web \"%1$s\" em \"%2$s\"."
 #: jsLoader.php:216
 msgid "Unmute"
 msgstr "Som"
+
+#: include/classes/db/MysqlDbBackend.php:95
+#: include/classes/db/PostgresqlDbBackend.php:111
+#, c-format
+msgid "Unsupported charset or collation for table: %1$s."
+msgid_plural "Unsupported charset or collation for tables: %1$s."
+msgstr[0] ""
 
 #: include/classes/import/readers/CImportReaderFactory.php:65
 #, c-format
@@ -18500,7 +18525,7 @@ msgstr "YYYY-MM-DD hh:mm"
 #: include/classes/import/validators/C34XmlValidator.php:1111
 #: include/classes/import/validators/C40XmlValidator.php:1290
 #: include/classes/import/validators/C42XmlValidator.php:1350
-#: include/classes/import/validators/C44XmlValidator.php:1755
+#: include/classes/import/validators/C44XmlValidator.php:1757
 msgctxt "XML date and time format"
 msgid "YYYY-MM-DDThh:mm:ssZ"
 msgstr "YYYY-MM-DDThh:mm:ssZ"
@@ -18517,7 +18542,7 @@ msgstr "Anual"
 #: app/views/administration.user.list.php:109
 #: app/views/monitoring.widget.problems.view.php:261
 #: include/actions.inc.php:32 include/blocks.inc.php:622
-#: include/blocks.inc.php:847
+#: include/blocks.inc.php:855
 #: include/classes/screens/CScreenHostTriggers.php:273
 #: include/classes/screens/CScreenProblem.php:1134
 #: include/classes/screens/CScreenProblem.php:1270 include/events.inc.php:183
@@ -18536,7 +18561,7 @@ msgstr "Anual"
 msgid "Yes"
 msgstr "Sim"
 
-#: include/classes/screens/CScreenProblem.php:757 include/func.inc.php:2663
+#: include/classes/screens/CScreenProblem.php:757 include/func.inc.php:2654
 msgid "Yesterday"
 msgstr "Ontem"
 
@@ -18626,7 +18651,7 @@ msgstr "Seu banco de dados não está funcionando corretamente. Aguarde alguns m
 msgid "ZABBIX"
 msgstr "ZABBIX"
 
-#: include/page_header.php:156
+#: include/page_header.php:136
 msgid "Zabbix"
 msgstr "Zabbix"
 
@@ -18824,7 +18849,7 @@ msgstr "um período de tempo é aguardado"
 
 #: app/controllers/CControllerPopupHttpStep.php:94
 #: include/classes/validators/CApiInputValidator.php:1434
-#: include/validate.inc.php:227 include/validate.inc.php:590
+#: include/validate.inc.php:227 include/validate.inc.php:591
 msgid "a time unit is expected"
 msgstr "uma unidade de tempo é aguardada"
 
@@ -18876,9 +18901,9 @@ msgstr "todas as mídias"
 #: include/classes/api/services/CDRule.php:474
 #: include/classes/api/services/CItemGeneral.php:2253
 #: include/classes/api/services/CItemGeneral.php:2277
-#: include/classes/import/validators/C44XmlValidator.php:2171
-#: include/classes/import/validators/C44XmlValidator.php:2191
-#: include/classes/import/validators/C44XmlValidator.php:2305
+#: include/classes/import/validators/C44XmlValidator.php:2149
+#: include/classes/import/validators/C44XmlValidator.php:2169
+#: include/classes/import/validators/C44XmlValidator.php:2283
 #: include/classes/import/validators/CXmlValidatorGeneral.php:216
 #: include/classes/validators/CApiInputValidator.php:394
 #: include/classes/validators/CApiInputValidator.php:526
@@ -19718,7 +19743,7 @@ msgstr "prev() - Valor anterior"
 msgid "problem pattern"
 msgstr "padrão de incidente"
 
-#: include/page_header.php:159 include/views/general.warning.php:21
+#: include/page_header.php:139 include/views/general.warning.php:21
 #, c-format
 msgid "refreshed every %1$s sec."
 msgstr "atualizado a cada %1$s segundo."
@@ -19897,7 +19922,7 @@ msgid "the parameter \"%1$s\" is missing"
 msgstr "o parâmetro \"%1$s\" está ausente"
 
 #: include/classes/export/CConfigurationExportBuilder.php:77
-#: include/classes/import/validators/C44XmlValidator.php:2037
+#: include/classes/import/validators/C44XmlValidator.php:2039
 #: include/classes/import/validators/CXmlValidatorGeneral.php:119
 #: include/classes/import/validators/CXmlValidatorGeneral.php:138
 #, c-format
@@ -19958,15 +19983,15 @@ msgstr "informe aqui o argumento para pesquisa"
 msgid "unacceptable URL"
 msgstr ""
 
-#: include/classes/import/validators/C44XmlValidator.php:2245
+#: include/classes/import/validators/C44XmlValidator.php:2223
 #: include/classes/import/validators/CXmlValidatorGeneral.php:231
 #, c-format
 msgid "unexpected constant \"%1$s\""
 msgstr ""
 
-#: include/classes/export/CConfigurationExportBuilder.php:104
+#: include/classes/export/CConfigurationExportBuilder.php:105
 #: include/classes/import/converters/CConstantImportConverter.php:60
-#: include/classes/import/validators/C44XmlValidator.php:2216
+#: include/classes/import/validators/C44XmlValidator.php:2194
 #, c-format
 msgid "unexpected constant value \"%1$s\""
 msgstr ""
@@ -20118,7 +20143,7 @@ msgstr "o valor é muito grande"
 #: include/classes/api/services/CMap.php:1146
 #: include/classes/validators/CApiInputValidator.php:356
 #: include/classes/validators/CApiInputValidator.php:664
-#: include/validate.inc.php:583
+#: include/validate.inc.php:584
 #, c-format
 msgid "value must be one of %1$s"
 msgstr "o valor precisa ser um de %1$s"

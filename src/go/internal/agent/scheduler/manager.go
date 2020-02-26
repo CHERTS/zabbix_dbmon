@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"zabbix.com/internal/agent"
+	"zabbix.com/internal/agent/alias"
 	"zabbix.com/internal/monitor"
 	"zabbix.com/pkg/conf"
 	"zabbix.com/pkg/glexpr"
@@ -41,7 +42,7 @@ type Manager struct {
 	plugins     map[string]*pluginAgent
 	pluginQueue pluginHeap
 	clients     map[uint64]*client
-	aliases     []keyAlias
+	aliases     *alias.Manager
 }
 
 type updateRequest struct {
@@ -134,7 +135,7 @@ func (m *Manager) processUpdateRequest(update *updateRequest, now time.Time) {
 		var key string
 		var err error
 		var p *pluginAgent
-		r.Key = m.getAlias(r.Key)
+		r.Key = m.aliases.Get(r.Key)
 		if key, _, err = itemutil.ParseKey(r.Key); err == nil {
 			if p, ok = m.plugins[key]; !ok {
 				err = fmt.Errorf("Unknown metric %s", key)
@@ -445,8 +446,9 @@ func (m *Manager) validatePlugins(options *agent.AgentOptions) (err error) {
 	return
 }
 
-func (m *Manager) configure(options *agent.AgentOptions) error {
-	return m.loadAlias(options)
+func (m *Manager) configure(options *agent.AgentOptions) (err error) {
+	m.aliases, err = alias.NewManager(options)
+	return
 }
 
 func NewManager(options *agent.AgentOptions) (mannager *Manager, err error) {
