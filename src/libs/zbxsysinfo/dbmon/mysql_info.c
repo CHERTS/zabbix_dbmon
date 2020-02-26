@@ -47,9 +47,10 @@ WHERE VARIABLE_NAME='UPTIME';"
 
 #define MYSQL_GLOBAL_STATUS_DBS "SHOW GLOBAL STATUS;"
 
-#define MYSQL_GLOBAL_VARIABLES_DBS "\
-SELECT /*DBS_004*/ LOWER(VARIABLE_NAME) AS VARIABLE_NAME, VARIABLE_VALUE \
-FROM %s.global_variables;"
+//#define MYSQL_GLOBAL_VARIABLES_DBS "\
+//SELECT /*DBS_004*/ LOWER(VARIABLE_NAME) AS VARIABLE_NAME, VARIABLE_VALUE \
+//FROM %s.global_variables;"
+#define MYSQL_GLOBAL_VARIABLES_DBS "SHOW GLOBAL VARIABLES;"
 
 #define MYSQL_DB_DISCOVERY_DBS "\
 SELECT /*DBS_005*/ SCHEMA_NAME AS DBNAME, \
@@ -448,14 +449,6 @@ static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 			mysql_schema = "information_schema";
 
 		if (0 == strcmp(request->key, "mysql.server.info"))
-		{
-			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
-		}
-		else if (0 == strcmp(request->key, "mysql.global.status"))
-		{
-			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query);
-		}
-		else if (0 == strcmp(request->key, "mysql.global.variables"))
 		{
 			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
 		}
