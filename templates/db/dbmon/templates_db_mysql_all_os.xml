@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-26T05:26:41Z</date>
+    <date>2020-02-26T07:37:09Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2152,6 +2152,14 @@ Removed in MySQL 5.7.4.</description>
                         </application>
                     </applications>
                     <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>if (value.indexOf(&quot;INNODB_ADDITIONAL_MEM_POOL_SIZE&quot;) &gt; -1) {
+  return value;
+} else {
+  return &quot;{\&quot;INNODB_ADDITIONAL_MEM_POOL_SIZE\&quot;:\&quot;0\&quot;}&quot;;
+}</params>
+                        </step>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_ADDITIONAL_MEM_POOL_SIZE</params>
