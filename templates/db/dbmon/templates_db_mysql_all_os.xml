@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-26T07:37:09Z</date>
+    <date>2020-02-26T09:27:42Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1958,6 +1958,14 @@ WARN: all transactions are allowed to violate GTID consistency, but a warning is
                     </valuemap>
                     <preprocessing>
                         <step>
+                            <type>JAVASCRIPT</type>
+                            <params>if (value.indexOf(&quot;ENFORCE_GTID_CONSISTENCY&quot;) &gt; -1) {
+  return value;
+} else {
+  return &quot;{\&quot;ENFORCE_GTID_CONSISTENCY\&quot;:\&quot;3\&quot;}&quot;;
+}</params>
+                        </step>
+                        <step>
                             <type>JSONPATH</type>
                             <params>$.ENFORCE_GTID_CONSISTENCY</params>
                         </step>
@@ -2008,6 +2016,14 @@ ON: Both new and replicated transactions must be GTID transactions.</description
                         <name>DBS MySQL (gtid_mode)</name>
                     </valuemap>
                     <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>if (value.indexOf(&quot;GTID_MODE&quot;) &gt; -1) {
+  return value;
+} else {
+  return &quot;{\&quot;GTID_MODE\&quot;:\&quot;4\&quot;}&quot;;
+}</params>
+                        </step>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.GTID_MODE</params>
@@ -2938,6 +2954,74 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/mrr-optimization.html</de
                     </master_item>
                 </item>
                 <item>
+                    <name>[MariaDB] Instance '{$DBS_MYSQL_INSTANCE}' variable: Slave parallel mode</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},slave_parallel_mode]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Controls what transactions are applied in parallel when using parallel replication.&#13;
+&#13;
+optimistic: tries to apply most transactional DML in parallel, and handles any conflicts with rollback and retry.&#13;
+conservative: limits parallelism in an effort to avoid any conflicts. See conservative mode.&#13;
+aggressive: tries to maximize the parallelism, possibly at the cost of increased conflict rate.&#13;
+minimal: only parallelizes the commit steps of transactions.&#13;
+none: disables parallel apply completely.&#13;
+&#13;
+See more info: https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#slave_parallel_mode</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MariaDB (slave_parallel_mode)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>if (value.indexOf(&quot;SLAVE_PARALLEL_MODE&quot;) &gt; -1) {
+  return value;
+} else {
+  return &quot;{\&quot;SLAVE_PARALLEL_MODE\&quot;:\&quot;0\&quot;}&quot;;
+}</params>
+                        </step>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SLAVE_PARALLEL_MODE</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;optimistic&quot;:
+    return 1;
+    break;
+  case &quot;conservative&quot;:
+    return 2;
+    break;
+  case &quot;aggressive&quot;:
+    return 3;
+    break;
+  case &quot;minimal&quot;:
+    return 4;
+    break;
+  case &quot;none&quot;:
+    return 5;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Slave parallel type</name>
                     <type>DEPENDENT</type>
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},slave_parallel_type]</key>
@@ -2959,6 +3043,14 @@ If your replication topology uses multiple levels of slaves, LOGICAL_CLOCK may a
                         <name>DBS MySQL (slave_parallel_type)</name>
                     </valuemap>
                     <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>if (value.indexOf(&quot;SLAVE_PARALLEL_TYPE&quot;) &gt; -1) {
+  return value;
+} else {
+  return &quot;{\&quot;SLAVE_PARALLEL_TYPE\&quot;:\&quot;0\&quot;}&quot;;
+}</params>
+                        </step>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SLAVE_PARALLEL_TYPE</params>
@@ -3061,6 +3153,14 @@ See more: https://dev.mysql.com/doc/refman/5.7/en/replication-options-slave.html
                         <name>DBS MySQL (slave_preserve_commit_order)</name>
                     </valuemap>
                     <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>if (value.indexOf(&quot;SLAVE_PRESERVE_COMMIT_ORDER&quot;) &gt; -1) {
+  return value;
+} else {
+  return &quot;{\&quot;SLAVE_PRESERVE_COMMIT_ORDER\&quot;:\&quot;2\&quot;}&quot;;
+}</params>
+                        </step>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SLAVE_PRESERVE_COMMIT_ORDER</params>
@@ -4431,6 +4531,35 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
     </graphs>
     <value_maps>
         <value_map>
+            <name>DBS MariaDB (slave_parallel_mode)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>unknown</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>optimistic</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>conservative</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>aggressive</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>minimal</newvalue>
+                </mapping>
+                <mapping>
+                    <value>5</value>
+                    <newvalue>none</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
             <name>DBS MySQL (binlog_format)</name>
             <mappings>
                 <mapping>
@@ -4626,6 +4755,10 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <mapping>
                     <value>1</value>
                     <newvalue>ON</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>UNKNOWN</newvalue>
                 </mapping>
             </mappings>
         </value_map>
