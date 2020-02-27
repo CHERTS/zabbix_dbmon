@@ -380,12 +380,12 @@ WHERE i.inst_id = d.inst_id \
 
 #define ORACLE_STANDBY_LAG_DBS "\
 SELECT decode(name, 'apply lag', 'APPLY_LAG', 'transport lag', 'TRANSPORT_LAG', 'NONE') AS PARAM_NAME, \
-	nvl(to_char(extract(day from to_dsinterval(value))*24*60*60+extract(hour from to_dsinterval(value))*60*60+extract(minute from to_dsinterval(value))*60+extract(second from to_dsinterval(value))), to_char(86400)) AS LAG_VALUE \
+nvl(to_char(extract(day from to_dsinterval(value))*24*60*60+extract(hour from to_dsinterval(value))*60*60+extract(minute from to_dsinterval(value))*60+extract(second from to_dsinterval(value))), to_char(86400)) AS LAG_VALUE \
 FROM v$dataguard_stats \
 WHERE name IN('apply lag', 'transport lag') \
 union all \
 SELECT decode(name, 'apply lag', 'APPLY_TIME_COMPUTED', 'transport lag', 'TRANSPORT_TIME_COMPUTED', 'NONE') AS PARAM_NAME, \
-	nvl(to_char((sysdate - to_date(TIME_COMPUTED, 'mm/dd/yyyy hh24:mi:ss')) * 24 * 60 * 60), to_char(86400)) AS TIME_COMPUTED_LAG_VALUE \
+	nvl(to_char(abs((sysdate - to_date(TIME_COMPUTED, 'mm/dd/yyyy hh24:mi:ss')))*24*60*60), to_char(86400)) AS TIME_COMPUTED_LAG_VALUE \
 FROM v$dataguard_stats \
 WHERE name IN('apply lag', 'transport lag')"
 
