@@ -1545,7 +1545,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_str_ts_type;
-	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_ts_type = 0;
+	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_ts_type = ORA_TS_PERMANENT;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
 	char						*query = ORACLE_V11_PERMANENT_TS_INFO_DBS;
