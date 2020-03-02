@@ -1411,9 +1411,9 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): request->nparam = %d", __func__, request->key, request->nparam);
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_conn_string);
-	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_instance);
-	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_str_mode);
-	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[4] = %s", __func__, request->key, oracle_dbname);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[1] = %s", __func__, request->key, oracle_instance);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_str_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_dbname);
 
 	if (NULL == oracle_conn_string || '\0' == *oracle_conn_string)
 	{
@@ -1576,9 +1576,9 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): request->nparam = %d", __func__, request->key, request->nparam);
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_conn_string);
-	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_instance);
-	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_str_mode);
-	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[4] = %s", __func__, request->key, oracle_str_ts_type);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[1] = %s", __func__, request->key, oracle_instance);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_str_mode);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_str_ts_type);
 
 	if (NULL == oracle_conn_string || '\0' == *oracle_conn_string)
 	{
@@ -1617,9 +1617,10 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 		}
 	}
 
-	if (2 < oracle_ts_type)
+	if (oracle_ts_type > 2)
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Incorrect fourth parameter (tstype). Allow: 0 - permanent, 1 - temporary, 2 - undo"));
+		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Incorrect fourth parameter (tstype = %u). Allow: 0 - permanent, 1 - temporary, 2 - undo", __func__, request->key, oracle_ts_type);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Incorrect fourth parameter. Allow: 0 - permanent, 1 - temporary, 2 - undo"));
 		return SYSINFO_RET_FAIL;
 	}
 
