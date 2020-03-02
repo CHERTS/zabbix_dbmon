@@ -642,7 +642,7 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance;
-	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
 
 	if (NULL == CONFIG_ORACLE_USER)
@@ -727,7 +727,8 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *oracle_dbname;
-	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_db_open_mode = 0, oracle_db_status = 0;
+	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	unsigned int				oracle_db_open_mode = 0, oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
 
@@ -1149,7 +1150,8 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version;
-	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_db_status = 0;
+	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	unsigned int				oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_ver_result, ora_dbstatus_result, ora_result;
 	const char					*query = ORACLE_V11_DISCOVER_DB_DBS;
@@ -1380,7 +1382,8 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_dbname;
-	unsigned int				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_db_status = 0;
+	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	unsigned int				oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_ver_result, ora_dbstatus_result, ora_result;
 	const char					*query = ORACLE_V11_DB_INFO_DBS;
@@ -1617,7 +1620,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 		}
 	}
 
-	if (oracle_ts_type > 2)
+	if (2 < oracle_ts_type)
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Incorrect fourth parameter (tstype = %u). Allow: 0 - permanent, 1 - temporary, 2 - undo", __func__, request->key, oracle_ts_type);
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Incorrect fourth parameter. Allow: 0 - permanent, 1 - temporary, 2 - undo"));
