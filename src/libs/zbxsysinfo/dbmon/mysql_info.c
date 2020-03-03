@@ -86,6 +86,8 @@ FROM( \
 	ORDER BY TABLE_ROWS DESC LIMIT 10 \
 ) t1, (SELECT @rn:=0) t2;"
 
+#define MYSQL_SLAVE_STATUS_DBS "SHOW SLAVE STATUS;"
+
 ZBX_METRIC	parameters_dbmon_mysql[] =
 /*	KEY								FLAG				FUNCTION			TEST PARAMETERS */
 {
@@ -100,6 +102,8 @@ ZBX_METRIC	parameters_dbmon_mysql[] =
 	{"mysql.errorlog.discovery",	CF_HAVEPARAMS,		MYSQL_DISCOVERY,	NULL},
 	{"mysql.top10_table_by_size",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.top10_table_by_rows",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.slave.discovery",		CF_HAVEPARAMS,		MYSQL_DISCOVERY,	NULL},
+	{"mysql.slave.status",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -364,6 +368,10 @@ static int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HAN
 		{
 			ret = zbx_db_query_select(mysql_conn, &mysql_result, MYSQL_ERRORLOG_DISCOVERY_DBS, mysql_schema);
 		}
+		else if (0 == strcmp(request->key, "mysql.slave.discovery"))
+		{
+			ret = zbx_db_query_select(mysql_conn, &mysql_result, MYSQL_SLAVE_STATUS_DBS);
+		}
 		else
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown discovery request key"));
@@ -533,6 +541,10 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "mysql.top10_table_by_rows"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_TOP10_TABLE_BY_ROWS_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+	}
+	else if (0 == strcmp(request->key, "mysql.slave.status"))
+	{
+		ret = mysql_make_result(request, result, MYSQL_SLAVE_STATUS_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else
 	{

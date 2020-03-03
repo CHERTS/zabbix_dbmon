@@ -46,6 +46,22 @@ echo ---------------------------------------------------------------------------
 
 echo MySQL database info:
 zabbix_get.exe %zbx_conn_string% -k mysql.db.info[127.0.0.1,3306] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL error.log discovery:
+zabbix_get.exe %zbx_conn_string% -k mysql.errorlog.discovery[127.0.0.1,3306] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL TOP10 by size:
+zabbix_get.exe %zbx_conn_string% -k mysql.top10_table_by_size[127.0.0.1,3306] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL TOP10 by rows:
+zabbix_get.exe %zbx_conn_string% -k mysql.top10_table_by_rows[127.0.0.1,3306] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL slave status:
+zabbix_get.exe %zbx_conn_string% -k mysql.slave.status[127.0.0.1,3306] | jq-win64.exe .
 
 echo === PgSQL ===================================================================
 

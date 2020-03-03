@@ -63,7 +63,7 @@ int make_discovery_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct z
 				}
 			}
 
-			zbx_snprintf(buffer, sizeof(buffer), "{#%s}", zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value)));
+			zbx_snprintf(buffer, sizeof(buffer), "{#%s}", zbx_strdup(NULL, buffer));
 
 			switch (db_result.data[row][col].type)
 			{
