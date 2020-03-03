@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-03T12:51:26Z</date>
+    <date>2020-03-03T18:39:12Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3705,14 +3705,119 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
+                            <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Last IO Errno</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.slave[{#MASTER_UUID},last_io_errno]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Replication</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].LAST_IO_ERRNO.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Last IO Error</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.slave[{#MASTER_UUID},last_io_error]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <description>The last errors registered by the I/O and SQL threads when processing the relay log. Ideally these should be blank, indicating no errors.</description>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Replication</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].LAST_IO_ERROR.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Last SQL Errno</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.slave[{#MASTER_UUID},last_sql_errno]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Replication</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].LAST_SQL_ERRNO.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Last SQL Error</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.slave[{#MASTER_UUID},last_sql_error]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <description>The last errors registered by the I/O and SQL threads when processing the relay log. Ideally these should be blank, indicating no errors.</description>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Replication</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].LAST_SQL_ERROR.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
                             <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Seconds Behind Master</name>
                             <type>DEPENDENT</type>
                             <key>mysql.slave[{#MASTER_UUID},seconds_behind_master]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <units>s</units>
-                            <description>The number of seconds that the slave SQL thread is behind processing the master binary log.&#13;
-A high number (or an increasing one) can indicate that the slave is unable to handle events from the master in a timely fashion.</description>
+                            <description>The number of seconds that the slave SQL thread is behind processing the master binary log. A high number (or an increasing one) can indicate that the slave is unable to handle events from the master in a timely fashion.</description>
                             <applications>
                                 <application>
                                     <name>MySQL: Replication</name>
@@ -3737,6 +3842,85 @@ A high number (or an increasing one) can indicate that the slave is unable to ha
                             <master_item>
                                 <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{min(10m)}&gt;{$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{max(5m)}&lt;={$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}</recovery_expression>
+                                    <name>Replication lag is too high</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>HIGH</priority>
+                                    <description>Очень высокое отставание slave реплики.&#13;
+Проверьте состояние с помощью команды &quot;SHOW SLAVE STATUS\G&quot;.&#13;
+Сообщите о проблеме эксперту.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>MySQL</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_MYSQL_INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>MasterHost</tag>
+                                            <value>{#MASTER_HOST}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>MasterPort</tag>
+                                            <value>{#MASTER_PORT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{min(10m)}&gt;{$DBS_MYSQL_APPLY_LAG_WARN:&quot;{#MASTER_UUID}&quot;}</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{max(5m)}&lt;={$DBS_MYSQL_APPLY_LAG_WARN:&quot;{#MASTER_UUID}&quot;}</recovery_expression>
+                                    <name>Replication lag is too high</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_APPLY_LAG_WARN:&quot;{#MASTER_UUID}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>Высокое отставание slave реплики.&#13;
+Проверьте состояние с помощью команды &quot;SHOW SLAVE STATUS\G&quot;.&#13;
+Сообщите о проблеме эксперту.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>Replication lag is too high</name>
+                                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},seconds_behind_master].min(10m)}&gt;{$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}</expression>
+                                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},seconds_behind_master].max(5m)}&lt;={$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>MySQL</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_MYSQL_INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>MasterHost</tag>
+                                            <value>{#MASTER_HOST}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>MasterPort</tag>
+                                            <value>{#MASTER_PORT}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Slave IO Running</name>
@@ -3744,8 +3928,6 @@ A high number (or an increasing one) can indicate that the slave is unable to ha
                             <key>mysql.slave[{#MASTER_UUID},slave_io_running]</key>
                             <delay>0</delay>
                             <history>30d</history>
-                            <trends>0</trends>
-                            <value_type>CHAR</value_type>
                             <description>Whether the I/O thread for reading the master's binary log is running. &#13;
 Normally, you want this to be Yes unless you have not yet started replication or have explicitly stopped it with STOP SLAVE.</description>
                             <applications>
@@ -3753,10 +3935,30 @@ Normally, you want this to be Yes unless you have not yet started replication or
                                     <name>MySQL: Replication</name>
                                 </application>
                             </applications>
+                            <valuemap>
+                                <name>DBS MySQL (Replication slave IO state)</name>
+                            </valuemap>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].SLAVE_IO_RUNNING.first()</params>
+                                </step>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <params>switch (value) {
+  case &quot;No&quot;:
+    return 0;
+    break;
+  case &quot;Yes&quot;:
+    return 1;
+    break;
+  case &quot;Connecting&quot;:
+    return 2;
+    break;
+  default:
+    return 3;
+    break;
+}</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3773,8 +3975,6 @@ Normally, you want this to be Yes unless you have not yet started replication or
                             <key>mysql.slave[{#MASTER_UUID},slave_sql_running]</key>
                             <delay>0</delay>
                             <history>30d</history>
-                            <trends>0</trends>
-                            <value_type>CHAR</value_type>
                             <description>Whether the SQL thread for executing events in the relay log is running. &#13;
 As with the I/O thread, this should normally be Yes.</description>
                             <applications>
@@ -3782,10 +3982,27 @@ As with the I/O thread, this should normally be Yes.</description>
                                     <name>MySQL: Replication</name>
                                 </application>
                             </applications>
+                            <valuemap>
+                                <name>DBS MySQL (Replication slave SQL state)</name>
+                            </valuemap>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].SLAVE_SQL_RUNNING.first()</params>
+                                </step>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <params>switch (value) {
+  case &quot;No&quot;:
+    return 0;
+    break;
+  case &quot;Yes&quot;:
+    return 1;
+    break;
+  default:
+    return 2;
+    break;
+}</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3797,6 +4014,148 @@ As with the I/O thread, this should normally be Yes.</description>
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_io_errno].last()}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}=1</recovery_expression>
+                            <name>Replication process is stopped (IO thread not running)</name>
+                            <priority>WARNING</priority>
+                            <description>Репликация остановлена (IO thread) в ручном режиме, возможно для выполнения каких-то работ.&#13;
+Проверьте состояние ошибок репликации с помощью команды &quot;SHOW SLAVE STATUS\G&quot;.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>MasterHost</tag>
+                                    <value>{#MASTER_HOST}</value>
+                                </tag>
+                                <tag>
+                                    <tag>MasterPort</tag>
+                                    <value>{#MASTER_PORT}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_sql_errno].last()}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}=1</recovery_expression>
+                            <name>Replication process is stopped (SQL thread not running)</name>
+                            <priority>WARNING</priority>
+                            <description>Репликация остановлена (SQL thread) в ручном режиме, возможно для выполнения каких-то работ.&#13;
+Проверьте состояние ошибок репликации с помощью команды &quot;SHOW SLAVE STATUS\G&quot;.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>MasterHost</tag>
+                                    <value>{#MASTER_HOST}</value>
+                                </tag>
+                                <tag>
+                                    <tag>MasterPort</tag>
+                                    <value>{#MASTER_PORT}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_io_errno].last()}&lt;&gt;0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}=1</recovery_expression>
+                            <name>Replication process is stopped due to an error (IO thread not running)</name>
+                            <opdata>(last errno: {ITEM.LASTVALUE2})</opdata>
+                            <priority>HIGH</priority>
+                            <description>Репликация остановлена (IO thread) в результате критической ошибки.&#13;
+Проверьте состояние ошибок репликации с помощью команды &quot;SHOW SLAVE STATUS\G&quot;.&#13;
+Сообщите о проблеме эксперту.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>MasterHost</tag>
+                                    <value>{#MASTER_HOST}</value>
+                                </tag>
+                                <tag>
+                                    <tag>MasterPort</tag>
+                                    <value>{#MASTER_PORT}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_sql_errno].last()}&lt;&gt;0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}=1</recovery_expression>
+                            <name>Replication process is stopped due to an error (SQL thread not running)</name>
+                            <opdata>(last errno: {ITEM.LASTVALUE2})</opdata>
+                            <priority>HIGH</priority>
+                            <description>Репликация остановлена (SQL thread) в результате критической ошибки.&#13;
+Проверьте состояние ошибок репликации с помощью команды &quot;SHOW SLAVE STATUS\G&quot;.&#13;
+Сообщите о проблеме эксперту.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>MasterHost</tag>
+                                    <value>{#MASTER_HOST}</value>
+                                </tag>
+                                <tag>
+                                    <tag>MasterPort</tag>
+                                    <value>{#MASTER_PORT}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                    </trigger_prototypes>
                     <master_item>
                         <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
@@ -4041,6 +4400,14 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_MYSQL_ABORTED_CONN_MAX_WARN}</macro>
                     <value>3</value>
                     <description>The number of failed attempts to connect to the MySQL server for trigger expression</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_APPLY_LAG_CRIT}</macro>
+                    <value>2h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_APPLY_LAG_WARN}</macro>
+                    <value>1h</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}</macro>
@@ -4855,6 +5222,44 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <mapping>
                     <value>3</value>
                     <newvalue>UNKNOWN</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS MySQL (Replication slave IO state)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>No</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Yes</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>Connecting</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>Unknown</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS MySQL (Replication slave SQL state)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>No</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Yes</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>Unknown</newvalue>
                 </mapping>
             </mappings>
         </value_map>
