@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-26T10:39:09Z</date>
+    <date>2020-03-03T12:51:26Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -26,6 +26,9 @@
                 </application>
                 <application>
                     <name>MySQL: Performance</name>
+                </application>
+                <application>
+                    <name>MySQL: Replication</name>
                 </application>
                 <application>
                     <name>MySQL: Throughput</name>
@@ -378,6 +381,19 @@
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.server.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     <delay>1h</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get slave status</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -3683,6 +3699,125 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     </item_prototypes>
                 </discovery_rule>
                 <discovery_rule>
+                    <name>MySQL slave discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.slave.discovery</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Seconds Behind Master</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.slave[{#MASTER_UUID},seconds_behind_master]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>s</units>
+                            <description>The number of seconds that the slave SQL thread is behind processing the master binary log.&#13;
+A high number (or an increasing one) can indicate that the slave is unable to handle events from the master in a timely fashion.</description>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Replication</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].SECONDS_BEHIND_MASTER.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                                <step>
+                                    <type>NOT_MATCHES_REGEX</type>
+                                    <params>null</params>
+                                    <error_handler>CUSTOM_ERROR</error_handler>
+                                    <error_handler_params>Replication is not performed</error_handler_params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Slave IO Running</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.slave[{#MASTER_UUID},slave_io_running]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Whether the I/O thread for reading the master's binary log is running. &#13;
+Normally, you want this to be Yes unless you have not yet started replication or have explicitly stopped it with STOP SLAVE.</description>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Replication</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].SLAVE_IO_RUNNING.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Slave SQL Running</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.slave[{#MASTER_UUID},slave_sql_running]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Whether the SQL thread for executing events in the relay log is running. &#13;
+As with the I/O thread, this should normally be Yes.</description>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Replication</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].SLAVE_SQL_RUNNING.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(slave){
+    return {
+        &quot;{#MASTER_UUID}&quot;: slave.MASTER_UUID,
+        &quot;{#MASTER_HOST}&quot;: slave.MASTER_HOST,
+        &quot;{#MASTER_PORT}&quot;: slave.MASTER_PORT
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
                     <name>MySQL TOP10 table by size discovery</name>
                     <type>DEPENDENT</type>
                     <key>mysql.top10_table_by_size.discovery</key>
@@ -4750,6 +4885,10 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <mapping>
                     <value>1</value>
                     <newvalue>ON</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>UNKNOWN</newvalue>
                 </mapping>
             </mappings>
         </value_map>
