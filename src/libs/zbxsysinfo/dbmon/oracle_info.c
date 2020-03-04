@@ -400,6 +400,18 @@ FROM(SELECT a.status, a.mrp_cnt, max(a.status) over() mx \
 		SELECT 0, 0 FROM dual) a) b \
 	WHERE mx <= status"
 
+#define ORACLE_STANDBY_RFS_STATUS_DBS "\
+SELECT i.instance_name AS INSTANCE, count(rr.inst_id) RFS_CNT FROM \
+(SELECT ms.inst_id FROM gv$managed_standby ms WHERE ms.PROCESS = 'RFS') rr \
+RIGHT JOIN gv$instance i ON i.INST_ID = rr.inst_id WHERE i.instance_name='%s' GROUP BY i.instance_name"
+
+#define ORACLE_STANDBY_LAST_SEQUENCE_STAT_DBS "\
+SELECT distinct ARCH.THREAD# AS THREAD, ARCH.SEQUENCE# AS LAST_SEQUENCE_RECEIVED, APPL.SEQUENCE# AS LAST_SEQUENCE_APPLIED \
+FROM \
+(SELECT THREAD#, max(SEQUENCE#) as SEQUENCE# FROM V$ARCHIVED_LOG WHERE(THREAD#, FIRST_TIME) IN (SELECT THREAD#, MAX(FIRST_TIME) FROM V$ARCHIVED_LOG GROUP BY THREAD#) GROUP BY THREAD#) ARCH, \
+(SELECT THREAD#, max(SEQUENCE#) as SEQUENCE# FROM V$LOG_HISTORY WHERE(THREAD#, FIRST_TIME) IN (SELECT THREAD#, MAX(FIRST_TIME) FROM V$LOG_HISTORY GROUP BY THREAD#) GROUP BY THREAD#) APPL \
+WHERE ARCH.THREAD# = APPL.THREAD# ORDER BY 1"
+
 #define ORACLE_DISCOVER_ARLDEST_DBS "\
 SELECT i.INSTANCE_NAME AS INSTANCE, \
 	db.name AS DBNAME, \
@@ -626,6 +638,8 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.standby.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.standby.lag",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.standby.mrp_status",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.rfs_status",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.last_sequence_stat",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.archlogdest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.archlogdest.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.parameters",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
@@ -810,6 +824,15 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 
 				if (oracle_db_status == ORA_ACTIVE)
 					goto next;
+				else if (oracle_db_status == ORA_ANY_STATUS)
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Oracle instance '%s' not found.", __func__, request->key, oracle_instance);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Oracle instance not found"));
+					ret = SYSINFO_RET_FAIL;
+					zbx_db_close_db(oracle_conn);
+					zbx_db_clean_connection(oracle_conn);
+					goto out;
+				}
 				else
 				{
 					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode.", __func__, request->key);
@@ -1118,6 +1141,14 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 	{
 		ret = oracle_make_result(request, result, ORACLE_STANDBY_MRP_STATUS_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_STANDBY, 0, ORA_ACTIVE);
 	}
+	else if (0 == strcmp(request->key, "oracle.standby.rfs_status"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_STANDBY_RFS_STATUS_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_STANDBY, 0, ORA_ACTIVE);
+	}
+	else if (0 == strcmp(request->key, "oracle.standby.last_sequence_stat"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_STANDBY_LAST_SEQUENCE_STAT_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_STANDBY, 0, ORA_ACTIVE);
+	}
 	else if (0 == strcmp(request->key, "oracle.archlogdest.info"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_ARLDEST_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ACTIVE);
@@ -1227,6 +1258,15 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 
 			if (oracle_db_status == ORA_ACTIVE)
 				goto next;
+			else if (oracle_db_status == ORA_ANY_STATUS)
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Oracle instance '%s' not found.", __func__, request->key, oracle_instance);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Oracle instance not found"));
+				ret = SYSINFO_RET_FAIL;
+				zbx_db_close_db(oracle_conn);
+				zbx_db_clean_connection(oracle_conn);
+				goto out;
+			}
 			else
 			{
 				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode.", __func__, request->key);
@@ -1456,6 +1496,15 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 			if (oracle_db_status == ORA_ACTIVE)
 				goto next;
+			else if (oracle_db_status == ORA_ANY_STATUS)
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Oracle instance '%s' not found.", __func__, request->key, oracle_instance);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Oracle instance not found"));
+				ret = SYSINFO_RET_FAIL;
+				zbx_db_close_db(oracle_conn);
+				zbx_db_clean_connection(oracle_conn);
+				goto out;
+			}
 			else
 			{
 				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode.", __func__, request->key);
