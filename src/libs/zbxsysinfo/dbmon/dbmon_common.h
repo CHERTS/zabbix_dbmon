@@ -22,6 +22,17 @@
 
 #include "sysinfo.h"
 
+typedef enum
+{
+	ZBX_DB_RES_TYPE_UNDEFINED = 0,
+	ZBX_DB_RES_TYPE_NOJSON,
+	ZBX_DB_RES_TYPE_ONEROW,
+	ZBX_DB_RES_TYPE_TWOCOLL,
+	ZBX_DB_RES_TYPE_MULTIROW,
+	ZBX_DB_RES_TYPE_DISCOVERY
+}
+zbx_db_result_type;
+
 int make_discovery_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_result db_result);
 int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_result db_result);
 int make_onerow_json_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_result db_result);
@@ -29,6 +40,6 @@ int make_multirow_twocoll_json_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 int make_multi_json_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_result db_result);
 char *get_str_one_result(AGENT_REQUEST *request, AGENT_RESULT *result, const unsigned int row, const unsigned int col, struct zbx_db_result db_result);
 unsigned int get_int_one_result(AGENT_REQUEST *request, AGENT_RESULT *result, const unsigned int row, const unsigned int col, struct zbx_db_result db_result);
-int zbx_db_compare_version(char *version1, char *version2);
+int dbmon_log_result(AGENT_RESULT *result, int level, const char *format, ...);
 
 #endif /* ZABBIX_DBMON_COMMON_H */

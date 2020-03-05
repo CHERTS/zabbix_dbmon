@@ -20,21 +20,15 @@
 #define ZBX_DB_TYPE_MSSQL 4
 #endif
 
+// function to determine if a string is null or empty
+#define strisnull(c)	(NULL == c || '\0' == *c)
+
 static char *DB_TYPE[] = {
 	"MySQL",
 	"PostgreSQL",
 	"Oracle",
 	"MSSQL"
 };
-
-typedef enum
-{
-	ZBX_DB_RES_TYPE_NOJSON = 0,
-	ZBX_DB_RES_TYPE_ONEROW,
-	ZBX_DB_RES_TYPE_TWOCOLL,
-	ZBX_DB_RES_TYPE_MULTIROW
-}
-zbx_db_result_type;
 
 #define ZBX_COL_TYPE_INT    0
 #define ZBX_COL_TYPE_DOUBLE 1

@@ -77,6 +77,8 @@
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\system.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\zabbix_stats.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\dbmon_common.c" />
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\dbmon_config.c" />
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\dbmon_params.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\mysql_info.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\oracle_info.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\pgsql_info.c" />
@@ -205,14 +207,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)..\openssl\include;$(ProjectDir)..\$(MYSQL_VENDOR)\include;$(ProjectDir)..\oracle_$(ORACLE_VER)\include;$(ProjectDir)..\postgresql_$(PG_VER)\include;$(ProjectDir)..\freetds\include;$(ProjectDir)..\pthreads4w\include;$(ProjectDir)..\pcre\include;$(ProjectDir)..\..\build\win32\include;$(ProjectDir)..\..\src\libs\zbxcrypto;$(ProjectDir)..\..\include;$(ProjectDir)..\..\src\libs\zbxsysinfo\dbmon;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\openssl\include;$(ProjectDir)..\$(MYSQL_VENDOR)\include;$(ProjectDir)..\oracle_$(ORACLE_VER)\include;$(ProjectDir)..\postgresql_$(PG_VER)\include;$(ProjectDir)..\freetds\include;$(ProjectDir)..\pthreads4w\include;$(ProjectDir)..\pcre\include;$(ProjectDir)..\..\build\win32\include;$(ProjectDir)..\..\src\libs\zbxcrypto;$(ProjectDir)..\..\include;$(ProjectDir)..\..\src\libs\zbxsysinfo\dbmon;$(ProjectDir)..\libconfig\include;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(Configuration)\$(Platform)\</IntDir>
     <ExtensionsToDeleteOnClean>*.log;$(ExtensionsToDeleteOnClean)</ExtensionsToDeleteOnClean>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(ProjectDir)..\openssl\include;$(ProjectDir)..\$(MYSQL_VENDOR)\include;$(ProjectDir)..\oracle_$(ORACLE_VER)\include;$(ProjectDir)..\postgresql_$(PG_VER)\include;$(ProjectDir)..\freetds\include;$(ProjectDir)..\pthreads4w\include;$(ProjectDir)..\pcre\include;$(ProjectDir)..\..\build\win32\include;$(ProjectDir)..\..\src\libs\zbxcrypto;$(ProjectDir)..\..\include;$(ProjectDir)..\..\src\libs\zbxsysinfo\dbmon;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\openssl\include;$(ProjectDir)..\$(MYSQL_VENDOR)\include;$(ProjectDir)..\oracle_$(ORACLE_VER)\include;$(ProjectDir)..\postgresql_$(PG_VER)\include;$(ProjectDir)..\freetds\include;$(ProjectDir)..\pthreads4w\include;$(ProjectDir)..\pcre\include;$(ProjectDir)..\..\build\win32\include;$(ProjectDir)..\..\src\libs\zbxcrypto;$(ProjectDir)..\..\include;$(ProjectDir)..\..\src\libs\zbxsysinfo\dbmon;$(ProjectDir)..\libconfig\include;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(Configuration)\$(Platform)\</IntDir>
     <ExtensionsToDeleteOnClean>*.log;$(ExtensionsToDeleteOnClean)</ExtensionsToDeleteOnClean>
@@ -275,8 +277,8 @@
       <OptimizeReferences>
       </OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x86;$(ProjectDir)..\openssl\lib\x86;$(ProjectDir)..\$(MYSQL_VENDOR)\lib\x86;$(ProjectDir)..\oracle_$(ORACLE_VER)\lib;$(ProjectDir)..\postgresql_$(PG_VER)\lib\x86;$(ProjectDir)..\freetds\lib\x86;$(ProjectDir)..\pthreads4w\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVC3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x86;$(ProjectDir)..\openssl\lib\x86;$(ProjectDir)..\$(MYSQL_VENDOR)\lib\x86;$(ProjectDir)..\oracle_$(ORACLE_VER)\lib;$(ProjectDir)..\postgresql_$(PG_VER)\lib\x86;$(ProjectDir)..\freetds\lib\x86;$(ProjectDir)..\pthreads4w\lib\x86;$(ProjectDir)..\libconfig\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVC3.lib;libconfig.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>true</EnableUAC>
       <TargetMachine>MachineX86</TargetMachine>
       <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
@@ -347,8 +349,8 @@ copy $(SolutionDir)openssl\bin\x86\ssleay32.dll $(SolutionDir)..\bin\win32</Comm
       <OptimizeReferences>
       </OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x64;$(ProjectDir)..\openssl\lib\x64;$(ProjectDir)..\$(MYSQL_VENDOR)\lib\x64;$(ProjectDir)..\oracle_$(ORACLE_VER)\lib;$(ProjectDir)..\postgresql_$(PG_VER)\lib\x64;$(ProjectDir)..\freetds\lib\x64;$(ProjectDir)..\pthreads4w\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVC3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x64;$(ProjectDir)..\openssl\lib\x64;$(ProjectDir)..\$(MYSQL_VENDOR)\lib\x64;$(ProjectDir)..\oracle_$(ORACLE_VER)\lib;$(ProjectDir)..\postgresql_$(PG_VER)\lib\x64;$(ProjectDir)..\freetds\lib\x64;$(ProjectDir)..\pthreads4w\lib\x64;$(ProjectDir)..\libconfig\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVC3.lib;libconfig.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>true</EnableUAC>
       <TargetMachine>MachineX64</TargetMachine>
       <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>

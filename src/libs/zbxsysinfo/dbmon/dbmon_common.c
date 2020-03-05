@@ -21,8 +21,9 @@
 #include "sysinfo.h"
 #include "log.h"
 #include "module.h"
+#include "zbxjson.h"
 #include "zbxdbmon.h"
-#include <zbxjson.h>
+#include "dbmon_common.h"
 
 int make_discovery_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_result db_result)
 {
@@ -280,6 +281,13 @@ int make_multirow_twocoll_json_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 		goto out;
 	}
 
+	if (2 > db_result.nb_columns)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "The query returned less than two columns of the result."));
+		ret = SYSINFO_RET_FAIL;
+		goto out;
+	}
+
 	if (0 == db_result.nb_rows)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "The request returned a null result."));
@@ -527,3 +535,24 @@ unsigned int get_int_one_result(AGENT_REQUEST *request, AGENT_RESULT *result, co
 
 	return ret;
 }
+
+/*
+ * Log an error to the agent log file and set the result message sent back to
+ * the server.
+ */
+int dbmon_log_result(AGENT_RESULT *result, int level, const char *format, ...)
+{
+	va_list args;
+	char    msg[MAX_STRING_LEN];
+
+	va_start(args, format);
+	zbx_vsnprintf(msg, sizeof(msg), format, args);
+
+	zabbix_log(level, "In %s: %s", __func__, msg);
+
+	if (NULL != result)
+		SET_MSG_RESULT(result, zbx_strdup(NULL, msg));
+
+	return SYSINFO_RET_FAIL;
+}
+

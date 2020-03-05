@@ -321,6 +321,12 @@
     <ClCompile Include="..\..\src\libs\zbxcrypto\tls_version.c">
       <Filter>Исходные файлы\zbxcrypto</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\dbmon_config.c">
+      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\dbmon_params.c">
+      <Filter>Исходные файлы\zbxsysinfo\dbmon</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\resource.h">

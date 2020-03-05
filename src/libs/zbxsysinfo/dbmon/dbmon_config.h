@@ -17,17 +17,13 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#ifndef ZABBIX_MYSQLINFO_H
-#define ZABBIX_MYSQLINFO_H
+#ifndef ZABBIX_DBMON_CONFIG_H
+#define ZABBIX_DBMON_CONFIG_H
 
 #include "sysinfo.h"
 
-extern ZBX_METRIC	parameters_dbmon_mysql[];
+const char *get_query_by_name(const char *key);
+int init_dbmon_config();
+int uninit_dbmon_config();
 
-int	MYSQL_PING(AGENT_REQUEST *request, AGENT_RESULT *result);
-int	MYSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result);
-int	MYSQL_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result);
-int	MYSQL_GET_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result);
-int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result);
-
-#endif /* ZABBIX_MYSQLINFO_H */
+#endif /* ZABBIX_DBMON_CONFIG_H */
