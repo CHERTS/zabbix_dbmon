@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-03T18:39:12Z</date>
+    <date>2020-03-05T08:49:45Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2029,7 +2029,8 @@ ON: Both new and replicated transactions must be GTID transactions.</description
                     <preprocessing>
                         <step>
                             <type>JAVASCRIPT</type>
-                            <params>if (value.indexOf(&quot;GTID_MODE&quot;) &gt; -1) {
+                            <params>var n = value.search(/.*\&quot;GTID_MODE\&quot;:.*/i);
+if (n &gt;= 0) {
   return value;
 } else {
   return &quot;{\&quot;GTID_MODE\&quot;:\&quot;4\&quot;}&quot;;
@@ -3376,6 +3377,90 @@ On thread startup, the session wait_timeout value is initialized from the global
                     <master_item>
                         <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                </item>
+                <item>
+                    <name>[MariaDB] Instance '{$DBS_MYSQL_INSTANCE}' variable: WSREP_GTID mode</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},wsrep_gtid_mode]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Wsrep GTID mode attempts to keep GTIDs consistent for Galera Cluster write sets on all cluster nodes.&#13;
+GTID state is initially copied to a joiner node during an SST.&#13;
+If you are planning to use Galera Cluster with MariaDB replication, then wsrep GTID mode can be helpful.&#13;
+See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_gtid_mode</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MySQL (gtid_mode)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>if (value.indexOf(&quot;WSREP_GTID_MODE&quot;) &gt; -1) {
+  return value;
+} else {
+  return &quot;{\&quot;WSREP_GTID_MODE\&quot;:\&quot;4\&quot;}&quot;;
+}</params>
+                        </step>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.WSREP_GTID_MODE</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;OFF&quot;:
+    return 0;
+    break;
+  case &quot;ON&quot;:
+    return 1;
+    break;
+  case &quot;OFF_PERMISSIVE&quot;:
+    return 2;
+    break;
+  case &quot;ON_PERMISSIVE&quot;:
+    return 3;
+    break;
+  default:
+    return 4;
+    break;
+}</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Setting 'wsrep_gtid_mode' has been changed</name>
+                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <priority>INFO</priority>
+                            <description>Настройка 'wsrep_gtid_mode' была изменена.&#13;
+Данная настройка отвечает за включение/отключение режима GTID и важна при репликации.&#13;
+Доведите информацию до эксперту.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <tags>
+                                <tag>
+                                    <tag>DBType</tag>
+                                    <value>MySQL</value>
+                                </tag>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Version</name>
