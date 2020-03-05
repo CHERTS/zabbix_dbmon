@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-05T09:08:11Z</date>
+    <date>2020-03-05T11:36:55Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3532,6 +3532,7 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>CHAR</value_type>
+                            <description>The schema default character set.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>MySQL: Database: {#DBNAME}, Info</name>
@@ -3559,6 +3560,7 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>CHAR</value_type>
+                            <description>The schema default collation.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>MySQL: Database: {#DBNAME}, Info</name>
@@ -3579,12 +3581,71 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                             </master_item>
                         </item_prototype>
                         <item_prototype>
-                            <name>[MySQL] Database '{#DBNAME}': Size</name>
+                            <name>[MySQL] Database '{#DBNAME}': Data size</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.db.info[{#DBNAME},db_data_lenght]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <description>For MyISAM, DATA_LENGTH is the length of the data file, in bytes.&#13;
+&#13;
+For InnoDB, DATA_LENGTH is the approximate amount of space allocated for the clustered index, in bytes. Specifically, it is the clustered index size, in pages, multiplied by the InnoDB page size.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].DB_DATA_LENGTH.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.db.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] Database '{#DBNAME}': Index size</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.db.info[{#DBNAME},db_index_lenght]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <description>For MyISAM, INDEX_LENGTH is the length of the index file, in bytes.&#13;
+&#13;
+For InnoDB, INDEX_LENGTH is the approximate amount of space allocated for non-clustered indexes, in bytes. Specifically, it is the sum of non-clustered index sizes, in pages, multiplied by the InnoDB page size.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>MySQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].DB_INDEX_LENGTH.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.db.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] Database '{#DBNAME}': Full size</name>
                             <type>DEPENDENT</type>
                             <key>mysql.db.info[{#DBNAME},db_size]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <units>B</units>
+                            <description>Full database size (DATA_LENGTH + INDEX_LENGTH for all tables).</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>MySQL: Database: {#DBNAME}, Info</name>
@@ -3594,6 +3655,10 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].DB_SIZE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
                                 </step>
                             </preprocessing>
                             <master_item>
