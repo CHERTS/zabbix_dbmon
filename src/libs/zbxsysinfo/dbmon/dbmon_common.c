@@ -90,7 +90,7 @@ int make_discovery_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct z
 					break;
 				case ZBX_COL_TYPE_NULL:
 				default:
-					zbx_json_addstring(&j, buffer, zbx_strdup(NULL, "[NULL]"), ZBX_JSON_TYPE_STRING);
+					zbx_json_addstring(&j, buffer, zbx_strdup(NULL, "NULL"), ZBX_JSON_TYPE_STRING);
 					break;
 			}
 		}
@@ -162,8 +162,8 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 					ret = SYSINFO_RET_OK;
 					break;
 				case ZBX_COL_TYPE_NULL:
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(NULL): %d, Value: [NULL]", __func__, request->key, row, col);
-					SET_STR_RESULT(result, zbx_strdup(NULL, "[NULL]"));
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(NULL): %d, Value: NULL", __func__, request->key, row, col);
+					SET_STR_RESULT(result, zbx_strdup(NULL, "NULL"));
 					ret = SYSINFO_RET_OK;
 					break;
 				}
@@ -244,8 +244,8 @@ int make_onerow_json_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct
 						zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "[BLOB]"), ZBX_JSON_TYPE_STRING);
 						break;
 					case ZBX_COL_TYPE_NULL:
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(NULL): %d, Value: [NULL]", __func__, request->key, row, col);
-						zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "[NULL]"), ZBX_JSON_TYPE_STRING);
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(NULL): %d, Value: NULL", __func__, request->key, row, col);
+						zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "NULL"), ZBX_JSON_TYPE_STRING);
 						break;
 				}
 			}
@@ -338,8 +338,8 @@ int make_multirow_twocoll_json_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "[BLOB]"), ZBX_JSON_TYPE_STRING);
 					break;
 				case ZBX_COL_TYPE_NULL:
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(NULL): %d, Value: [NULL]", __func__, request->key, row, 1);
-					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "[NULL]"), ZBX_JSON_TYPE_STRING);
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(NULL): %d, Value: NULL", __func__, request->key, row, 1);
+					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "NULL"), ZBX_JSON_TYPE_STRING);
 					break;
 			}
 		}
@@ -421,8 +421,8 @@ int make_multi_json_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct 
 					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "[BLOB]"), ZBX_JSON_TYPE_STRING);
 					break;
 				case ZBX_COL_TYPE_NULL:
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(NULL): %d, Value: [NULL]", __func__, request->key, row, col);
-					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "[NULL]"), ZBX_JSON_TYPE_STRING);
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(NULL): %d, Value: NULL", __func__, request->key, row, col);
+					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "NULL"), ZBX_JSON_TYPE_STRING);
 					break;
 				}
 			}
