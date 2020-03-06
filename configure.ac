@@ -167,6 +167,14 @@ if test "x$found_resolv" != "xyes"; then
 fi
 LIBS="${LIBS} ${RESOLV_LIBS}"
 
+dnl check for libconfig functions
+found_libconfig="no"
+LIBCONFIG_CHECK_CONFIG([no])
+if test "x$found_libconfig" != "xyes"; then
+	AC_MSG_ERROR([Unable to check config (libconfig check failed)])
+fi
+LIBS="${LIBS} ${CONFIG_LIBS}"
+
 dnl *****************************************************************
 dnl *                                                               *
 dnl *          Checks for type definitions and structures           *
