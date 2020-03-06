@@ -33,7 +33,7 @@
 extern char	*CONFIG_MYSQL_USER;
 extern char	*CONFIG_MYSQL_PASSWORD;
 
-int init_config_done = -1;
+int init_config_done = 1;
 
 #define MYSQL_DEFAULT_USER		"root"
 #define MYSQL_DEFAULT_PASSWORD	"password"
@@ -254,7 +254,7 @@ static int	mysql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned 
 		{
 			if (ZBX_DB_OK == zbx_db_query_select(mysql_conn, &mysql_result, MYSQL_VERSION_DBS))
 			{
-				ret = make_result(request, result, mysql_result);
+				ret = make_result(request, result, mysql_result, ZBX_DB_RES_TYPE_NOJSON);
 				zbx_db_clean_result(&mysql_result);
 			}
 			else
@@ -382,14 +382,14 @@ static int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HAN
 		}
 		else
 		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown discovery request key"));
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown discovery request key."));
 			ret = SYSINFO_RET_FAIL;
 			goto out;
 		}
 
 		if (ZBX_DB_OK == ret)
 		{
-			ret = make_discovery_result(request, result, mysql_result);
+			ret = make_result(request, result, mysql_result, ZBX_DB_RES_TYPE_DISCOVERY);
 			zbx_db_clean_result(&mysql_result);
 		}
 		else
@@ -472,22 +472,7 @@ static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 
 		if (ZBX_DB_OK == db_ret)
 		{
-			switch (result_type)
-			{
-			case ZBX_DB_RES_TYPE_ONEROW:
-				ret = make_onerow_json_result(request, result, mysql_result);
-				break;
-			case ZBX_DB_RES_TYPE_TWOCOLL:
-				ret = make_multirow_twocoll_json_result(request, result, mysql_result);
-				break;
-			case ZBX_DB_RES_TYPE_MULTIROW:
-				ret = make_multi_json_result(request, result, mysql_result);
-				break;
-			default:
-				ret = make_result(request, result, mysql_result);
-				break;
-			}
-
+			ret = make_result(request, result, mysql_result, result_type);
 			zbx_db_clean_result(&mysql_result);
 		}
 		else
@@ -658,6 +643,9 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	dbmon_param_free(params);
 out:
+	uninit_dbmon_config();
+	init_config_done = 1;
+
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 	return ret;
 }

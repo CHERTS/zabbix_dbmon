@@ -40,7 +40,7 @@ char **query_values = NULL;
 int query_count = 0;
 
 /*
- * Function getDBMONCONFIGFILE
+ * Function get_dbmon_configfile
  *
  * Returns the config file path.
  * 
@@ -49,12 +49,12 @@ int query_count = 0;
  *
  * Returns: pointer to const char
  */
-static inline const char * getDBMONCONFIGFILE() {
+static inline const char *get_dbmon_configfile() {
     char *path = NULL;
     if('\0' == (path = getenv("DBMONCONFIGFILE"))) {
         path = DEFAULT_DBMON_CONFIG_FILE;
     } else if (strlen(path) > MAX_GLOBBING_PATH_LENGTH) {
-        zabbix_log(LOG_LEVEL_ERR, "DBMONCONFIGFILE exceeds maximum length of %i", MAX_GLOBBING_PATH_LENGTH);
+        zabbix_log(LOG_LEVEL_ERR, "In %s: environment DBMONCONFIGFILE exceeds maximum length of %i", __func__, MAX_GLOBBING_PATH_LENGTH);
         return NULL;
     }
     
@@ -117,23 +117,25 @@ static int read_config_queries(const config_setting_t *root)
     config_setting_t    *node = NULL;
 
     if (CONFIG_TYPE_GROUP != config_setting_type(root)) {
-        zabbix_log(LOG_LEVEL_ERR, "queries is not a valid configuration group");
+        zabbix_log(LOG_LEVEL_ERR, "In %s: queries is not a valid configuration group", __func__);
         return EXIT_FAILURE;
     }
 
     query_count = config_setting_length(root);
-    query_keys = (char**) zbx_calloc(query_keys, query_count + 1, sizeof(char*));
-    query_values = (char**) zbx_calloc(query_values, query_count + 1, sizeof(char*));
+    query_keys = (char**)zbx_calloc(query_keys, query_count + 1, sizeof(char*));
+    query_values = (char**)zbx_calloc(query_values, query_count + 1, sizeof(char*));
 
     for (i = 0; i < query_count; i++) {
         node = config_setting_get_elem(root, i);
         key = config_setting_name(node);
+
         if (CONFIG_TYPE_STRING != config_setting_type(node)) {
-            zabbix_log(LOG_LEVEL_ERR, "query '%s' is not a valid string", key);
+            zabbix_log(LOG_LEVEL_ERR, "In %s: query '%s' is not a valid string", __func__, key);
             return EXIT_FAILURE;
         }
 
         value = config_setting_get_string_elem(root, i);
+
         if (EXIT_SUCCESS != (add_named_query(key, value)))
             return EXIT_FAILURE;
     }
@@ -151,14 +153,15 @@ static int read_dbmon_config(const char *cfgfile)
     config_setting_t    *root, *node;
 
     config_init(&cfg);
+
     if (CONFIG_TRUE != (config_read_file(&cfg, cfgfile))) {
-        zabbix_log(LOG_LEVEL_ERR, "%s in %s:%i",
-            config_error_text(&cfg), cfgfile, config_error_line(&cfg));
+        zabbix_log(LOG_LEVEL_ERR, "In %s: %s in %s:%i",	__func__, config_error_text(&cfg), cfgfile, config_error_line(&cfg));
         goto out;
     }
 
     root = config_root_setting(&cfg);
     cfglen = config_setting_length(root);
+
     for (i = 0; i < cfglen; i++) {
         node = config_setting_get_elem(root, i);
         key = config_setting_name(node);
@@ -167,13 +170,12 @@ static int read_dbmon_config(const char *cfgfile)
             if (EXIT_SUCCESS != (read_config_queries(node)))
                 goto out;
         } else {
-            zabbix_log(LOG_LEVEL_ERR, "unrecognised configuration parameter: %s", key);
+            zabbix_log(LOG_LEVEL_ERR, "In %s: unrecognised configuration parameter: %s", __func__, key);
             goto out;
         }
     }
 
     res = EXIT_SUCCESS;
-
 out:
     config_destroy(&cfg);
     return res;
@@ -181,9 +183,9 @@ out:
 
 int init_dbmon_config()
 {
-    const char *cfgfile = getDBMONCONFIGFILE();
+    const char *cfgfile = get_dbmon_configfile();
 
-	zabbix_log(LOG_LEVEL_INFORMATION, "using dbmon configuration file: %s", cfgfile);
+	zabbix_log(LOG_LEVEL_INFORMATION, "In %s: using dbmon configuration file: %s", __func__, cfgfile);
 
     if (EXIT_SUCCESS != (read_dbmon_config(cfgfile)))
         return EXIT_FAILURE;
@@ -193,5 +195,8 @@ int init_dbmon_config()
 
 int uninit_dbmon_config()
 {
+	zbx_free(query_keys);
+	zbx_free(query_values);
+	query_count = 0;
     return EXIT_SUCCESS;
 }

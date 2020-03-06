@@ -65,20 +65,20 @@ zabbix_get.exe %zbx_conn_string% -k mysql.slave.status[127.0.0.1,3306] | jq-win6
 
 echo === PgSQL ===================================================================
 
+echo PostgreSQL ping:
+zabbix_get.exe %zbx_conn_string% -k pgsql.ping["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
+echo -----------------------------------------------------------------------------
+
 echo PostgreSQL version:
-zabbix_get.exe %zbx_conn_string% -k pg.version["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
+zabbix_get.exe %zbx_conn_string% -k pgsql.version["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
 echo -----------------------------------------------------------------------------
 
 echo PostgreSQL version full:
-zabbix_get.exe %zbx_conn_string% -k pg.version.full["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
-echo -----------------------------------------------------------------------------
-
-echo PostgreSQL ping:
-zabbix_get.exe %zbx_conn_string% -k pg.ping["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
+zabbix_get.exe %zbx_conn_string% -k pgsql.version.full["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
 echo -----------------------------------------------------------------------------
 
 echo PostgreSQL database discovery:
-zabbix_get.exe %zbx_conn_string% -k pg.db.discovery["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k pgsql.db.discovery["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
 
 echo === Oracle (%oracle_srv_name%) =================================================
 

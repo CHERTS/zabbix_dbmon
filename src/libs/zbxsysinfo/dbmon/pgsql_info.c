@@ -193,7 +193,7 @@ static int	pgsql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned 
 		{
 			if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, PGSQL_VERSION_DBS))
 			{
-				ret = make_result(request, result, pgsql_result);
+				ret = make_result(request, result, pgsql_result, ZBX_DB_RES_TYPE_NOJSON);
 				zbx_db_clean_result(&pgsql_result);
 			}
 			else
@@ -277,7 +277,7 @@ static int	pgsql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, con
 	{
 		if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, query))
 		{
-			ret = make_discovery_result(request, result, pgsql_result);
+			ret = make_result(request, result, pgsql_result, ZBX_DB_RES_TYPE_DISCOVERY);
 			zbx_db_clean_result(&pgsql_result);
 		}
 		else
@@ -349,22 +349,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 	{
 		if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, query))
 		{
-			switch (result_type)
-			{
-				case ZBX_DB_RES_TYPE_ONEROW:
-					ret = make_onerow_json_result(request, result, pgsql_result);
-					break;
-				case ZBX_DB_RES_TYPE_TWOCOLL:
-					ret = make_multirow_twocoll_json_result(request, result, pgsql_result);
-					break;
-				case ZBX_DB_RES_TYPE_MULTIROW:
-					ret = make_multi_json_result(request, result, pgsql_result);
-					break;
-				default:
-					ret = make_result(request, result, pgsql_result);
-					break;
-			}
-
+			ret = make_result(request, result, pgsql_result, result_type);
 			zbx_db_clean_result(&pgsql_result);
 		}
 		else

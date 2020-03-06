@@ -915,21 +915,7 @@ next:
 exec_inst_query:
 				if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance))
 				{
-					switch (result_type)
-					{
-						case ZBX_DB_RES_TYPE_ONEROW:
-							ret = make_onerow_json_result(request, result, ora_result);
-							break;
-						case ZBX_DB_RES_TYPE_TWOCOLL:
-							ret = make_multirow_twocoll_json_result(request, result, ora_result);
-							break;
-						case ZBX_DB_RES_TYPE_MULTIROW:
-							ret = make_multi_json_result(request, result, ora_result);
-							break;
-						default:
-							ret = make_result(request, result, ora_result);
-							break;
-					}
+					ret = make_result(request, result, ora_result, result_type);
 					zbx_db_clean_result(&ora_result);
 				}
 				else
@@ -1004,21 +990,7 @@ exec_inst_query:
 exec_db_query:
 				if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance, oracle_dbname))
 				{
-					switch (result_type)
-					{
-						case ZBX_DB_RES_TYPE_ONEROW:
-							ret = make_onerow_json_result(request, result, ora_result);
-							break;
-						case ZBX_DB_RES_TYPE_TWOCOLL:
-							ret = make_multirow_twocoll_json_result(request, result, ora_result);
-							break;
-						case ZBX_DB_RES_TYPE_MULTIROW:
-							ret = make_multi_json_result(request, result, ora_result);
-							break;
-						default:
-							ret = make_result(request, result, ora_result);
-							break;
-					}
+					ret = make_result(request, result, ora_result, result_type);
 					zbx_db_clean_result(&ora_result);
 				}
 				else
@@ -1382,7 +1354,7 @@ next:
 		{
 			if (zbx_db_query_select(oracle_conn, &ora_result, query) == ZBX_DB_OK)
 			{
-				ret = make_discovery_result(request, result, ora_result);
+				ret = make_result(request, result, ora_result, ZBX_DB_RES_TYPE_DISCOVERY);
 				zbx_db_clean_result(&ora_result);
 			}
 			else
@@ -1566,7 +1538,7 @@ next:
 
 		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_dbname))
 		{
-			ret = make_onerow_json_result(request, result, ora_result);
+			ret = make_result(request, result, ora_result, ZBX_DB_RES_TYPE_ONEROW);
 			zbx_db_clean_result(&ora_result);
 		}
 		else
