@@ -17,7 +17,7 @@
 yum group install "Development Tools"
 yum-config-manager --enable ol7_optional_latest
 yum-config-manager --enable ol7_developer
-yum install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre-devel libssh2-devel
+yum install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre-devel libssh2-devel libconfig-devel
 yum install -y MariaDB-client MariaDB-devel MariaDB-shared
 yum install -y postgresql-devel postgresql-libs
 ~~~~
@@ -96,7 +96,7 @@ cp src/zabbix_agent/zabbix_agentd /sbin
 
 ~~~~
 sudo apt-get update
-sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libmariadbclient-dev-compat
+sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libmariadbclient-dev-compat  libconfig-dev
 ~~~~
 
 ### 2. Скачать и распаковать свежую версию исходного кода:

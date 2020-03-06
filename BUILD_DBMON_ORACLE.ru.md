@@ -13,7 +13,7 @@
 yum group install "Development Tools"
 yum-config-manager --enable ol7_optional_latest
 yum-config-manager --enable ol7_developer
-yum install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre-devel libssh2-devel
+yum install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre-devel libssh2-devel libconfig-devel
 yum install -y MariaDB-client MariaDB-devel MariaDB-shared
 yum install -y postgresql-devel postgresql-libs
 ~~~~
@@ -53,7 +53,7 @@ cp src/zabbix_agent/zabbix_agentd /sbin
 
 ~~~~
 dnf group install "Development Tools"
-dnf install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre-devel
+dnf install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre-devel libconfig-devel
 dnf install -y mariadb-devel postgresql-devel
 ~~~~
 
