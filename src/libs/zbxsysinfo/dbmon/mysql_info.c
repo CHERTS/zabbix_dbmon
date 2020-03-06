@@ -80,17 +80,19 @@ WHERE VARIABLE_NAME = 'log_error';"
 #define MYSQL_TOP10_TABLE_BY_SIZE_DBS "\
 SELECT /*DBS_008*/ CAST(@rn:=@rn+1 AS DECIMAL(0)) AS TOP, TABLE_SCHEMA AS DB_NAME, TABLE_NAME, ENGINE AS TABLE_ENGINE, IFNULL(TABLE_ROWS,0) AS TABLE_ROWS, DATA_FREE AS DATA_FREE_SIZE, DATA_LENGTH AS DATA_SIZE, INDEX_LENGTH AS INDEX_SIZE, (DATA_LENGTH + INDEX_LENGTH) AS TOTAL_SIZE \
 FROM( \
-    SELECT TABLE_SCHEMA, TABLE_NAME, ENGINE, TABLE_ROWS, DATA_FREE, DATA_LENGTH, INDEX_LENGTH, (DATA_LENGTH + INDEX_LENGTH) AS TOTAL_SIZE \
-	FROM information_schema.tables \
-	ORDER BY (DATA_LENGTH + INDEX_LENGTH) DESC LIMIT 10 \
+    SELECT t.TABLE_SCHEMA, t.TABLE_NAME, t.ENGINE, t.TABLE_ROWS, t.DATA_FREE, t.DATA_LENGTH, t.INDEX_LENGTH, (t.DATA_LENGTH + t.INDEX_LENGTH) AS TOTAL_SIZE \
+	FROM information_schema.schemata s INNER JOIN information_schema.tables t ON s.SCHEMA_NAME = t.TABLE_SCHEMA \
+	WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema|mysql)' \
+	ORDER BY (t.DATA_LENGTH + t.INDEX_LENGTH) DESC LIMIT %s \
 ) t1, (SELECT @rn:=0) t2;"
 
 #define MYSQL_TOP10_TABLE_BY_ROWS_DBS "\
 SELECT /*DBS_008*/ CAST(@rn:=@rn+1 AS DECIMAL(0)) AS TOP, TABLE_SCHEMA AS DB_NAME, TABLE_NAME, ENGINE AS TABLE_ENGINE, IFNULL(TABLE_ROWS,0) AS TABLE_ROWS, DATA_FREE AS DATA_FREE_SIZE, DATA_LENGTH AS DATA_SIZE, INDEX_LENGTH AS INDEX_SIZE, (DATA_LENGTH + INDEX_LENGTH) AS TOTAL_SIZE \
 FROM( \
-    SELECT TABLE_SCHEMA, TABLE_NAME, ENGINE, TABLE_ROWS, DATA_FREE, DATA_LENGTH, INDEX_LENGTH, (DATA_LENGTH + INDEX_LENGTH) AS TOTAL_SIZE \
-	FROM information_schema.tables \
-	ORDER BY TABLE_ROWS DESC LIMIT 10 \
+    SELECT t.TABLE_SCHEMA, t.TABLE_NAME, t.ENGINE, t.TABLE_ROWS, t.DATA_FREE, t.DATA_LENGTH, t.INDEX_LENGTH, (t.DATA_LENGTH + t.INDEX_LENGTH) AS TOTAL_SIZE \
+	FROM information_schema.schemata s INNER JOIN information_schema.tables t ON s.SCHEMA_NAME = t.TABLE_SCHEMA \
+	WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema|mysql)' \
+	ORDER BY t.TABLE_ROWS DESC LIMIT %s \
 ) t1, (SELECT @rn:=0) t2;"
 
 #define MYSQL_SLAVE_STATUS_DBS "SHOW SLAVE STATUS;"
@@ -423,8 +425,8 @@ int	MYSQL_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type)
 {
 	int							ret = SYSINFO_RET_FAIL, db_ret = ZBX_DB_ERROR;
-	char						*mysql_host, *mysql_str_port;
-	unsigned short				mysql_port = 0;
+	char						*mysql_host, *mysql_str_port, *mysql_top_table_num_str;
+	unsigned short				mysql_port = 0, mysql_top_table_num = 0;
 	struct zbx_db_connection	*mysql_conn;
 	struct zbx_db_result		mysql_result;
 	unsigned long				mysql_version;
@@ -437,6 +439,15 @@ static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 
 	mysql_host = get_rparam(request, 0);
 	mysql_str_port = get_rparam(request, 1);
+
+	if (0 == strcmp(request->key, "mysql.top10_table_by_size") || 0 == strcmp(request->key, "mysql.top10_table_by_rows"))
+	{
+		mysql_top_table_num_str = get_rparam(request, 2);
+		if (NULL == mysql_top_table_num_str || '\0' == *mysql_top_table_num_str)
+			mysql_top_table_num_str = "10";
+		if (SUCCEED != is_ushort(mysql_top_table_num_str, &mysql_top_table_num))
+			mysql_top_table_num_str = "10";
+	}
 
 	if (NULL == mysql_host || '\0' == *mysql_host)
 	{
@@ -464,6 +475,10 @@ static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 		if (0 == strcmp(request->key, "mysql.server.info"))
 		{
 			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_schema);
+		}
+		else if (0 == strcmp(request->key, "mysql.top10_table_by_size") || 0 == strcmp(request->key, "mysql.top10_table_by_rows"))
+		{
+			db_ret = zbx_db_query_select(mysql_conn, &mysql_result, query, mysql_top_table_num_str);
 		}
 		else
 		{
