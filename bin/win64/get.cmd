@@ -4,10 +4,10 @@ title Get zabbix-agent data...
 
 set zbx_conn_string=-s 127.0.0.1 -p 11311 --tls-connect psk --tls-psk-identity default --tls-psk-file C:\DBS_Zabbix\Config\default.psk
 
-set oracle_srv_name=dbs-db-dcb.vpn
-set oracle_srv_ip=dbs-db-dcb.vpn
-set oracle_instance=logsb
-set oracle_dbname=LOGSB
+set oracle_srv_name=127.0.0.1
+set oracle_conn_string=127.0.0.1:1521/orcl
+set oracle_instance=orcl
+set oracle_dbname=ORCL
 
 echo =============================================================================
 
@@ -83,118 +83,122 @@ zabbix_get.exe %zbx_conn_string% -k pgsql.db.discovery["host = localhost port = 
 echo === Oracle (%oracle_srv_name%) =================================================
 
 echo Orcale ping (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.ping[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.ping[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Orcale version (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.version[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.version[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle instance info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.info[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.info[%oracle_conn_string%,%oracle_instance%,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle instance parameter (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.parameter[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.parameter[%oracle_conn_string%,%oracle_instance%,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle instance patch info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.patch_info[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.patch_info[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle instance resource (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.resource[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.resource[%oracle_conn_string%,%oracle_instance%,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle instance number of dbfiles (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.dbfiles[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.dbfiles[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle instance resumable sessions info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.resumable[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.resumable[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle instance bad processes info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.bad_processes[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.bad_processes[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle instance FRA info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.fra[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.fra[%oracle_conn_string%,%oracle_instance%,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle instance redo log switch rate (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.redolog_switch_rate[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.redolog_switch_rate[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle instance redo log size per 1 hour (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.instance.redolog_size_per_hour[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.instance.redolog_size_per_hour[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle last archive log backup (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.backup.archivelog[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.backup.archivelog[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle last full backup (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.backup.full[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.backup.full[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle last incremental backup (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.backup.incr[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.backup.incr[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle total incremental file number (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.backup.incr_file_num[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.backup.incr_file_num[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle last control file backup (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.backup.cf[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.backup.cf[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle database discovery (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.db.discovery[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.db.discovery[%oracle_conn_string%,%oracle_instance%,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle database info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.db.info[%oracle_srv_ip%,1521,%oracle_instance%,1,%oracle_dbname%] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.db.info[%oracle_conn_string%,%oracle_instance%,1,%oracle_dbname%] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle database incarnation (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.db.incarnation[%oracle_srv_ip%,1521,%oracle_instance%,1,%oracle_dbname%] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.db.incarnation[%oracle_conn_string%,%oracle_instance%,1,%oracle_dbname%] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle database size (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.db.size[%oracle_srv_ip%,1521,%oracle_instance%,1,%oracle_dbname%] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.db.size[%oracle_conn_string%,%oracle_instance%,1,%oracle_dbname%] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle standby discovery (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.standby.discovery[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.standby.discovery[%oracle_conn_string%,%oracle_instance%,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle get standby lag (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.standby.lag[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.standby.lag[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle get standby MRP status (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.standby.mrp_status[%oracle_srv_ip%,1521,%oracle_instance%,1]
+zabbix_get.exe %zbx_conn_string% -k oracle.standby.mrp_status[%oracle_conn_string%,%oracle_instance%,1]
 echo -----------------------------------------------------------------------------
 
 echo Oracle archlogdest discovery (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.archlogdest.discovery[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.archlogdest.discovery[%oracle_conn_string%,%oracle_instance%,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle archlogdest info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.archlogdest.info[%oracle_srv_ip%,1521,%oracle_instance%,1] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.archlogdest.info[%oracle_conn_string%,%oracle_instance%,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle permanent tablespace info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.info[%oracle_srv_ip%,1521,%oracle_instance%,1,0] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.info[%oracle_conn_string%,%oracle_instance%,1,0] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle temporary tablespace info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.info[%oracle_srv_ip%,1521,%oracle_instance%,1,1] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.info[%oracle_conn_string%,%oracle_instance%,1,1] | jq-win64.exe .
 echo -----------------------------------------------------------------------------
 
 echo Oracle undo tablespace info (%oracle_srv_name%):
-zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.info[%oracle_srv_ip%,1521,%oracle_instance%,1,2] | jq-win64.exe .
+zabbix_get.exe %zbx_conn_string% -k oracle.tablespace.info[%oracle_conn_string%,%oracle_instance%,1,2] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo Oracle alert log discovery (%oracle_srv_name%):
+zabbix_get.exe %zbx_conn_string% -k oracle.alertlog.discovery[%oracle_conn_string%,%oracle_instance%,1] | jq-win64.exe .
 
 echo =============================================================================

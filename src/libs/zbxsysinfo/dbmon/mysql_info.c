@@ -609,6 +609,10 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 		{
 			query_result_type = ZBX_DB_RES_TYPE_MULTIROW;
 		}
+		else if (0 == strcmp(query_result_type_str, "DISCOVERY"))
+		{
+			query_result_type = ZBX_DB_RES_TYPE_DISCOVERY;
+		}
 		else
 		{
 			dbmon_log_result(result, LOG_LEVEL_ERR, "Unsupported query type: %s", query_result_type_str);
