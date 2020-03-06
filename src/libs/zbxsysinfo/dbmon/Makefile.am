@@ -21,7 +21,9 @@ libzbxdbmoninfo_a_SOURCES = \
 	$(DBMON_MYSQL_INFO_FILE) \
 	$(DBMON_PGSQL_INFO_FILE) \
 	$(DBMON_ORACLE_INFO_FILE) \
-	dbmon_common.c dbmon_common.h
+	dbmon_common.c dbmon_common.h \
+	dbmon_config.c dbmon_config.h \
+	dbmon_params.c dbmon_params.h
 	
 libzbxdbmoninfo_a_CFLAGS = \
 	-I@top_srcdir@/src/zabbix_agent/ \
