@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-06T18:19:16Z</date>
+    <date>2020-03-07T16:28:35Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -404,6 +404,32 @@
                     </applications>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Aborted clients</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},aborted_clients]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of connections that were aborted because the client died without closing the connection properly.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.ABORTED_CLIENTS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Aborted clients per second</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},aborted_clients_rate]</key>
@@ -424,6 +450,32 @@
                         <step>
                             <type>CHANGE_PER_SECOND</type>
                             <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Aborted connections</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},aborted_connects]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of failed attempts to connect to the MySQL server.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.ABORTED_CONNECTS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1312,6 +1364,30 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     </preprocessing>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Opened tables</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},opened_tables]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of tables that have been opened. If Opened_tables is big, your table_open_cache value is probably too small.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.OPENED_TABLES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Open files</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},open_files]</key>
@@ -1647,6 +1723,27 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <master_item>
                         <key>mysql.status[{$DBS_MYSQL_INSTANCE},sort_merge_passes]</key>
                     </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Table cache hit rate</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_cache_hit_rate]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},table_open_cache]&quot;) * 100 / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},opened_tables]&quot;)</params>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads cached</name>
