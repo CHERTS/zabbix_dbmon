@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-08T09:06:08Z</date>
+    <date>2020-03-08T14:26:29Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1420,7 +1420,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The number of files that are open. This count includes regular files opened by the server. It does not include other types of files such as sockets or pipes. Also, the count does not include files that storage engines open using their own internal functions rather than asking the server level to do so.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Info</name>
+                            <name>MySQL: Performance</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1442,7 +1442,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The number of tables that are open.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Info</name>
+                            <name>MySQL: Performance</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1775,7 +1775,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The number of queries that have taken more than long_query_time seconds. This counter increments regardless of whether the slow query log is enabled.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Throughput</name>
                         </application>
                     </applications>
                     <preprocessing>
