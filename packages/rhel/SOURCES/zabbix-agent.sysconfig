@@ -1,0 +1,4 @@
+# Configuration file for /etc/init.d/zabbix-agent service
+
+# User to run zabbix agent as
+ZABBIX_AGENT_USER=zabbix
