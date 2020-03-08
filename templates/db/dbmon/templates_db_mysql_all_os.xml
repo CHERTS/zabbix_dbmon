@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-07T16:28:35Z</date>
+    <date>2020-03-08T09:06:08Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1374,13 +1374,37 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
 See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</description>
                     <applications>
                         <application>
-                            <name>MySQL: Info</name>
+                            <name>MySQL: Performance</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.OPENED_TABLES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Opened tables definitions</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},opened_tables_definitions]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of table definitions that have been cached.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.OPENED_TABLE_DEFINITIONS</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1622,6 +1646,119 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                         <step>
                             <type>CHANGE_PER_SECOND</type>
                             <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Select full join</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},select_full_join]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Показывает количество запросов, которые сделали сканирование таблицы во время объединения (даже если join_buffer был использован).&#13;
+Параметр может означать наличие плохих запросов или в некоторых случаях наличие небольших таблиц для которых объединение выполняться быстро (поэтому они не оптимизируются).</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SELECT_FULL_JOIN</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Select full rahge join</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},select_full_range_join]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Показывает количество объединений, которые использовали поиск по диапазону на табличные ссылки.&#13;
+Такие запросы не частые, но всегда вредные.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SELECT_FULL_RANGE_JOIN</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Select range</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},select_range]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Параметр показывает количество запросов использующих диапазоны.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SELECT_RANGE</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Select range check</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},select_range_check]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Показывает количество соединений без ключа с дополнительной проверкой использования ключей при каждом чтении строки.&#13;
+Хороший индикатор плохого индексирования таблиц.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SELECT_RANGE_CHECK</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Select scan</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},select_scan]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Полное сканирование таблиц в объединениях. Большое значение указывает на проблемы с корректным построением индексов.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SELECT_SCAN</params>
                         </step>
                     </preprocessing>
                     <master_item>
