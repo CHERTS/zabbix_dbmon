@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-08T14:26:29Z</date>
+    <date>2020-03-09T17:15:00Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -28,7 +28,13 @@
                     <name>MySQL: Performance</name>
                 </application>
                 <application>
+                    <name>MySQL: Query cache</name>
+                </application>
+                <application>
                     <name>MySQL: Replication</name>
+                </application>
+                <application>
+                    <name>MySQL: Status</name>
                 </application>
                 <application>
                     <name>MySQL: Throughput</name>
@@ -706,13 +712,17 @@
                     <description>The Com_select counter variable indicates the number of times the select statement has been executed.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.COM_SELECT</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -997,13 +1007,17 @@
                     <description>The number of internal on-disk temporary tables created by the server while executing statements.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.CREATED_TMP_DISK_TABLES</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1019,13 +1033,17 @@
                     <description>How many temporary files mysqld has created.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.CREATED_TMP_FILES</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1041,7 +1059,7 @@
                     <description>The number of internal temporary tables created by the server while executing statements.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1049,10 +1067,30 @@
                             <type>JSONPATH</type>
                             <params>$.CREATED_TMP_TABLES</params>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Open file limit used</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},files_open_pct]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},open_files]&quot;) * 100 / last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},open_files_limit]&quot;)</params>
+                    <description>Open file limit used in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB buffer pool dirty pages</name>
@@ -1063,13 +1101,17 @@
                     <description>The current number of dirty pages in the InnoDB buffer pool.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_BUFFER_POOL_PAGES_DIRTY</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1085,13 +1127,17 @@
                     <description>The number of free pages in the InnoDB buffer pool.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_BUFFER_POOL_PAGES_FREE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1107,13 +1153,17 @@
                     <description>The total size of the InnoDB buffer pool, in pages.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_BUFFER_POOL_PAGES_TOTAL</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1129,13 +1179,17 @@
                     <description>The number of logical reads that InnoDB could not satisfy from the buffer pool, and had to read directly from disk.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_BUFFER_POOL_READS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1151,13 +1205,17 @@
                     <description>The number of logical read requests.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_BUFFER_POOL_READ_REQUESTS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1173,13 +1231,17 @@
                     <description>The number of times that the log buffer was too small and a wait was required for it to be flushed before continuing.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_LOG_WAITS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1197,7 +1259,7 @@
                     <description>The total time spent in acquiring row locks for InnoDB tables, in milliseconds.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1229,7 +1291,7 @@
                     <description>The maximum time to acquire a row lock for InnoDB tables, in milliseconds.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1259,13 +1321,17 @@
                     <description>The number of times operations on InnoDB tables had to wait for a row lock.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_ROW_LOCK_WAITS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1374,13 +1440,17 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
 See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.OPENED_TABLES</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1398,13 +1468,17 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
 See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.OPENED_TABLE_DEFINITIONS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1420,13 +1494,17 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The number of files that are open. This count includes regular files opened by the server. It does not include other types of files such as sockets or pipes. Also, the count does not include files that storage engines open using their own internal functions rather than asking the server level to do so.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.OPEN_FILES</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1442,13 +1520,17 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The number of tables that are open.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.OPEN_TABLES</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1467,24 +1549,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>Query cache efficiency in percentage.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Query cache efficiency (2)</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency_2]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <status>DISABLED</status>
-                    <value_type>FLOAT</value_type>
-                    <units>%</units>
-                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_hits]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_hits]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_inserts]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_not_cached]&quot;))) * 100</params>
-                    <description>Query cache efficiency in percentage.</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                 </item>
@@ -1497,7 +1562,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The amount of free memory for the query cache.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1519,7 +1584,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The number of query cache hits.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1541,7 +1606,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The number of queries added to the query cache.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1563,7 +1628,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The number of queries that were deleted from the query cache because of low memory.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1585,7 +1650,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The number of noncached queries (not cacheable, or not cached due to the query_cache_type setting).</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1597,6 +1662,22 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Query cache used</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_used_pct]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>100 - (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_free_memory]&quot;) / last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_size]&quot;)) * 100</params>
+                    <description>Query cache used in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Query cache</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Queries per second</name>
@@ -1624,6 +1705,21 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Query cache prunes per day</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},query_cache_prunes_per_day]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},qcache_lowmem_prunes]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},uptime]&quot;) / 86400)</params>
+                    <description>Query cache prunes per day.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Query cache</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Questions per second</name>
@@ -1658,17 +1754,20 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},select_full_join]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Показывает количество запросов, которые сделали сканирование таблицы во время объединения (даже если join_buffer был использован).&#13;
-Параметр может означать наличие плохих запросов или в некоторых случаях наличие небольших таблиц для которых объединение выполняться быстро (поэтому они не оптимизируются).</description>
+                    <description>The number of joins that perform table scans because they do not use indexes. If this value is not 0, you should carefully check the indexes of your tables.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SELECT_FULL_JOIN</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1681,17 +1780,20 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},select_full_range_join]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Показывает количество объединений, которые использовали поиск по диапазону на табличные ссылки.&#13;
-Такие запросы не частые, но всегда вредные.</description>
+                    <description>The number of joins that used a range search on a reference table.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SELECT_FULL_RANGE_JOIN</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1704,16 +1806,20 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},select_range]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Параметр показывает количество запросов использующих диапазоны.</description>
+                    <description>The number of joins that used ranges on the first table. This is normally not a critical issue even if the value is quite large.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SELECT_RANGE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1726,17 +1832,20 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},select_range_check]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Показывает количество соединений без ключа с дополнительной проверкой использования ключей при каждом чтении строки.&#13;
-Хороший индикатор плохого индексирования таблиц.</description>
+                    <description>The number of joins without keys that check for key usage after each row. If this is not 0, you should carefully check the indexes of your tables.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SELECT_RANGE_CHECK</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1749,16 +1858,20 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},select_scan]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Полное сканирование таблиц в объединениях. Большое значение указывает на проблемы с корректным построением индексов.</description>
+                    <description>The number of joins that did a full scan of the first table.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SELECT_SCAN</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1826,13 +1939,17 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <description>The number of merge passes that the sort algorithm has had to do. If this value is large, you should consider increasing the value of the sort_buffer_size system variable.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Performance</name>
+                            <name>MySQL: Status</name>
                         </application>
                     </applications>
                     <preprocessing>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SORT_MERGE_PASSES</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1862,6 +1979,58 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Sort range</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},sort_range]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of sorts that were done using ranges.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Status</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SORT_RANGE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Sort scan</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},sort_scan]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of sorts that were done by scanning the table.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Status</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SORT_SCAN</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Table cache hit rate</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_cache_hit_rate]</key>
@@ -1869,7 +2038,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>%</units>
-                    <params>last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},table_open_cache]&quot;) * 100 / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},opened_tables]&quot;)</params>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},open_tables]&quot;) * 100 / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},opened_tables]&quot;)</params>
+                    <description>Table cache hit rate in percentage.</description>
                     <applications>
                         <application>
                             <name>MySQL: Performance</name>
@@ -1881,6 +2051,106 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                             <params>1h</params>
                         </step>
                     </preprocessing>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Table locks immediate</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of times that a request for a table lock could be granted immediately.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Status</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.TABLE_LOCKS_IMMEDIATE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Table locks acquired immediately</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate_pct]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate]&quot;) * 100 / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_waited]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate]&quot;))</params>
+                    <description>Table locks acquired immediately.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Table locks waited</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_waited]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of times that a request for a table lock could not be granted immediately and a wait was needed. If this is high and you have performance problems, you should first optimize your queries, and then either split your table or tables or use replication.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Status</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.TABLE_LOCKS_WAITED</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Sorts requiring temporary tables</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},temp_sort_table_pct]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},sort_merge_passes]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},sort_scan]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},sort_range]&quot;))) * 100</params>
+                    <description>Sorts requiring temporary tables.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Temporary tables created on disk</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},temp_table_disk_created_pct]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_disk_tables]&quot;) / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_tables]&quot;)) * 100</params>
+                    <description>Temporary tables created on disk in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads cached</name>
@@ -1969,6 +2239,28 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Thread cache hit rate</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},thread_cache_hit_rate]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>100 - ((last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},threads_created]&quot;) / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},connections]&quot;)) * 100)</params>
+                    <description>Thread cache hit rate in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Uptime</name>
@@ -2350,7 +2642,7 @@ if (n &gt;= 0) {
                     <description>YES if mysqld supports the query cache, NO if not.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Variables</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                     <valuemap>
@@ -3024,6 +3316,34 @@ If max_relay_log_size is 0, the value of max_binlog_size applies to relay logs a
                     </triggers>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Open files limit</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},open_files_limit]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of file descriptors available to mysqld from the operating system. mysqld reserves descriptors with setrlimit(), using the value requested at startup by setting this variable directly or by using the --open-files-limit option to mysqld_safe. If mysqld produces the error Too many open files, try increasing the open_files_limit value. Internally, the maximum value for this variable is the maximum unsigned integer value, but the actual maximum is platform dependent.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_open_files_limit</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.OPEN_FILES_LIMIT</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Query cache limit</name>
                     <type>DEPENDENT</type>
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_limit]</key>
@@ -3033,7 +3353,7 @@ If max_relay_log_size is 0, the value of max_binlog_size applies to relay logs a
                     <description>Do not cache results that are larger than this number of bytes. The default value is 1MB.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Variables</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -3060,7 +3380,7 @@ If max_relay_log_size is 0, the value of max_binlog_size applies to relay logs a
                     <description>The minimum size (in bytes) for blocks allocated by the query cache. The default value is 4096 (4KB).</description>
                     <applications>
                         <application>
-                            <name>MySQL: Variables</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -3087,7 +3407,7 @@ If max_relay_log_size is 0, the value of max_binlog_size applies to relay logs a
                     <description>The amount of memory allocated for caching query results. By default, the query cache is disabled.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Variables</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -3116,7 +3436,7 @@ If max_relay_log_size is 0, the value of max_binlog_size applies to relay logs a
 2 or DEMAND - Cache results only for cacheable queries that begin with SELECT SQL_CACHE.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Variables</name>
+                            <name>MySQL: Query cache</name>
                         </application>
                     </applications>
                     <valuemap>
