@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-09T17:15:00Z</date>
+    <date>2020-03-09T17:30:28Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -777,6 +777,32 @@
                         <step>
                             <type>CHANGE_PER_SECOND</type>
                             <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Connections</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},connections]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of connection attempts (successful or not) to the MySQL server.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Status</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CONNECTIONS</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
