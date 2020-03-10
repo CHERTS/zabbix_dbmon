@@ -611,6 +611,12 @@ FROM gv$instance i, gv$diag_info d \
 WHERE i.inst_id = d.inst_id \
 	AND d.name = 'Diag Trace'"
 
+#define ORACLE_AUDIT_FILE_DEST_DISCOVERY_DBS "\
+SELECT i.INSTANCE_NAME AS INSTANCE, p.value AS AUDITFILEDEST \
+FROM gv$instance i, gv$parameter p \
+WHERE i.instance_number = p.inst_id \
+	AND p.name = 'audit_file_dest'"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -645,6 +651,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.instance.parameters",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.tablespace.info",					CF_HAVEPARAMS,		ORACLE_TS_INFO,					NULL},
 	{"oracle.alertlog.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.auditfiledest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{NULL}
 }; 
 
@@ -1292,6 +1299,11 @@ next:
 						query = ORACLE_V11_ALERTLOG_DISCOVERY_DBS;
 						ret = ZBX_DB_OK;
 					}
+					else if (0 == strcmp(request->key, "oracle.auditfiledest.discovery"))
+					{
+						query = ORACLE_AUDIT_FILE_DEST_DISCOVERY_DBS;
+						ret = ZBX_DB_OK;
+					}
 					else
 					{
 						SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown discovery request key"));
@@ -1320,6 +1332,11 @@ next:
 					else if (0 == strcmp(request->key, "oracle.alertlog.discovery"))
 					{
 						query = ORACLE_V12_ALERTLOG_DISCOVERY_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else if (0 == strcmp(request->key, "oracle.auditfiledest.discovery"))
+					{
+						query = ORACLE_AUDIT_FILE_DEST_DISCOVERY_DBS;
 						ret = ZBX_DB_OK;
 					}
 					else
