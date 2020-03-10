@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-09T17:30:28Z</date>
+    <date>2020-03-10T17:25:04Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -289,6 +289,253 @@
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool dirty</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},buffer_pool_dirty_ratio]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_dirty]&quot;) / ( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) = 0)) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) &gt; 0)</params>
+                    <description>Ratio of total to dirty pages in the buffer pool.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool efficiency</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},buffer_pool_efficiency]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_reads]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) = 0 ) ) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) &gt; 0 )</params>
+                    <description>The item shows how effectively the buffer pool is serving reads.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool utilization</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) - last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_free]&quot;) ) / ( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) = 0)) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) &gt; 0)</params>
+                    <description>Ratio of used to total pages in the buffer pool.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Open file limit used</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},files_open_pct]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},open_files]&quot;) * 100 / last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},open_files_limit]&quot;)</params>
+                    <description>Open file limit used in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Key buffer used</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},key_buffer_used_pct]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>(1 - ((last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},key_blocks_unused]&quot;) * last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},key_cache_block_size]&quot;)) / last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},key_buffer_size]&quot;))) * 100</params>
+                    <description>Key buffer used in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Base memory usage (possible)</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},mysql_base_memory_usage]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <params>last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},key_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_additional_mem_pool_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_log_buffer_size]&quot;)</params>
+                    <description>Possible use of MySQL memory (for all base buffers).&#13;
+&#13;
+Base memory usage = key_buffer_size +  query_cache_size +  innodb_buffer_pool_size +  innodb_additional_mem_pool_size +  innodb_log_buffer_size</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Memory per connection (possible)</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},mysql_per_connection_memory_usage]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <params>last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},sort_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},read_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},read_rnd_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},join_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},thread_stack]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_cache_size]&quot;)</params>
+                    <description>Possible use of MySQL memory per one connection.&#13;
+&#13;
+Memory per connection = sort_buffer_size  +  read_buffer_size +  read_rnd_buffer_size  + join_buffer_size  +  thread_stack  +  binlog_cache_size</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Total memory usage (possible)</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},mysql_total_memory_usage]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <params>last(&quot;mysql.perf[{$DBS_MYSQL_INSTANCE},mysql_base_memory_usage]&quot;) + (last(&quot;mysql.perf[{$DBS_MYSQL_INSTANCE},mysql_per_connection_memory_usage]&quot;) * last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections]&quot;))</params>
+                    <description>Possible full use of MySQL memory.&#13;
+&#13;
+Total memory usage = Base memory usage + (Memory per connection * variable[max_connections])</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Table cache hit rate</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},table_cache_hit_rate]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},open_tables]&quot;) * 100 / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},opened_tables]&quot;)</params>
+                    <description>Table cache hit rate in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Table locks acquired immediately</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},table_locks_immediate_pct]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate]&quot;) * 100 / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_waited]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate]&quot;))</params>
+                    <description>Table locks acquired immediately.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Sorts requiring temporary tables</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},temp_sort_table_pct]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},sort_merge_passes]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},sort_scan]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},sort_range]&quot;))) * 100</params>
+                    <description>Sorts requiring temporary tables.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Temporary tables created on disk</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},temp_table_disk_created_pct]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_disk_tables]&quot;) / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_tables]&quot;)) * 100</params>
+                    <description>Temporary tables created on disk in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Thread cache hit rate</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.perf[{$DBS_MYSQL_INSTANCE},thread_cache_hit_rate]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>%</units>
+                    <params>100 - ((last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},threads_created]&quot;) / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},connections]&quot;)) * 100)</params>
+                    <description>Thread cache hit rate in percentage.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Performance</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Ping</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
@@ -544,54 +791,6 @@
                             </tags>
                         </trigger>
                     </triggers>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool dirty</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_dirty_ratio]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>%</units>
-                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_dirty]&quot;) / ( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) = 0)) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) &gt; 0)</params>
-                    <description>Ratio of total to dirty pages in the buffer pool.</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool efficiency</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_efficiency]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>%</units>
-                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_reads]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) = 0 ) ) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_read_requests]&quot;) &gt; 0 )</params>
-                    <description>The item shows how effectively the buffer pool is serving reads.</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Buffer pool utilization</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>%</units>
-                    <params>( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) - last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_free]&quot;) ) / ( last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) = 0)) * 100 * (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_total]&quot;) &gt; 0)</params>
-                    <description>Ratio of used to total pages in the buffer pool.</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Bytes received</name>
@@ -1103,22 +1302,6 @@
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Open file limit used</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},files_open_pct]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>%</units>
-                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},open_files]&quot;) * 100 / last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},open_files_limit]&quot;)</params>
-                    <description>Open file limit used in percentage.</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                </item>
-                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB buffer pool dirty pages</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_pages_dirty]</key>
@@ -1365,6 +1548,32 @@
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Key blocks unused</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},key_blocks_unused]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of unused blocks in the MyISAM key cache.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Status</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.KEY_BLOCKS_UNUSED</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Max used connections</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},max_used_connections]</key>
@@ -1385,75 +1594,6 @@
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Base memory usage (possible)</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},mysql_base_memory_usage]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <units>B</units>
-                    <params>last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},key_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_buffer_pool_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_additional_mem_pool_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},innodb_log_buffer_size]&quot;)</params>
-                    <description>Possible use of MySQL memory (for all base buffers).&#13;
-&#13;
-Base memory usage = key_buffer_size +  query_cache_size +  innodb_buffer_pool_size +  innodb_additional_mem_pool_size +  innodb_log_buffer_size</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>1h</params>
-                        </step>
-                    </preprocessing>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Memory per connection (possible)</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},mysql_per_connection_memory_usage]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <units>B</units>
-                    <params>last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},sort_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},read_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},read_rnd_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},join_buffer_size]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},thread_stack]&quot;) + last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_cache_size]&quot;)</params>
-                    <description>Possible use of MySQL memory per one connection.&#13;
-&#13;
-Memory per connection = sort_buffer_size  +  read_buffer_size +  read_rnd_buffer_size  + join_buffer_size  +  thread_stack  +  binlog_cache_size</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>1h</params>
-                        </step>
-                    </preprocessing>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Total memory usage (possible)</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},mysql_total_memory_usage]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <units>B</units>
-                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},mysql_base_memory_usage]&quot;) + (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},mysql_per_connection_memory_usage]&quot;) * last(&quot;mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections]&quot;))</params>
-                    <description>Possible full use of MySQL memory.&#13;
-&#13;
-Total memory usage = Base memory usage + (Memory per connection * variable[max_connections])</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>1h</params>
-                        </step>
-                    </preprocessing>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Opened tables</name>
@@ -2057,28 +2197,6 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Table cache hit rate</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_cache_hit_rate]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>%</units>
-                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},open_tables]&quot;) * 100 / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},opened_tables]&quot;)</params>
-                    <description>Table cache hit rate in percentage.</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>1h</params>
-                        </step>
-                    </preprocessing>
-                </item>
-                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Table locks immediate</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate]</key>
@@ -2105,22 +2223,6 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Table locks acquired immediately</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate_pct]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>%</units>
-                    <params>last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate]&quot;) * 100 / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_waited]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate]&quot;))</params>
-                    <description>Table locks acquired immediately.</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                </item>
-                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Table locks waited</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_waited]</key>
@@ -2145,38 +2247,6 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Sorts requiring temporary tables</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},temp_sort_table_pct]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>%</units>
-                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},sort_merge_passes]&quot;) / (last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},sort_scan]&quot;) + last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},sort_range]&quot;))) * 100</params>
-                    <description>Sorts requiring temporary tables.</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Temporary tables created on disk</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},temp_table_disk_created_pct]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>%</units>
-                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_disk_tables]&quot;) / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_tables]&quot;)) * 100</params>
-                    <description>Temporary tables created on disk in percentage.</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads cached</name>
@@ -2265,28 +2335,6 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Thread cache hit rate</name>
-                    <type>CALCULATED</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},thread_cache_hit_rate]</key>
-                    <delay>10m</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>%</units>
-                    <params>100 - ((last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},threads_created]&quot;) / last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},connections]&quot;)) * 100)</params>
-                    <description>Thread cache hit rate in percentage.</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Performance</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>1h</params>
-                        </step>
-                    </preprocessing>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Uptime</name>
@@ -3206,6 +3254,36 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.h
                         <step>
                             <type>JSONPATH</type>
                             <params>$.KEY_BUFFER_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Key cache block size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},key_cache_block_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>The size in bytes of blocks in the key cache. The default value is 1024.&#13;
+&#13;
+See more info:https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_key_cache_block_size&#13;
+See more info from section 8.10.2, “The MyISAM Key Cache”: https://dev.mysql.com/doc/refman/5.7/en/myisam-key-cache.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.KEY_CACHE_BLOCK_SIZE</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -5684,7 +5762,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
     </templates>
     <triggers>
         <trigger>
-            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization].max(5m)}&lt;{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN} and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&gt;24h</expression>
+            <expression>{DBS_Template DB MySQL:mysql.perf[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization].max(5m)}&lt;{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN} and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&gt;24h</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&lt;24h</recovery_expression>
             <name>Buffer pool utilization is too low</name>
