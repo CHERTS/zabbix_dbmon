@@ -713,20 +713,19 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
 		return SYSINFO_RET_FAIL;
 	}
-
-	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
+	else
 	{
 		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits."));
 			return SYSINFO_RET_FAIL;
 		}
-	}
-
-	if (5 < oracle_mode)
-	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
-		return SYSINFO_RET_FAIL;
+		
+		if (5 < oracle_mode)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
+			return SYSINFO_RET_FAIL;
+		}
 	}
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
@@ -809,20 +808,19 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
 		return SYSINFO_RET_FAIL;
 	}
-
-	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
+	else
 	{
 		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
 		{
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fourth parameter (mode). Use only digits."));
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits."));
 			return SYSINFO_RET_FAIL;
 		}
-	}
 
-	if (5 < oracle_mode)
-	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
-		return SYSINFO_RET_FAIL;
+		if (5 < oracle_mode)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
+			return SYSINFO_RET_FAIL;
+		}
 	}
 
 	if (NULL != oracle_dbname && '\0' != *oracle_dbname)
@@ -1239,20 +1237,19 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
 		return SYSINFO_RET_FAIL;
 	}
-
-	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
+	else
 	{
 		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits."));
 			return SYSINFO_RET_FAIL;
 		}
-	}
 
-	if (5 < oracle_mode)
-	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
-		return SYSINFO_RET_FAIL;
+		if (5 < oracle_mode)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
+			return SYSINFO_RET_FAIL;
+		}
 	}
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
@@ -1499,20 +1496,19 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
 		return SYSINFO_RET_FAIL;
 	}
-
-	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
+	else
 	{
 		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits."));
 			return SYSINFO_RET_FAIL;
 		}
-	}
 
-	if (5 < oracle_mode)
-	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
-		return SYSINFO_RET_FAIL;
+		if (5 < oracle_mode)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
+			return SYSINFO_RET_FAIL;
+		}
 	}
 
 	if (NULL == oracle_dbname || '\0' == *oracle_dbname)
@@ -1693,20 +1689,19 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
 		return SYSINFO_RET_FAIL;
 	}
-
-	if (NULL != oracle_str_mode && '\0' != *oracle_str_mode)
+	else
 	{
 		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits."));
 			return SYSINFO_RET_FAIL;
 		}
-	}
 
-	if (5 < oracle_mode)
-	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
-		return SYSINFO_RET_FAIL;
+		if (5 < oracle_mode)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
+			return SYSINFO_RET_FAIL;
+		}
 	}
 
 	if (NULL == oracle_str_ts_type || '\0' == *oracle_str_ts_type)
@@ -1714,21 +1709,20 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fourth parameter (tstype)."));
 		return SYSINFO_RET_FAIL;
 	}
-
-	if (NULL != oracle_str_ts_type && '\0' != *oracle_str_ts_type)
+	else
 	{
 		if (SUCCEED != is_ushort(oracle_str_ts_type, &oracle_ts_type))
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fourth parameter (tstype). Use only digits (0 - 2)."));
 			return SYSINFO_RET_FAIL;
 		}
-	}
 
-	if (2 < oracle_ts_type)
-	{
-		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Incorrect fourth parameter (tstype = %u). Allow: 0 - permanent, 1 - temporary, 2 - undo", __func__, request->key, oracle_ts_type);
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Incorrect fourth parameter. Allow: 0 - permanent, 1 - temporary, 2 - undo"));
-		return SYSINFO_RET_FAIL;
+		if (2 < oracle_ts_type)
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Incorrect fourth parameter (tstype = %u). Allow: 0 - permanent, 1 - temporary, 2 - undo", __func__, request->key, oracle_ts_type);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Incorrect fourth parameter. Allow: 0 - permanent, 1 - temporary, 2 - undo"));
+			return SYSINFO_RET_FAIL;
+		}
 	}
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
