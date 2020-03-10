@@ -49,11 +49,18 @@ int query_count = 0;
  *
  * Returns: pointer to const char
  */
-static inline const char *get_dbmon_configfile() {
+static inline const char *get_dbmon_configfile()
+{
     char *path = NULL;
-    if('\0' == (path = getenv("DBMONCONFIGFILE"))) {
+
+	path = getenv("DBMONCONFIGFILE");
+
+	if (NULL == path || '\0' == *path)
+	{
         path = DEFAULT_DBMON_CONFIG_FILE;
-    } else if (strlen(path) > MAX_GLOBBING_PATH_LENGTH) {
+    }
+	else if (strlen(path) > MAX_GLOBBING_PATH_LENGTH)
+	{
         zabbix_log(LOG_LEVEL_ERR, "In %s: environment DBMONCONFIGFILE exceeds maximum length of %i", __func__, MAX_GLOBBING_PATH_LENGTH);
         return NULL;
     }
@@ -64,7 +71,8 @@ static inline const char *get_dbmon_configfile() {
 static inline int add_named_query(const char *name, const char *query)
 {
     int i = query_count - 1;
-    while(i >= 0 && (NULL == query_keys[i] || 0 > strcmp(name, query_keys[i]))) {
+    while(i >= 0 && (NULL == query_keys[i] || 0 > strcmp(name, query_keys[i])))
+	{
         query_keys[i+1] = query_keys[i];
         query_values[i+1] = query_values[i];
         query_keys[i] = NULL;
@@ -89,20 +97,27 @@ static inline int add_named_query(const char *name, const char *query)
  *    If Key Found: pointer to query string
  *    If Not Found: NULL
  */
-const char *get_query_by_name(const char *key) {
+const char *get_query_by_name(const char *key)
+{
     int top = query_count - 1;
     int mid = 0;
     int bottom = 0;
     int cmp = -1;
 
-    while (bottom <= top) {
+    while (bottom <= top)
+	{
         mid = (bottom + top)/2;
         cmp = strcmp(query_keys[mid], key);
-        if (cmp == 0) {
+        if (cmp == 0)
+		{
             return query_values[mid];
-        } else if (cmp > 0) {
+        }
+		else if (cmp > 0)
+		{
             top = mid - 1;
-        } else if (cmp < 0) {
+        }
+		else if (cmp < 0)
+		{
             bottom = mid + 1;
         }
     }
@@ -116,7 +131,8 @@ static int read_config_queries(const config_setting_t *root)
     const char          *key = NULL, *value = NULL;
     config_setting_t    *node = NULL;
 
-    if (CONFIG_TYPE_GROUP != config_setting_type(root)) {
+    if (CONFIG_TYPE_GROUP != config_setting_type(root))
+	{
         zabbix_log(LOG_LEVEL_ERR, "In %s: queries is not a valid configuration group", __func__);
         return EXIT_FAILURE;
     }
@@ -125,11 +141,13 @@ static int read_config_queries(const config_setting_t *root)
     query_keys = (char**)zbx_calloc(query_keys, query_count + 1, sizeof(char*));
     query_values = (char**)zbx_calloc(query_values, query_count + 1, sizeof(char*));
 
-    for (i = 0; i < query_count; i++) {
+    for (i = 0; i < query_count; i++)
+	{
         node = config_setting_get_elem(root, i);
         key = config_setting_name(node);
 
-        if (CONFIG_TYPE_STRING != config_setting_type(node)) {
+        if (CONFIG_TYPE_STRING != config_setting_type(node))
+		{
             zabbix_log(LOG_LEVEL_ERR, "In %s: query '%s' is not a valid string", __func__, key);
             return EXIT_FAILURE;
         }
@@ -154,7 +172,8 @@ static int read_dbmon_config(const char *cfgfile)
 
     config_init(&cfg);
 
-    if (CONFIG_TRUE != (config_read_file(&cfg, cfgfile))) {
+    if (CONFIG_TRUE != (config_read_file(&cfg, cfgfile)))
+	{
         zabbix_log(LOG_LEVEL_ERR, "In %s: %s in %s:%i",	__func__, config_error_text(&cfg), cfgfile, config_error_line(&cfg));
         goto out;
     }
@@ -162,14 +181,18 @@ static int read_dbmon_config(const char *cfgfile)
     root = config_root_setting(&cfg);
     cfglen = config_setting_length(root);
 
-    for (i = 0; i < cfglen; i++) {
+    for (i = 0; i < cfglen; i++)
+	{
         node = config_setting_get_elem(root, i);
         key = config_setting_name(node);
 
-        if (0 == strncmp(key, "queries", 8)) {
+        if (0 == strncmp(key, "queries", 8))
+		{
             if (EXIT_SUCCESS != (read_config_queries(node)))
                 goto out;
-        } else {
+        }
+		else
+		{
             zabbix_log(LOG_LEVEL_ERR, "In %s: unrecognised configuration parameter: %s", __func__, key);
             goto out;
         }
