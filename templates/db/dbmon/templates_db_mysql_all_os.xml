@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-11T06:07:38Z</date>
+    <date>2020-03-11T09:20:31Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2251,7 +2251,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                 <item>
                     <name>[MariaDB] Instance '{$DBS_MYSQL_INSTANCE}' status: Threadpool idle threads</name>
                     <type>DEPENDENT</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},Threadpool_idle_threads]</key>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},threadpool_idle_threads]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <description>Number of inactive threads in the thread pool. Threads become inactive for various reasons, such as by waiting for new work. However, an inactive thread is not necessarily one that has not been assigned work. Threads are also considered inactive if they are being blocked while waiting on disk I/O, or while waiting on a lock, etc. This status variable is only meaningful on Unix&#13;
@@ -5693,7 +5693,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_HOST}</macro>
-                    <value>127.0.0.1</value>
+                    <value>localhost</value>
                     <description>MySQL host address</description>
                 </macro>
                 <macro>
