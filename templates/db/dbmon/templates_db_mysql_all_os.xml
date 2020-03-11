@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-11T09:20:31Z</date>
+    <date>2020-03-11T09:23:30Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2249,7 +2249,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     </master_item>
                 </item>
                 <item>
-                    <name>[MariaDB] Instance '{$DBS_MYSQL_INSTANCE}' status: Threadpool idle threads</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threadpool idle threads</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},threadpool_idle_threads]</key>
                     <delay>0</delay>
@@ -2267,7 +2267,7 @@ See more info: https://mariadb.com/kb/en/thread-pool-in-mariadb/</description>
                             <type>JSONPATH</type>
                             <params>$.THREADPOOL_IDLE_THREADS</params>
                             <error_handler>CUSTOM_ERROR</error_handler>
-                            <error_handler_params>No thread_pool enabled or use no MariaDB</error_handler_params>
+                            <error_handler_params>No thread_pool enabled or use no MariaDB or Percona Server for MySQL</error_handler_params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -2279,7 +2279,7 @@ See more info: https://mariadb.com/kb/en/thread-pool-in-mariadb/</description>
                     </master_item>
                 </item>
                 <item>
-                    <name>[MariaDB] Instance '{$DBS_MYSQL_INSTANCE}' status: Threadpool threads</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threadpool threads</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},threadpool_threads]</key>
                     <delay>0</delay>
@@ -2297,7 +2297,7 @@ See more info: https://mariadb.com/kb/en/thread-pool-in-mariadb/</description>
                             <type>JSONPATH</type>
                             <params>$.THREADPOOL_THREADS</params>
                             <error_handler>CUSTOM_ERROR</error_handler>
-                            <error_handler_params>No thread_pool enabled or use no MariaDB</error_handler_params>
+                            <error_handler_params>No thread_pool enabled or use no MariaDB or Percona Server for MySQL</error_handler_params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
