@@ -164,7 +164,7 @@ void zbx_db_close_mysql(struct zbx_db_connection *conn);
 
 #if defined(HAVE_POSTGRESQL)
 int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_db_result *p_result, const char *query);
-unsigned long zbx_db_get_version_pgsql(const struct zbx_db_connection *conn);
+int zbx_db_get_version_pgsql(const struct zbx_db_connection *conn);
 struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string);
 void zbx_db_close_pgsql(struct zbx_db_connection *conn);
 #endif

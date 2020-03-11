@@ -892,7 +892,7 @@ unsigned long zbx_db_version(const struct zbx_db_connection *conn)
 		}
 		else if (conn->type == ZBX_DB_TYPE_POSTGRESQL)
 		{
-			rc = zbx_db_get_version_pgsql(conn);
+			rc = (unsigned long)zbx_db_get_version_pgsql(conn);
 #endif
 /*
 #if defined(HAVE_ORACLE)

@@ -55,7 +55,7 @@ struct zbx_db_mysql
  * convert value into a struct zbx_db_data * depening on the m_type given
  * returned value must be free'd with zbx_db_clean_data_full after use
  */
-struct zbx_db_data *zbx_db_get_mysql_value(const char * value, const unsigned long length, const int m_type)
+struct zbx_db_data *zbx_db_get_mysql_value(const char *value, const unsigned long length, const int m_type)
 {
 	struct zbx_db_data		*data = NULL;
 	long long int			i_value;
@@ -112,6 +112,7 @@ struct zbx_db_data *zbx_db_get_mysql_value(const char * value, const unsigned lo
 				data = zbx_db_new_data_null();
 				break;
 			case FIELD_TYPE_DATE:
+				// %F - Equivalent to %Y-%m-%d, the ISO 8601 date format.
 				if (NULL == strptime(value, "%F", &tm_value))
 				{
 					data = zbx_db_new_data_null();
@@ -122,6 +123,7 @@ struct zbx_db_data *zbx_db_get_mysql_value(const char * value, const unsigned lo
 				}
 				break;
 			case FIELD_TYPE_TIME:
+				// %T - Equivalent to %H:%M:%S
 				if (NULL == strptime(value, "%T", &tm_value))
 				{
 					data = zbx_db_new_data_null();
@@ -134,6 +136,9 @@ struct zbx_db_data *zbx_db_get_mysql_value(const char * value, const unsigned lo
 			case FIELD_TYPE_TIMESTAMP:
 			case FIELD_TYPE_DATETIME:
 			case FIELD_TYPE_NEWDATE:
+				// %F - Equivalent to %Y-%m-%d, the ISO 8601 date format.
+				// %T - Equivalent to %H:%M:%S
+				// Format - %Y-%m-%d %H:%M:%S
 				if (NULL == strptime(value, "%F %T", &tm_value))
 				{
 					data = zbx_db_new_data_null();

@@ -176,7 +176,7 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 
 						if (0 == i)
 						{
-							zabbix_log(LOG_LEVEL_TRACE, "In %s(): PQfsize=%d, PQfsize=%d, PQfname=%s", __func__, PQfsize(res, j), strlen((const char*)PQfname(res, j)), PQfname(res, j));
+							zabbix_log(LOG_LEVEL_TRACE, "In %s(): PQfsize=%d, PQfsize=%zu, PQfname=%s", __func__, PQfsize(res, j), strlen((const char*)PQfname(res, j)), PQfname(res, j));
 
 							db_fields = zbx_db_fields_value(PQfname(res, j), strlen((const char*)PQfname(res, j)));
 							f_res = zbx_db_row_add_fields(&cur_field, db_fields, j);
@@ -231,7 +231,7 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 	return ret;
 }
 
-unsigned long	zbx_db_get_version_pgsql(const struct zbx_db_connection *conn)
+int	zbx_db_get_version_pgsql(const struct zbx_db_connection *conn)
 {
 	int	version = 0;
 
@@ -242,7 +242,10 @@ unsigned long	zbx_db_get_version_pgsql(const struct zbx_db_connection *conn)
 
 	version = PQserverVersion(((struct zbx_db_pgsql *)conn->connection)->db_handle);
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): PostgreSQL version: %lu", __func__, version);
+	if (0 > version)
+		version = 0;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): PostgreSQL version: %d", __func__, version);
 
 	pthread_mutex_unlock(&(((struct zbx_db_pgsql *)conn->connection)->lock));
 

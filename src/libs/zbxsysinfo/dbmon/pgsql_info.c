@@ -171,11 +171,11 @@ static int	pgsql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned 
 			{
 				if (version < 100000)
 				{
-					zbx_snprintf(pgsql_ver, sizeof(pgsql_ver), "%d.%d.%d", version / 10000, (version % 10000) / 100, (version % 10000) % 100);
+					zbx_snprintf(pgsql_ver, sizeof(pgsql_ver), "%lu.%lu.%lu", version / 10000, (version % 10000) / 100, (version % 10000) % 100);
 				}
 				else
 				{
-					zbx_snprintf(pgsql_ver, sizeof(pgsql_ver), "%d.%d.%d", version / 10000, ((version % 10000) / 100) == 0 ? (version % 10000) % 100 : (version % 10000) / 100, ((version % 10000) / 100) == 0 ? (version % 10000) / 100 : (version % 10000) % 100);
+					zbx_snprintf(pgsql_ver, sizeof(pgsql_ver), "%lu.%lu.%lu", version / 10000, ((version % 10000) / 100) == 0 ? (version % 10000) % 100 : (version % 10000) / 100, ((version % 10000) / 100) == 0 ? (version % 10000) / 100 : (version % 10000) % 100);
 				}
 
 				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %s", __func__, request->key, pgsql_ver);
