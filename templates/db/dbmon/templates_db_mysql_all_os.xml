@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-10T17:25:04Z</date>
+    <date>2020-03-11T06:07:38Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2249,6 +2249,66 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     </master_item>
                 </item>
                 <item>
+                    <name>[MariaDB] Instance '{$DBS_MYSQL_INSTANCE}' status: Threadpool idle threads</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},Threadpool_idle_threads]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of inactive threads in the thread pool. Threads become inactive for various reasons, such as by waiting for new work. However, an inactive thread is not necessarily one that has not been assigned work. Threads are also considered inactive if they are being blocked while waiting on disk I/O, or while waiting on a lock, etc. This status variable is only meaningful on Unix&#13;
+&#13;
+See more info: https://mariadb.com/kb/en/thread-pool-in-mariadb/</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Status</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.THREADPOOL_IDLE_THREADS</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>No thread_pool enabled or use no MariaDB</error_handler_params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MariaDB] Instance '{$DBS_MYSQL_INSTANCE}' status: Threadpool threads</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},threadpool_threads]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of threads in the thread pool. In rare cases, this can be slightly higher than thread_pool_max_threads, because each thread group needs at least two threads (i.e. at least one worker thread and at least one listener thread) to prevent deadlocks.&#13;
+&#13;
+See more info: https://mariadb.com/kb/en/thread-pool-in-mariadb/</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Status</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.THREADPOOL_THREADS</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>No thread_pool enabled or use no MariaDB</error_handler_params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads cached</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_cached]</key>
@@ -3995,6 +4055,68 @@ The default value is based on the following formula, capped to a limit of 100:&#
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Thread handling</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},thread_handling]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Determines how the server handles threads for client connections. In addition to threads for client connections, this also applies to certain internal server threads, such as Galera slave threads.&#13;
+- When the default one-thread-per-connection mode is enabled, the server uses one thread to handle each client connection.&#13;
+- When the pool-of-threads mode is enabled, the server uses the thread pool for client connections.&#13;
+- When the no-threads mode is enabled, the server uses a single thread for all client connections, which is really only usable for debugging.&#13;
+&#13;
+See more info: https://mariadb.com/kb/en/thread-pool-system-status-variables/#thread_handling</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MySQL (thread_handling)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>if (value.indexOf(&quot;THREAD_HANDLING&quot;) &gt; -1) {
+  return value;
+} else {
+  return &quot;{\&quot;THREAD_HANDLING\&quot;:\&quot;0\&quot;}&quot;;
+}</params>
+                        </step>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.THREAD_HANDLING</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;no-threads&quot;:
+    return 1;
+    break;
+  case &quot;one-thread-per-connection&quot;:
+    return 2;
+    break;
+  case &quot;pool-of-threads&quot;:
+    return 3;
+    break;
+  case &quot;loaded-dynamically&quot;:
+    return 4;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Thread stack</name>
                     <type>DEPENDENT</type>
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},thread_stack]</key>
@@ -4847,6 +4969,11 @@ As with the I/O thread, this should normally be Yes.</description>
                                     <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
                                     <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
                                 </dependency>
+                                <dependency>
+                                    <name>Replication process is stopped due to an error (IO thread not running)</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_io_errno].last()}&lt;&gt;0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}=1</recovery_expression>
+                                </dependency>
                             </dependencies>
                             <tags>
                                 <tag>
@@ -4880,6 +5007,11 @@ As with the I/O thread, this should normally be Yes.</description>
                                     <name>Instance access failed</name>
                                     <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
                                     <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Replication process is stopped due to an error (SQL thread not running)</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_sql_errno].last()}&lt;&gt;0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -6410,6 +6542,31 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <mapping>
                     <value>1</value>
                     <newvalue>ON</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS MySQL (thread_handling)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>unknown</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>no-threads</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>one-thread-per-connection</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>pool-of-threads</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>loaded-dynamically</newvalue>
                 </mapping>
             </mappings>
         </value_map>
