@@ -50,6 +50,19 @@ systemctl stop zabbix-agent
 cp src/zabbix_agent/zabbix_agentd /sbin
 ~~~~
 
+### 6. Если будет осуществляться мониторинг MySQL, то добавить пользователя zabbix в группу adm:
+
+Это необходимо для того, чтобы zabbix_agentd смог читать каталог /var/log/mysql с логами MySQL.
+
+~~~~
+usermod -G adm zabbix
+~~~~
+
+### 7. Запустите обновленный zabbix-agent:
+~~~~
+systemctl start zabbix-agent
+~~~~
+
 # Red Hat Enterprise Linux 8
 ## Сборка на Red Hat Enterprise Linux 8 с поддержкой MySQL (MariaDB) и PostgreSQL
 
@@ -89,6 +102,19 @@ systemctl stop zabbix-agent
 cp src/zabbix_agent/zabbix_agentd /sbin
 ~~~~
 
+### 6. Если будет осуществляться мониторинг MySQL, то добавить пользователя zabbix в группу adm:
+
+Это необходимо для того, чтобы zabbix_agentd смог читать каталог /var/log/mysql с логами MySQL.
+
+~~~~
+usermod -G adm zabbix
+~~~~
+
+### 7. Запустите обновленный zabbix-agent:
+~~~~
+systemctl start zabbix-agent
+~~~~
+
 # Ubuntu
 ## Сборка на Ubuntu 18.04 LTS (Bionic Beaver) с поддержкой MariaDB и PostgreSQL
 
@@ -96,7 +122,27 @@ cp src/zabbix_agent/zabbix_agentd /sbin
 
 ~~~~
 sudo apt-get update
-sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libmariadbclient-dev-compat  libconfig-dev
+sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
+~~~~
+
+Если у вас установлена Oracle MySQL, то:
+~~~~
+sudo apt-get install -y libmysqlclient-dev
+~~~~
+
+Если у вас установлена MariaDB, то:
+~~~~
+sudo apt-get install -y libmariadbclient-dev-compat
+~~~~
+
+Если у вас установлена Percona Server for MySQL, то:
+~~~~
+sudo apt-get install -y libperconaserverclient20-dev
+~~~~
+
+Если у вас установлен PostgreSQL, то:
+~~~~
+sudo apt-get install -y libpq-dev
 ~~~~
 
 ### 2. Скачать и распаковать свежую версию исходного кода:
@@ -125,4 +171,17 @@ ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
 ~~~~
 systemctl stop zabbix-agent
 cp src/zabbix_agent/zabbix_agentd /sbin
+~~~~
+
+### 6. Если будет осуществляться мониторинг MySQL, то добавить пользователя zabbix в группу adm:
+
+Это необходимо для того, чтобы zabbix_agentd смог читать каталог /var/log/mysql с логами MySQL.
+
+~~~~
+usermod -G adm zabbix
+~~~~
+
+### 7. Запустите обновленный zabbix-agent:
+~~~~
+systemctl start zabbix-agent
 ~~~~
