@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-11T09:23:30Z</date>
+    <date>2020-03-12T15:59:24Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -6490,15 +6490,19 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
             <mappings>
                 <mapping>
                     <value>0</value>
-                    <newvalue>NO</newvalue>
+                    <newvalue>No</newvalue>
                 </mapping>
                 <mapping>
                     <value>1</value>
-                    <newvalue>YES</newvalue>
+                    <newvalue>Yes</newvalue>
                 </mapping>
                 <mapping>
                     <value>2</value>
-                    <newvalue>CONNECTING</newvalue>
+                    <newvalue>Connecting</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>Unknown</newvalue>
                 </mapping>
             </mappings>
         </value_map>
@@ -6507,11 +6511,15 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
             <mappings>
                 <mapping>
                     <value>0</value>
-                    <newvalue>NO</newvalue>
+                    <newvalue>No</newvalue>
                 </mapping>
                 <mapping>
                     <value>1</value>
-                    <newvalue>YES</newvalue>
+                    <newvalue>Yes</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>Unknown</newvalue>
                 </mapping>
             </mappings>
         </value_map>
@@ -6542,6 +6550,10 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <mapping>
                     <value>1</value>
                     <newvalue>ON</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>UNKNOWN</newvalue>
                 </mapping>
             </mappings>
         </value_map>
