@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-14T10:48:18Z</date>
+    <date>2020-03-12T13:42:54Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -142,6 +142,20 @@
                     <applications>
                         <application>
                             <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get database info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>30m</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
                         </application>
                     </applications>
                 </item>
@@ -393,6 +407,262 @@
                     </triggers>
                 </item>
             </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>PgSQL database discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.database.discovery[{$DBS_PGSQL_INSTANCE}]</key>
+                    <delay>0</delay>
+                    <filter>
+                        <evaltype>AND</evaltype>
+                        <conditions>
+                            <condition>
+                                <macro>{#DBNAME}</macro>
+                                <value>{$DBS_PGSQL_LLD_FILTER_DB_NOT_MATCHES}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>A</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#DBNAME}</macro>
+                                <value>{$DBS_PGSQL_LLD_FILTER_DB_MATCHES}</value>
+                                <formulaid>B</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Size</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.info[{#DBNAME},dbsize]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].DBSIZE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Description</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.info[{#DBNAME},description]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].DESCRIPTION.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Encoding</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.info[{#DBNAME},encoding]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].ENCODING.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': LC collate</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.info[{#DBNAME},lc_collate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].LC_COLLATE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': LC ctype</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.info[{#DBNAME},lc_ctype]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].LC_CTYPE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': OID</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.info[{#DBNAME},oid]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].OID.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Owner</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.info[{#DBNAME},owner]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].OWNER.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Tablespace</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.info[{#DBNAME},tablespace]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].TABLESPACE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(db){
+    return {
+        &quot;{#DBNAME}&quot;: db.DBNAME
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+            </discovery_rules>
             <macros>
                 <macro>
                     <macro>{$DBS_DBMON_AGENTD_NODATA_CRIT}</macro>
