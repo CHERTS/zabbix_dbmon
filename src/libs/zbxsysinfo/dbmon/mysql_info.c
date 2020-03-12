@@ -58,7 +58,7 @@ SELECT /*DBS_005*/ SCHEMA_NAME AS DBNAME, \
 	DEFAULT_CHARACTER_SET_NAME AS DB_CHARACTER_SET, \
 	DEFAULT_COLLATION_NAME AS DB_COLLATION_NAME \
 FROM information_schema.schemata \
-WHERE SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema)' GROUP BY SCHEMA_NAME;"
+WHERE SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema|sys)' GROUP BY SCHEMA_NAME;"
 
 #define MYSQL_DB_INFO_DBS "\
 SELECT /*DBS_006*/ s.SCHEMA_NAME AS DBNAME,\
@@ -69,7 +69,7 @@ SELECT /*DBS_006*/ s.SCHEMA_NAME AS DBNAME,\
 	COALESCE(SUM(t.INDEX_LENGTH), 0) AS DB_INDEX_LENGTH, \
 	COALESCE(SUM(t.DATA_LENGTH + t.INDEX_LENGTH), 0) AS DB_SIZE \
 FROM information_schema.schemata s INNER JOIN information_schema.tables t ON s.SCHEMA_NAME = t.TABLE_SCHEMA \
-WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema)' GROUP BY s.SCHEMA_NAME;"
+WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema|sys)' GROUP BY s.SCHEMA_NAME;"
 
 // SELECT /*DBS_007*/ IF(VARIABLE_VALUE = '', CONCAT(@@datadir,'error.log'), CASE WHEN VARIABLE_VALUE REGEXP '^.\\\\' THEN CONCAT(@@datadir,REPLACE(VARIABLE_VALUE, '.\\', ''))  ELSE VARIABLE_VALUE END) AS LOG_ERROR FROM information_schema.global_variables WHERE VARIABLE_NAME = 'log_error';
 #define MYSQL_ERRORLOG_DISCOVERY_DBS "\
@@ -82,7 +82,7 @@ SELECT /*DBS_008*/ CAST(@rn:=@rn+1 AS DECIMAL(0)) AS TOP, TABLE_SCHEMA AS DB_NAM
 FROM( \
     SELECT t.TABLE_SCHEMA, t.TABLE_NAME, t.ENGINE, t.TABLE_ROWS, t.DATA_FREE, t.DATA_LENGTH, t.INDEX_LENGTH, (t.DATA_LENGTH + t.INDEX_LENGTH) AS TOTAL_SIZE \
 	FROM information_schema.schemata s INNER JOIN information_schema.tables t ON s.SCHEMA_NAME = t.TABLE_SCHEMA \
-	WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema|mysql)' \
+	WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema|mysql|sys)' \
 	ORDER BY (t.DATA_LENGTH + t.INDEX_LENGTH) DESC LIMIT %s \
 ) t1, (SELECT @rn:=0) t2;"
 
@@ -91,11 +91,13 @@ SELECT /*DBS_008*/ CAST(@rn:=@rn+1 AS DECIMAL(0)) AS TOP, TABLE_SCHEMA AS DB_NAM
 FROM( \
     SELECT t.TABLE_SCHEMA, t.TABLE_NAME, t.ENGINE, t.TABLE_ROWS, t.DATA_FREE, t.DATA_LENGTH, t.INDEX_LENGTH, (t.DATA_LENGTH + t.INDEX_LENGTH) AS TOTAL_SIZE \
 	FROM information_schema.schemata s INNER JOIN information_schema.tables t ON s.SCHEMA_NAME = t.TABLE_SCHEMA \
-	WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema|mysql)' \
+	WHERE s.SCHEMA_NAME NOT REGEXP '(information_schema|performance_schema|mysql|sys)' \
 	ORDER BY t.TABLE_ROWS DESC LIMIT %s \
 ) t1, (SELECT @rn:=0) t2;"
 
 #define MYSQL_SLAVE_STATUS_DBS "SHOW SLAVE STATUS;"
+
+#define MYSQL_INNODB_STATUS_DBS "SHOW ENGINE INNODB STATUS;"
 
 ZBX_METRIC	parameters_dbmon_mysql[] =
 /*	KEY								FLAG				FUNCTION			TEST PARAMETERS */
@@ -105,6 +107,7 @@ ZBX_METRIC	parameters_dbmon_mysql[] =
 	{"mysql.version.full",			CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
 	{"mysql.server.info",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.global.status",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.innodb.status",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.global.variables",		CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.db.discovery",			CF_HAVEPARAMS,		MYSQL_DISCOVERY,	NULL},
 	{"mysql.db.info",				CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
@@ -533,6 +536,10 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "mysql.global.status"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_GLOBAL_STATUS_DBS, ZBX_DB_RES_TYPE_TWOCOLL);
+	}
+	else if (0 == strcmp(request->key, "mysql.innodb.status"))
+	{
+		ret = mysql_make_result(request, result, MYSQL_INNODB_STATUS_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "mysql.global.variables"))
 	{
