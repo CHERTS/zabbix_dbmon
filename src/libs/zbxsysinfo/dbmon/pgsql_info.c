@@ -35,22 +35,39 @@ SELECT  VERSION() AS VERSION, \
 	date_part('epoch', pg_postmaster_start_time())::int AS STARTUPTIME, \
 	date_part('epoch', now() - pg_postmaster_start_time())::int AS UPTIME;"
 
-#define PGSQL_DISCOVER_DBS  "\
+#define PGSQL_DB_DISCOVERY_DBS  "\
 SELECT \
-    d.oid as oid, \
-    d.datname as path, \
-    d.datname as database, \
-    pg_catalog.pg_encoding_to_char(d.encoding) as encoding, \
-    d.datcollate as lc_collate, \
-    d.datctype as lc_ctype, \
-    pg_catalog.pg_get_userbyid(d.datdba) as owner, \
-    t.spcname as tablespace, \
-    pg_catalog.shobj_description(d.oid, 'pg_database') as description \
+    d.oid AS OID, \
+    d.datname AS DBNAME, \
+    pg_catalog.pg_encoding_to_char(d.encoding) AS ENCODING, \
+    d.datcollate AS LC_COLLATE, \
+    d.datctype AS LC_CTYPE, \
+    pg_catalog.pg_get_userbyid(d.datdba) AS OWNER, \
+    t.spcname AS TABLESPACE, \
+    pg_catalog.shobj_description(d.oid, 'pg_database') AS DESCRIPTION \
 FROM pg_catalog.pg_database d \
     JOIN pg_catalog.pg_tablespace t on d.dattablespace = t.oid \
 WHERE \
     d.datallowconn = 't' \
     AND d.datistemplate = 'n' \
+ORDER BY 1;"
+
+#define PGSQL_DB_INFO_DBS "\
+SELECT \
+	d.oid AS oid, \
+	d.datname AS DBNAME, \
+	pg_catalog.pg_encoding_to_char(d.encoding) AS ENCODING, \
+	d.datcollate AS LC_COLLATE, \
+	d.datctype AS LC_CTYPE, \
+	pg_catalog.pg_get_userbyid(d.datdba) AS OWNER, \
+	t.spcname AS TABLESPACE, \
+	pg_catalog.shobj_description(d.oid, 'pg_database') AS DESCRIPTION, \
+	pg_database_size(d.datname::text) AS DBSIZE \
+FROM pg_catalog.pg_database d \
+	JOIN pg_catalog.pg_tablespace t on d.dattablespace = t.oid \
+WHERE \
+	d.datallowconn = 't' \
+	AND d.datistemplate = 'n' \
 ORDER BY 1;"
 
 ZBX_METRIC	parameters_dbmon_pgsql[] =
@@ -61,6 +78,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.version.full",	CF_HAVEPARAMS,		PGSQL_VERSION,		NULL},
 	{"pgsql.server.info",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.db.discovery",	CF_HAVEPARAMS,		PGSQL_DB_DISCOVERY,	NULL},
+	{"pgsql.db.info",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -242,7 +260,11 @@ int	PGSQL_VERSION(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return ret;
 }
 
-static int	pgsql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query)
+#if !defined(_WINDOWS) && !defined(__MINGW32__)
+static int	pgsql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result)
+#else
+static int	pgsql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
+#endif
 {
 	int							ret = SYSINFO_RET_FAIL;
 	char						*pgsql_conn_string, *c = NULL;
@@ -271,11 +293,28 @@ static int	pgsql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, con
 		return SYSINFO_RET_FAIL;
 	}
 
+#if defined(_WINDOWS) && defined(__MINGW32__)
+	/* 'timeout_event' argument is here to make the pgsql_get_discovery() prototype as required by */
+	/* zbx_execute_threaded_metric() on MS Windows */
+	ZBX_UNUSED(timeout_event);
+#endif
+
 	pgsql_conn = zbx_db_connect_pgsql(pgsql_conn_string);
 
 	if (NULL != pgsql_conn)
 	{
-		if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, query))
+		if (0 == strcmp(request->key, "pgsql.db.discovery"))
+		{
+			ret = zbx_db_query_select(pgsql_conn, &pgsql_result, PGSQL_DB_DISCOVERY_DBS);
+		}
+		else
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown discovery request key."));
+			ret = SYSINFO_RET_FAIL;
+			goto out;
+		}
+
+		if (ZBX_DB_OK == ret)
 		{
 			ret = make_result(request, result, pgsql_result, ZBX_DB_RES_TYPE_DISCOVERY);
 			zbx_db_clean_result(&pgsql_result);
@@ -293,7 +332,7 @@ static int	pgsql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, con
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
-
+out:
 	zbx_db_close_db(pgsql_conn);
 	zbx_db_clean_connection(pgsql_conn);
 
@@ -304,15 +343,8 @@ static int	pgsql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, con
 
 int	PGSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	int ret = SYSINFO_RET_FAIL;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
-
-	ret = pgsql_get_discovery(request, result, PGSQL_DISCOVER_DBS);
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(): %s", __func__, zbx_sysinfo_ret_string(ret));
-
-	return ret;
+	return zbx_execute_threaded_metric(pgsql_get_discovery, request, result);
+	//return pgsql_get_discovery(request, result, NULL);
 }
 
 static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type)
@@ -391,6 +423,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	if (0 == strcmp(request->key, "pgsql.server.info"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_SERVER_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW);
+	}
+	else if (0 == strcmp(request->key, "pgsql.db.info"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_DB_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else
 	{
