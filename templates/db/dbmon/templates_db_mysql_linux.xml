@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-26T06:25:07Z</date>
+    <date>2020-03-12T12:20:38Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -24,7 +24,7 @@
             </groups>
             <items>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}': state</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': state</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>proc.num[{$DBS_MYSQL_SERVICE_NAME},{$DBS_MYSQL_SERVICE_USER},,{$DBS_MYSQL_SERVICE_CMD}]</key>
                     <history>30d</history>

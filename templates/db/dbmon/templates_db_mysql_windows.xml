@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-24T18:07:49Z</date>
+    <date>2020-03-12T12:19:55Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -24,7 +24,7 @@
             </groups>
             <items>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}': CPU usage (% Processor Time)</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': CPU usage (% Processor Time)</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>perf_counter_en[&quot;\Process({$DBS_MYSQL_SERVICE_EXE_NAME})\% Processor Time&quot;]</key>
                     <history>30d</history>
@@ -43,7 +43,7 @@
                     </preprocessing>
                 </item>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}': Memory usage (Working Set)</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': Memory usage (Working Set)</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>perf_counter_en[&quot;\Process({$DBS_MYSQL_SERVICE_EXE_NAME})\Working Set&quot;]</key>
                     <history>30d</history>
@@ -62,7 +62,7 @@
                     </preprocessing>
                 </item>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}': startup type</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': startup type</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>service.info[{$DBS_MYSQL_SERVICE_NAME},startup]</key>
                     <history>30d</history>
@@ -76,7 +76,7 @@
                     </valuemap>
                 </item>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}': state</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': state</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>service.info[{$DBS_MYSQL_SERVICE_NAME},state]</key>
                     <history>30d</history>
@@ -90,7 +90,7 @@
                     </valuemap>
                 </item>
                 <item>
-                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}': account</name>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': account</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>service.info[{$DBS_MYSQL_SERVICE_NAME},user]</key>
                     <delay>1h</delay>
@@ -102,6 +102,9 @@
                             <name>MySQL: Info</name>
                         </application>
                     </applications>
+                    <valuemap>
+                        <name>Windows service startup type</name>
+                    </valuemap>
                 </item>
             </items>
             <tags>
