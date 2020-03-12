@@ -6,7 +6,20 @@
 
 После сборки и установки агента Вам необходимо сделать:
 
-1. Настроить подключение агента к MySQL/PostgreSQL или Oracle (создать пользователя и назначить ему права);
+1. Переименовать файл /etc/zabbix/zabbix_agentd.d/userparameter_mysql.conf
+
+Т.к. в новом агенте мониторинга СУБД имена некоторых элементов данных пересекаются с именами из стандартного файла userparameter_mysql.conf, то
+чтобы новый агент запустился Вы должны переименовать файл userparameter_mysql.conf
+
+~~~~
+mv /etc/zabbix/zabbix_agentd.d/userparameter_mysql.{conf,bak}
+~~~~
+
+ВНИМАНИЕ! Если Вы осуществляете мониторинг MySQL с помощью userparameter_mysql.conf, то его переименование заставит работать мониторинг некорректно.
+Если Вам хочется оставить userparameter_mysql.conf для мониторинга СУБД MySQL и использовать новый агент, то необходимо запускать нового агента с
+отдельным файлом конфигурации, для этого есть отдельная Инструкция.
+
+2. Настроить подключение агента к MySQL/PostgreSQL или Oracle (создать пользователя и назначить ему права);
 
 Пример создания пользователя и назначения прав для MySQL есть в файле templates\db\dbmon\mysql_grants.sql
 
@@ -14,7 +27,7 @@
 
 Пример создания пользователя и назначения прав для Oracle есть в файле templates\db\dbmon\oracle_grants.sql
 
-2. Прописать в файле zabbix_agentd.conf новые настройки:
+3. Прописать в файле zabbix_agentd.conf новые настройки:
 
 ~~~~
 Alias=dbmon.vfs.fs.discovery[*]:vfs.fs.discovery
@@ -26,19 +39,19 @@ Alias=dbmon.agent.version[*]:agent.version
 Alias=dbmon.agent.hostname[*]:agent.hostname
 ~~~~
 
-Для MySQL прописать в файле zabbix_agentd.conf новые настройки:
+Если Вы собрали агента с поддержкой мониторинга СУБД MySQL прописать в файле zabbix_agentd.conf новые настройки:
 ~~~~
 MySQLUser=zabbixmon
 MySQLPassword=zabbixmon
 ~~~~
 
-Для Oracle прописать в файле zabbix_agentd.conf новые настройки:
+Если Вы собрали агента с поддержкой мониторинга СУБД Oracle, то прописать в файле zabbix_agentd.conf новые настройки:
 ~~~~
 OracleUser=zabbixmon
 OraclePassword=zabbixmon
 ~~~~
 
-3. Если Вы собрали агента с поддержкой мониторинга СУБД Oracle, то необходимо сделать доп. настройки - создать файл /etc/sysconfig/zabbix-agent следующего вида:
+4. Если Вы собрали агента с поддержкой мониторинга СУБД Oracle, то необходимо сделать доп. настройки - создать файл /etc/sysconfig/zabbix-agent следующего вида:
 
 ~~~~
 ORACLE_HOME=/u01/app/oracle/18c/dbhome_1
@@ -48,12 +61,12 @@ PATH=$ORACLE_HOME/bin:/sbin:/bin:/usr/sbin:/usr/bin
 LD_LIBRARY_PATH=/u01/app/oracle/18c/dbhome_1/lib:${LD_LIBRARY_PATH}
 ~~~~
 
-4. Запустить нового агента:
+5. Запустить нового агента:
 ~~~~
 systemctl start zabbix-agent
 ~~~~
 
-5. Проверить лог агента:
+6. Проверить лог агента:
 ~~~~
 tail -n20 /var/log/zabbix/zabbix_agentd.log
 ~~~~
@@ -78,7 +91,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd.log
 
 В нем Вы увидите с поддержкой мониторинга каких СУБД собран агент.
 
-6. Теперь Вы можете импортировать в Zabbix web-frontend новые шаблоны из папки templates\db\dbmon в следующей последовательности:
+7. Теперь Вы можете импортировать в Zabbix web-frontend новые шаблоны из папки templates\db\dbmon в следующей последовательности:
 
 Последовательность импорта шаблонов (НЕ НАРУШАЙТЕ ЕЕ!):
 ~~~~
@@ -114,7 +127,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd.log
 5. Добавьте зависимость от триггера "Service '{$DBS_PGSQL_SERVICE_NAME}' is not running" (Service 'postgresql-12' is not running)
 ~~~~
 
-7. Теперь подключите шаблон мониторинга к Вашему хосту в Zabbix web-frontend:
+8. Теперь подключите шаблон мониторинга к Вашему хосту в Zabbix web-frontend:
 
 Для мониторинга MySQL в Linux шаблон "MySQL for Linux (Active, DBMON)"
 
@@ -125,6 +138,8 @@ tail -n20 /var/log/zabbix/zabbix_agentd.log
 Для мониторинга PostgreSQL в Windows шаблон "PostgreSQL for Windows (Active, DBMON)"
 
 Для мониторинга Oracle в Linux шаблон "Oracle for Linux (Active, DBMON)"
+
+Для мониторинга Oracle в AIX шаблон "Oracle for AIX (Active, DBMON)"
 
 Для мониторинга Oracle в Windows шаблон "Oracle for Windows (Active, DBMON)"
 
