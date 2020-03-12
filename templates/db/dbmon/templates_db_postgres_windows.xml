@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-14T06:19:44Z</date>
+    <date>2020-03-12T11:59:49Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -24,7 +24,7 @@
             </groups>
             <items>
                 <item>
-                    <name>[PgSQL] Service '{$DBS_PGSQL_SERVICE_NAME}', startup type</name>
+                    <name>[PgSQL] Service '{$DBS_PGSQL_SERVICE_NAME}', instance '{$DBS_PGSQL_INSTANCE}', startup type</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>service.info[{$DBS_PGSQL_SERVICE_NAME},startup]</key>
                     <history>30d</history>
@@ -38,7 +38,7 @@
                     </valuemap>
                 </item>
                 <item>
-                    <name>[PgSQL] Service '{$DBS_PGSQL_SERVICE_NAME}', state</name>
+                    <name>[PgSQL] Service '{$DBS_PGSQL_SERVICE_NAME}', instance '{$DBS_PGSQL_INSTANCE}', state</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>service.info[{$DBS_PGSQL_SERVICE_NAME},state]</key>
                     <history>30d</history>
@@ -52,7 +52,7 @@
                     </valuemap>
                 </item>
                 <item>
-                    <name>[PgSQL] Service '{$DBS_PGSQL_SERVICE_NAME}', account</name>
+                    <name>[PgSQL] Service '{$DBS_PGSQL_SERVICE_NAME}', instance '{$DBS_PGSQL_INSTANCE}', account</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>service.info[{$DBS_PGSQL_SERVICE_NAME},user]</key>
                     <delay>1h</delay>
