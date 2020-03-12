@@ -73,7 +73,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd.log
 
 Лог старта должен быть примерто таким:
 ~~~~
- 22646:20200219:211042.119 Starting Zabbix Agent [XXXXXX]. Zabbix 4.4.5 (revision b93f5c4fc0).
+ 22646:20200219:211042.119 Starting Zabbix Agent [XXXXXX]. Zabbix 4.4.6 (revision 8cc702429d).
  22646:20200219:211042.119 **** Enabled features ****
  22646:20200219:211042.119 IPv6 support:          YES
  22646:20200219:211042.119 TLS support:           YES
@@ -96,8 +96,8 @@ tail -n20 /var/log/zabbix/zabbix_agentd.log
 Последовательность импорта шаблонов (НЕ НАРУШАЙТЕ ЕЕ!):
 ~~~~
 1. templates_db_mysql_all_os.xml, templates_db_postgres_all_os.xml, templates_db_oracle_all_os.xml
-2. templates_db_mysql_linux.xml, templates_db_mysql_windows.xml, templates_db_postgres_linux.xml, templates_db_postgres_windows.xml, templates_db_oracle_linux.xml и templates_db_oracle_windows.xml
-3. templates_zabbix_agent_dbmon_linux.xml и templates_zabbix_agent_dbmon_windows.xml
+2. templates_db_mysql_linux.xml, templates_db_mysql_windows.xml, templates_db_postgres_linux.xml, templates_db_postgres_windows.xml, templates_db_oracle_linux.xml, templates_db_oracle_windows.xml и templates_db_oracle_aix.xml
+3. templates_zabbix_agent_dbmon_linux.xml, templates_zabbix_agent_dbmon_windows.xml и templates_zabbix_agent_dbmon_aix.xml
 ~~~~
 
 Дополнительные действия по связыванию триггеров для MySQL for Windows:
