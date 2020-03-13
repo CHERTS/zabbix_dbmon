@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-12T15:59:24Z</date>
+    <date>2020-03-13T04:37:53Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -4299,7 +4299,7 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                 <discovery_rule>
                     <name>MySQL database discovery</name>
                     <type>DEPENDENT</type>
-                    <key>mysql.database.discovery</key>
+                    <key>mysql.database.discovery[{$DBS_MYSQL_INSTANCE}]</key>
                     <delay>0</delay>
                     <filter>
                         <evaltype>AND</evaltype>
@@ -4641,7 +4641,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <discovery_rule>
                     <name>MySQL slave discovery</name>
                     <type>DEPENDENT</type>
-                    <key>mysql.slave.discovery</key>
+                    <key>mysql.slave.discovery[{$DBS_MYSQL_INSTANCE}]</key>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
@@ -5129,7 +5129,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <discovery_rule>
                     <name>MySQL TOP{$DBS_MYSQL_TOP_TABLE_BY_ROWS} table by rows discovery</name>
                     <type>DEPENDENT</type>
-                    <key>mysql.top_table_by_rows.discovery</key>
+                    <key>mysql.top_table_by_rows.discovery[{$DBS_MYSQL_INSTANCE}]</key>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
@@ -5385,7 +5385,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <discovery_rule>
                     <name>MySQL TOP{$DBS_MYSQL_TOP_TABLE_BY_SIZE} table by size discovery</name>
                     <type>DEPENDENT</type>
-                    <key>mysql.top_table_by_size.discovery</key>
+                    <key>mysql.top_table_by_size.discovery[{$DBS_MYSQL_INSTANCE}]</key>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
