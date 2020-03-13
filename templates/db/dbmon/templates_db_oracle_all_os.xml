@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-04T08:10:44Z</date>
+    <date>2020-03-13T04:12:46Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1595,7 +1595,7 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                 <discovery_rule>
                     <name>Oracle archivelog dest discovery</name>
                     <type>DEPENDENT</type>
-                    <key>oracle.archlogdest.discovery</key>
+                    <key>oracle.archlogdest.discovery[{$DBS_ORACLE_INSTANCE}]</key>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
@@ -2618,7 +2618,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <discovery_rule>
                     <name>Oracle instance parameters discovery</name>
                     <type>DEPENDENT</type>
-                    <key>oracle.instance.parameters.discovery</key>
+                    <key>oracle.instance.parameters.discovery[{$DBS_ORACLE_INSTANCE}]</key>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
@@ -2661,7 +2661,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <discovery_rule>
                     <name>Oracle permanent tablespace discovery</name>
                     <type>DEPENDENT</type>
-                    <key>oracle.permanent.tablespace.discovery</key>
+                    <key>oracle.permanent.tablespace.discovery[{$DBS_ORACLE_INSTANCE}]</key>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
@@ -3428,7 +3428,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <discovery_rule>
                     <name>Oracle temporary tablespace discovery</name>
                     <type>DEPENDENT</type>
-                    <key>oracle.temporary.tablespace.discovery</key>
+                    <key>oracle.temporary.tablespace.discovery[{$DBS_ORACLE_INSTANCE}]</key>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
@@ -3800,7 +3800,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <discovery_rule>
                     <name>Oracle undo tablespace discovery</name>
                     <type>DEPENDENT</type>
-                    <key>oracle.undo.tablespace.discovery</key>
+                    <key>oracle.undo.tablespace.discovery[{$DBS_ORACLE_INSTANCE}]</key>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
@@ -4317,6 +4317,16 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_ORACLE_PING_NODATA_WARN}</macro>
                     <value>6m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PRIMARY_CONN_STRING}</macro>
+                    <value>127.0.0.1:1521/orcl</value>
+                    <description>This connection is used only for connecting to the primary database with standby to collect metrics on apply and transport lag. Format connection string: username/userpassword@host[:port][/service name][:server][/instance_name]</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PRIMARY_MODE}</macro>
+                    <value>0</value>
+                    <description>This connection is used only for connecting to the primary database with standby to collect metrics on apply and transport lag. Allow: 0 - OCI_DEFAULT, 1 - OCI_SYSDBA, 2 - OCI_SYSOPER, 3 - OCI_SYSASM, 4 - OCI_SYSDGD</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_PROCESSES_PRC_CRIT}</macro>
