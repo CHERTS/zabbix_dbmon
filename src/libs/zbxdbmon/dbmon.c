@@ -925,7 +925,7 @@ unsigned long zbx_db_version(const struct zbx_db_connection *conn)
  * Close a database connection
  * Return ZBX_DB_OK on success
  */
-int zbx_db_close_db(struct zbx_db_connection * conn)
+int zbx_db_close_db(struct zbx_db_connection *conn)
 {
 	if (NULL != conn && NULL != conn->connection)
 	{
@@ -977,7 +977,7 @@ int zbx_db_close_db(struct zbx_db_connection * conn)
  * Free memory allocated by the struct zbx_db_connection
  * Return ZBX_DB_OK on success
  */
-int zbx_db_clean_connection(struct zbx_db_connection * conn)
+int zbx_db_clean_connection(struct zbx_db_connection *conn)
 {
 	if (NULL != conn)
 	{
