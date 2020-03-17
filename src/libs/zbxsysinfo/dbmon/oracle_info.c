@@ -385,7 +385,7 @@ FROM v$dataguard_stats \
 WHERE name IN('apply lag', 'transport lag') \
 union all \
 SELECT decode(name, 'apply lag', 'APPLY_TIME_COMPUTED', 'transport lag', 'TRANSPORT_TIME_COMPUTED', 'NONE') AS PARAM_NAME, \
-	nvl(to_char(abs((sysdate - to_date(TIME_COMPUTED, 'mm/dd/yyyy hh24:mi:ss')))*24*60*60), to_char(86400)) AS TIME_COMPUTED_LAG_VALUE \
+	to_char(nvl(round(abs((sysdate - to_date(TIME_COMPUTED, 'mm/dd/yyyy hh24:mi:ss'))*24*60*60),0), 86400)) AS TIME_COMPUTED_LAG_VALUE \
 FROM v$dataguard_stats \
 WHERE name IN('apply lag', 'transport lag')"
 
