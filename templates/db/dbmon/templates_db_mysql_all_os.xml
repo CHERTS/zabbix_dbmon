@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-13T04:37:53Z</date>
+    <date>2020-03-17T17:30:49Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -6375,7 +6375,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 </mapping>
                 <mapping>
                     <value>3</value>
-                    <newvalue>UNKNOWN</newvalue>
+                    <newvalue>NOT SUPPORTED</newvalue>
                 </mapping>
             </mappings>
         </value_map>
@@ -6400,7 +6400,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 </mapping>
                 <mapping>
                     <value>4</value>
-                    <newvalue>UNKNOWN</newvalue>
+                    <newvalue>NOT SUPPORTED</newvalue>
                 </mapping>
             </mappings>
         </value_map>
@@ -6417,7 +6417,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 </mapping>
                 <mapping>
                     <value>2</value>
-                    <newvalue>UNKNOWN</newvalue>
+                    <newvalue>NOT SUPPORTED</newvalue>
                 </mapping>
             </mappings>
         </value_map>
@@ -6481,7 +6481,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 </mapping>
                 <mapping>
                     <value>3</value>
-                    <newvalue>UNKNOWN</newvalue>
+                    <newvalue>NOT SUPPORTED</newvalue>
                 </mapping>
             </mappings>
         </value_map>
@@ -6528,7 +6528,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
             <mappings>
                 <mapping>
                     <value>0</value>
-                    <newvalue>UNKNOWN</newvalue>
+                    <newvalue>NOT SUPPORTED</newvalue>
                 </mapping>
                 <mapping>
                     <value>1</value>
@@ -6553,7 +6553,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 </mapping>
                 <mapping>
                     <value>2</value>
-                    <newvalue>UNKNOWN</newvalue>
+                    <newvalue>NOT SUPPORTED</newvalue>
                 </mapping>
             </mappings>
         </value_map>
