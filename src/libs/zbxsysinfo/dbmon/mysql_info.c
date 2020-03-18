@@ -116,7 +116,11 @@ ZBX_METRIC	parameters_dbmon_mysql[] =
 	{"mysql.top10_table_by_rows",	CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.slave.discovery",		CF_HAVEPARAMS,		MYSQL_DISCOVERY,	NULL},
 	{"mysql.slave.status",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
-	{"mysql.query",					CF_HAVEPARAMS,		MYSQL_QUERY,		NULL},
+	{"mysql.query.nojson",			CF_HAVEPARAMS,		MYSQL_QUERY,		NULL},
+	{"mysql.query.onerow",			CF_HAVEPARAMS,		MYSQL_QUERY,		NULL},
+	{"mysql.query.twocoll",			CF_HAVEPARAMS,		MYSQL_QUERY,		NULL},
+	{"mysql.query.multirow",		CF_HAVEPARAMS,		MYSQL_QUERY,		NULL},
+	{"mysql.query.discovery",		CF_HAVEPARAMS,		MYSQL_QUERY,		NULL},
 	{NULL}
 };
 
@@ -578,15 +582,19 @@ int	MYSQL_GET_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result)
 }
 
 /*
- * Custom key mysql.query[]
+ * Custom key 
+ * mysql.query.nojson[]
+ * mysql.query.onerow[]
+ * mysql.query.twocoll[]
+ * mysql.query.multirow[]
+ * mysql.query.discovery[]
  *
  * Returns the value of the specified SQL query.
  *
  * Parameters:
  *   0:  mysql host address
  *   1:  mysql port
- *   3:  query type (NOJSON, ONEROW, TWOCOLL, MULTIROW, DISCOVERY)
- *   3:  scalar SQL query to execute
+ *   2:  scalar SQL query to execute
  *   n:  query parameters
  *
  * Returns: string
@@ -596,62 +604,56 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int					ret = SYSINFO_RET_FAIL;
 	const char			*query_key = NULL, *query = NULL;
-	char				*query_result_type_str;
 	zbx_db_result_type	query_result_type = ZBX_DB_RES_TYPE_NOJSON;
 	int					i = 0;
 	DBMONparams			params = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 
-	if (init_config_done != 0)
-		init_config_done = init_dbmon_config();
-
-	// Get the user SQL query result type parameter
-	query_result_type_str = get_rparam(request, 2);
-	if (strisnull(query_result_type_str))
+	if (0 == strcmp(request->key, "mysql.query.nojson"))
 	{
-		dbmon_log_result(result, LOG_LEVEL_ERR, "No query result type specified");
-		goto out;
+		query_result_type = ZBX_DB_RES_TYPE_NOJSON;
+	}
+	else if (0 == strcmp(request->key, "mysql.query.onerow"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_ONEROW;
+	}
+	else if (0 == strcmp(request->key, "mysql.query.twocoll"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_TWOCOLL;
+	}
+	else if (0 == strcmp(request->key, "mysql.query.multirow"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_MULTIROW;
+	}
+	else if (0 == strcmp(request->key, "mysql.query.discovery"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_DISCOVERY;
 	}
 	else
 	{
-		if (0 == strcmp(query_result_type_str, "NOJSON"))
-		{
-			query_result_type = ZBX_DB_RES_TYPE_NOJSON;
-		}
-		else if (0 == strcmp(query_result_type_str, "ONEROW"))
-		{
-			query_result_type = ZBX_DB_RES_TYPE_ONEROW;
-		}
-		else if (0 == strcmp(query_result_type_str, "TWOCOLL"))
-		{
-			query_result_type = ZBX_DB_RES_TYPE_TWOCOLL;
-		}
-		else if (0 == strcmp(query_result_type_str, "MULTIROW"))
-		{
-			query_result_type = ZBX_DB_RES_TYPE_MULTIROW;
-		}
-		else if (0 == strcmp(query_result_type_str, "DISCOVERY"))
-		{
-			query_result_type = ZBX_DB_RES_TYPE_DISCOVERY;
-		}
-		else
-		{
-			dbmon_log_result(result, LOG_LEVEL_ERR, "Unsupported query type: %s", query_result_type_str);
-			goto out;
-		}
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key"));
+		ret = SYSINFO_RET_FAIL;
+		goto end;
 	}
 
+	if (init_config_done != 0)
+		init_config_done = init_dbmon_config();
+
 	// Get the user SQL query parameter
-	query_key = get_rparam(request, 3);
-	if (strisnull(query_key)) {
+	query_key = get_rparam(request, 2);
+
+	if (strisnull(query_key))
+	{
 		dbmon_log_result(result, LOG_LEVEL_ERR, "No query or query-key specified");
 		goto out;
 	}
 
 	// Check if query comes from configs
 	query = get_query_by_name(query_key);
-	if (NULL == query) {
+
+	if (NULL == query)
+	{
 		dbmon_log_result(result, LOG_LEVEL_DEBUG, "No query found for '%s'", query_key);
 		goto out;
 		//query = query_key;
@@ -659,7 +661,9 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	// parse user params
 	dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query", request->nparam - 3);
-	for (i = 4; i < request->nparam; i++) {
+
+	for (i = 3; i < request->nparam; i++)
+	{
 		params = dbmon_param_append(params, get_rparam(request, i));
 	}
 
@@ -671,8 +675,9 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 out:
 	uninit_dbmon_config();
 	init_config_done = 1;
-
+end:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
+
 	return ret;
 }
 
