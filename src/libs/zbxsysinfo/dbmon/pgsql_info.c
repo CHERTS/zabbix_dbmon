@@ -44,7 +44,9 @@ SELECT \
     d.datctype AS LC_CTYPE, \
     pg_catalog.pg_get_userbyid(d.datdba) AS OWNER, \
     t.spcname AS TABLESPACE, \
-    pg_catalog.shobj_description(d.oid, 'pg_database') AS DESCRIPTION \
+    pg_catalog.shobj_description(d.oid, 'pg_database') AS DESCRIPTION, \
+	age(d.datfrozenxid) AS AGE, \
+	d.datconnlimit AS CONNLIM \
 FROM pg_catalog.pg_database d \
     JOIN pg_catalog.pg_tablespace t on d.dattablespace = t.oid \
 WHERE \
@@ -62,6 +64,8 @@ SELECT \
 	pg_catalog.pg_get_userbyid(d.datdba) AS OWNER, \
 	t.spcname AS TABLESPACE, \
 	pg_catalog.shobj_description(d.oid, 'pg_database') AS DESCRIPTION, \
+	age(d.datfrozenxid) AS AGE, \
+	d.datconnlimit AS CONNLIM, \
 	pg_database_size(d.datname::text) AS DBSIZE \
 FROM pg_catalog.pg_database d \
 	JOIN pg_catalog.pg_tablespace t on d.dattablespace = t.oid \
@@ -69,6 +73,54 @@ WHERE \
 	d.datallowconn = 't' \
 	AND d.datistemplate = 'n' \
 ORDER BY 1;"
+
+#define PGSQL_DB_LOCKS_DBS "\
+WITH T AS \
+(SELECT db.datname AS DBNAME, \
+	lower(replace(Q.mode, 'Lock', '')) AS MODE, \
+	coalesce(T.qty, 0) val \
+	FROM pg_database db \
+	JOIN( \
+		VALUES('AccessShareLock'), ('RowShareLock'), ('RowExclusiveLock'), ('ShareUpdateExclusiveLock'), ('ShareLock'), ('ShareRowExclusiveLock'), ('ExclusiveLock'), ('AccessExclusiveLock')) Q(MODE) ON TRUE NATURAL \
+	LEFT JOIN \
+	(SELECT datname, \
+		MODE, \
+		count(MODE) qty \
+		FROM pg_locks lc \
+		RIGHT JOIN pg_database db ON db.oid = lc.database \
+		GROUP BY 1, 2) T \
+	WHERE NOT db.datistemplate \
+	ORDER BY 1, 2) \
+	SELECT json_object_agg(dbname, row_to_json(T2)) \
+	FROM \
+	(SELECT dbname, \
+		sum(val) AS TOTAL, \
+		sum(CASE \
+			WHEN MODE = 'accessexclusive' THEN val \
+			END) AS ACCESSEXCLUSIVE, \
+		sum(CASE \
+			WHEN MODE = 'accessshare' THEN val \
+			END) AS ACCESSSHARE, \
+		sum(CASE \
+			WHEN MODE = 'exclusive' THEN val \
+			END) AS EXCLUSIVE, \
+		sum(CASE \
+			WHEN MODE = 'rowexclusive' THEN val \
+			END) AS ROWEXCLUSIVE, \
+		sum(CASE \
+			WHEN MODE = 'rowshare' THEN val \
+			END) AS ROWSHARE, \
+		sum(CASE \
+			WHEN MODE = 'share' THEN val \
+			END) AS SHARE, \
+		sum(CASE \
+			WHEN MODE = 'sharerowexclusive' THEN val \
+			END) AS SHAREROWEXCLUSIVE, \
+		sum(CASE \
+			WHEN MODE = 'shareupdateexclusive' THEN val \
+			END) AS SHARUPDATEEXCLUSIVE \
+		FROM T \
+		GROUP BY dbname) T2"
 
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
@@ -79,6 +131,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.server.info",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.db.discovery",	CF_HAVEPARAMS,		PGSQL_DB_DISCOVERY,	NULL},
 	{"pgsql.db.info",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.locks",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -427,6 +480,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.db.info"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_DB_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+	}
+	else if (0 == strcmp(request->key, "pgsql.db.locks"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_DB_LOCKS_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else
 	{
