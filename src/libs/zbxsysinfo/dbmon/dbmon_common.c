@@ -488,6 +488,8 @@ int dbmon_log_result(AGENT_RESULT *result, int level, const char *format, ...)
 	if (NULL != result)
 		SET_MSG_RESULT(result, zbx_strdup(NULL, msg));
 
+	va_end(args);
+
 	return SYSINFO_RET_FAIL;
 }
 

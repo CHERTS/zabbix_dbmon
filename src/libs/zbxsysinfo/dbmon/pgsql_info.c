@@ -122,6 +122,55 @@ WITH T AS \
 		FROM T \
 		GROUP BY dbname) T2"
 
+#define PGSQL_DB_STAT_SUM_DBS "\
+SELECT row_to_json(T) \
+FROM( \
+	SELECT \
+	sum(numbackends) as numbackends \
+	, sum(xact_commit) as xact_commit \
+	, sum(xact_rollback) as xact_rollback \
+	, sum(blks_read) as blks_read \
+	, sum(blks_hit) as blks_hit \
+	, sum(tup_returned) as tup_returned \
+	, sum(tup_fetched) as tup_fetched \
+	, sum(tup_inserted) as tup_inserted \
+	, sum(tup_updated) as tup_updated \
+	, sum(tup_deleted) as tup_deleted \
+	, sum(conflicts) as conflicts \
+	, sum(temp_files) as temp_files \
+	, sum(temp_bytes) as temp_bytes \
+	, sum(deadlocks) as deadlocks \
+	, %s as checksum_failures \
+	, sum(blk_read_time) as blk_read_time \
+	, sum(blk_write_time) as blk_write_time \
+	FROM pg_catalog.pg_stat_database \
+) T;"
+
+#define PGSQL_DB_STAT_DBS "\
+SELECT json_object_agg(coalesce(datname, 'null'), row_to_json(T)) \
+FROM( \
+	SELECT \
+	datname \
+	, numbackends as numbackends \
+	, xact_commit as xact_commit \
+	, xact_rollback as xact_rollback \
+	, blks_read as blks_read \
+	, blks_hit as blks_hit \
+	, tup_returned as tup_returned \
+	, tup_fetched as tup_fetched \
+	, tup_inserted as tup_inserted \
+	, tup_updated as tup_updated \
+	, tup_deleted as tup_deleted \
+	, conflicts as conflicts \
+	, temp_files as temp_files \
+	, temp_bytes as temp_bytes \
+	, deadlocks as deadlocks \
+	, %s as checksum_failures \
+	, blk_read_time as blk_read_time \
+	, blk_write_time as blk_write_time \
+	FROM pg_catalog.pg_stat_database \
+) T;"
+
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
@@ -132,6 +181,8 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.db.discovery",	CF_HAVEPARAMS,		PGSQL_DB_DISCOVERY,	NULL},
 	{"pgsql.db.info",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.db.locks",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.stat.sum",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.stat",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -402,11 +453,12 @@ int	PGSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type)
 {
-	int							ret = SYSINFO_RET_FAIL;
+	int							ret = SYSINFO_RET_FAIL, db_ret = ZBX_DB_ERROR;
 	char						*pg_conn_string;
 	struct zbx_db_connection	*pgsql_conn;
 	struct zbx_db_result		pgsql_result;
-
+	unsigned long				version;
+	const char					*pg_db_sum;
 
 	if (1 < request->nparam)
 	{
@@ -432,7 +484,66 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 
 	if (NULL != pgsql_conn)
 	{
-		if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, query))
+		if (0 == strcmp(request->key, "pgsql.db.stat.sum"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version >= 120000)
+				{
+					pg_db_sum = "sum(checksum_failures)";
+				}
+				else
+				{
+					pg_db_sum = "null";
+				}
+
+				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query, pg_db_sum);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
+		else if (0 == strcmp(request->key, "pgsql.db.stat"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version >= 120000)
+				{
+					pg_db_sum = "checksum_failures";
+				}
+				else
+				{
+					pg_db_sum = "null";
+				}
+
+				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query, pg_db_sum);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
+		else
+		{
+			db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query);
+		}
+
+		if (ZBX_DB_OK == db_ret)
 		{
 			ret = make_result(request, result, pgsql_result, result_type);
 			zbx_db_clean_result(&pgsql_result);
@@ -450,7 +561,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
-
+out:
 	zbx_db_close_db(pgsql_conn);
 	zbx_db_clean_connection(pgsql_conn);
 
@@ -484,6 +595,14 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.db.locks"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_DB_LOCKS_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.db.stat.sum"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_DB_STAT_SUM_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.db.stat"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_DB_STAT_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else
 	{
