@@ -171,18 +171,36 @@ FROM( \
 	FROM pg_catalog.pg_stat_database \
 ) T;"
 
+#define PGSQL_CONNECTIONS_INFO_DBS "\
+SELECT row_to_json(T) \
+FROM( \
+	SELECT \
+	sum(CASE WHEN state = 'active' THEN 1 ELSE 0 END) AS active, \
+	sum(CASE WHEN state = 'idle' THEN 1 ELSE 0 END) AS idle, \
+	sum(CASE WHEN state = 'idle in transaction' THEN 1 ELSE 0 END) AS idle_in_transaction, \
+	sum(CASE WHEN state = 'idle in transaction (aborted)' THEN 1 ELSE 0 END) AS idle_in_transaction_aborted, \
+	sum(CASE WHEN state = 'fastpath function call' THEN 1 ELSE 0 END) AS fastpath_function_call, \
+	sum(CASE WHEN state = 'disabled' THEN 1 ELSE 0 END) AS disabled, \
+	count(*) AS total, \
+	count(*) * 100 / (SELECT current_setting('max_connections')::int) AS total_pct, \
+	sum(CASE WHEN wait_event IS NOT NULL THEN 1 ELSE 0 END) AS waiting, \
+	(SELECT count(*) FROM pg_prepared_xacts) AS prepared \
+	FROM pg_stat_activity WHERE datid is not NULL) \
+T;"
+
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
-	{"pgsql.ping",			CF_HAVEPARAMS,		PGSQL_PING,			NULL},
-	{"pgsql.version",		CF_HAVEPARAMS,		PGSQL_VERSION,		NULL},
-	{"pgsql.version.full",	CF_HAVEPARAMS,		PGSQL_VERSION,		NULL},
-	{"pgsql.server.info",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.db.discovery",	CF_HAVEPARAMS,		PGSQL_DB_DISCOVERY,	NULL},
-	{"pgsql.db.info",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.db.locks",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.db.stat.sum",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.db.stat",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.ping",				CF_HAVEPARAMS,		PGSQL_PING,			NULL},
+	{"pgsql.version",			CF_HAVEPARAMS,		PGSQL_VERSION,		NULL},
+	{"pgsql.version.full",		CF_HAVEPARAMS,		PGSQL_VERSION,		NULL},
+	{"pgsql.server.info",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.discovery",		CF_HAVEPARAMS,		PGSQL_DB_DISCOVERY,	NULL},
+	{"pgsql.db.info",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.locks",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.stat.sum",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.stat",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.connections.info",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -603,6 +621,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.db.stat"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_DB_STAT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.connections.info"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_CONNECTIONS_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else
 	{
