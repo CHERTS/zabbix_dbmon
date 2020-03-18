@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-18T11:17:11Z</date>
+    <date>2020-03-18T11:28:21Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -214,7 +214,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of times disk blocks were found already in the buffer cache</description>
+                    <description>Number of times disk blocks were found already in the buffer cache.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -229,6 +229,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -241,7 +245,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of disk blocks read</description>
+                    <description>Number of disk blocks read.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -256,6 +260,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -268,7 +276,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Time spent reading data file blocks by backends, in milliseconds</description>
+                    <description>Time spent reading data file blocks by backends, in milliseconds.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -283,6 +291,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -295,7 +307,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Time spent writing data file blocks by backends, in milliseconds</description>
+                    <description>Time spent writing data file blocks by backends, in milliseconds.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -309,6 +321,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <step>
                             <type>SIMPLE_CHANGE</type>
                             <params/>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -343,6 +359,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <error_handler>CUSTOM_VALUE</error_handler>
                             <error_handler_params>-1</error_handler_params>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -355,7 +375,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of queries canceled due to conflicts with recovery.  (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)</description>
+                    <description>Number of queries canceled due to conflicts with recovery (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details)</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -370,6 +390,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -382,7 +406,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of deadlocks detected</description>
+                    <description>Number of deadlocks detected.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -397,6 +421,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -410,7 +438,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>b</units>
-                    <description>Total amount of data written to temporary files by queries</description>
+                    <description>Total amount of data written to temporary files by queries.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -425,6 +453,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -437,7 +469,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of temporary files created by queries </description>
+                    <description>Number of temporary files created by queries.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -452,6 +484,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -464,7 +500,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of rows deleted by queries</description>
+                    <description>Number of rows deleted by queries.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -479,6 +515,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -491,7 +531,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of rows fetched by queries</description>
+                    <description>Number of rows fetched by queries.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -506,6 +546,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -518,7 +562,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of rows inserted by queries</description>
+                    <description>Number of rows inserted by queries.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -533,6 +577,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -545,7 +593,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of rows returned by queries</description>
+                    <description>Number of rows returned by queries.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -560,6 +608,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -572,7 +624,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of rows updated by queries</description>
+                    <description>Number of rows updated by queries.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -587,6 +639,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -599,7 +655,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of transactions that have been committed</description>
+                    <description>Number of transactions that have been committed.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -614,6 +670,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -626,7 +686,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of transactions that have been rolled back</description>
+                    <description>Number of transactions that have been rolled back.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -640,6 +700,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <step>
                             <type>SIMPLE_CHANGE</type>
                             <params/>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1207,6 +1271,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1232,6 +1300,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                 <step>
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1259,6 +1331,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1284,6 +1360,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                 <step>
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1311,6 +1391,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1336,6 +1420,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                 <step>
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1363,6 +1451,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1389,6 +1481,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1414,6 +1510,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                 <step>
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1442,6 +1542,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1469,6 +1573,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1495,6 +1603,10 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                                 <step>
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1556,6 +1668,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1612,6 +1728,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1637,6 +1757,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                 <step>
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1665,6 +1789,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1691,6 +1819,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                 <step>
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1719,6 +1851,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1745,6 +1881,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                 <step>
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -1773,6 +1913,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1800,6 +1944,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
                                 </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1826,6 +1974,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                 <step>
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
                                 </step>
                             </preprocessing>
                             <master_item>
