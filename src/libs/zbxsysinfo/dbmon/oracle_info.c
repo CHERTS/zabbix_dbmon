@@ -41,10 +41,15 @@ SELECT decode(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY',
 FROM v$instance \
 WHERE instance_name = '%s'"
 
-#define ORACLE_CHECK_ARCHIVELOG_MODE_DBS "\
-SELECT decode(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER, \
+/*#define ORACLE_CHECK_ARCHIVELOG_MODE_DBS "\
+SELECT decode(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER \
 FROM v$instance \
-WHERE instance_name = '%s'"
+WHERE instance_name = '%s'"*/
+
+#define ORACLE_CHECK_ARCHIVELOG_MODE_DBS "\
+SELECT decode(d.log_mode,'NOARCHIVELOG',1,'ARCHIVELOG',2,'MANUAL',3,0) log_mode \
+FROM gv$instance i, gv$database d \
+WHERE i.inst_id = d.inst_id AND i.instance_name = '%s' AND d.name = '%s'"
 
 #define ORACLE_VERSION_DBS "\
 SELECT version AS VERSION \
@@ -618,40 +623,40 @@ WHERE i.instance_number = p.inst_id \
 	AND p.name = 'audit_file_dest'"
 
 ZBX_METRIC	parameters_dbmon_oracle[] =
-/*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
+/*	KEY						FLAG			FUNCTION				TEST PARAMETERS */
 {
-	{"oracle.instance.ping",					CF_HAVEPARAMS,		ORACLE_INSTANCE_PING,			NULL},
-	{"oracle.instance.version",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.parameter",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.patch_info",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.resource",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.dbfiles",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.resumable",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.bad_processes",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.fra",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.ping",			CF_HAVEPARAMS,		ORACLE_INSTANCE_PING,			NULL},
+	{"oracle.instance.version",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.info",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.parameter",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.patch_info",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.resource",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.dbfiles",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.resumable",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.bad_processes",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.fra",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.redolog_switch_rate",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.redolog_size_per_hour",	CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.archivelog",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.full",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.incr",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.incr_file_num",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.cf",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.db.discovery",						CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
-	{"oracle.db.info",							CF_HAVEPARAMS,		ORACLE_DB_INFO,					NULL},
-	{"oracle.db.incarnation",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.db.size",							CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.standby.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
-	{"oracle.standby.lag",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.standby.mrp_status",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.standby.rfs_status",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.archivelog",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.full",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.incr",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.incr_file_num",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.cf",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.db.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
+	{"oracle.db.info",				CF_HAVEPARAMS,		ORACLE_DB_INFO,				NULL},
+	{"oracle.db.incarnation",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.db.size",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
+	{"oracle.standby.lag",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.mrp_status",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.rfs_status",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.standby.last_sequence_stat",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.archlogdest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
-	{"oracle.archlogdest.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.parameters",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.tablespace.info",					CF_HAVEPARAMS,		ORACLE_TS_INFO,					NULL},
-	{"oracle.alertlog.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
-	{"oracle.auditfiledest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.archlogdest.discovery",		CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
+	{"oracle.archlogdest.info",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.parameters",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.tablespace.info",			CF_HAVEPARAMS,		ORACLE_TS_INFO,				NULL},
+	{"oracle.alertlog.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
+	{"oracle.auditfiledest.discovery",		CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
 	{NULL}
 }; 
 
@@ -661,9 +666,9 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
 #endif
 {
-	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance;
-	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	int				ret = SYSINFO_RET_FAIL, ping = 0;
+	char				*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance;
+	unsigned short			oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
 
 	if (NULL == CONFIG_ORACLE_USER)
