@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-12T13:42:54Z</date>
+    <date>2020-03-18T08:42:57Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -153,6 +153,51 @@
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get database locks</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect all metrics from pg_locks per database&#13;
+See more info: https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-TABLES</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get database stat sum</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect pg_stat_database.&#13;
+See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-STAT-DATABASE-VIEW</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get database stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect all metrics from pg_stat_database per database&#13;
+See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-STAT-DATABASE-VIEW</description>
                     <applications>
                         <application>
                             <name>stubs</name>
