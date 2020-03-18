@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-18T11:08:03Z</date>
+    <date>2020-03-18T11:17:11Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1833,6 +1833,145 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
+                    <graph_prototypes>
+                        <graph_prototype>
+                            <name>Database '{#DBNAME}': Block hit/read</name>
+                            <ymin_type_1>FIXED</ymin_type_1>
+                            <graph_items>
+                                <graph_item>
+                                    <color>66BB6A</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},blks_hit.rate]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>42A5F5</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},blks_read.rate]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <name>Database '{#DBNAME}': Events</name>
+                            <graph_items>
+                                <graph_item>
+                                    <drawtype>GRADIENT_LINE</drawtype>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},xact_commit.rate]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},conflicts.rate]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>2774A4</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},deadlocks.rate]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>3</sortorder>
+                                    <color>A54F10</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},xact_rollback.rate]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <name>Database '{#DBNAME}': Size</name>
+                            <ymin_type_1>FIXED</ymin_type_1>
+                            <graph_items>
+                                <graph_item>
+                                    <color>66BB6A</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.info[{#DBNAME},dbsize]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <name>Database '{#DBNAME}': Temp files</name>
+                            <graph_items>
+                                <graph_item>
+                                    <drawtype>GRADIENT_LINE</drawtype>
+                                    <color>66BB6A</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},temp_bytes.rate]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>42A5F5</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},temp_files.rate]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <name>Database '{#DBNAME}': Tuples</name>
+                            <ymin_type_1>FIXED</ymin_type_1>
+                            <graph_items>
+                                <graph_item>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},tup_deleted.rate]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},tup_fetched.rate]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>2774A4</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},tup_inserted.rate]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>3</sortorder>
+                                    <color>A54F10</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},tup_returned.rate]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>4</sortorder>
+                                    <color>FC6EA3</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},tup_updated.rate]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                    </graph_prototypes>
                     <master_item>
                         <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
