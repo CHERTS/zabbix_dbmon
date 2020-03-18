@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-18T10:54:09Z</date>
+    <date>2020-03-18T11:08:03Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1401,6 +1401,11 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <delay>0</delay>
                             <history>30d</history>
                             <description>Number of total locks for each database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
@@ -1495,6 +1500,39 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <master_item>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{min(5m)}&gt;{$DBS_PGSQL_CONFLICTS_MAX_WARN:&quot;{#DBNAME}&quot;}</expression>
+                                    <name>Too many recovery conflicts over last 5 minutes</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_CONFLICTS_MAX_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>AVERAGE</priority>
+                                    <description>The primary and standby servers are in many ways loosely connected.&#13;
+Actions on the primary will have an effect on the standby.&#13;
+As a result, there is potential for negative interactions or conflicts between them.&#13;
+See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STANDBY-CONFLICT</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>PostgreSQL</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_PGSQL_INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[PgSQL] Database '{#DBNAME}': Detected deadlocks per second</name>
@@ -1522,6 +1560,35 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <master_item>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{min(5m)}&gt;{$DBS_PGSQL_DEADLOCKS_MAX_WARN:&quot;{#DBNAME}&quot;}</expression>
+                                    <name>Deadlock has been occurred over last 5 minutes</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_DEADLOCKS_MAX_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>HIGH</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>DBType</tag>
+                                            <value>PostgreSQL</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_PGSQL_INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[PgSQL] Database '{#DBNAME}': Temp_bytes written per second</name>
@@ -1795,6 +1862,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>8m</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_PGSQL_CONFLICTS_MAX_WARN}</macro>
+                    <value>0</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_PGSQL_CONNECTION_PRC_CRIT}</macro>
                     <value>90</value>
                 </macro>
@@ -1820,6 +1891,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>1h</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_PGSQL_DEADLOCKS_MAX_WARN}</macro>
+                    <value>0</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_PGSQL_INSTANCE}</macro>
                     <value>pgsql_5432</value>
                     <description>Unique instance name of PgSQL</description>
@@ -1841,14 +1916,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_PGSQL_PING_NODATA_WARN}</macro>
                     <value>6m</value>
-                </macro>
-                <macro>
-                    <macro>{$DBS_PGSQL_PXACT_PRC_CRIT}</macro>
-                    <value>90</value>
-                </macro>
-                <macro>
-                    <macro>{$DBS_PGSQL_PXACT_PRC_WARN}</macro>
-                    <value>80</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_XID_CRIT}</macro>
