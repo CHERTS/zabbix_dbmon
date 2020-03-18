@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-18T08:42:57Z</date>
+    <date>2020-03-18T10:54:09Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -26,6 +26,9 @@
                 </application>
                 <application>
                     <name>PgSQL: Performance</name>
+                </application>
+                <application>
+                    <name>PgSQL: Statistic</name>
                 </application>
                 <application>
                     <name>PgSQL: Throughput</name>
@@ -203,6 +206,445 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <name>stubs</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Hit blocks read</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},blks_hit]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of times disk blocks were found already in the buffer cache</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.blks_hit</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Disk blocks read</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},blks_read]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of disk blocks read</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.blks_read</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Blocks read time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},blk_read_time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Time spent reading data file blocks by backends, in milliseconds</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.blk_read_time</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Blocks write time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},blk_write_time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Time spent writing data file blocks by backends, in milliseconds</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.blk_write_time</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Checksum failures</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},checksum_failures]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of data page checksum failures detected (or on a shared object), or NULL if data checksums are not enabled. This metric included in PostgreSQL 12</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.checksum_failures</params>
+                        </step>
+                        <step>
+                            <type>MATCHES_REGEX</type>
+                            <params>^\d*$</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                            <error_handler>CUSTOM_VALUE</error_handler>
+                            <error_handler_params>-1</error_handler_params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Conflicts</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},conflicts]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of queries canceled due to conflicts with recovery.  (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details.)</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.conflicts</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Deadlocks</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},deadlocks]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of deadlocks detected</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.deadlocks</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Number temp bytes</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},temp_bytes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>b</units>
+                    <description>Total amount of data written to temporary files by queries</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.temp_bytes</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Number temp files</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},temp_files]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of temporary files created by queries </description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.temp_files</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Rows deleted</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},tup_deleted]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of rows deleted by queries</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.tup_deleted</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Rows fetched</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},tup_fetched]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of rows fetched by queries</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.tup_fetched</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Rows inserted</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},tup_inserted]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of rows inserted by queries</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.tup_inserted</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Rows returned</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},tup_returned]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of rows returned by queries</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.tup_returned</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Rows updated</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},tup_updated]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of rows updated by queries</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.tup_updated</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Committed transactions</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},xact_commit]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of transactions that have been committed</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.xact_commit</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Roll backed transactions</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},xact_rollback]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of transactions that have been rolled back</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Statistic</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.xact_rollback</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Startup time</name>
@@ -476,6 +918,62 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     </filter>
                     <item_prototypes>
                         <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Age</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.info[{#DBNAME},age]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].AGE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Connection limit</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.info[{#DBNAME},datconnlimit]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DBNAME== &quot;{#DBNAME}&quot;)].CONNLIM.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                                <step>
+                                    <type>NOT_MATCHES_REGEX</type>
+                                    <params>-1</params>
+                                    <error_handler>CUSTOM_ERROR</error_handler>
+                                    <error_handler_params>Connection unlimited</error_handler_params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
                             <name>[PgSQL] Database '{#DBNAME}': Size</name>
                             <type>DEPENDENT</type>
                             <key>pgsql.db.info[{#DBNAME},dbsize]</key>
@@ -686,6 +1184,585 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             </preprocessing>
                             <master_item>
                                 <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Num of accessexclusive locks</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.locks[{#DBNAME},accessexclusive]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of accessexclusive locks for each database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].accessexclusive</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Num of accessshare locks</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.locks[{#DBNAME},accessshare]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of accessshare locks for each database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].accessshare</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Num of exclusive locks</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.locks[{#DBNAME},exclusive]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of exclusive locks for each database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].exclusive</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Num of rowexclusive locks</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.locks[{#DBNAME},rowexclusive]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of rowexclusive locks for each database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].rowexclusive</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Num of rowshare locks</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.locks[{#DBNAME},rowshare]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of rowshare locks for each database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].rowshare</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Num of sharerowexclusive locks</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.locks[{#DBNAME},sharerowexclusive]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of total sharerowexclusive for each database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].sharerowexclusive</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Num of shareupdateexclusive locks</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.locks[{#DBNAME},shareupdateexclusive]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of shareupdateexclusive locks for each database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].shareupdateexclusive</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Num of share locks</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.locks[{#DBNAME},share]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of share locks for each database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].share</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Num of total locks</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.locks[{#DBNAME},total]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of total locks for each database</description>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].total</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Blocks hit per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},blks_hit.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of times disk blocks were found already in the buffer cache, so that a read was not necessary</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].blks_hit</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Disk blocks read per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},blks_read.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of disk blocks read in this database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].blks_read</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Detected conflicts per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},conflicts.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of queries canceled due to conflicts with recovery in this database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].conflicts</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Detected deadlocks per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},deadlocks.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of detected deadlocks in this database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].deadlocks</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Temp_bytes written per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},temp_bytes.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <description>Total amount of data written to temporary files by queries in this database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].temp_bytes</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Temp_files created per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},temp_files.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Total number of temporary files created by queries in this database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].temp_files</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Tuples deleted per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},tup_deleted.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of rows deleted by queries in this database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].tup_deleted</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Tuples fetched per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},tup_fetched.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of rows fetched by queries in this database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].tup_fetched</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Tuples inserted per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},tup_inserted.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of rows inserted by queries in this database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].tup_inserted</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Tuples returned per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},tup_returned.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of rows updated by queries in this database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].tup_returned</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Tuples updated per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},tup_updated.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of rows updated by queries in this database</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].tup_updated</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Commits per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},xact_commit.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Number of transactions in this database that have been committed</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].xact_commit</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Rollbacks per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},xact_rollback.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Total number of transactions in this database that have been rolled back</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].xact_rollback</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
