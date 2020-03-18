@@ -118,7 +118,7 @@ WITH T AS \
 			END) AS SHAREROWEXCLUSIVE, \
 		sum(CASE \
 			WHEN MODE = 'shareupdateexclusive' THEN val \
-			END) AS SHARUPDATEEXCLUSIVE \
+			END) AS SHAREUPDATEEXCLUSIVE \
 		FROM T \
 		GROUP BY dbname) T2"
 
