@@ -62,6 +62,26 @@ echo ---------------------------------------------------------------------------
 
 echo MySQL slave status:
 zabbix_get.exe %zbx_conn_string% -k mysql.slave.status[127.0.0.1,3306] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL custom query (name: mysqlver):
+zabbix_get.exe %zbx_conn_string% -k mysql.query.nojson[127.0.0.1,3306,mysqlver]
+echo -----------------------------------------------------------------------------
+
+echo MySQL custom query (name: mysqlinfo):
+zabbix_get.exe %zbx_conn_string% -k mysql.query.onerow[127.0.0.1,3306,mysqlinfo] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL custom query (name: mysqldbdiscovery):
+zabbix_get.exe %zbx_conn_string% -k mysql.query.discovery[127.0.0.1,3306,mysqldbdiscovery] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL custom query (name: mysqldbinfo):
+zabbix_get.exe %zbx_conn_string% -k mysql.query.multirow[127.0.0.1,3306,mysqldbinfo] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo MySQL custom query (name: mysqlinnodbenginestatus):
+zabbix_get.exe %zbx_conn_string% -k mysql.query.nojson[127.0.0.1,3306,mysqlinnodbenginestatus]
 
 echo === PgSQL ===================================================================
 
@@ -79,6 +99,58 @@ echo ---------------------------------------------------------------------------
 
 echo PostgreSQL database discovery:
 zabbix_get.exe %zbx_conn_string% -k pgsql.db.discovery["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL database info:
+zabbix_get.exe %zbx_conn_string% -k pgsql.db.info["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL database locks:
+zabbix_get.exe %zbx_conn_string% -k pgsql.db.locks["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL database stat sum:
+zabbix_get.exe %zbx_conn_string% -k pgsql.db.stat.sum["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL database stat:
+zabbix_get.exe %zbx_conn_string% -k pgsql.db.stat["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL connections:
+zabbix_get.exe %zbx_conn_string% -k pgsql.connections["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL transactions:
+zabbix_get.exe %zbx_conn_string% -k pgsql.transactions["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL WAL stat:
+zabbix_get.exe %zbx_conn_string% -k pgsql.wal.stat["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL age of oldest xid:
+zabbix_get.exe %zbx_conn_string% -k pgsql.oldest.xid["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL cache hit:
+zabbix_get.exe %zbx_conn_string% -k pgsql.cache.hit["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL bgwriter:
+zabbix_get.exe %zbx_conn_string% -k pgsql.bgwriter["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL autovacuum count:
+zabbix_get.exe %zbx_conn_string% -k pgsql.autovacuum.count["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"]
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL archive count:
+zabbix_get.exe %zbx_conn_string% -k pgsql.archive.count["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
+echo -----------------------------------------------------------------------------
+
+echo PostgreSQL archive size:
+zabbix_get.exe %zbx_conn_string% -k pgsql.archive.size["host = localhost port = 5432 dbname = template1 user=postgres password=xxxxxx connect_timeout = 10"] | jq-win64.exe .
 
 echo === Oracle (%oracle_srv_name%) =================================================
 

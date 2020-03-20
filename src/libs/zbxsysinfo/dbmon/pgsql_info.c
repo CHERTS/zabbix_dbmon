@@ -169,6 +169,7 @@ FROM( \
 	, blk_read_time as blk_read_time \
 	, blk_write_time as blk_write_time \
 	FROM pg_catalog.pg_stat_database \
+	WHERE datname is not null \
 ) T;"
 
 #define PGSQL_CONNECTIONS_INFO_DBS "\
@@ -188,6 +189,76 @@ FROM( \
 	FROM pg_stat_activity WHERE datid is not NULL) \
 T;"
 
+#define PGSQL_TRANSACTIONS_INFO_DBS "\
+SELECT row_to_json(T) \
+FROM( \
+	SELECT \
+	coalesce(extract(epoch FROM max(CASE WHEN state = 'idle in transaction' THEN age(now(), xact_start) END)), 0) AS idle, \
+	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' THEN age(now(), xact_start) END)), 0) AS active, \
+	coalesce(extract(epoch FROM max(CASE WHEN wait_event IS NOT NULL THEN age(now(), xact_start) END)), 0) AS waiting, \
+	(SELECT coalesce(extract(epoch FROM max(age(now(), prepared))), 0) \
+		FROM pg_prepared_xacts) AS prepared \
+	FROM pg_stat_activity) T;"
+
+#define PGSQL_WAL_STAT_DBS "\
+SELECT row_to_json(T) \
+FROM( \
+	SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), '0/00000000') AS WRITE, \
+	count(*) \
+	FROM pg_ls_waldir() AS COUNT \
+) T;"
+
+#define PGSQL_OLDEST_XID_DBS "\
+SELECT greatest(max(age(backend_xmin)), max(age(backend_xid))) \
+FROM pg_catalog.pg_stat_activity;"
+
+#define PGSQL_CACHE_HIT_DBS "\
+SELECT round(sum(blks_hit) * 100 / sum(blks_hit + blks_read), 2) \
+FROM pg_catalog.pg_stat_database;"
+
+#define PGSQL_BGWRITER_DBS "\
+SELECT row_to_json(T) \
+FROM( \
+	SELECT \
+	checkpoints_timed \
+	, checkpoints_req \
+	, checkpoint_write_time \
+	, checkpoint_sync_time \
+	, buffers_checkpoint \
+	, buffers_clean \
+	, maxwritten_clean \
+	, buffers_backend \
+	, buffers_backend_fsync \
+	, buffers_alloc \
+	FROM pg_catalog.pg_stat_bgwriter \
+) T;"
+
+#define PGSQL_AUTOVACUUM_COUNT_DBS "\
+SELECT count(*) \
+FROM pg_catalog.pg_stat_activity \
+WHERE query like '%%autovacuum%%' \
+	AND state <> 'idle' \
+	AND pid <> pg_catalog.pg_backend_pid();"
+
+#define PGSQL_ARCHIVE_COUNT_DBS "\
+SELECT row_to_json(T) \
+FROM( \
+	SELECT archived_count, failed_count \
+	FROM pg_stat_archiver \
+) T;"
+
+#define PGSQL_ARCHIVE_SIZE_DBS "\
+SELECT row_to_json(T) \
+FROM( \
+	SELECT count(name) AS count_files, \
+	coalesce(sum((pg_stat_file('./pg_wal/' || rtrim(ready.name, '.ready'))).size), 0) AS size_files \
+	FROM( \
+		SELECT name \
+		FROM pg_ls_dir('./pg_wal/archive_status') name \
+		WHERE right(name, 6) = '.ready' \
+	) ready \
+) T;"
+
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
@@ -200,7 +271,15 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.db.locks",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.db.stat.sum",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.db.stat",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.connections.info",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.connections",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.transactions",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.wal.stat",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.oldest.xid",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.cache.hit",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.bgwriter",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.autovacuum.count",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.archive.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.archive.size",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -622,9 +701,41 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	{
 		ret = pgsql_make_result(request, result, PGSQL_DB_STAT_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
-	else if (0 == strcmp(request->key, "pgsql.connections.info"))
+	else if (0 == strcmp(request->key, "pgsql.connections"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_CONNECTIONS_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.transactions"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_TRANSACTIONS_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.wal.stat"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_WAL_STAT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.oldest.xid"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_OLDEST_XID_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.cache.hit"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_CACHE_HIT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.bgwriter"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_BGWRITER_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.autovacuum.count"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_AUTOVACUUM_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.archive.count"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_ARCHIVE_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.archive.size"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_ARCHIVE_SIZE_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else
 	{
