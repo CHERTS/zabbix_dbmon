@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-22T15:42:57Z</date>
+    <date>2020-03-22T17:04:26Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -249,7 +249,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: fastpath function call</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Fastpath function call</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},fastpath_function_call]</key>
                     <delay>0</delay>
