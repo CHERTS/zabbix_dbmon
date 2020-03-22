@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-18T11:28:21Z</date>
+    <date>2020-03-22T15:26:49Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -145,6 +145,21 @@
                     <applications>
                         <application>
                             <name>Zabbix agent (DBMON)</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get connections stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect all metrics from pg_stat_activity&#13;
+See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-STAT-ACTIVITY-VIEW</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
                         </application>
                     </applications>
                 </item>
