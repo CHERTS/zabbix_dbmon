@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-22T15:26:49Z</date>
+    <date>2020-03-22T15:42:57Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -221,6 +221,245 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <name>stubs</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Active</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},active]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Total number of connections executing a query</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.active</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: fastpath function call</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},fastpath_function_call]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Total number of connections in a transaction state, but not executing a query</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.idle_in_transaction</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Idle</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},idle]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Total number of connections waiting for a new client command</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.idle</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Idle in transaction</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},idle_in_transaction]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Total number of connections in a transaction state, but not executing a query</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.idle_in_transaction</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Get connections  idle in transaction (aborted)</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},idle_in_transaction_aborted]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Total number of connections in a transaction state, but not executing a query and one of the statements in the transaction caused an error.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.idle_in_transaction_aborted</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Prepared</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},prepared]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Total number of prepared transactions&#13;
+https://www.postgresql.org/docs/current/sql-prepare-transaction.html</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.prepared</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Total</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Total number of connections</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Total %</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>%</units>
+                    <description>Total number of connections in percentage</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_pct</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Waiting</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},waiting]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Total number of waiting connections&#13;
+https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.waiting</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Hit blocks read</name>
