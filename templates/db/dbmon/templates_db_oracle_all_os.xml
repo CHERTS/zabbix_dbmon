@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-13T04:12:46Z</date>
+    <date>2020-03-24T14:16:36Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -4591,6 +4591,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <name>Instance access failed</name>
                     <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
                     <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                </dependency>
+                <dependency>
+                    <name>Redolog switch rate per hour is too high</name>
+                    <expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}</expression>
+                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT} or {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
