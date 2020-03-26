@@ -1,0 +1,4 @@
+pcre-8.43
+libconfig-1.4.9
+openssl-1.0.0e
+oracle-instant-client-11g
