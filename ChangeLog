@@ -1,3 +1,41 @@
+Changes for 4.4.7
+
+4.4.7rc1 was released as 4.4.7 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 4.4.7rc1
+
+New features:
+...G...PS. [ZBXNEXT-3604] added support of user configurable ciphers for communication between Zabbix components (Andris)
+.......PS. [ZBXNEXT-5649] added name referencing support ('~' suffix) to jsonpath (wiper)
+...G...... [ZBXNEXT-5781] improved agent2 metric testing (-t) and printing (-p) by adding full plugin interface support and verbose testing option (wiper)
+
+Bug fixes:
+.........T [ZBX-17409] fixed item mysql.dbsize in Template DB MySQL (mchudinov)
+....I..... [ZBX-17173] improved windows agent build scripts (yurii)
+A......... [ZBX-17425] fixed template.massupdate API macros update (rlataria)
+..F....... [ZBX-17344] fixed PHP 7.4 errors in Latest data->History page for text and log items having an empty filter (Ivo)
+.......PS. [ZBX-17330] fixed error reading vmware events with keys over 2^31 (MVekslers)
+..F....... [ZBX-17288] fixed undefined indexes in Administration->Regular expressions->Test tab (averza, Ivo)
+...G...... [ZBX-17426] fixed agen2 build with go 1.14 (wiper)
+..FG...... [ZBX-16802] added mtime-reread/mtime-noreread options parameter to log* keys (atumilovics)
+..F....... [ZBX-17350] fixed displaying of multiple value types in Latest data->History page (Ivo)
+........S. [ZBX-17284] fixed macro {EVENT.VALUE} is not substituted properly in webhooks (akozlovs)
+..F....... [ZBX-17027] fixed broken layout on some pages with multiselect (rlataria)
+..F....... [ZBX-17390] fixed validation of the maximum selected period (Sasha)
+..F....... [ZBX-17205] fixed inability to add more than one space in auto-expandable fields like macros and tags (agriscenko)
+..F....... [ZBX-17308] fixed unreachable code notice in a generic popup (averza)
+..F....... [ZBX-17185] fixed non-disappearing messages of failed login attempts (Ivo)
+..F....... [ZBX-17180] fixed undefined index in maps for trigger elements with no permissions (vmurzins)
+........S. [ZBX-17322] fixed deadlock between server and frontend when updating multiple hosts (vso)
+..F.I..... [ZBX-9057] fixed duplicate entries being written into in profiles table (talbergs)
+..F....... [ZBX-17159] fixed overlay dialogue instantiation (talbergs)
+.......PS. [ZBX-17108] improved process utilization calculation (mabele)
+..F....... [ZBX-17269] fixed undefined indexes in history page (Ivo)
+........S. [ZBX-17342] dump memory statistics and items with most values when value cache is fully used (vso)
+.......PS. [ZBX-16926] fix INT_MAX error when compiling on SunOS/Joyent/Solaris (arimdjonoks)
+
+--------------------------------------------------------------------------------
 Changes for 4.4.6
 
 4.4.6rc1 was released as 4.4.6 without any changes
@@ -193,7 +231,7 @@ A......... [ZBX-16679] fixed username and password fields resetting and saving f
 ...G...... [ZBX-16769] fixed Zabbix agent 2 compilation on i386, arm, ppc64le and s390x architectures (viktors)
 ........S. [ZBX-16843] fixed {TRIGGER.ID} to be supported on trigger level in addition to host level and template level tags (vso)
 ..F....... [ZBX-16812] fixed problems by severity widget problem duplication (talbergs)
-..F....... [ZBX-16815] fixed widget form positioing when changing widget type from Graph to any other type (averza)
+..F....... [ZBX-16815] fixed widget form positioning when changing widget type from Graph to any other type (averza)
 ..F....... [ZBX-16706] fixed unneeded padding for dashboard URL widget (averza)
 ..F....... [ZBX-16784] fixed Oracle performance by using "between" operator in SQL queries (averza)
 ..F....... [ZBX-16579] fixed long text wrapping in the latest data history (averza)
@@ -1053,6 +1091,41 @@ A.F.I...S. [ZBXNEXT-4853,ZBXNEXT-517] added ability to send email messages in HT
 ..F.....S. [ZBXNEXT-1282,ZBXNEXT-4730] added changes to introduce regex based matching for auto-registration (vasilijs, viktors)
 
 --------------------------------------------------------------------------------
+Changes for 4.0.19
+
+4.0.19rc1 was released as 4.0.19 without any changes
+
+--------------------------------------------------------------------------------
+Changes for 4.0.19rc1
+
+New features:
+.......PS. [ZBXNEXT-5649] added name referencing support ('~' suffix) to jsonpath (wiper)
+...G...PS. [ZBXNEXT-3604] added support of user configurable ciphers for communication between Zabbix components (Andris)
+
+Bug fixes:
+....I..... [ZBX-17173] improved windows agent build scripts (yurii)
+A......... [ZBX-17425] fixed template.massupdate API macros update (rlataria)
+..F....... [ZBX-17344] fixed PHP 7.4 errors in Latest data->History page for text and log items having an empty filter (Ivo)
+.......PS. [ZBX-17330] fixed error reading vmware events with keys over 2^31 (MVekslers)
+..F....... [ZBX-17288] fixed undefined indexes in Administration->Regular expressions->Test tab (averza, Ivo)
+..F....... [ZBX-17350] fixed displaying of multiple value types in Latest data->History page (Ivo)
+..FG...... [ZBX-16802] added mtime-reread/mtime-noreread options parameter to log* keys (atumilovics)
+..F....... [ZBX-17390] fixed validation of the maximum selected period (Sasha)
+..F....... [ZBX-17185] fixed non-disappearing messages of failed login attempts (Ivo)
+........S. [ZBX-17322] fixed deadlock between server and frontend when updating multiple hosts (vso)
+..F.I..... [ZBX-9057] fixed duplicate entries being written into in profiles table (talbergs)
+..F....... [ZBX-17159] fixed overlay dialogue instantiation (talbergs)
+.......PS. [ZBX-17108] improved process utilization calculation (mabele)
+..F....... [ZBX-17269] fixed undefined indexes in history page (Ivo)
+........S. [ZBX-17342] dump memory statistics and items with most values when value cache is fully used (vso)
+.......PS. [ZBX-16926] fix INT_MAX error when compiling on SunOS/Joyent/Solaris (arimdjonoks)
+
+--------------------------------------------------------------------------------
+Changes for 4.0.18
+
+4.0.18rc1 was released as 4.0.18 without any changes
+
+--------------------------------------------------------------------------------
 Changes for 4.0.18rc1
 
 New features:
@@ -1176,7 +1249,7 @@ A......... [ZBX-16679] fixed username and password fields resetting and saving f
 ..F....... [ZBX-16809] fixed undefined offset error in action operation condition form (miks)
 ...G...... [ZBX-16595] optimized active logs checks monitoring when buffer flushing fails (arimdjonoks)
 ..F....... [ZBX-16682] fixed wrong element label update in map constructor (rlataria)
-..F....... [ZBX-16815] fixed widget form positioing when changing widget type from Graph to any other type (averza)
+..F....... [ZBX-16815] fixed widget form positioning when changing widget type from Graph to any other type (averza)
 ..F....... [ZBX-16706] fixed unneeded padding for dashboard URL widget (averza)
 ..F....... [ZBX-16784] fixed Oracle performance by using "between" operator in SQL queries (averza)
 ..F....... [ZBX-16579] fixed long text wrapping in the latest data history (averza)
@@ -3832,6 +3905,18 @@ A......... [ZBX-10030] fixed API action update method request with only "actioni
 A......... [ZBX-10049] fixed optional field validation in drule.update API method (Gunars)
 ..F....PS. [ZBX-10076] fixed text information containing non-ASCII characters being saved incorrectly to IBM DB2 database in case of system locale misconfiguration (gleb, Oleg)
 ..F....... [ZBX-9989] optimized SQL queries for graphs building (Gunars, Sasha)
+
+--------------------------------------------------------------------------------
+Changes for 3.0.31rc1
+
+New features:
+
+Bug fixes:
+
+--------------------------------------------------------------------------------
+Changes for 3.0.30
+
+3.0.30rc1 was released as 3.0.30 without any changes
 
 --------------------------------------------------------------------------------
 Changes for 3.0.30rc1

@@ -377,18 +377,12 @@ switch ($data['new_condition']['conditiontype']) {
 $action_tab->addRow(_('New condition'),
 	(new CDiv(
 		(new CTable())
-			->setAttribute('style', 'width: 100%;')
-			->addRow(
-				new CCol([
-					$conditionTypeComboBox,
-					(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-					$condition2,
-					($condition2 === null) ? null : (new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-					$condition_operator,
-					(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-					$condition
-				])
-			)
+			->addRow([
+				new CCol($conditionTypeComboBox),
+				$condition2 ? new CCol($condition2) : null,
+				new CCol($condition_operator),
+				(new CCol($condition))->addStyle('vertical-align: top;')
+			])
 			->addRow(
 				(new CSimpleButton(_('Add')))
 					->onClick('javascript: submitFormWithParam("'.$actionForm->getName().'", "add_condition", "1");')

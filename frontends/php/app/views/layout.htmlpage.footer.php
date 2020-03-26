@@ -21,6 +21,12 @@
 
 show_messages();
 
+if (CProfile::isModified()) {
+	DBstart();
+	$result = CProfile::flush();
+	DBend($result);
+}
+
 if ($data['web_layout_mode'] === ZBX_LAYOUT_NORMAL) {
 	makePageFooter()->show();
 }

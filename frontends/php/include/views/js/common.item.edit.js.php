@@ -309,7 +309,7 @@ zbx_subarray_push($this->data['authTypeVisibility'], ITEM_AUTHTYPE_PUBLICKEY, 'r
 							action: function() {}
 						}
 					]
-				});
+				}, this);
 			}
 		});
 

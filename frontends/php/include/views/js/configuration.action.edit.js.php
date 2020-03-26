@@ -56,27 +56,30 @@
 	<div class="<?= ZBX_STYLE_TABLE_FORMS_TD_LEFT ?>"></div>
 	<div class="<?= ZBX_STYLE_TABLE_FORMS_TD_RIGHT ?>">
 		<?= (new CDiv(
-			(new CTable())
-				->addRow([
-					[
-						_('Target'),
-						(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-						new CComboBox('opCmdTarget', null, null, [
-							'current' => _('Current host'),
-							'host' => _('Host'),
-							'hostGroup' => _('Host group')
-						]),
-						(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-						new CVar('opCmdId', '#{opcmdid}')
-					]
-				])
-				->addRow([
-					new CHorList([
-						(new CButton('save', '#{operationName}'))->addClass(ZBX_STYLE_BTN_LINK),
-						(new CButton('cancel', _('Cancel')))->addClass(ZBX_STYLE_BTN_LINK)
+				(new CTable())
+					->addRow([
+						[
+							_('Target'),
+							new CCol(
+								new CComboBox('opCmdTarget', null, null, [
+									'current' => _('Current host'),
+									'host' => _('Host'),
+									'hostGroup' => _('Host group')
+								])
+							),
+							(new CCol())
+								->setId('opCmdMultiselectTarget')
+								->addStyle('vertical-align: top;')
+						]
 					])
-				])
-				->setAttribute('style', 'width: 100%;')
+					->addRow([
+						(new CCol(
+							new CHorList([
+								(new CButton('save', '#{operationName}'))->addClass(ZBX_STYLE_BTN_LINK),
+								(new CButton('cancel', _('Cancel')))->addClass(ZBX_STYLE_BTN_LINK)
+							])
+						))->setColSpan(3)
+					])
 			))
 				->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
 				->addClass(ZBX_STYLE_NOWRAP)
@@ -393,8 +396,8 @@
 	}
 
 	function changeOpCmdTarget() {
-		var opCmdTarget = jQuery('#opcmdEditForm select[name="opCmdTarget"]'),
-			opCmdTargetVal = opCmdTarget.val();
+		var opCmdTargetVal = jQuery('#opcmdEditForm #opCmdTarget').val(),
+			$container = jQuery('td#opCmdMultiselectTarget');
 
 		if (jQuery('#opCmdTargetObject').length > 0) {
 			jQuery('.<?= CMultiSelect::ZBX_STYLE_CLASS ?>').remove();
@@ -411,7 +414,7 @@
 				'aria-required': 'true'
 			});
 
-			opCmdTarget.parent().append(opCmdTargetObject);
+			$container.html(opCmdTargetObject);
 
 			jQuery(opCmdTargetObject).multiSelectHelper({
 				id: 'opCmdTargetObject',

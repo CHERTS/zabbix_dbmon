@@ -109,13 +109,16 @@
 			 * @param {Object} response ajax response
 			 */
 			showTestResults: function(response) {
-				var tplData, hasErrors, obj = this;
+				var tplData,
+					hasErrors,
+					obj = this,
+					$expressions = $('#tbl_expr .form_row'),
+					expression_type_str;
 
 				$('#testResultTable .test_row').remove();
+				hasErrors = ($expressions.length == 0);
 
-				hasErrors = false;
-
-				$('#tbl_expr .form_row').each(function() {
+				$expressions.each(function() {
 					var index = $(this).data('index'),
 						expr_result = response.data.expressions[index],
 						result;
@@ -170,7 +173,9 @@
 				else {
 					tplData = {
 						resultClass: response.data.final ? '<?= ZBX_STYLE_GREEN ?>' : '<?= ZBX_STYLE_RED ?>',
-						result: response.data.final ? <?= CJs::encodeJson(_('TRUE')) ?> : <?= CJs::encodeJson(_('FALSE')) ?>
+						result: response.data.final
+							? <?= CJs::encodeJson(_('TRUE')) ?>
+							: <?= CJs::encodeJson(_('FALSE')) ?>
 					};
 				}
 

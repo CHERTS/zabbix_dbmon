@@ -94,7 +94,7 @@ Cscreen.prototype = {
 					'title': 'Error',
 					'content': jQuery('<span>').text('Ajax request error'),
 					'buttons': []
-				});
+				}, dropDiv);
 			}
 			else {
 				var parent = dropDiv.parent().get(0);

@@ -411,7 +411,7 @@
 
 			// button "add"
 			jQuery('#add_new_dcheck').click(function() {
-				saveNewDCheckForm(dcheckId);
+				saveNewDCheckForm(dcheckId, this);
 			});
 
 			// rename button to "update"
@@ -564,7 +564,13 @@
 		toggleInputs('newCheckPrivPassRow', showPrivPass);
 	}
 
-	function saveNewDCheckForm(dcheckId) {
+	/**
+	 * Validates discovery check.
+	 *
+	 * @param {string} dcheckId            Discovery rule check id.
+	 * @param {HTMLElement} trigger_elmnt  Element that triggered this action.
+	 */
+	function saveNewDCheckForm(dcheckId, trigger_elmnt) {
 		var dCheck = jQuery('#new_check_form :input:enabled').serializeJSON();
 		if (typeof dCheck.snmp_oid != 'undefined') {
 			dCheck.key_ = dCheck.snmp_oid;
@@ -610,7 +616,7 @@
 								'action': function() {}
 							}
 						]
-					});
+					}, trigger_elmnt);
 
 					return null;
 				}
@@ -681,7 +687,7 @@
 								'action': function() {}
 							}
 						]
-					});
+					}, trigger_elmnt);
 					jQuery('#add_new_dcheck').prop('disabled', false);
 				}
 			});
@@ -711,7 +717,7 @@
 							'action': function() {}
 						}
 					]
-				});
+				}, trigger_elmnt);
 			}
 			else {
 				dCheck.name = jQuery('#type :selected').text();

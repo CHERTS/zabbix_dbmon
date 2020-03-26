@@ -4808,7 +4808,9 @@ $form-icon-btn: (
 	overflow: hidden;
 	resize: none;
 	word-break: break-all;
-	white-space: normal;
+	height: 24px;
+	line-height: 14px;
+	white-space: break-spaces;
 }
 
 // Map widget back to parent button.
@@ -7544,6 +7546,17 @@ table.preprocessing-test-results {
 
 		td {
 			height: 100%;
+		}
+	}
+
+	/**
+	 * IE11 makes textarea elements inherit whatever white-space property is applied to the direct parent.
+	 * https://stackoverflow.com/a/20327197
+	 */
+	.overlay-dialogue-body {
+
+		textarea {
+			white-space: pre-wrap;
 		}
 	}
 }
