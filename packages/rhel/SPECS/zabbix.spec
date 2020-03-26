@@ -1,6 +1,6 @@
 Name:		zabbix
 Version:	4.4.6
-Release:	%{?alphatag:0.}2%{?alphatag}%{?dist}
+Release:	%{?alphatag:0.}3%{?alphatag}%{?dist}
 Summary:	The Enterprise-class open source monitoring solution
 Group:		Applications/Internet
 License:	GPLv2+
@@ -642,6 +642,7 @@ cat conf/zabbix_agentd_dbmon.conf | sed \
 	-e '/^# LogFileSize=.*/a \\nLogFileSize=5' \
 	-e '/^# Include=$/a \\nInclude=%{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d/*.conf' \
 	> $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_agentd_dbmon.conf
+cp man/zabbix_agentd_dbmon.man $RPM_BUILD_ROOT%{_mandir}/man8/zabbix_agentd_dbmon.8
 
 %if 0%{?build_agent2}
 cat src/go/conf/zabbix_agent2.conf | sed \
@@ -1182,7 +1183,7 @@ fi
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/log/zabbix
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/run/zabbix
 %{_sbindir}/zabbix_agentd_dbmon
-%{_mandir}/man8/zabbix_agentd.8*
+%{_mandir}/man8/zabbix_agentd_dbmon.8*
 %if 0%{?rhel} >= 7
 %{_unitdir}/zabbix-agent-dbmon.service
 %{_prefix}/lib/tmpfiles.d/zabbix-agent-dbmon.conf
