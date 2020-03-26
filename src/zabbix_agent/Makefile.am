@@ -12,7 +12,6 @@ sbin_PROGRAMS = zabbix_agentd
 noinst_LIBRARIES = libzbxagent.a
 
 libzbxagent_a_SOURCES = \
-	@DBMON_CFLAGS@ \
 	active.c active.h \
 	stats.c stats.h \
 	cpustat.c cpustat.h \
@@ -24,6 +23,7 @@ libzbxagent_a_SOURCES = \
 	metrics.h
 
 libzbxagent_a_CFLAGS = \
+	@DBMON_CFLAGS@ \
 	-DZABBIX_DAEMON
 
 zabbix_agentd_SOURCES = zabbix_agentd.c
