@@ -43,6 +43,7 @@ noinst_LIBRARIES = \
 
 # AGENT version of sysinfo library
 libzbxagentsysinfo_a_CFLAGS = \
+	@DBMON_CFLAGS@ \
 	-DWITH_AGENT_METRICS \
 	-DWITH_COMMON_METRICS \
 	-DWITH_SIMPLE_METRICS \
@@ -63,7 +64,6 @@ libzbxserversysinfo_a_SOURCES = \
 
 # PROXY version of sysinfo library
 libzbxproxysysinfo_a_CFLAGS = \
-	@DBMON_CFLAGS@ \
 	-DWITH_COMMON_METRICS \
 	-DWITH_SIMPLE_METRICS \
 	-DWITH_HOSTNAME_METRIC
