@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-17T17:30:49Z</date>
+    <date>2020-03-31T05:32:57Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -4579,9 +4579,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <delay>5m</delay>
                     <item_prototypes>
                         <item_prototype>
-                            <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Log of '{#LOG_ERROR}'</name>
+                            <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Log file '{#LOG_ERROR}' content</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>logrt[&quot;{#LOG_ERROR}&quot;,&quot;PANIC|FATAL|ERROR|[Ee]rror&quot;]</key>
+                            <key>logrt[&quot;{#LOG_ERROR}&quot;,&quot;{$DBS_MYSQL_ERRORLOG_REGEXP}&quot;,,,skip]</key>
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>LOG</value_type>
@@ -4635,6 +4635,24 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     </tags>
                                 </trigger_prototype>
                             </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Log file '{#LOG_ERROR}' size</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>vfs.file.size[&quot;{#LOG_ERROR}&quot;]</key>
+                            <history>30d</history>
+                            <units>B</units>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Info</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
                         </item_prototype>
                     </item_prototypes>
                 </discovery_rule>
@@ -5690,6 +5708,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_MYSQL_DISABLE_SCHEDULER_DEADLOCK_DETECT}</macro>
                     <value>0</value>
                     <description>Disable trigger &quot;Deadlock detected during event scheduler is running&quot;</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_ERRORLOG_REGEXP}</macro>
+                    <value>PANIC|FATAL|ERROR|[Ee]rror</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_HOST}</macro>
