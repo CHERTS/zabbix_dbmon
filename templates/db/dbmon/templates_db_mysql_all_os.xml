@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-31T05:32:57Z</date>
+    <date>2020-03-31T11:57:06Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2402,7 +2402,7 @@ See more info: https://mariadb.com/kb/en/thread-pool-in-mariadb/</description>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},uptime]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <units>s</units>
+                    <units>uptime</units>
                     <description>The number of seconds that the server has been up.</description>
                     <applications>
                         <application>

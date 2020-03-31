@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-22T17:04:26Z</date>
+    <date>2020-03-31T11:57:22Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -997,7 +997,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <key>pgsql.instance[{$DBS_PGSQL_INSTANCE},uptime]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <units>s</units>
+                    <units>uptime</units>
                     <description>The number of seconds that the server has been up.</description>
                     <applications>
                         <application>

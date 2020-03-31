@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-31T07:02:53Z</date>
+    <date>2020-03-31T11:57:13Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1271,7 +1271,7 @@ INSTANCE RECOVERY</description>
                     <key>oracle.instance[{$DBS_ORACLE_INSTANCE},uptime]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <units>s</units>
+                    <units>uptime</units>
                     <description>Instance uptime in second.</description>
                     <applications>
                         <application>
