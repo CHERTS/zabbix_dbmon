@@ -413,9 +413,47 @@ RIGHT JOIN gv$instance i ON i.INST_ID = rr.inst_id WHERE i.instance_name='%s' GR
 #define ORACLE_STANDBY_LAST_SEQUENCE_STAT_DBS "\
 SELECT distinct ARCH.THREAD# AS THREAD, ARCH.SEQUENCE# AS LAST_SEQUENCE_RECEIVED, APPL.SEQUENCE# AS LAST_SEQUENCE_APPLIED \
 FROM \
-(SELECT THREAD#, max(SEQUENCE#) as SEQUENCE# FROM V$ARCHIVED_LOG WHERE(THREAD#, FIRST_TIME) IN (SELECT THREAD#, MAX(FIRST_TIME) FROM V$ARCHIVED_LOG GROUP BY THREAD#) GROUP BY THREAD#) ARCH, \
-(SELECT THREAD#, max(SEQUENCE#) as SEQUENCE# FROM V$LOG_HISTORY WHERE(THREAD#, FIRST_TIME) IN (SELECT THREAD#, MAX(FIRST_TIME) FROM V$LOG_HISTORY GROUP BY THREAD#) GROUP BY THREAD#) APPL \
+	(SELECT THREAD#, max(SEQUENCE#) as SEQUENCE# FROM V$ARCHIVED_LOG WHERE(THREAD#, FIRST_TIME) IN (SELECT THREAD#, MAX(FIRST_TIME) FROM V$ARCHIVED_LOG GROUP BY THREAD#) GROUP BY THREAD#) ARCH, \
+	(SELECT THREAD#, max(SEQUENCE#) as SEQUENCE# FROM V$LOG_HISTORY WHERE(THREAD#, FIRST_TIME) IN (SELECT THREAD#, MAX(FIRST_TIME) FROM V$LOG_HISTORY GROUP BY THREAD#) GROUP BY THREAD#) APPL \
 WHERE ARCH.THREAD# = APPL.THREAD# ORDER BY 1"
+
+// This SQL request calculates the transport lag without taking into account the possible difference in time zones in which there are primary and standby database
+#define ORACLE_STANDBY_THREADED_TRANSPORT_LAG_DBS "\
+SELECT thread# AS THREAD_NUM, TRUNC((sysdate - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400) AS CURRENT_UNIXTIME, (sysdate-MAX(next_time))*86400 AS TRANSPORT_LAG \
+FROM ( \
+	SELECT thread#, MAX(sequence#), MAX(next_time) AS next_time FROM v$archived_log l \
+	WHERE RESETLOGS_CHANGE# = (SELECT RESETLOGS_CHANGE# FROM v$database) \
+		AND sequence# < nvl((SELECT MIN(cs) \
+		FROM (SELECT thread#, cs FROM ( \
+			SELECT thread#, sequence# AS cs, LEAD(sequence#, 1) OVER (PARTITION BY thread# ORDER BY sequence#) AS hs, \
+				LEAD(sequence#, 1) OVER (PARTITION BY thread# ORDER BY sequence#) - sequence# AS dt \
+				FROM v$archived_log \
+			WHERE first_change# > (SELECT MIN(checkpoint_change#) FROM v$datafile_header) \
+		) WHERE dt > 1 \
+	) g WHERE g.thread# = l.thread# \
+), sequence# + 1) \
+GROUP BY thread# \
+UNION ALL \
+SELECT thread#, MAX(sequence#), MAX(last_time) AS next_time FROM v$standby_log l \
+WHERE sequence# < nvl((select min(cs) \
+FROM (SELECT thread#, cs FROM ( \
+		SELECT thread#, sequence# AS cs, LEAD(sequence#, 1) OVER (PARTITION BY thread# ORDER BY sequence#) AS hs, \
+			LEAD (sequence#, 1) OVER (PARTITION BY thread# ORDER BY sequence#) - sequence# AS dt \
+			FROM v$archived_log \
+		WHERE first_change# > (SELECT MIN(checkpoint_change#) FROM v$datafile_header) \
+	) WHERE dt > 1 \
+) g WHERE g.thread# = l.thread# \
+), sequence# + 1) \
+GROUP BY thread# \
+) GROUP BY thread#"
+
+#define ORACLE_STANDBY_SCN_DBS "\
+SELECT to_number(substr(comments, 6, 21)) AS STANDBY_SCN FROM gv$recovery_progress \
+WHERE item = 'Last Applied Redo' AND start_time = ( \
+	SELECT MAX(start_time) FROM gv$recovery_progress WHERE item = 'Last Applied Redo' \
+)"
+
+#define ORACLE_STANDBY_APPLY_LAG_DBS "SLECT (sysdate - cast(scn_to_timestamp(%s) AS date)) * 86400 AS APPLY_LAG from dual"
 
 #define ORACLE_DISCOVER_ARLDEST_DBS "\
 SELECT i.INSTANCE_NAME AS INSTANCE, \
@@ -623,40 +661,42 @@ WHERE i.instance_number = p.inst_id \
 	AND p.name = 'audit_file_dest'"
 
 ZBX_METRIC	parameters_dbmon_oracle[] =
-/*	KEY						FLAG			FUNCTION				TEST PARAMETERS */
+/*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
-	{"oracle.instance.ping",			CF_HAVEPARAMS,		ORACLE_INSTANCE_PING,			NULL},
-	{"oracle.instance.version",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.info",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.parameter",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.patch_info",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.resource",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.dbfiles",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.resumable",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.bad_processes",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.fra",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.ping",					CF_HAVEPARAMS,		ORACLE_INSTANCE_PING,			NULL},
+	{"oracle.instance.version",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.parameter",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.patch_info",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.resource",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.dbfiles",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.resumable",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.bad_processes",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.fra",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.redolog_switch_rate",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.redolog_size_per_hour",	CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.archivelog",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.full",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.incr",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.incr_file_num",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.backup.cf",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.db.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
-	{"oracle.db.info",				CF_HAVEPARAMS,		ORACLE_DB_INFO,				NULL},
-	{"oracle.db.incarnation",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.db.size",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.standby.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
-	{"oracle.standby.lag",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.standby.mrp_status",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.standby.rfs_status",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.archivelog",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.full",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.incr",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.incr_file_num",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.backup.cf",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.db.discovery",						CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.db.info",							CF_HAVEPARAMS,		ORACLE_DB_INFO,					NULL},
+	{"oracle.db.incarnation",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.db.size",							CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.standby.lag",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.mrp_status",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.rfs_status",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.standby.last_sequence_stat",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.archlogdest.discovery",		CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
-	{"oracle.archlogdest.info",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.instance.parameters",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
-	{"oracle.tablespace.info",			CF_HAVEPARAMS,		ORACLE_TS_INFO,				NULL},
-	{"oracle.alertlog.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
-	{"oracle.auditfiledest.discovery",		CF_HAVEPARAMS,		ORACLE_DISCOVERY,			NULL},
+	{"oracle.standby.transport_lag",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.last_scn",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.archlogdest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.archlogdest.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.parameters",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.tablespace.info",					CF_HAVEPARAMS,		ORACLE_TS_INFO,					NULL},
+	{"oracle.alertlog.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.auditfiledest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{NULL}
 }; 
 
@@ -1154,6 +1194,14 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp(request->key, "oracle.standby.last_sequence_stat"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_STANDBY_LAST_SEQUENCE_STAT_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_STANDBY, 0, ORA_ACTIVE);
+	}
+	else if (0 == strcmp(request->key, "oracle.standby.transport_lag"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_STANDBY_THREADED_TRANSPORT_LAG_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_STANDBY, 0, ORA_ACTIVE);
+	}
+	else if (0 == strcmp(request->key, "oracle.standby.last_scn"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_STANDBY_SCN_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_STANDBY, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.archlogdest.info"))
 	{
