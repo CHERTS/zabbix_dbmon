@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-31T05:32:51Z</date>
+    <date>2020-03-31T07:02:53Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2861,7 +2861,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
                                     <name>Tablespace '{#TSNAME}' is not available</name>
                                     <priority>HIGH</priority>
-                                    <description>Данные о табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Проверьте наличие данного табличного пространства. Доведите информацию до эксперта.</description>
+                                    <description>Данные о табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} (минут).&#13;
+Проверьте наличие данного табличного пространства, либо оно было удалено, либо zabbix-agent не присылает долго по нему данные.&#13;
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -3628,7 +3630,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
                                     <name>Temporary tablespace '{#TSNAME}' is not available</name>
                                     <priority>HIGH</priority>
-                                    <description>Данные о временном табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Проверьте наличие данного табличного пространства. Доведите информацию до эксперта.</description>
+                                    <description>Данные о временном табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} (минут).&#13;
+Проверьте наличие данного табличного пространства, либо оно было удалено, либо zabbix-agent не присылает долго по нему данные.&#13;
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -3992,7 +3996,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
                                     <name>Undo tablespace '{#TSNAME}' is not available</name>
                                     <priority>HIGH</priority>
-                                    <description>Данные о undo табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Проверьте наличие данного табличного пространства. Доведите информацию до эксперта.</description>
+                                    <description>Данные о undo табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} (минут).&#13;
+Проверьте наличие данного табличного пространства, либо оно было удалено, либо zabbix-agent не присылает долго по нему данные.&#13;
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
