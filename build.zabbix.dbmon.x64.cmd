@@ -4,13 +4,14 @@ title Build zabbix-agent-dbmon...
 
 set ZBX_ARCH=AMD64
 set VS_ARCH=x64
-set PCRE_PATH=D:\Neo\Project\zabbix\zabbix_dbmon_github\vs2017\pcre
-set OPENSSL_PATH=D:\Neo\Project\zabbix\zabbix_dbmon_github\vs2017\openssl
-set PTHREADS4W_PATH=D:\Neo\Project\zabbix\zabbix_dbmon_github\vs2017\pthreads4w
-set LIBCONIG_PATH=D:\Neo\Project\zabbix\zabbix_dbmon_github\vs2017\libconfig
-set MYSQL_PATH=D:\Neo\Project\zabbix\zabbix_dbmon_github\vs2017\mariadb
-set PGSQL_PATH=D:\Neo\Project\zabbix\zabbix_dbmon_github\vs2017\postgresql_12
-set ORACLE_PATH=D:\Neo\Project\zabbix\zabbix_dbmon_github\vs2017\oracle_18
+set BASE_DIR=D:\Neo\Project\zabbix_dbmon_github
+set PCRE_PATH=%BASE_DIR%\vs2017\pcre
+set OPENSSL_PATH=%BASE_DIR%\vs2017\openssl
+set PTHREADS4W_PATH=%BASE_DIR%\vs2017\pthreads4w
+set LIBCONIG_PATH=%BASE_DIR%\vs2017\libconfig
+set MYSQL_PATH=%BASE_DIR%\vs2017\mariadb
+set PGSQL_PATH=%BASE_DIR%\vs2017\postgresql_12
+set ORACLE_PATH=%BASE_DIR%\vs2017\oracle_18
 
 title Build zabbix-agent-dbmon %ZBX_ARCH%...
 
@@ -53,7 +54,8 @@ if exist "build" (
   cd build\win32\project
   copy ..\include\config.h ..\..\..\include\ >nul 2>&1
   echo Build Zabbix Agent DBMON %ZBX_ARCH%...
-  nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" PTHREADS4WINCDIR="%PTHREADS4W_PATH%\include" PTHREADS4WLIBDIR="%PTHREADS4W_PATH%\lib\%VS_ARCH%" LIBCONIGINCDIR="%LIBCONIG_PATH%\include" LIBCONIGLIBDIR="%LIBCONIG_PATH%\lib\%VS_ARCH%" DBMON=yes DBMON_MYSQL=yes MYSQLINCDIR="%MYSQL_PATH%\include" MYSQLLIBDIR="%MYSQL_PATH%\lib\%VS_ARCH%" /f Makefile_agent
+  nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" PTHREADS4WINCDIR="%PTHREADS4W_PATH%\include" PTHREADS4WLIBDIR="%PTHREADS4W_PATH%\lib\%VS_ARCH%" LIBCONIGINCDIR="%LIBCONIG_PATH%\include" LIBCONIGLIBDIR="%LIBCONIG_PATH%\lib\%VS_ARCH%" DBMON=yes DBMON_ORACLE=yes ORACLEINCDIR="%ORACLE_PATH%\include" ORACLELIBDIR="%ORACLE_PATH%\lib" DBMON_PGSQL=yes PGSQLINCDIR="%PGSQL_PATH%\include" PGSQLLIBDIR="%PGSQL_PATH%\lib\%VS_ARCH%" DBMON_MYSQL=yes MYSQLINCDIR="%MYSQL_PATH%\include" MYSQLLIBDIR="%MYSQL_PATH%\lib\%VS_ARCH%" /f Makefile_agent
+  rem nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" /f Makefile_agent
   rem echo Build Zabbix Sender %ZBX_ARCH%...
   rem nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" /f Makefile_sender
   rem echo Build Zabbix Get %ZBX_ARCH%...
