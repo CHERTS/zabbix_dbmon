@@ -1,6 +1,6 @@
 !IF "$(DBMON)" != ""
 
-CFLAGS = $(CFLAGS) /DHAVE_DBMON
+CFLAGS = $(CFLAGS) /D HAVE_DBMON
 
 !	IF "$(PTHREADS4WINCDIR)" == ""
 !		ERROR Please specify directory containing PTHREADS4W header files (e. g. PTHREADS4WINCDIR=\somepath\include).
@@ -38,7 +38,7 @@ LIBS = $(LIBS) "$(LIBCONIGLIB)"
 !		ERROR LIBCONIGLIBDIR "$(LIBCONIGLIBDIR)" cannot find LIBCONIGLIB "$(LIBCONIGLIB)"
 !	ENDIF
 
-OBJS =	$(OBJS) ..\..\..\src\libs\zbxdbmon\dbmon.o ..\..\..\src\libs\zbxsysinfo\dbmon\dbmon_common.o ..\..\..\src\libs\zbxsysinfo\dbmon\dbmon_params.o ..\..\..\src\libs\zbxsysinfo\dbmon\dbmon_config.o
+OBJS =	$(OBJS) ..\..\..\src\libs\zbxdbmon\strptime.o ..\..\..\src\libs\zbxdbmon\dbmon.o ..\..\..\src\libs\zbxsysinfo\dbmon\dbmon_common.o ..\..\..\src\libs\zbxsysinfo\dbmon\dbmon_params.o ..\..\..\src\libs\zbxsysinfo\dbmon\dbmon_config.o
 
 !	IF "$(DBMON_MYSQL)" == "yes"
 !		IF "$(MYSQLINCDIR)" == ""
@@ -48,7 +48,7 @@ OBJS =	$(OBJS) ..\..\..\src\libs\zbxdbmon\dbmon.o ..\..\..\src\libs\zbxsysinfo\d
 !			ERROR Please specify MYSQLLIBDIR (e. g. MYSQLLIBDIR=\somepath\lib).
 !		ENDIF
 !		IF EXISTS("$(MYSQLINCDIR)\mysql.h")
-CFLAGS =	$(CFLAGS) /DHAVE_MYSQL
+CFLAGS =	$(CFLAGS) /D HAVE_MYSQL
 INCS =	$(INCS) /I "$(MYSQLINCDIR)"
 !		ELSE
 !			ERROR MYSQLINCDIR "$(MYSQLINCDIR)" cannot find "$(MYSQLINCDIR)\mysql.h"
@@ -56,7 +56,7 @@ INCS =	$(INCS) /I "$(MYSQLINCDIR)"
 MYSQLLIB = $(MYSQLLIBDIR)\libmariadb.lib
 !		IF EXISTS("$(MYSQLLIB)")
 LIBS = $(LIBS) "$(MYSQLLIB)"
-OBJS =	$(OBJS) ..\..\..\src\libs\zbxdbmon\dbmon_mysql.o ..\..\..\src\libs\zbxdbmon\strptime.o ..\..\..\src\libs\zbxsysinfo\dbmon\mysql_info.o
+OBJS =	$(OBJS) ..\..\..\src\libs\zbxdbmon\dbmon_mysql.o ..\..\..\src\libs\zbxsysinfo\dbmon\mysql_info.o
 !		ELSE
 !			ERROR MYSQLLIBDIR "$(MYSQLLIBDIR)" cannot find MYSQLLIB "$(MYSQLLIB)"
 !		ENDIF
@@ -70,7 +70,7 @@ OBJS =	$(OBJS) ..\..\..\src\libs\zbxdbmon\dbmon_mysql.o ..\..\..\src\libs\zbxdbm
 !			ERROR Please specify PGSQLLIBDIR (e. g. PGSQLLIBDIR=\somepath\lib).
 !		ENDIF
 !		IF EXISTS("$(PGSQLINCDIR)\libpq-fe.h")
-CFLAGS =	$(CFLAGS) /DHAVE_POSTGRESQL
+CFLAGS =	$(CFLAGS) /D HAVE_POSTGRESQL
 INCS =	$(INCS) /I "$(PGSQLINCDIR)"
 !		ELSE
 !			ERROR PGSQLINCDIR "$(PGSQLINCDIR)" cannot find "$(PGSQLINCDIR)\libpq-fe.h"
@@ -91,8 +91,8 @@ OBJS =	$(OBJS) ..\..\..\src\libs\zbxdbmon\dbmon_pgsql.o ..\..\..\src\libs\zbxsys
 !		IF ("$(ORACLELIBDIR)" == "")
 !			ERROR Please specify ORACLELIBDIR (e. g. ORACLELIBDIR=\somepath\lib).
 !		ENDIF
-!		IF EXISTS("$(ORACLEINCDIR)\oci")
-CFLAGS =	$(CFLAGS) /DHAVE_ORACLE
+!		IF EXISTS("$(ORACLEINCDIR)\oci.h")
+CFLAGS =	$(CFLAGS) /D HAVE_ORACLE
 INCS =	$(INCS) /I "$(ORACLEINCDIR)"
 !		ELSE
 !			ERROR ORACLEINCDIR "$(ORACLEINCDIR)" cannot find "$(ORACLEINCDIR)\oci.h"
