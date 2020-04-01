@@ -11,5 +11,6 @@ libcommonsysinfo_a_SOURCES = \
 	cpu.c cpu.h \
 	http.c http.h \
 	net.c net.h \
+	dns.c dns.h \
 	system.c system.h \
 	zabbix_stats.c zabbix_stats.h

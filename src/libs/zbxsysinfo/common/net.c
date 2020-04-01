@@ -27,11 +27,6 @@
 #include "net.h"
 #include "zbxalgo.h"
 
-#ifdef _WINDOWS
-#	include <windns.h>
-#	pragma comment(lib, "Dnsapi.lib") /* add the library for DnsQuery function */
-#endif
-
 int	tcp_expect(const char *host, unsigned short port, int timeout, const char *request,
 		int (*validate_func)(const char *), const char *sendtoclose, int *value_int)
 {
