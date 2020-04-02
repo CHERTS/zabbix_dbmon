@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-31T11:57:06Z</date>
+    <date>2020-04-02T18:36:41Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -4582,6 +4582,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Log file '{#LOG_ERROR}' content</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>logrt[&quot;{#LOG_ERROR}&quot;,&quot;{$DBS_MYSQL_ERRORLOG_REGEXP}&quot;,,,skip]</key>
+                            <delay>10s</delay>
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>LOG</value_type>

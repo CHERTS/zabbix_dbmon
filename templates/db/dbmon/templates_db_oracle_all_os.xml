@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-31T11:57:13Z</date>
+    <date>2020-04-02T18:37:37Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1528,6 +1528,7 @@ INSTANCE RECOVERY</description>
                             <name>[Oracle] Instance '{#INSTANCE}': Alert log '{#ALERTLOG}' content</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>log[&quot;{#ALERTLOG}&quot;,&quot;{$DBS_ORACLE_ALERTLOG_REGEXP}&quot;,,,skip]</key>
+                            <delay>10s</delay>
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>LOG</value_type>
