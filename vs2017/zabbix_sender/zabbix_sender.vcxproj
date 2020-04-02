@@ -172,7 +172,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;ZABBIX_SENDER;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;ZABBIX_SENDER;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK;HAVE_DBMON</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -226,7 +226,7 @@ copy $(SolutionDir)openssl\bin\x86\ssleay32.dll $(SolutionDir)..\bin\win32</Comm
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0502;ZABBIX_SENDER;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0502;ZABBIX_SENDER;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK;HAVE_DBMON</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

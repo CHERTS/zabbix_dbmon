@@ -577,8 +577,12 @@ static int	check_response(char *response, const char *server, unsigned short por
 	{
 		int	failed;
 
+#if defined(HAVE_DBMON)
+		zabbix_log(LOG_LEVEL_INFORMATION, "Response from \"%s:%hu\": \"%s\"", server, port, info);
+#else
 		printf("Response from \"%s:%hu\": \"%s\"\n", server, port, info);
 		fflush(stdout);
+#endif
 
 		if (1 == sscanf(info, "processed: %*d; failed: %d", &failed) && 0 < failed)
 			ret = SUCCEED_PARTIAL;
@@ -593,6 +597,10 @@ static	ZBX_THREAD_ENTRY(send_value, args)
 	int			tcp_ret, ret = FAIL;
 	char			*tls_arg1, *tls_arg2;
 	zbx_socket_t		sock;
+
+#if defined(HAVE_DBMON)
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s: server [%s], port [%d]", __func__, sendval_args->server, sendval_args->port);
+#endif
 
 #if defined(_WINDOWS) && (defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL))
 	if (ZBX_TCP_SEC_UNENCRYPTED != configured_tls_connect_mode)
@@ -665,6 +673,9 @@ static	ZBX_THREAD_ENTRY(send_value, args)
 	if (FAIL == tcp_ret)
 		zabbix_log(LOG_LEVEL_DEBUG, "send value error: %s", zbx_socket_strerror());
 out:
+#if defined(HAVE_DBMON)
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s: server [%s], port [%d]", __func__, sendval_args->server, sendval_args->port);
+#endif
 	zbx_thread_exit(ret);
 }
 
@@ -714,7 +725,9 @@ static int	perform_data_sending(ZBX_THREAD_SENDVAL_ARGS *sendval_args, int old_s
 		}
 
 		destinations[i].thread = &threads[i];
-
+#if defined(HAVE_DBMON)
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s: Start thread [%d], server [%s], port [%d]", __func__, destinations[i].thread, destinations[i].host, destinations[i].port);
+#endif
 		zbx_thread_start(send_value, thread_args, &threads[i]);
 #ifndef _WINDOWS
 		zbx_free(thread_args);
@@ -828,11 +841,26 @@ static void	zbx_load_config(const char *config_file)
 			PARM_OPT,	0,			0},
 		{"TLSCipherPSK",		&cfg_tls_cipher_psk,			TYPE_STRING,
 			PARM_OPT,	0,			0},
+#if defined(HAVE_DBMON)
+		{"LogType",				&CONFIG_LOG_TYPE_STR,			TYPE_STRING,
+			PARM_OPT,	0,			0},
+		{"LogFile",				&CONFIG_LOG_FILE,				TYPE_STRING,
+			PARM_OPT,	0,			0},
+		{"DebugLevel",			&CONFIG_LOG_LEVEL,				TYPE_INT,
+			PARM_OPT,	0,			5},
+#endif
 		{NULL}
 	};
 
 	/* do not complain about unknown parameters in agent configuration file */
 	parse_cfg_file(config_file, cfg, ZBX_CFG_FILE_REQUIRED, ZBX_CFG_NOT_STRICT);
+
+#if defined(HAVE_DBMON)
+	if (NULL == CONFIG_LOG_TYPE_STR)
+		CONFIG_LOG_TYPE_STR = zbx_strdup(CONFIG_LOG_TYPE_STR, ZBX_OPTION_LOGTYPE_FILE);
+
+	CONFIG_LOG_TYPE = zbx_get_log_type(CONFIG_LOG_TYPE_STR);
+#endif
 
 	zbx_fill_from_config_file(&CONFIG_SOURCE_IP, cfg_source_ip);
 
@@ -1312,12 +1340,25 @@ int	main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 #endif
+#if defined(HAVE_DBMON)
+	char *SENDER_CONFIG_LOG_FILE = NULL;
+	
+	SENDER_CONFIG_LOG_FILE = zbx_strdcatf(SENDER_CONFIG_LOG_FILE, "%s.sender", CONFIG_LOG_FILE);
+
+	if (SUCCEED != zabbix_open_log(CONFIG_LOG_TYPE, CONFIG_LOG_LEVEL, SENDER_CONFIG_LOG_FILE, &error))
+#else
 	if (SUCCEED != zabbix_open_log(LOG_TYPE_UNDEFINED, CONFIG_LOG_LEVEL, NULL, &error))
+#endif
 	{
 		zbx_error("cannot open log: %s", error);
 		zbx_free(error);
 		exit(EXIT_FAILURE);
 	}
+#if defined(HAVE_DBMON)
+	zabbix_log(LOG_LEVEL_INFORMATION, "Starting Zabbix Sender [%s]. Zabbix %s (revision %s).",
+		ZABBIX_HOSTNAME, ZABBIX_VERSION, ZABBIX_REVISION);
+	zabbix_log(LOG_LEVEL_INFORMATION, "using configuration file: %s", CONFIG_FILE);
+#endif
 #if defined(_WINDOWS)
 	if (SUCCEED != zbx_socket_start(&error))
 	{
@@ -1386,6 +1427,9 @@ int	main(int argc, char **argv)
 		size_t	in_line_alloc = MAX_BUFFER_LEN;
 		double	last_send = 0;
 
+#if defined(HAVE_DBMON)
+		zabbix_log(LOG_LEVEL_DEBUG, "read input file: %s", INPUT_FILE);
+#endif
 		if (0 == strcmp(INPUT_FILE, "-"))
 		{
 			in = stdin;
@@ -1596,15 +1640,24 @@ int	main(int argc, char **argv)
 free:
 	zbx_json_free(&sendval_args->json);
 	zbx_free(sendval_args);
+	zbx_free(destinations);
 exit:
 	if (FAIL != ret)
 	{
+#if defined(HAVE_DBMON)
+		zabbix_log(LOG_LEVEL_INFORMATION, "Sent: %d; skipped: %d; total: %d", succeed_count, total_count - succeed_count, total_count);
+#else
 		printf("sent: %d; skipped: %d; total: %d\n", succeed_count, total_count - succeed_count, total_count);
+#endif
 	}
 	else
 	{
+#if defined(HAVE_DBMON)
+		zabbix_log(LOG_LEVEL_INFORMATION, "Sending failed");
+#else
 		printf("Sending failed.%s\n", CONFIG_LOG_LEVEL != LOG_LEVEL_DEBUG ?
 				" Use option -vv for more detailed output." : "");
+#endif
 	}
 
 #if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
@@ -1615,6 +1668,10 @@ exit:
 		zbx_tls_library_deinit();
 #endif
 	}
+#endif
+#if defined(HAVE_DBMON)
+	zabbix_log(LOG_LEVEL_INFORMATION, "Zabbix Sender end. Zabbix %s (revision %s).",
+		ZABBIX_VERSION, ZABBIX_REVISION);
 #endif
 	zabbix_close_log();
 #if defined(_WINDOWS)
