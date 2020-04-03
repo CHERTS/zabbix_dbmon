@@ -144,7 +144,7 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 							switch (zbx_db_get_type_from_oid(conn, PQftype(res, j)))
 							{
 								case ZBX_COL_TYPE_INT:
-									data = zbx_db_new_data_int(strtol(val, NULL, 19));
+									data = zbx_db_new_data_int(strtoll(val, NULL, 10));
 									break;
 								case ZBX_COL_TYPE_DOUBLE:
 									data = zbx_db_new_data_double(strtod(val, NULL));

@@ -36,7 +36,7 @@ static char *DB_TYPE[] = {
 #define ZBX_COL_TYPE_DATE   3
 #define ZBX_COL_TYPE_BLOB   4
 #define ZBX_COL_TYPE_BOOL   5
-#define ZBX_COL_TYPE_NULL   6
+#define ZBX_COL_TYPE_NULL   5
 
 #define ZBX_DB_OK				0	/* No error */
 #define ZBX_DB_ERROR			1	/* Generic error */
