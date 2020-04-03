@@ -184,7 +184,7 @@ FROM( \
 	sum(CASE WHEN state = 'disabled' THEN 1 ELSE 0 END) AS disabled, \
 	count(*) AS total, \
 	count(*) * 100 / (SELECT current_setting('max_connections')::int) AS total_pct, \
-	sum(CASE WHEN wait_event IS NOT NULL THEN 1 ELSE 0 END) AS waiting, \
+	sum(%s) AS waiting, \
 	(SELECT count(*) FROM pg_prepared_xacts) AS prepared \
 	FROM pg_stat_activity WHERE datid is not NULL) \
 T;"
@@ -195,7 +195,7 @@ FROM( \
 	SELECT \
 	coalesce(extract(epoch FROM max(CASE WHEN state = 'idle in transaction' THEN age(now(), xact_start) END)), 0) AS idle, \
 	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' THEN age(now(), xact_start) END)), 0) AS active, \
-	coalesce(extract(epoch FROM max(CASE WHEN wait_event IS NOT NULL THEN age(now(), xact_start) END)), 0) AS waiting, \
+	coalesce(extract(epoch FROM max(CASE WHEN %s THEN age(now(), xact_start) END)), 0) AS waiting, \
 	(SELECT coalesce(extract(epoch FROM max(age(now(), prepared))), 0) \
 		FROM pg_prepared_xacts) AS prepared \
 	FROM pg_stat_activity) T;"
@@ -555,7 +555,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 	struct zbx_db_connection	*pgsql_conn;
 	struct zbx_db_result		pgsql_result;
 	unsigned long				version;
-	const char					*pg_db_sum;
+	const char					*pg_db_sum, *pg_wait_event;
 
 	if (1 < request->nparam)
 	{
@@ -626,6 +626,60 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 				}
 
 				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query, pg_db_sum);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
+		else if (0 == strcmp(request->key, "pgsql.connections"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version >= 90600)
+				{
+					pg_wait_event = "CASE WHEN wait_event IS NOT NULL THEN 1 ELSE 0 END";
+				}
+				else
+				{
+					pg_wait_event = "CASE WHEN waiting = 't' THEN 1 ELSE 0 END";
+				}
+
+				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query, pg_wait_event);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
+		else if (0 == strcmp(request->key, "pgsql.transactions"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version >= 90600)
+				{
+					pg_wait_event = "wait_event IS NOT NULL";
+				}
+				else
+				{
+					pg_wait_event = "waiting = 't'";
+				}
+
+				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query, pg_wait_event);
 			}
 			else
 			{
