@@ -204,8 +204,18 @@ FROM( \
 SELECT row_to_json(T) \
 FROM( \
 	SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), '0/00000000') AS WRITE, \
+	count(*) * 16 * 1024 * 1024 AS TOTAL_SIZE, \
 	count(*) \
 	FROM pg_ls_waldir() AS COUNT \
+) T;"
+
+#define PGSQL_XLOG_STAT_DBS "\
+SELECT row_to_json(T) \
+FROM( \
+	SELECT pg_xlog_location_diff(pg_current_xlog_location(), '0/00000000') AS WRITE, \
+	count(*) * 16 * 1024 * 1024 AS TOTAL_SIZE, \
+	count(*) \
+	FROM pg_ls_dir('pg_xlog') AS t(fname) WHERE fname <> 'archive_status' \
 ) T;"
 
 #define PGSQL_OLDEST_XID_DBS "\
@@ -251,10 +261,10 @@ FROM( \
 SELECT row_to_json(T) \
 FROM( \
 	SELECT count(name) AS count_files, \
-	coalesce(sum((pg_stat_file('./pg_wal/' || rtrim(ready.name, '.ready'))).size), 0) AS size_files \
+	coalesce(sum((pg_stat_file('./%s/' || rtrim(ready.name, '.ready'))).size), 0) AS size_files \
 	FROM( \
 		SELECT name \
-		FROM pg_ls_dir('./pg_wal/archive_status') name \
+		FROM pg_ls_dir('./%s/archive_status') name \
 		WHERE right(name, 6) = '.ready' \
 	) ready \
 ) T;"
@@ -555,7 +565,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 	struct zbx_db_connection	*pgsql_conn;
 	struct zbx_db_result		pgsql_result;
 	unsigned long				version;
-	const char					*pg_db_sum, *pg_wait_event;
+	const char					*pg_db_sum, *pg_wait_event, *pg_wal_dir;
 
 	if (1 < request->nparam)
 	{
@@ -680,6 +690,60 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char 
 				}
 
 				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query, pg_wait_event);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
+		else if (0 == strcmp(request->key, "pgsql.wal.stat"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version >= 100000)
+				{
+					query = PGSQL_WAL_STAT_DBS;
+				}
+				else
+				{
+					query = PGSQL_XLOG_STAT_DBS;
+				}
+
+				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
+		else if (0 == strcmp(request->key, "pgsql.archive.size"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version >= 100000)
+				{
+					pg_wal_dir = "pg_wal";
+				}
+				else
+				{
+					pg_wal_dir = "pg_xlog";
+				}
+
+				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query, pg_wal_dir, pg_wal_dir);
 			}
 			else
 			{
