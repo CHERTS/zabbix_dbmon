@@ -61,7 +61,7 @@ static void	zbx_db_pgsql_error(char **error, const PGresult *pg_result)
  * Return the type of a column given its Oid
  * If type is not found, return ZBX_COL_TYPE_TEXT
  */
-static unsigned short zbx_db_get_type_from_oid(const struct zbx_db_connection * conn, Oid pg_type)
+static unsigned short zbx_db_get_type_from_oid(const struct zbx_db_connection *conn, Oid pg_type)
 {
 	unsigned int i;
 
@@ -144,7 +144,7 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 							switch (zbx_db_get_type_from_oid(conn, PQftype(res, j)))
 							{
 								case ZBX_COL_TYPE_INT:
-									data = zbx_db_new_data_int(strtol(val, NULL, 10));
+									data = zbx_db_new_data_int(strtol(val, NULL, 19));
 									break;
 								case ZBX_COL_TYPE_DOUBLE:
 									data = zbx_db_new_data_double(strtod(val, NULL));
@@ -343,10 +343,6 @@ struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 						else if (zbx_db_strcmp(cur_type_name, "bytea") == 0)
 						{
 							((struct zbx_db_pgsql *)conn->connection)->list_type[i].col_type = ZBX_COL_TYPE_BLOB;
-						}
-						else if (zbx_db_strcmp(cur_type_name, "bool") == 0)
-						{
-							((struct zbx_db_pgsql *)conn->connection)->list_type[i].col_type = ZBX_COL_TYPE_BOOL;
 						}
 						else
 						{
