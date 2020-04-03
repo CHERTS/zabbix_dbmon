@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-31T11:57:22Z</date>
+    <date>2020-04-03T19:14:06Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -19,6 +19,9 @@
             </groups>
             <applications>
                 <application>
+                    <name>PgSQL: Bgwriter</name>
+                </application>
+                <application>
                     <name>PgSQL: Connections</name>
                 </application>
                 <application>
@@ -34,7 +37,13 @@
                     <name>PgSQL: Throughput</name>
                 </application>
                 <application>
+                    <name>PgSQL: Transactions</name>
+                </application>
+                <application>
                     <name>PgSQL: Variables</name>
+                </application>
+                <application>
+                    <name>PgSQL: WAL</name>
                 </application>
                 <application>
                     <name>stubs</name>
@@ -147,6 +156,407 @@
                             <name>Zabbix agent (DBMON)</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get archive count stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.archive.count[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect metrics by pg_stat_archiver</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get archive size stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.archive.size[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect metrics by archive size status</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Successfully archived</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},archived_count]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of WAL files that have been successfully archived.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: WAL</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.archived_count</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.archive.count[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total files</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},count_files]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Total number of WAL files.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: WAL</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.count_files</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.archive.size[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Failed attempts for archiving</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},failed_count]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of failed attempts for archiving WAL files.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: WAL</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.failed_count</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.archive.count[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total size of files</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},size_files]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Total size of WAL files.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: WAL</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.size_files</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.archive.size[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' autovacuum: Count of autovacuum workers</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.autovacuum.count[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>3d</history>
+                    <description>Count number of autovacuum workers.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get bgwriter stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect pg_stat_bgwriter.&#13;
+See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-STAT-BGWRITER-VIEW</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' bgwriter: Buffers allocated</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_alloc]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of buffers allocated.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.buffers_alloc</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' bgwriter: Buffers written directly by a backend</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_backend]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of buffers written directly by a backend.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.buffers_backend</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' bgwriter: Times a backend execute its own fsync</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_backend_fsync]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of times a backend had to execute its own fsync call (normally the background writer handles those even when the backend does its own write).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.buffers_backend_fsync</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Buffers checkpoints written</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_checkpoint]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of buffers written during checkpoints.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.buffers_checkpoint</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Buffers background written</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_clean]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of buffers written by the background writer.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.buffers_clean</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Requested</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_req]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of requested checkpoints that have been performed.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.checkpoints_req</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: By timeout</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_timed]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of scheduled checkpoints that have been performed.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.checkpoints_timed</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' bgwriter: Number of bgwriter stopped</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},maxwritten_clean]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of times the background writer stopped a cleaning scan because it had written too many buffers.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.maxwritten_clean</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Cache hit</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.cache.hit[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>percent</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get connections stat</name>
@@ -965,6 +1375,157 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </master_item>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Active</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.active</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Count</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},count]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>PgSQL: WAL</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.count</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.wal.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Idle</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.idle</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Prepared</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},prepared]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.prepared</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Waiting</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},waiting]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.waiting</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Write</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},write]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: WAL</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.write</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.wal.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Startup time</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance[{$DBS_PGSQL_INSTANCE},startup_time]</key>
@@ -1065,6 +1626,25 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <master_item>
                         <key>pgsql.server.info[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Age of oldest xid</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.oldest.xid[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>3d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Returns age of oldest xid.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Ping</name>
@@ -1174,6 +1754,20 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </applications>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get transactions stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect metrics by transaction execution time</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Version</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.version[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1210,6 +1804,20 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get WAL stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.wal.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect metrics by WAL stat</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
                 </item>
             </items>
             <discovery_rules>
