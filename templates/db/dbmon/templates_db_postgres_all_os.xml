@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-03T19:14:06Z</date>
+    <date>2020-04-03T20:16:53Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -161,6 +161,7 @@
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get archive count stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.archive.count[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>5m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -175,6 +176,7 @@
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get archive size stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.archive.size[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>5m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -312,6 +314,7 @@
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get bgwriter stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>5m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -1809,6 +1812,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get WAL stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.wal.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>5m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
