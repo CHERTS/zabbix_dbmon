@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-06T12:22:06Z</date>
+    <date>2020-04-06T12:51:02Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -4612,7 +4612,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Redolog switch rate per hour is too high</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}, alert started: {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
-            <description>Генерация redo log черезвычайно высокая, возможно в базу интенсивно пишутся данные.</description>
+            <description>Генерация redo log черезвычайно высокая, возможно в базу интенсивно пишутся данные.&#13;
+Доведите информацию до эксперта.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -4638,7 +4639,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Redolog switch rate per hour is too high</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_WARN}, alert started: {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
-            <description>Генерация redo log слишком высокая, возможно в базу интенсивно пишутся данные.</description>
+            <description>Генерация redo log слишком высокая, возможно в базу интенсивно пишутся данные.&#13;
+Доведите информацию до эксперта.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -4669,6 +4671,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Too many processes</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
+            <description>Черезвычайно много работающих процессов.&#13;
+Доведите информацию до эксперта.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -4726,6 +4730,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Too many sessions</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
+            <description>Черезвычайно много открытых сессий.&#13;
+Доведите информацию до эксперта.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
