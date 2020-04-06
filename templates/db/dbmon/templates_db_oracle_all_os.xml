@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-02T18:37:37Z</date>
+    <date>2020-04-06T12:22:06Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -950,6 +950,29 @@ INSTANCE RECOVERY</description>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
                             <params>10m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>oracle.instance.fra[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': FRA free</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.instance[{$DBS_ORACLE_INSTANCE},fra_free]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Amount of disk space (in bytes) free by flash recovery area (space_limit-space_used-space_reclaimable).</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.FRA_SPACE_FREE</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -4431,6 +4454,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN}</macro>
                     <value>700M</value>
                 </macro>
+                <macro>
+                    <macro>{$USE_CALC_FREE_FRA_IN_PRC}</macro>
+                    <value>1</value>
+                </macro>
             </macros>
         </template>
     </templates>
@@ -4461,9 +4488,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0</expression>
+            <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0 and {$USE_CALC_FREE_FRA_IN_PRC}=1</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT}</recovery_expression>
+            <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT} or {$USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;1</recovery_expression>
             <name>FRA usage is to high</name>
             <opdata>(used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_CRIT}%, alert started: {ITEM.VALUE1}%)</opdata>
             <priority>HIGH</priority>
@@ -4487,9 +4514,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_WARN} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0</expression>
+            <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_WARN} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0 and {$USE_CALC_FREE_FRA_IN_PRC}=1</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_WARN}</recovery_expression>
+            <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_WARN} or {$USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;1</recovery_expression>
             <name>FRA usage is to high</name>
             <opdata>(used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_WARN}%, alert started: {ITEM.VALUE1}%)</opdata>
             <priority>WARNING</priority>
@@ -4497,8 +4524,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>FRA usage is to high</name>
-                    <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0</expression>
-                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT}</recovery_expression>
+                    <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0 and {$USE_CALC_FREE_FRA_IN_PRC}=1</expression>
+                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT} or {$USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;1</recovery_expression>
                 </dependency>
                 <dependency>
                     <name>Instance access failed</name>
