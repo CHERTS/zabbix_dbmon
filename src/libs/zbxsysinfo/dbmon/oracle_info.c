@@ -234,7 +234,7 @@ GROUP BY i.INSTANCE_NAME"
 
 #define ORACLE_INSTANCE_FRA_INFO_DBS "\
 SELECT name AS FRA_LOCATION_NAME, number_of_files AS FRA_FILE_NUM, space_limit AS FRA_SPACE_LIMIT, \
-	space_used AS FRA_SPACE_USED, space_reclaimable AS FRA_SPACE_RECLAIMABLE, \
+	space_used AS FRA_SPACE_USED, space_reclaimable AS FRA_SPACE_RECLAIMABLE, (space_limit-(space_used-space_reclaimable)) AS FRA_SPACE_FREE, \
 	decode(space_limit, 0, 0, round(((space_used - space_reclaimable) / space_limit) * 100, 2)) AS FRA_USED_PCT, \
 	decode(space_limit, 0, 100, round(100 - ((space_used - space_reclaimable) / space_limit) * 100, 2)) AS FRA_FREE_PCT \
 FROM v$recovery_file_dest"
