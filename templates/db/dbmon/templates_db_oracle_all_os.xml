@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-06T12:51:02Z</date>
+    <date>2020-04-09T10:52:06Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1825,6 +1825,32 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <params>1h</params>
                         </step>
                     </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Oracle audit_file_dest discovery</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.auditfiledest.discovery[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>1h</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle] Instance '{#INSTANCE}', path '{#AUDITFILEDEST}' file count</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>vfs.dir.count[&quot;{#AUDITFILEDEST}&quot;,,,file,,0]</key>
+                            <delay>10m</delay>
+                            <history>30d</history>
+                            <applications>
+                                <application>
+                                    <name>Oracle: Instance info</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                    </item_prototypes>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Oracle database discovery</name>
