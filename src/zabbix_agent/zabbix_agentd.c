@@ -98,6 +98,8 @@ char	*CONFIG_MYSQL_PASSWORD		= NULL;
 char	*CONFIG_ORACLE_USER = NULL;
 char	*CONFIG_ORACLE_PASSWORD = NULL;
 char	*CONFIG_ORACLE_INSTANCE = NULL;
+char	*CONFIG_ORACLE_PRIMARY_USER = NULL;
+char	*CONFIG_ORACLE_PRIMARY_PASSWORD = NULL;
 #endif
 #endif
 
@@ -865,11 +867,15 @@ static void	zbx_load_config(int requirement, ZBX_TASK_EX *task)
 			PARM_OPT,   0,          0},
 #endif
 #if defined(HAVE_ORACLE)
-		{ "OracleUser",			&CONFIG_ORACLE_USER,	TYPE_STRING,
+		{ "OracleUser",				&CONFIG_ORACLE_USER,	TYPE_STRING,
 			PARM_OPT,   0,          0 },
-		{ "OraclePassword",		&CONFIG_ORACLE_PASSWORD,	TYPE_STRING,
+		{ "OraclePassword",			&CONFIG_ORACLE_PASSWORD,	TYPE_STRING,
 			PARM_OPT,   0,          0 },
-		{ "OracleInstance",		&CONFIG_ORACLE_INSTANCE,	TYPE_STRING,
+		{ "OracleInstance",			&CONFIG_ORACLE_INSTANCE,	TYPE_STRING,
+			PARM_OPT,   0,          0 },
+		{ "OraclePrimaryUser",		&CONFIG_ORACLE_PRIMARY_USER,	TYPE_STRING,
+			PARM_OPT,   0,          0 },
+		{ "OraclePrimaryPassword",	&CONFIG_ORACLE_PRIMARY_PASSWORD,	TYPE_STRING,
 			PARM_OPT,   0,          0 },
 #endif
 #endif

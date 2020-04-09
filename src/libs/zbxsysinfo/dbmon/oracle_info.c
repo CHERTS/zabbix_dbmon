@@ -31,6 +31,8 @@
 extern char	*CONFIG_ORACLE_USER;
 extern char	*CONFIG_ORACLE_PASSWORD;
 extern char	*CONFIG_ORACLE_INSTANCE;
+extern char	*CONFIG_ORACLE_PRIMARY_USER;
+extern char	*CONFIG_ORACLE_PRIMARY_PASSWORD;
 
 #define ORACLE_DEFAULT_USER	"sys"
 #define ORACLE_DEFAULT_PASSWORD	"sys"
@@ -447,13 +449,27 @@ FROM (SELECT thread#, cs FROM ( \
 GROUP BY thread# \
 ) GROUP BY thread#"
 
+// This SQL request get SCN from last applied redo
 #define ORACLE_STANDBY_SCN_DBS "\
-SELECT to_number(substr(comments, 6, 21)) AS STANDBY_SCN FROM gv$recovery_progress \
-WHERE item = 'Last Applied Redo' AND start_time = ( \
-	SELECT MAX(start_time) FROM gv$recovery_progress WHERE item = 'Last Applied Redo' \
+SELECT i.instance_name AS INSTANCE, d.name AS DBNAME, \
+TO_NUMBER(SUBSTR(r.comments, 6, 21)) AS STANDBY_SCN, \
+TRUNC((sysdate - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400) AS CURRENT_UNIXTIME \
+FROM gv$instance i, gv$database d, gv$recovery_progress r \
+WHERE i.inst_id = d.inst_id  \
+	AND d.database_role <> 'PRIMARY' \
+	AND r.item = 'Last Applied Redo' \
+	AND r.start_time = ( \
+		SELECT max(start_time) from gv$recovery_progress where item = 'Last Applied Redo' \
 )"
 
-#define ORACLE_STANDBY_APPLY_LAG_DBS "SLECT (sysdate - cast(scn_to_timestamp(%s) AS date)) * 86400 AS APPLY_LAG from dual"
+// This SQL request calculates the apply lag (run it on primary database, required enter last SCN (see ORACLE_STANDBY_SCN_DBS))
+#define ORACLE_STANDBY_APPLY_LAG_DBS "\
+SELECT i.instance_name AS INSTANCE, d.name AS DBNAME, \
+	ROUND((sysdate - cast(scn_to_timestamp(%s) as date)) * 86400, 0) AS APPLY_LAG, \
+	TRUNC((sysdate - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400) AS CURRENT_UNIXTIME \
+FROM gv$instance i, gv$database d \
+WHERE i.inst_id = d.inst_id \
+	AND d.database_role = 'PRIMARY'"
 
 #define ORACLE_DISCOVER_ARLDEST_DBS "\
 SELECT i.INSTANCE_NAME AS INSTANCE, \
@@ -691,6 +707,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.standby.last_sequence_stat",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.standby.transport_lag",			CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.standby.last_scn",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.standby.apply_lag",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.archlogdest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.archlogdest.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.parameters",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
@@ -698,7 +715,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.alertlog.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.auditfiledest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{NULL}
-}; 
+};
 
 #if !defined(_WINDOWS) && !defined(__MINGW32__)
 static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
@@ -803,7 +820,7 @@ int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode, zbx_db_oracle_db_status oracle_need_dbstatus)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *oracle_dbname;
+	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *oracle_dbname,*oracle_standby_scn;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	unsigned int				oracle_db_open_mode = 0, oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
@@ -817,6 +834,10 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 		CONFIG_ORACLE_PASSWORD = zbx_strdup(CONFIG_ORACLE_PASSWORD, ORACLE_DEFAULT_PASSWORD);
 	if (NULL == CONFIG_ORACLE_INSTANCE)
 		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
+	if (NULL == CONFIG_ORACLE_PRIMARY_USER)
+		CONFIG_ORACLE_PRIMARY_USER = zbx_strdup(CONFIG_ORACLE_PRIMARY_USER, ORACLE_DEFAULT_USER);
+	if (NULL == CONFIG_ORACLE_PRIMARY_PASSWORD)
+		CONFIG_ORACLE_PRIMARY_PASSWORD = zbx_strdup(CONFIG_ORACLE_PRIMARY_PASSWORD, ORACLE_DEFAULT_PASSWORD);
 
 	oracle_conn_string = get_rparam(request, 0);
 	oracle_instance = get_rparam(request, 1);
@@ -828,6 +849,18 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[1] = %s", __func__, request->key, oracle_instance);
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_str_mode);
 	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[3] = %s", __func__, request->key, oracle_dbname);
+
+	if (0 == strcmp(request->key, "oracle.standby.apply_lag"))
+	{
+		oracle_standby_scn = get_rparam(request, 4);
+		zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[4] = %s", __func__, request->key, oracle_standby_scn);
+
+		if (NULL == oracle_standby_scn || '\0' == *oracle_standby_scn)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid fourth parameter (standby scn)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
 
 	if (NULL == oracle_conn_string || '\0' == *oracle_conn_string)
 	{
@@ -884,7 +917,14 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char
 		}
 	}
 
-	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+	if (0 == strcmp(request->key, "oracle.standby.apply_lag"))
+	{
+		oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_PRIMARY_USER, CONFIG_ORACLE_PRIMARY_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+	}
+	else
+	{
+		oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+	}
 
 	if (NULL != oracle_conn)
 	{
@@ -987,7 +1027,16 @@ next:
 			else
 			{
 exec_inst_query:
-				if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance))
+				if (0 == strcmp(request->key, "oracle.standby.apply_lag"))
+				{
+					ret = zbx_db_query_select(oracle_conn, &ora_result, query, oracle_standby_scn);
+				}
+				else
+				{
+					ret = zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance);
+				}
+
+				if (ZBX_DB_OK == ret)
 				{
 					ret = make_result(request, result, ora_result, result_type);
 					zbx_db_clean_result(&ora_result);
@@ -1198,6 +1247,10 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp(request->key, "oracle.standby.transport_lag"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_STANDBY_THREADED_TRANSPORT_LAG_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_STANDBY, 0, ORA_ACTIVE);
+	}
+	else if (0 == strcmp(request->key, "oracle.standby.apply_lag"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_STANDBY_APPLY_LAG_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_PRIMARY, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.standby.last_scn"))
 	{
