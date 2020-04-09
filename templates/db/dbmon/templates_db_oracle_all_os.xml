@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-09T10:52:06Z</date>
+    <date>2020-04-09T11:05:40Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -4254,7 +4254,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_ALERTLOG_REGEXP}</macro>
-                    <value>ORA-|PLS-|SP2-|IMP-|TNS|TERMINAT|ERROR|[Ee]rror|Corrupt block relative dba:</value>
+                    <value>ORA-|PLS-|SP2-|IMP-|TERMINAT|ERROR|[Ee]rror|Corrupt block relative dba:</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_ALOG_BACKUP_CRIT}</macro>
