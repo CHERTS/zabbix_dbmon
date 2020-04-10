@@ -65,6 +65,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\cpu.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\dir.c" />
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\dns.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\file.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)zbxsysinfo_common_file.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)zbxsysinfo_common_file.obj</ObjectFileName>
