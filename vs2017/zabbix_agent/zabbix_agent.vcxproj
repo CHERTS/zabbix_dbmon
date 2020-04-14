@@ -145,7 +145,7 @@
     <ProjectGuid>{CF0C802C-D347-4585-A3CC-4151ED7373AE}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>zabbixagent</RootNamespace>
-    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -256,7 +256,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK;WITH_AGENT_METRICS;WITH_COMMON_METRICS;WITH_SPECIFIC_METRICS;WITH_HOSTNAME_METRIC;WITH_SIMPLE_METRICS;DEFAULT_CONFIG_FILE="C:\\zabbix_agentd.conf";UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;HAVE_DBMON;HAVE_MYSQL;HAVE_ORACLE;HAVE_POSTGRESQL</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK;WITH_AGENT_METRICS;WITH_COMMON_METRICS;WITH_SPECIFIC_METRICS;WITH_HOSTNAME_METRIC;WITH_SIMPLE_METRICS;DEFAULT_CONFIG_FILE="C:\\DBS_Zabbix_DBMON\\zabbix_agentd_dbmon.conf";UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;HAVE_DBMON;HAVE_MYSQL;HAVE_ORACLE;HAVE_POSTGRESQL</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -311,7 +311,7 @@ copy $(SolutionDir)openssl\bin\x86\ssleay32.dll $(SolutionDir)..\bin\win32</Comm
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0502;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK;WITH_AGENT_METRICS;WITH_COMMON_METRICS;WITH_SPECIFIC_METRICS;WITH_HOSTNAME_METRIC;WITH_SIMPLE_METRICS;DEFAULT_CONFIG_FILE="C:\\zabbix_agentd.conf";UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;HAVE_DBMON;HAVE_MYSQL;HAVE_ORACLE;HAVE_POSTGRESQL</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0502;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK;WITH_AGENT_METRICS;WITH_COMMON_METRICS;WITH_SPECIFIC_METRICS;WITH_HOSTNAME_METRIC;WITH_SIMPLE_METRICS;DEFAULT_CONFIG_FILE="C:\\DBS_Zabbix_DBMON\\zabbix_agentd_dbmon.conf";UNICODE;_UNICODE;_CRT_SECURE_NO_WARNINGS;HAVE_DBMON;HAVE_MYSQL;HAVE_ORACLE;HAVE_POSTGRESQL</PreprocessorDefinitions>
       <ConformanceMode>
       </ConformanceMode>
       <ExceptionHandling>Sync</ExceptionHandling>
