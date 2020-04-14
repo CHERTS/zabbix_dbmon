@@ -643,7 +643,7 @@ WHERE d.tablespace_name = f.tablespace_name(+) \
 
 // Oracle v8i/9i/10g/11g (get alert log path)
 #define ORACLE_V11_ALERTLOG_INFO_DBS "\
-SELECT regexp_replace(value,'(.*)([/\\])(trace|bdump)$','\\1\\2\\3\\2')||( \
+SELECT regexp_replace(value,'(.*)([/\\])(trace|bdump|BDUMP)$','\\1\\2\\3\\2')||( \
 	SELECT 'alert_' || instance_name || '.log' FROM v$instance) AS ALERTLOG \
 FROM v$parameter \
 WHERE name = 'background_dump_dest'"
@@ -656,7 +656,7 @@ FROM v$diag_info WHERE name='Diag Trace'"
 
 // Oracle v8i/9i/10g/11g (get discovery alert log path)
 #define ORACLE_V11_ALERTLOG_DISCOVERY_DBS "\
-SELECT i.instance_name AS INSTANCE, regexp_replace(value, '(.*)([/\\])(trace|bdump)$', '\\1\\2\\3\\2') || ( \
+SELECT i.instance_name AS INSTANCE, regexp_replace(value, '(.*)([/\\])(trace|bdump|BDUMP)$', '\\1\\2\\3\\2') || ( \
 	SELECT 'alert_' || instance_name || '.log' FROM v$instance) AS ALERTLOG \
 FROM gv$instance i, gv$parameter p \
 WHERE i.instance_number = p.inst_id \
@@ -664,7 +664,7 @@ WHERE i.instance_number = p.inst_id \
 
 // Oracle v11g/12c/18c (get discovery alert log path)
 #define ORACLE_V12_ALERTLOG_DISCOVERY_DBS "\
-SELECT i.instance_name AS INSTANCE, regexp_replace(value, '(.*)([/\\])(trace|bdump)$', '\\1\\2\\3\\2') || ( \
+SELECT i.instance_name AS INSTANCE, regexp_replace(value, '(.*)([/\\])(trace|bdump|BDUMP)$', '\\1\\2\\3\\2') || ( \
 	SELECT 'alert_' || instance_name || '.log' FROM v$instance) AS ALERTLOG \
 FROM gv$instance i, gv$diag_info d \
 WHERE i.inst_id = d.inst_id \
