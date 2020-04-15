@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-03T20:16:53Z</date>
+    <date>2020-04-15T04:25:12Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1723,7 +1723,9 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <name>Instance access failed</name>
                             <priority>DISASTER</priority>
                             <description>Тестовое подключение к экземпляру БД PostgreSQL не успешно.&#13;
-Необходимо проверить работу экземпляра БД, посмотреть postgres.log, далее проверить работу и настройки zabbix-agent.</description>
+Необходимо проверить работу экземпляра БД, проверьте postgres.log на предмет ошибок.&#13;
+Далее проверьте работу и настройки zabbix-agent.&#13;
+Проверьте лог-файл zabbix-agent на предмет ошибок подключения к БД.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Database test connection data not received for more than {$DBS_PGSQL_PING_NODATA_WARN} (minutes)</name>

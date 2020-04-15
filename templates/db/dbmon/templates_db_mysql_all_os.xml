@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-02T18:36:41Z</date>
+    <date>2020-04-15T04:24:46Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -609,7 +609,9 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                             <name>Instance access failed</name>
                             <priority>DISASTER</priority>
                             <description>Тестовое подключение к экземпляру БД MySQL не успешно.&#13;
-Необходимо проверить работу экземпляра БД, посмотреть error.log, далее проверить работу и настройки zabbix-agent.</description>
+Необходимо проверить работу экземпляра БД, проверьте error.log на предмет ошибок.&#13;
+Далее проверьте работу и настройки zabbix-agent.&#13;
+Проверьте лог-файл zabbix-agent на предмет ошибок подключения к БД.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Database test connection data not received for more than {$DBS_MYSQL_PING_NODATA_WARN} (minutes)</name>
