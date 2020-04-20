@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-15T04:25:04Z</date>
+    <date>2020-04-20T08:04:52Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -191,6 +191,10 @@
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Backup</value>
+                                </tag>
                             </tags>
                         </trigger>
                         <trigger>
@@ -224,6 +228,10 @@
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Backup</value>
                                 </tag>
                             </tags>
                         </trigger>
@@ -269,6 +277,10 @@
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Backup</value>
+                                </tag>
                             </tags>
                         </trigger>
                         <trigger>
@@ -301,6 +313,10 @@
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Backup</value>
                                 </tag>
                             </tags>
                         </trigger>
@@ -346,6 +362,10 @@
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Backup</value>
+                                </tag>
                             </tags>
                         </trigger>
                         <trigger>
@@ -378,6 +398,10 @@
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Backup</value>
                                 </tag>
                             </tags>
                         </trigger>
@@ -1031,6 +1055,10 @@ INSTANCE RECOVERY</description>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>FRA</value>
+                                </tag>
                             </tags>
                         </trigger>
                     </triggers>
@@ -1579,6 +1607,10 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Alertlog</value>
+                                        </tag>
                                     </tags>
                                 </trigger_prototype>
                                 <trigger_prototype>
@@ -1594,6 +1626,10 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Alertlog</value>
                                         </tag>
                                     </tags>
                                 </trigger_prototype>
@@ -1611,6 +1647,10 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Alertlog</value>
                                         </tag>
                                     </tags>
                                 </trigger_prototype>
@@ -2794,6 +2834,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#INSTANCE}</value>
                                         </tag>
                                         <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Tablespace</value>
+                                        </tag>
+                                        <tag>
                                             <tag>Tablespace</tag>
                                             <value>{#TSNAME}</value>
                                         </tag>
@@ -2937,6 +2981,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#INSTANCE}</value>
                                         </tag>
                                         <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Tablespace</value>
+                                        </tag>
+                                        <tag>
                                             <tag>Tablespace</tag>
                                             <value>{#TSNAME}</value>
                                         </tag>
@@ -2974,6 +3022,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Tablespace</value>
                                         </tag>
                                         <tag>
                                             <tag>Tablespace</tag>
@@ -3032,6 +3084,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <value>{#INSTANCE}</value>
                                 </tag>
                                 <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Tablespace</value>
+                                </tag>
+                                <tag>
                                     <tag>Tablespace</tag>
                                     <value>{#TSNAME}</value>
                                 </tag>
@@ -3073,6 +3129,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{#INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Tablespace</value>
                                 </tag>
                                 <tag>
                                     <tag>Tablespace</tag>
@@ -3190,7 +3250,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#INSTANCE}</value>
                                         </tag>
                                         <tag>
-                                            <tag>Service</tag>
+                                            <tag>Subsystem</tag>
                                             <value>Standby</value>
                                         </tag>
                                     </tags>
@@ -3233,7 +3293,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#INSTANCE}</value>
                                         </tag>
                                         <tag>
-                                            <tag>Service</tag>
+                                            <tag>Subsystem</tag>
                                             <value>Standby</value>
                                         </tag>
                                     </tags>
@@ -3318,7 +3378,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#INSTANCE}</value>
                                         </tag>
                                         <tag>
-                                            <tag>Service</tag>
+                                            <tag>Subsystem</tag>
                                             <value>Standby</value>
                                         </tag>
                                     </tags>
@@ -3424,7 +3484,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#INSTANCE}</value>
                                         </tag>
                                         <tag>
-                                            <tag>Service</tag>
+                                            <tag>Subsystem</tag>
                                             <value>Standby</value>
                                         </tag>
                                     </tags>
@@ -3467,7 +3527,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#INSTANCE}</value>
                                         </tag>
                                         <tag>
-                                            <tag>Service</tag>
+                                            <tag>Subsystem</tag>
                                             <value>Standby</value>
                                         </tag>
                                     </tags>
@@ -3561,6 +3621,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>TempTablespace</value>
                                         </tag>
                                         <tag>
                                             <tag>Tablespace</tag>
@@ -3706,6 +3770,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#INSTANCE}</value>
                                         </tag>
                                         <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>TempTablespace</value>
+                                        </tag>
+                                        <tag>
                                             <tag>Tablespace</tag>
                                             <value>{#TSNAME}</value>
                                         </tag>
@@ -3743,6 +3811,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>TempTablespace</value>
                                         </tag>
                                         <tag>
                                             <tag>Tablespace</tag>
@@ -3802,6 +3874,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <value>{#INSTANCE}</value>
                                 </tag>
                                 <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>TempTablespace</value>
+                                </tag>
+                                <tag>
                                     <tag>Tablespace</tag>
                                     <value>{#TSNAME}</value>
                                 </tag>
@@ -3844,6 +3920,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{#INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>TempTablespace</value>
                                 </tag>
                                 <tag>
                                     <tag>Tablespace</tag>
@@ -3935,6 +4015,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>UndoTablespace</value>
                                         </tag>
                                         <tag>
                                             <tag>Tablespace</tag>
@@ -4072,6 +4156,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#INSTANCE}</value>
                                         </tag>
                                         <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>UndoTablespace</value>
+                                        </tag>
+                                        <tag>
                                             <tag>Tablespace</tag>
                                             <value>{#TSNAME}</value>
                                         </tag>
@@ -4109,6 +4197,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>UndoTablespace</value>
                                         </tag>
                                         <tag>
                                             <tag>Tablespace</tag>
@@ -4175,6 +4267,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <value>{#INSTANCE}</value>
                                 </tag>
                                 <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>UndoTablespace</value>
+                                </tag>
+                                <tag>
                                     <tag>Tablespace</tag>
                                     <value>{#TSNAME}</value>
                                 </tag>
@@ -4216,6 +4312,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{#INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>UndoTablespace</value>
                                 </tag>
                                 <tag>
                                     <tag>Tablespace</tag>
@@ -4539,6 +4639,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
                 </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>FRA</value>
+                </tag>
             </tags>
         </trigger>
         <trigger>
@@ -4570,6 +4674,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
                 </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>FRA</value>
+                </tag>
             </tags>
         </trigger>
         <trigger>
@@ -4597,6 +4705,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>Backup</value>
                 </tag>
             </tags>
         </trigger>
@@ -4630,6 +4742,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>Backup</value>
                 </tag>
             </tags>
         </trigger>
