@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-15T04:24:46Z</date>
+    <date>2020-04-20T08:07:16Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -4613,6 +4613,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         </tag>
                                         <tag>
                                             <tag>Subsystem</tag>
+                                            <value>Errorlog</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
                                             <value>Scheduler</value>
                                         </tag>
                                     </tags>
@@ -4630,6 +4634,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>DBType</tag>
                                             <value>MySQL</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Errorlog</value>
                                         </tag>
                                         <tag>
                                             <tag>Subsystem</tag>
@@ -4838,6 +4846,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <tag>MasterPort</tag>
                                             <value>{#MASTER_PORT}</value>
                                         </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Replication</value>
+                                        </tag>
                                     </tags>
                                 </trigger_prototype>
                                 <trigger_prototype>
@@ -4878,6 +4890,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>MasterPort</tag>
                                             <value>{#MASTER_PORT}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Replication</value>
                                         </tag>
                                     </tags>
                                 </trigger_prototype>
@@ -5013,6 +5029,10 @@ As with the I/O thread, this should normally be Yes.</description>
                                     <tag>MasterPort</tag>
                                     <value>{#MASTER_PORT}</value>
                                 </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Replication</value>
+                                </tag>
                             </tags>
                         </trigger_prototype>
                         <trigger_prototype>
@@ -5052,6 +5072,10 @@ As with the I/O thread, this should normally be Yes.</description>
                                     <tag>MasterPort</tag>
                                     <value>{#MASTER_PORT}</value>
                                 </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Replication</value>
+                                </tag>
                             </tags>
                         </trigger_prototype>
                         <trigger_prototype>
@@ -5088,6 +5112,10 @@ As with the I/O thread, this should normally be Yes.</description>
                                     <tag>MasterPort</tag>
                                     <value>{#MASTER_PORT}</value>
                                 </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Replication</value>
+                                </tag>
                             </tags>
                         </trigger_prototype>
                         <trigger_prototype>
@@ -5123,6 +5151,10 @@ As with the I/O thread, this should normally be Yes.</description>
                                 <tag>
                                     <tag>MasterPort</tag>
                                     <value>{#MASTER_PORT}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Replication</value>
                                 </tag>
                             </tags>
                         </trigger_prototype>
