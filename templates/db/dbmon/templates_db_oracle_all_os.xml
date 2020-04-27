@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-20T08:04:52Z</date>
+    <date>2020-04-27T11:16:04Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1592,7 +1592,7 @@ INSTANCE RECOVERY</description>
                             </applications>
                             <trigger_prototypes>
                                 <trigger_prototype>
-                                    <expression>{iregexp(&quot;Corrupt block relative dba:&quot;)}=1</expression>
+                                    <expression>{iregexp(&quot;Corrupt block relative dba:&quot;)}=1 and {$DBS_ORACLE_DISABLE_CORRUPT_BLOCK_ALARM}=0</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>{{ITEM.VALUE}.iregsub(&quot;Corrupt block relative dba: 0x[a-z0-9]{1,} \(file ([0-9]+), block ([0-9]+)\)&quot;, &quot;Found corrupt block (file: '\1', block: '\2')&quot;)}</name>
                                     <priority>WARNING</priority>
@@ -2725,6 +2725,20 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </tags>
                         </trigger_prototype>
                     </trigger_prototypes>
+                    <graph_prototypes>
+                        <graph_prototype>
+                            <name>[Oracle] Database '{#DBNAME}' size</name>
+                            <graph_items>
+                                <graph_item>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>DBS_Template DB Oracle</host>
+                                        <key>oracle.db.size[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                    </graph_prototypes>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Oracle instance parameters discovery</name>
@@ -4417,6 +4431,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>100G</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_DISABLE_CORRUPT_BLOCK_ALARM}</macro>
+                    <value>0</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_DISABLE_DB_STATUS_ALARM}</macro>
                     <value>0</value>
                     <description>Set 1 to disable alarm &quot;Database status has been changed&quot;</description>
@@ -4587,6 +4605,147 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>1</value>
                 </macro>
             </macros>
+            <screens>
+                <screen>
+                    <name>Oracle summary</name>
+                    <hsize>2</hsize>
+                    <vsize>3</vsize>
+                    <screen_items>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[Oracle] Processes</name>
+                                <host>DBS_Template DB Oracle</host>
+                            </resource>
+                            <width>700</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>0</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[Oracle] Sessions</name>
+                                <host>DBS_Template DB Oracle</host>
+                            </resource>
+                            <width>700</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>0</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[Oracle] FRA used space</name>
+                                <host>DBS_Template DB Oracle</host>
+                            </resource>
+                            <width>700</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>1</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[Oracle] Backup info</name>
+                                <host>DBS_Template DB Oracle</host>
+                            </resource>
+                            <width>700</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>1</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[Oracle] DB files</name>
+                                <host>DBS_Template DB Oracle</host>
+                            </resource>
+                            <width>700</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>2</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[Oracle] Redo log summary</name>
+                                <host>DBS_Template DB Oracle</host>
+                            </resource>
+                            <width>700</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>2</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                    </screen_items>
+                </screen>
+            </screens>
         </template>
     </templates>
     <triggers>
@@ -4681,7 +4840,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+            <expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(100m)}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
             <name>No incremental database backups</name>
@@ -4713,7 +4872,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_WARN} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+            <expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(100m)}&gt;{$DBS_ORACLE_INCR_BACKUP_WARN} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_WARN} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
             <name>No incremental database backups</name>
@@ -4730,7 +4889,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
                 <dependency>
                     <name>No incremental database backups</name>
-                    <expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
+                    <expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(100m)}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
                     <recovery_expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
                 </dependency>
             </dependencies>
@@ -4927,6 +5086,140 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
     </triggers>
+    <graphs>
+        <graph>
+            <name>[Oracle] Backup info</name>
+            <graph_items>
+                <graph_item>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.backup.archivelog[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.backup.cf[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>2774A4</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.backup.full[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <color>A54F10</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[Oracle] DB files</name>
+            <graph_items>
+                <graph_item>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.instance.dbfiles[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>BOLD_LINE</drawtype>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[Oracle] FRA used space</name>
+            <graph_items>
+                <graph_item>
+                    <drawtype>BOLD_LINE</drawtype>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[Oracle] Processes</name>
+            <graph_items>
+                <graph_item>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>BOLD_LINE</drawtype>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[Oracle] Redo log summary</name>
+            <graph_items>
+                <graph_item>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.instance.redolog_size_per_hour[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[Oracle] Sessions</name>
+            <graph_items>
+                <graph_item>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>BOLD_LINE</drawtype>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB Oracle</host>
+                        <key>oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+    </graphs>
     <value_maps>
         <value_map>
             <name>DBS Oracle (active_state)</name>
