@@ -79,9 +79,20 @@ ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
 -rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd
 ~~~~
 
-### 5. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
+### 5. Создание файла с переменными среды:
+
+Создайте файл /etc/sysconfig/zabbix-agent-dbmon со следующим содержимым:
+
+~~~~
+ORACLE_HOME=/u01/app/oracle/18c/dbhome_1
+ORACLE_SID=orcl
+ORACLE_BASE=/u01/orabase
+PATH=/u01/app/oracle/18c/dbhome_1/bin:/sbin:/bin:/usr/sbin:/usr/bin
+LD_LIBRARY_PATH=/u01/app/oracle/18c/dbhome_1/lib
+~~~~
+
+### 6. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
 ~~~~
 systemctl stop zabbix-agent
 cp src/zabbix_agent/zabbix_agentd /sbin
 ~~~~
-
