@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-06T06:24:20Z</date>
+    <date>2020-05-06T06:26:37Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1520,10 +1520,6 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                     <manual_close>YES</manual_close>
                                     <tags>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -1543,10 +1539,6 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <tags>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
@@ -1568,10 +1560,6 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <tags>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
@@ -1765,10 +1753,6 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{#INSTANCE}</value>
