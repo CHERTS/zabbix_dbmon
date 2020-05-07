@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-15T04:25:12Z</date>
+    <date>2020-05-06T06:31:09Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -95,10 +95,6 @@
 Доведите информацию до заказчика и эксперта.</description>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>PostgreSQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_PGSQL_INSTANCE}</value>
                                 </tag>
@@ -127,10 +123,6 @@
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>PostgreSQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_PGSQL_INSTANCE}</value>
@@ -1383,6 +1375,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <value_type>FLOAT</value_type>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1433,6 +1426,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <value_type>FLOAT</value_type>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1458,6 +1452,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},prepared]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <value_type>FLOAT</value_type>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1483,6 +1478,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},waiting]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <value_type>FLOAT</value_type>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1591,10 +1587,6 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <manual_close>YES</manual_close>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>PostgreSQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_PGSQL_INSTANCE}</value>
                                 </tag>
@@ -1679,10 +1671,6 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>PostgreSQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_PGSQL_INSTANCE}</value>
                                 </tag>
@@ -1707,10 +1695,6 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>PostgreSQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_PGSQL_INSTANCE}</value>
                                 </tag>
@@ -1733,10 +1717,6 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>PostgreSQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_PGSQL_INSTANCE}</value>
@@ -1798,10 +1778,6 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>PostgreSQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_PGSQL_INSTANCE}</value>
@@ -2503,10 +2479,6 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>PostgreSQL</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{$DBS_PGSQL_INSTANCE}</value>
                                         </tag>
@@ -2561,10 +2533,6 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>PostgreSQL</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -3011,6 +2979,12 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     </preprocessing>
                 </discovery_rule>
             </discovery_rules>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>PostgreSQL</value>
+                </tag>
+            </tags>
             <macros>
                 <macro>
                     <macro>{$DBS_DBMON_AGENTD_NODATA_CRIT}</macro>

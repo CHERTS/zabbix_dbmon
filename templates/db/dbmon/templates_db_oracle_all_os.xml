@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-27T11:16:04Z</date>
+    <date>2020-05-06T06:26:37Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -74,10 +74,6 @@
 Доведите информацию до заказчика и эксперта.</description>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
@@ -106,10 +102,6 @@
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -184,10 +176,6 @@
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
@@ -221,10 +209,6 @@
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -270,10 +254,6 @@
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
@@ -306,10 +286,6 @@
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -355,10 +331,6 @@
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
@@ -391,10 +363,6 @@
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -465,10 +433,6 @@
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
@@ -496,10 +460,6 @@
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -621,10 +581,6 @@
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
@@ -649,10 +605,6 @@
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
@@ -675,10 +627,6 @@
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -759,10 +707,6 @@
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
@@ -797,10 +741,6 @@
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -891,10 +831,6 @@ A single ALTER SYSTEM QUIESCE RESTRICTED statement quiesces all instances in an 
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
@@ -944,10 +880,6 @@ INSTANCE RECOVERY</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -1047,10 +979,6 @@ INSTANCE RECOVERY</description>
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -1285,10 +1213,6 @@ INSTANCE RECOVERY</description>
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
                                 </tag>
@@ -1306,10 +1230,6 @@ INSTANCE RECOVERY</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -1353,10 +1273,6 @@ INSTANCE RECOVERY</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -1838,10 +1754,6 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{#INSTANCE}</value>
                                 </tag>
@@ -1973,10 +1885,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -2007,10 +1915,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -2091,10 +1995,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -2140,10 +2040,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -2226,10 +2122,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -2280,10 +2172,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -2332,10 +2220,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -2399,10 +2283,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -2420,10 +2300,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -2479,10 +2355,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -2571,10 +2443,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -2657,10 +2525,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -2713,10 +2577,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <tag>
                                     <tag>Database</tag>
                                     <value>{#DBNAME}</value>
-                                </tag>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
                                 </tag>
                                 <tag>
                                     <tag>Instance</tag>
@@ -2838,10 +2698,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -2987,10 +2843,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -3028,10 +2880,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -3090,10 +2938,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <value>{#DBNAME}</value>
                                 </tag>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{#INSTANCE}</value>
                                 </tag>
@@ -3135,10 +2979,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <tag>
                                     <tag>Database</tag>
                                     <value>{#DBNAME}</value>
-                                </tag>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
                                 </tag>
                                 <tag>
                                     <tag>Instance</tag>
@@ -3256,10 +3096,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -3297,10 +3133,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -3382,10 +3214,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -3490,10 +3318,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -3531,10 +3355,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -3627,10 +3447,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -3776,10 +3592,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -3817,10 +3629,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -3880,10 +3688,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <value>{#DBNAME}</value>
                                 </tag>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{#INSTANCE}</value>
                                 </tag>
@@ -3926,10 +3730,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <tag>
                                     <tag>Database</tag>
                                     <value>{#DBNAME}</value>
-                                </tag>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
                                 </tag>
                                 <tag>
                                     <tag>Instance</tag>
@@ -4021,10 +3821,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -4162,10 +3958,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -4203,10 +3995,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>Oracle</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -4273,10 +4061,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <value>{#DBNAME}</value>
                                 </tag>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{#INSTANCE}</value>
                                 </tag>
@@ -4320,10 +4104,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <value>{#DBNAME}</value>
                                 </tag>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>Oracle</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{#INSTANCE}</value>
                                 </tag>
@@ -4359,6 +4139,12 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     </preprocessing>
                 </discovery_rule>
             </discovery_rules>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>Oracle</value>
+                </tag>
+            </tags>
             <macros>
                 <macro>
                     <macro>{$DBS_DBMON_AGENTD_NODATA_CRIT}</macro>
@@ -4765,10 +4551,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </dependencies>
             <tags>
                 <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
-                <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
                 </tag>
@@ -4790,10 +4572,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
             </dependencies>
             <tags>
-                <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -4826,10 +4604,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </dependencies>
             <tags>
                 <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
-                <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
                 </tag>
@@ -4857,10 +4631,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
             </dependencies>
             <tags>
-                <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -4895,10 +4665,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </dependencies>
             <tags>
                 <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
-                <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
                 </tag>
@@ -4925,10 +4691,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
             </dependencies>
             <tags>
-                <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -4958,10 +4720,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </dependencies>
             <tags>
                 <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
-                <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
                 </tag>
@@ -4984,10 +4742,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
             </dependencies>
             <tags>
-                <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -5017,10 +4771,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </dependencies>
             <tags>
                 <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
-                <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
                 </tag>
@@ -5043,10 +4793,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
             </dependencies>
             <tags>
-                <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
@@ -5075,10 +4821,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
             </dependencies>
             <tags>
-                <tag>
-                    <tag>DBType</tag>
-                    <value>Oracle</value>
-                </tag>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>

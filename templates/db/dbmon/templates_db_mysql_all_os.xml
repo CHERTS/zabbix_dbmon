@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-04-20T08:07:16Z</date>
+    <date>2020-05-06T06:29:03Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -92,10 +92,6 @@
 Доведите информацию до заказчика и эксперта.</description>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
                                 </tag>
@@ -124,10 +120,6 @@
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -565,10 +557,6 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
                                 </tag>
@@ -593,10 +581,6 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
                                 </tag>
@@ -619,10 +603,6 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -782,10 +762,6 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -1132,10 +1108,6 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -2087,10 +2059,6 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
                                 </tag>
@@ -2434,10 +2402,6 @@ See more info: https://mariadb.com/kb/en/thread-pool-in-mariadb/</description>
                             <manual_close>YES</manual_close>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
                                 </tag>
@@ -2562,10 +2526,6 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/binary-log.html</descript
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -2757,10 +2717,6 @@ if (n &gt;= 0) {
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -3469,10 +3425,6 @@ If max_relay_log_size is 0, the value of max_binlog_size applies to relay logs a
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -4247,10 +4199,6 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                             <manual_close>YES</manual_close>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
                                 </tag>
@@ -4284,10 +4232,6 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -4477,10 +4421,6 @@ For InnoDB, INDEX_LENGTH is the approximate amount of space allocated for non-cl
                                             <value>{#DBNAME}</value>
                                         </tag>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>MySQL</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{$DBS_MYSQL_INSTANCE}</value>
                                         </tag>
@@ -4506,10 +4446,6 @@ For InnoDB, INDEX_LENGTH is the approximate amount of space allocated for non-cl
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>MySQL</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -4542,10 +4478,6 @@ For InnoDB, INDEX_LENGTH is the approximate amount of space allocated for non-cl
                                         <tag>
                                             <tag>Database</tag>
                                             <value>{#DBNAME}</value>
-                                        </tag>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>MySQL</value>
                                         </tag>
                                         <tag>
                                             <tag>Instance</tag>
@@ -4608,10 +4540,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
 Доведите информацию до эксперта.</description>
                                     <tags>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>MySQL</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Subsystem</tag>
                                             <value>Errorlog</value>
                                         </tag>
@@ -4631,10 +4559,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
 Как можно скорее просмотрите лог-файл на сервере.&#13;
 Передайте информацию эксперту.</description>
                                     <tags>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>MySQL</value>
-                                        </tag>
                                         <tag>
                                             <tag>Subsystem</tag>
                                             <value>Errorlog</value>
@@ -4831,10 +4755,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     </dependencies>
                                     <tags>
                                         <tag>
-                                            <tag>DBType</tag>
-                                            <value>MySQL</value>
-                                        </tag>
-                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{$DBS_MYSQL_INSTANCE}</value>
                                         </tag>
@@ -4875,10 +4795,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         </dependency>
                                     </dependencies>
                                     <tags>
-                                        <tag>
-                                            <tag>DBType</tag>
-                                            <value>MySQL</value>
-                                        </tag>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -5014,10 +4930,6 @@ As with the I/O thread, this should normally be Yes.</description>
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
                                 </tag>
@@ -5057,10 +4969,6 @@ As with the I/O thread, this should normally be Yes.</description>
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
                                 </tag>
@@ -5097,10 +5005,6 @@ As with the I/O thread, this should normally be Yes.</description>
                             </dependencies>
                             <tags>
                                 <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
-                                <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
                                 </tag>
@@ -5136,10 +5040,6 @@ As with the I/O thread, this should normally be Yes.</description>
                                 </dependency>
                             </dependencies>
                             <tags>
-                                <tag>
-                                    <tag>DBType</tag>
-                                    <value>MySQL</value>
-                                </tag>
                                 <tag>
                                     <tag>Instance</tag>
                                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -5692,6 +5592,12 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     </preprocessing>
                 </discovery_rule>
             </discovery_rules>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>MySQL</value>
+                </tag>
+            </tags>
             <macros>
                 <macro>
                     <macro>{$DBS_DBMON_AGENTD_NODATA_CRIT}</macro>
@@ -5969,10 +5875,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </dependencies>
             <tags>
                 <tag>
-                    <tag>DBType</tag>
-                    <value>MySQL</value>
-                </tag>
-                <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_MYSQL_INSTANCE}</value>
                 </tag>
@@ -5998,10 +5900,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>Performance</value>
                 </tag>
                 <tag>
-                    <tag>DBType</tag>
-                    <value>MySQL</value>
-                </tag>
-                <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_MYSQL_INSTANCE}</value>
                 </tag>
@@ -6024,10 +5922,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
             </dependencies>
             <tags>
-                <tag>
-                    <tag>DBType</tag>
-                    <value>MySQL</value>
-                </tag>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -6056,10 +5950,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </dependencies>
             <tags>
                 <tag>
-                    <tag>DBType</tag>
-                    <value>MySQL</value>
-                </tag>
-                <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_MYSQL_INSTANCE}</value>
                 </tag>
@@ -6083,10 +5973,6 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 </dependency>
             </dependencies>
             <tags>
-                <tag>
-                    <tag>DBType</tag>
-                    <value>MySQL</value>
-                </tag>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_MYSQL_INSTANCE}</value>
@@ -6115,10 +6001,6 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 </dependency>
             </dependencies>
             <tags>
-                <tag>
-                    <tag>DBType</tag>
-                    <value>MySQL</value>
-                </tag>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_MYSQL_INSTANCE}</value>
