@@ -72,8 +72,6 @@ DBS_LOG_FILE="${ZBX_HOME_DIR}/${SCRIPT_NAME%.*}.log"
 DBS_MAX_LOG_FILE_SIZE_IN_KB=51200
 # Config
 DBS_CONFIG_FILE="${ZBX_HOME_DIR}/${SCRIPT_NAME%.*}.conf"
-# Maximum allowed config string lengh
-DBS_MAX_ALLOWED_CONFIG_STRING=2048
 # Maximum number of running script
 DBS_ZBX_MON_PROCESSES_NUMBER_MAX=50
 
@@ -200,7 +198,7 @@ _message() {
 }
 
 if [ -z "${PARAM1}" ]; then
-	message="The first parameter (items) is required (Ex: listener_discovery, service_discovery, listener_info, service_info)"
+	message="The first parameter (items) is required (Ex: dbs_check_zabbix_server, listener_discovery, service_discovery, listener_info, service_info)"
 	_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
 	exit 1
 fi
@@ -252,7 +250,7 @@ fi
 
 # Check PARAM1 and set don't use sudo
 case "${PARAM1}" in
-	listener_discovery|listener_info|service_discovery|service_info)
+	dbs_check_zabbix_server|listener_discovery|listener_info|service_discovery|service_info)
 		DONOT_USE_SUDO=1
 		;;
 esac
@@ -1021,7 +1019,11 @@ _run_zabbix_sender() {
 			OLD_IFS=$IFS
 			IFS=$' '
 			if [ -f "${ZBX_AGENTD_CONFIG_FILE}" ]; then
-				ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+				if [[ "${PLATFORM}" = "aix" ]]; then
+					ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+				else
+					ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+				fi
 			fi
 			ZBX_SERVERS_NUM=${#ZBX_SERVERS[*]}
 			_debug_logging "Func: ${FUNCNAME[0]}: ZBX_SERVERS_NUM=${ZBX_SERVERS_NUM}"
@@ -1694,7 +1696,69 @@ else
 	${PRINTF_BIN} "%s" "${DBS_SCRIPT_PID}" > "${ZBX_HOME_DIR}/${ZBX_LOCK_FILE_NAME}" 2>/dev/null
 fi
 
-if [[ "$PARAM1" = "listener_discovery" ]]; then
+if [[ "$PARAM1" = "dbs_check_zabbix_server" ]]; then
+	# Check working zabbix-server
+	ZBX_SERVERS=(127.0.0.1)
+	ZBX_SERVER_ADDR=""
+	ZBX_SERVER_PORT=""
+	ZBX_CHECK_PORT=""
+	ZBX_WORKING_SERVER_ADDR=""
+	ZBX_WORKING_SERVER_PORT=""
+	ZBX_FOUND_WORKING_SERVER=0
+	OLD_IFS=$IFS
+	IFS=$' '
+	if [ -f "${ZBX_AGENTD_CONFIG_FILE}" ]; then
+		if [[ "${PLATFORM}" = "aix" ]]; then
+			ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+		else
+			ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+		fi
+	fi
+	ZBX_SERVERS_NUM=${#ZBX_SERVERS[*]}
+	_debug_logging "Func: Main: ZBX_SERVERS_NUM=${ZBX_SERVERS_NUM}"
+	_debug_logging "Func: Main: ZBX_SERVERS=$(declare -p ZBX_SERVERS | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
+	if [ ${ZBX_SERVERS_NUM} -ge 0 ]; then
+		for ((i=0; i<${#ZBX_SERVERS[@]}; i++)); do
+			_debug_logging "Func: Main: ZabbixServer $i: ${ZBX_SERVERS[$i]}"
+			ZBX_SERVER_ADDR=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${CUT_BIN} -d':' -f1)
+			ZBX_CHECK_PORT=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${GREP_BIN} ':')
+			if [ -n "${ZBX_CHECK_PORT}" ]; then
+				ZBX_SERVER_PORT=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${CUT_BIN} -d':' -f2 )
+			else
+				ZBX_SERVER_PORT=${ZBX_SERVER_DEFAULT_PORT}
+			fi
+			${ZABBIX_SENDER_BIN} -c "${ZBX_AGENTD_CONFIG_FILE}" -z "${ZBX_SERVER_ADDR}" -p "${ZBX_SERVER_PORT}" -s "${HOSTNAME}" -k "dbs.runshell[dbs_check_zabbix_server,${DB_TYPE},result]" -o 1 >/dev/null 2>&1
+			EXIT_CODE=$?
+			_debug_logging "Func: Main: ExitCode: ${EXIT_CODE}, ZabbixServer: ${ZBX_SERVER_ADDR}:${ZBX_SERVER_PORT}"
+			if [ ${EXIT_CODE} -eq 0 ]; then
+				_debug_logging "Func: Main: Found working zabbix-proxy or zabbix-server: ${ZBX_SERVER_ADDR}:${ZBX_SERVER_PORT}"
+				ZBX_FOUND_WORKING_SERVER=1
+				ZBX_WORKING_SERVER_ADDR=${ZBX_SERVER_ADDR}
+				ZBX_WORKING_SERVER_PORT=${ZBX_SERVER_PORT}
+				${ECHO_BIN} "${ZBX_WORKING_SERVER_ADDR}:${ZBX_WORKING_SERVER_PORT}" > "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}"
+				break
+			fi
+		done
+		IFS=${OLD_IFS}
+		if [ ${ZBX_FOUND_WORKING_SERVER} -eq 0 ]; then
+			if [ -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ]; then
+				${RM_BIN} -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" >/dev/null 2>&1
+			fi
+		fi
+	fi
+	if [ -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ]; then
+		ZBX_SERVERS=$(${CAT_BIN} "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}")
+		if [ -n "${ZBX_SERVERS}" ]; then
+			ZBX_WORKING_SERVER_ADDR=$(${ECHO_BIN} ${ZBX_SERVERS} | ${CUT_BIN} -d':' -f1)
+			ZBX_WORKING_SERVER_PORT=$(${ECHO_BIN} ${ZBX_SERVERS} | ${CUT_BIN} -d':' -f2)
+			_debug_logging "Func: Main: ZabbixServerCache: ${ZBX_SERVERS}"
+		else
+			_debug_logging "Func: Main: ZabbixServerCache: <NotFound>"
+		fi
+	fi
+	_logrotate
+	RCODE="0"
+elif [[ "$PARAM1" = "listener_discovery" ]]; then
 	if [[ "${DB_TYPE}" = "oracle" ]]; then
 		#_oracle_find_instance "oracle"
 		RES=$(_oracle_listener_discovery)
