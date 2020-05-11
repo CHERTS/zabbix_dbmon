@@ -64,6 +64,7 @@ zabbix_sender \- Zabbix sender utility
 .RB [ \-s
 .IR host ]
 .RB [ \-T ]
+.RB [ \-N ]
 .RB [ \-r ]
 .B \-i
 .I input\-file
@@ -98,6 +99,7 @@ zabbix_sender \- Zabbix sender utility
 .RB [ \-s
 .IR host ]
 .RB [ \-T ]
+.RB [ \-N ]
 .RB [ \-r ]
 .B \-i
 .I input-file
@@ -164,6 +166,7 @@ zabbix_sender \- Zabbix sender utility
 .RB [ \-\-tls\-cipher
 .IR cipher\-string ]
 .RB [ \-T ]
+.RB [ \-N ]
 .RB [ \-r ]
 .B \-i
 .I input\-file
@@ -234,6 +237,7 @@ zabbix_sender \- Zabbix sender utility
 .RB [ \-\-tls\-cipher
 .IR cipher\-string ]
 .RB [ \-T ]
+.RB [ \-N ]
 .RB [ \-r ]
 .B \-i
 .I input\-file
@@ -284,6 +288,7 @@ zabbix_sender \- Zabbix sender utility
 .RB [ \-\-tls\-cipher
 .IR cipher\-string ]
 .RB [ \-T ]
+.RB [ \-N ]
 .RB [ \-r ]
 .B \-i
 .I input\-file
@@ -338,6 +343,7 @@ zabbix_sender \- Zabbix sender utility
 .RB [ \-\-tls\-cipher
 .IR cipher\-string ]
 .RB [ \-T ]
+.RB [ \-N ]
 .RB [ \-r ]
 .B \-i
 .I input\-file
@@ -432,6 +438,17 @@ An example of a line of the input file:
 For more details please see option \fB\-\-input\-file\fR.
 
 If a timestamped value is sent for a host that is in a “no data” maintenance type then this value will be dropped; however, it is possible to send a timestamped value in for an expired maintenance period and it will be accepted. 
+
+.IP "\fB\-N\fR, \fB\-\-with\-ns\fR"
+This option can be only used with \fB\-\-with\-timestamps\fR option.
+
+Each line of the input file must contain 5 whitespace delimited entries: \fB<hostname> <key> <timestamp> <ns> <value>\fR.
+
+An example of a line of the input file:
+
+\fB "Linux DB3" db.connections 1429533600 7402561 43\fR
+
+For more details please see option \fB\-\-input\-file\fR.
 
 .IP "\fB\-r\fR, \fB\-\-real\-time\fR"
 Send values one by one as soon as they are received.

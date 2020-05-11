@@ -43,6 +43,10 @@ type Meta struct {
 	min          int64
 	max          int64
 }
+type Suffix struct {
+	suffix string
+	factor int
+}
 
 func validateParameterName(key []byte) (err error) {
 	for i, b := range key {
@@ -137,6 +141,40 @@ loop:
 	return &m, nil
 }
 
+func getTimeSuffix(str string) (string, int) {
+	suffixes := []Suffix{
+		Suffix{
+			suffix: "s",
+			factor: 1,
+		},
+		Suffix{
+			suffix: "m",
+			factor: 60,
+		},
+		Suffix{
+			suffix: "h",
+			factor: 3600,
+		},
+		Suffix{
+			suffix: "d",
+			factor: 86400,
+		},
+		Suffix{
+			suffix: "w",
+			factor: (7 * 86400),
+		},
+	}
+
+	for _, s := range suffixes {
+		if strings.HasSuffix(str, s.suffix) == true {
+			str = strings.TrimSuffix(str, s.suffix)
+			return str, s.factor
+		}
+	}
+	return str, 1
+
+}
+
 func setBasicValue(value reflect.Value, meta *Meta, str *string) (err error) {
 	if str == nil {
 		return nil
@@ -146,7 +184,10 @@ func setBasicValue(value reflect.Value, meta *Meta, str *string) (err error) {
 		value.SetString(*str)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		var v int64
+		var r int
+		*str, r = getTimeSuffix(*str)
 		if v, err = strconv.ParseInt(*str, 10, 64); err == nil {
+			v = v * int64(r)
 			if meta != nil {
 				if meta.min != -1 && v < meta.min || meta.max != -1 && v > meta.max {
 					return errors.New("value out of range")
@@ -156,7 +197,10 @@ func setBasicValue(value reflect.Value, meta *Meta, str *string) (err error) {
 		}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		var v uint64
+		var r int
+		*str, r = getTimeSuffix(*str)
 		if v, err = strconv.ParseUint(*str, 10, 64); err == nil {
+			v = v * uint64(r)
 			if meta != nil {
 				if meta.min != -1 && v < uint64(meta.min) || meta.max != -1 && v > uint64(meta.max) {
 					return errors.New("value out of range")
@@ -211,27 +255,35 @@ func setStructValue(value reflect.Value, node *Node) (err error) {
 
 func setMapValue(value reflect.Value, node *Node) (err error) {
 	m := reflect.MakeMap(reflect.MapOf(value.Type().Key(), value.Type().Elem()))
-	for _, child := range node.nodes {
-		k := reflect.New(value.Type().Key())
-		if err = setBasicValue(k.Elem(), nil, &child.name); err != nil {
-			return
+	for _, v := range node.Nodes {
+		if child, ok := v.(*Node); ok {
+			k := reflect.New(value.Type().Key())
+			if err = setBasicValue(k.Elem(), nil, &child.Name); err != nil {
+				return
+			}
+			v := reflect.New(value.Type().Elem())
+			if err = setValue(v.Elem(), nil, child); err != nil {
+				return
+			}
+			m.SetMapIndex(k.Elem(), v.Elem())
 		}
-		v := reflect.New(value.Type().Elem())
-		if err = setValue(v.Elem(), nil, child); err != nil {
-			return
-		}
-		m.SetMapIndex(k.Elem(), v.Elem())
 	}
 	value.Set(m)
 	return
 }
 
 func setSliceValue(value reflect.Value, node *Node) (err error) {
-	size := len(node.values)
+	tmpValues := make([][]byte, 0)
+	for _, v := range node.Nodes {
+		if val, ok := v.(*Value); ok {
+			tmpValues = append(tmpValues, val.Value)
+		}
+	}
+	size := len(tmpValues)
 	values := reflect.MakeSlice(reflect.SliceOf(value.Type().Elem()), 0, size)
 
-	if len(node.values) > 0 {
-		for _, data := range node.values {
+	if len(tmpValues) > 0 {
+		for _, data := range tmpValues {
 			v := reflect.New(value.Type().Elem())
 			str := string(data)
 			if err = setBasicValue(v.Elem(), nil, &str); err != nil {
@@ -240,12 +292,14 @@ func setSliceValue(value reflect.Value, node *Node) (err error) {
 			values = reflect.Append(values, v.Elem())
 		}
 	} else {
-		for _, child := range node.nodes {
-			v := reflect.New(value.Type().Elem())
-			if err = setValue(v.Elem(), nil, child); err != nil {
-				return
+		for _, n := range node.Nodes {
+			if child, ok := n.(*Node); ok {
+				v := reflect.New(value.Type().Elem())
+				if err = setValue(v.Elem(), nil, child); err != nil {
+					return
+				}
+				values = reflect.Append(values, v.Elem())
 			}
-			values = reflect.Append(values, v.Elem())
 		}
 	}
 	value.Set(values)
@@ -444,7 +498,7 @@ func parseConfig(root *Node, data []byte) (err error) {
 // a byte array ([]byte) with configuration file or interface{} either returned by Marshal
 // or a configuration file Unmarshaled into interface{} variable before.
 // The third is optional 'strict' parameter that forces strict validation of configuration
-// and structure fields (enabled by efault). When disabled it will unmarshal part of
+// and structure fields (enabled by default). When disabled it will unmarshal part of
 // configuration into incomplete target structures.
 func Unmarshal(data interface{}, v interface{}, args ...interface{}) (err error) {
 	rv := reflect.ValueOf(v)
@@ -464,20 +518,18 @@ func Unmarshal(data interface{}, v interface{}, args ...interface{}) (err error)
 	switch u := data.(type) {
 	case nil:
 		root = &Node{
-			name:   "",
+			Name:   "",
 			used:   false,
-			values: make([][]byte, 0),
-			nodes:  make([]*Node, 0),
+			Nodes:  make([]interface{}, 0),
 			parent: nil,
-			line:   0}
+			Line:   0}
 	case []byte:
 		root = &Node{
-			name:   "",
+			Name:   "",
 			used:   false,
-			values: make([][]byte, 0),
-			nodes:  make([]*Node, 0),
+			Nodes:  make([]interface{}, 0),
 			parent: nil,
-			line:   0}
+			Line:   0}
 
 		if err = parseConfig(root, u); err != nil {
 			return fmt.Errorf("Cannot read configuration: %s", err.Error())

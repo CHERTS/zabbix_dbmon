@@ -64,6 +64,7 @@ const char	*usage_message[] = {};
 const char	*help_message[] = {};
 
 ZBX_METRIC	parameters_common[] = {NULL};
+ZBX_METRIC	parameters_common_local[] = {NULL};
 
 #define ZBX_MESSAGE_BUF_SIZE	1024
 
@@ -98,6 +99,11 @@ int	PERF_COUNTER(AGENT_REQUEST *request, AGENT_RESULT *result)
 }
 
 DWORD	get_builtin_counter_index(zbx_builtin_counter_ref_t counter_ref)
+{
+	return 0;
+}
+
+DWORD	get_builtin_object_index(zbx_builtin_counter_ref_t object_ref)
 {
 	return 0;
 }

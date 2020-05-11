@@ -34,11 +34,14 @@
 #include "proxydata.h"
 #include "../alerter/alerter_protocol.h"
 #include "trapper_preproc.h"
+#include "trapper_expressions_evaluate.h"
 
 #include "daemon.h"
 #include "zbxcrypto.h"
 #include "../../libs/zbxserver/zabbix_stats.h"
 #include "zbxipcservice.h"
+#include "trapper_item_test.h"
+#include "../poller/checks_snmp.h"
 
 #define ZBX_MAX_SECTION_ENTRIES		4
 #define ZBX_MAX_ENTRY_ATTRIBUTES	3
@@ -48,6 +51,10 @@ extern int		server_num, process_num;
 extern size_t		(*find_psk_in_cache)(const unsigned char *, unsigned char *, unsigned int *);
 
 extern int	CONFIG_CONFSYNCER_FORKS;
+
+#ifdef HAVE_NETSNMP
+static volatile sig_atomic_t	snmp_cache_reload_requested;
+#endif
 
 typedef struct
 {
@@ -194,7 +201,7 @@ static void	recv_proxy_heartbeat(zbx_socket_t *sock, struct zbx_json_parse *jp)
 	}
 
 	zbx_update_proxy_data(&proxy, zbx_get_proxy_protocol_version(jp), time(NULL),
-			(0 != (sock->protocol & ZBX_TCP_COMPRESS) ? 1 : 0));
+			(0 != (sock->protocol & ZBX_TCP_COMPRESS) ? 1 : 0), ZBX_FLAGS_PROXY_DIFF_UPDATE_HEARTBEAT);
 
 	if (0 != proxy.auto_compress)
 		flags |= ZBX_TCP_COMPRESS;
@@ -473,7 +480,7 @@ static void	recv_alert_send(zbx_socket_t *sock, const struct zbx_json_parse *jp)
 	DB_ROW			row;
 	int			ret = FAIL, errcode;
 	char			tmp[ZBX_MAX_UINT64_LEN + 1], sessionid[MAX_STRING_LEN], *sendto = NULL, *subject = NULL,
-				*message = NULL, *error = NULL, *params = NULL, *value = NULL;
+				*message = NULL, *error = NULL, *params = NULL, *value = NULL, *debug = NULL;
 	zbx_uint64_t		mediatypeid;
 	size_t			string_alloc;
 	struct zbx_json		json;
@@ -484,8 +491,9 @@ static void	recv_alert_send(zbx_socket_t *sock, const struct zbx_json_parse *jp)
 	zbx_user_t		user;
 	unsigned short		smtp_port;
 
-
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
+
+	zbx_json_init(&json, ZBX_JSON_STAT_BUF_LEN);
 
 	if (SUCCEED != zbx_json_value_by_name(jp, ZBX_PROTO_TAG_SID, sessionid, sizeof(sessionid), NULL) ||
 			SUCCEED != DBget_user_by_active_session(sessionid, &user) || USER_TYPE_SUPER_ADMIN > user.type)
@@ -562,25 +570,30 @@ static void	recv_alert_send(zbx_socket_t *sock, const struct zbx_json_parse *jp)
 		goto fail;
 	}
 
-	zbx_alerter_deserialize_result(response, &value, &errcode, &error);
+	zbx_alerter_deserialize_result(response, &value, &errcode, &error, &debug);
 	zbx_free(response);
 
-	if (SUCCEED != errcode)
-		goto fail;
+	if (SUCCEED == errcode)
+		ret = SUCCEED;
+fail:
+	zbx_json_addstring(&json, ZBX_PROTO_TAG_RESPONSE, SUCCEED == ret ? ZBX_PROTO_VALUE_SUCCESS :
+				ZBX_PROTO_VALUE_FAILED, ZBX_JSON_TYPE_STRING);
 
-	zbx_json_init(&json, ZBX_JSON_STAT_BUF_LEN);
-	zbx_json_addstring(&json, ZBX_PROTO_TAG_RESPONSE, ZBX_PROTO_VALUE_SUCCESS, ZBX_JSON_TYPE_STRING);
-	if (NULL != value)
-		zbx_json_addstring(&json, ZBX_PROTO_TAG_DATA, value, ZBX_JSON_TYPE_STRING);
+	if (SUCCEED == ret)
+	{
+		if (NULL != value)
+			zbx_json_addstring(&json, ZBX_PROTO_TAG_DATA, value, ZBX_JSON_TYPE_STRING);
+	}
+	else
+	{
+		if (NULL != error && '\0' != *error)
+			zbx_json_addstring(&json, ZBX_PROTO_TAG_INFO, error, ZBX_JSON_TYPE_STRING);
+	}
+
+	if (NULL != debug)
+		zbx_json_addraw(&json, "debug", debug);
 
 	(void)zbx_tcp_send(sock, json.buffer);
-
-	zbx_json_free(&json);
-
-	ret = SUCCEED;
-fail:
-	if (SUCCEED != ret)
-		zbx_send_response(sock, FAIL, error, CONFIG_TIMEOUT);
 
 	zbx_free(params);
 	zbx_free(message);
@@ -589,6 +602,8 @@ fail:
 	zbx_free(data);
 	zbx_free(value);
 	zbx_free(error);
+	zbx_free(debug);
+	zbx_json_free(&json);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __func__, zbx_result_string(ret));
 }
@@ -837,7 +852,7 @@ static void	status_entry_export(struct zbx_json *json, const zbx_section_entry_t
 			zbx_json_adduint64(json, "count", counter_value.ui64);
 			break;
 		case ZBX_COUNTER_TYPE_DBL:
-			tmp = zbx_dsprintf(tmp, ZBX_FS_DBL, counter_value.dbl);
+			tmp = zbx_dsprintf(tmp, ZBX_FS_DBL64, counter_value.dbl);
 			zbx_json_addstring(json, "count", tmp, ZBX_JSON_TYPE_STRING);
 			break;
 		default:
@@ -1199,6 +1214,16 @@ static int	process_trap(zbx_socket_t *sock, char *s, zbx_timespec_t *ts)
 				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 					ret = zbx_trapper_preproc_test(sock, &jp);
 			}
+			else if (0 == strcmp(value, ZBX_PROTO_VALUE_EXPRESSIONS_EVALUATE))
+			{
+				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+					ret = zbx_trapper_expressions_evaluate(sock, &jp);
+			}
+			else if (0 == strcmp(value, ZBX_PROTO_VALUE_ZABBIX_ITEM_TEST))
+			{
+				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
+					zbx_trapper_item_test(sock, &jp);
+			}
 			else
 				zabbix_log(LOG_LEVEL_WARNING, "unknown request received from \"%s\": [%s]", sock->peer, value);
 		}
@@ -1263,7 +1288,7 @@ static int	process_trap(zbx_socket_t *sock, char *s, zbx_timespec_t *ts)
 			av.state = ITEM_STATE_NOTSUPPORTED;
 
 		DCconfig_get_items_by_keys(&item, &hk, &errcode, 1);
-		process_history_data(&item, &av, &errcode, 1);
+		process_history_data(&item, &av, &errcode, 1, NULL);
 		DCconfig_clean_items(&item, &errcode, 1);
 
 		zbx_alarm_on(CONFIG_TIMEOUT);
@@ -1283,6 +1308,16 @@ static void	process_trapper_child(zbx_socket_t *sock, zbx_timespec_t *ts)
 	process_trap(sock, sock->buffer, ts);
 }
 
+static void	zbx_trapper_sigusr_handler(int flags)
+{
+#ifdef HAVE_NETSNMP
+	if (ZBX_RTC_SNMP_CACHE_RELOAD == ZBX_RTC_GET_MSG(flags))
+		snmp_cache_reload_requested = 1;
+#else
+	ZBX_UNUSED(flags);
+#endif
+}
+
 ZBX_THREAD_ENTRY(trapper_thread, args)
 {
 	double		sec = 0.0;
@@ -1299,8 +1334,11 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 	update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
 
 	memcpy(&s, (zbx_socket_t *)((zbx_thread_args_t *)args)->args, sizeof(zbx_socket_t));
+#ifdef HAVE_NETSNMP
+	zbx_init_snmp();
+#endif
 
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
+#if defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_init_child();
 	find_psk_in_cache = DCget_psk_by_identity;
 #endif
@@ -1315,8 +1353,17 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 		DCsync_configuration(ZBX_DBSYNC_INIT);
 	}
 
+	zbx_set_sigusr_handler(zbx_trapper_sigusr_handler);
+
 	while (ZBX_IS_RUNNING())
 	{
+#ifdef HAVE_NETSNMP
+		if (1 == snmp_cache_reload_requested)
+		{
+			zbx_clear_cache_snmp();
+			snmp_cache_reload_requested = 0;
+		}
+#endif
 		zbx_setproctitle("%s #%d [processed data in " ZBX_FS_DBL " sec, waiting for connection]",
 				get_process_type_string(process_type), process_num, sec);
 

@@ -22,13 +22,6 @@ use File::Basename;
 
 my (%output, $insert_into, $fields);
 
-my %ibm_db2 = (
-	"database"	=>	"ibm_db2",
-	"before"	=>	"",
-	"after"		=>	"",
-	"exec_cmd"	=>	";;\n"
-);
-
 my %mysql = (
 	"database"	=>	"mysql",
 	"before"	=>	"START TRANSACTION;\n",
@@ -56,6 +49,11 @@ my %sqlite3 = (
 	"after"		=>	"COMMIT;\n",
 	"exec_cmd"	=>	";\n"
 );
+
+# Maximum line length that SQL*Plus can read from .sql file is 2499 characters.
+# Splitting long entries in 'media_type' table have to happen before SQL*Plus limit has been reached and end-of-lien
+# character has to stay intact in one line.
+my $oracle_field_limit = 2048;
 
 sub process_table
 {
@@ -111,6 +109,7 @@ sub process_row
 
 	my $first = 1;
 	my $values = "(";
+	my $split_script_field = 0;
 
 	foreach (@array)
 	{
@@ -167,6 +166,53 @@ sub process_row
 			{
 				$_ =~ s/&eol;/' || chr(13) || chr(10) || '/g;
 				$_ =~ s/&bsn;/' || chr(10) || '/g;
+
+				if (length($_) > $oracle_field_limit)
+				{
+					my @sections = unpack("(a$oracle_field_limit)*", $_);
+					my $move_to_next;
+					my $first_part = 1;
+					my $script;
+
+					$split_script_field = 1;
+
+					foreach (@sections)
+					{
+						# split after 'end of line' character and move what is left to the next line
+						if (/(.*' \|\| chr\(13\) \|\| chr\(10\) \|\| ')(.*)/)
+						{
+							if ($first_part == 1)
+							{
+								$script = "TO_NCLOB('$1')";
+								$first_part = 0;
+							}
+							else
+							{
+								$script = "${script}||\nTO_NCLOB('$move_to_next$1')";
+							}
+
+							$move_to_next = $2;
+						}
+						else
+						{
+							$move_to_next = "$move_to_next$_";
+						}
+					}
+
+					if (length($move_to_next) > 0)
+					{
+						if (length($script) + length($move_to_next) < $oracle_field_limit)
+						{
+							substr($script, length($script) - 2, 2, "$move_to_next')");
+						}
+						else
+						{
+							substr($script, length($script), 0, "||\nTO_NCLOB('$move_to_next')");
+						}
+					}
+
+					$_ = $script;
+				}
 			}
 			else
 			{
@@ -174,7 +220,16 @@ sub process_row
 				$_ =~ s/&bsn;/\x0A/g;
 			}
 
-			$values = "$values$modifier'$_'";
+			# can be set to 1 only if Oracle DB is used
+			if ($split_script_field == 1)
+			{
+				$values = "$values$modifier$_";
+				$split_script_field = 0;
+			}
+			else
+			{
+				$values = "$values$modifier'$_'";
+			}
 		}
 	}
 
@@ -192,7 +247,7 @@ sub process_row
 
 sub usage
 {
-	print "Usage: $0 [ibm_db2|mysql|oracle|postgresql|sqlite3]\n";
+	print "Usage: $0 [mysql|oracle|postgresql|sqlite3]\n";
 	print "The script generates Zabbix SQL data files for different database engines.\n";
 	exit;
 }
@@ -216,8 +271,7 @@ sub main
 	push(@lines, <INFO>);
 	close(INFO);
 
-	if ($ARGV[0] eq 'ibm_db2')		{ %output = %ibm_db2; }
-	elsif ($ARGV[0] eq 'mysql')		{ %output = %mysql; }
+	if ($ARGV[0] eq 'mysql')		{ %output = %mysql; }
 	elsif ($ARGV[0] eq 'oracle')		{ %output = %oracle; }
 	elsif ($ARGV[0] eq 'postgresql')	{ %output = %postgresql; }
 	elsif ($ARGV[0] eq 'sqlite3')		{ %output = %sqlite3; }

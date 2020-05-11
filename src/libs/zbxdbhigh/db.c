@@ -25,6 +25,7 @@
 #include "zbxserver.h"
 #include "dbcache.h"
 #include "zbxalgo.h"
+#include "cfg.h"
 
 #if defined(HAVE_MYSQL) || defined(HAVE_ORACLE) || defined(HAVE_POSTGRESQL)
 #define ZBX_SUPPORTED_DB_CHARACTER_SET	"utf8"
@@ -53,11 +54,100 @@ extern char	ZBX_PG_ESCAPE_BACKSLASH;
 #endif
 
 static int	connection_failure;
+extern unsigned char	program_type;
 
 void	DBclose(void)
 {
 	zbx_db_close();
 }
+
+int	zbx_db_validate_config_features(void)
+{
+	int	err = 0;
+
+#if !(defined(HAVE_MYSQL_TLS) || defined(HAVE_MARIADB_TLS) || defined(HAVE_POSTGRESQL))
+	err |= (FAIL == check_cfg_feature_str("DBTLSConnect", CONFIG_DB_TLS_CONNECT, "PostgreSQL or MySQL library"
+			" version that support TLS"));
+	err |= (FAIL == check_cfg_feature_str("DBTLSCAFile", CONFIG_DB_TLS_CA_FILE,"PostgreSQL or MySQL library"
+			" version that support TLS"));
+	err |= (FAIL == check_cfg_feature_str("DBTLSCertFile", CONFIG_DB_TLS_CERT_FILE, "PostgreSQL or MySQL library"
+			" version that support TLS"));
+	err |= (FAIL == check_cfg_feature_str("DBTLSKeyFile", CONFIG_DB_TLS_KEY_FILE, "PostgreSQL or MySQL library"
+			" version that support TLS"));
+#endif
+
+#if !(defined(HAVE_MYSQL_TLS) || defined(HAVE_POSTGRESQL))
+	if (NULL != CONFIG_DB_TLS_CONNECT && 0 == strcmp(CONFIG_DB_TLS_CONNECT, ZBX_DB_TLS_CONNECT_VERIFY_CA_TXT))
+	{
+		zbx_error("\"DBTLSConnect\" configuration parameter value '%s' cannot be used: Zabbix %s was compiled"
+			" without PostgreSQL or MySQL library version that support this value",
+			ZBX_DB_TLS_CONNECT_VERIFY_CA_TXT, get_program_type_string(program_type));
+		err |= 1;
+	}
+#endif
+
+#if !(defined(HAVE_MYSQL_TLS) || defined(HAVE_MARIADB_TLS))
+	err |= (FAIL == check_cfg_feature_str("DBTLSCipher", CONFIG_DB_TLS_CIPHER, "MySQL library version that support"
+			" configuration of cipher"));
+#endif
+
+#if !defined(HAVE_MYSQL_TLS_CIPHERSUITES)
+	err |= (FAIL == check_cfg_feature_str("DBTLSCipher13", CONFIG_DB_TLS_CIPHER_13, "MySQL library version that"
+			" support configuration of TLSv1.3 ciphersuites"));
+#endif
+
+	return 0 != err ? FAIL : SUCCEED;
+}
+
+#if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
+static void	check_cfg_empty_str(const char *parameter, const char *value)
+{
+	if (NULL != value && 0 == strlen(value))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "configuration parameter \"%s\" is defined but empty", parameter);
+		exit(EXIT_FAILURE);
+	}
+}
+
+void	zbx_db_validate_config(void)
+{
+	check_cfg_empty_str("DBTLSConnect", CONFIG_DB_TLS_CONNECT);
+	check_cfg_empty_str("DBTLSCertFile", CONFIG_DB_TLS_CERT_FILE);
+	check_cfg_empty_str("DBTLSKeyFile", CONFIG_DB_TLS_KEY_FILE);
+	check_cfg_empty_str("DBTLSCAFile", CONFIG_DB_TLS_CA_FILE);
+	check_cfg_empty_str("DBTLSCipher", CONFIG_DB_TLS_CIPHER);
+	check_cfg_empty_str("DBTLSCipher13", CONFIG_DB_TLS_CIPHER_13);
+
+	if (NULL != CONFIG_DB_TLS_CONNECT &&
+			0 != strcmp(CONFIG_DB_TLS_CONNECT, ZBX_DB_TLS_CONNECT_REQUIRED_TXT) &&
+			0 != strcmp(CONFIG_DB_TLS_CONNECT, ZBX_DB_TLS_CONNECT_VERIFY_CA_TXT) &&
+			0 != strcmp(CONFIG_DB_TLS_CONNECT, ZBX_DB_TLS_CONNECT_VERIFY_FULL_TXT))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "invalid \"DBTLSConnect\" configuration parameter: '%s'",
+				CONFIG_DB_TLS_CONNECT);
+		exit(EXIT_FAILURE);
+	}
+
+	if (NULL != CONFIG_DB_TLS_CONNECT &&
+			(0 == strcmp(ZBX_DB_TLS_CONNECT_VERIFY_CA_TXT, CONFIG_DB_TLS_CONNECT) ||
+			0 == strcmp(ZBX_DB_TLS_CONNECT_VERIFY_FULL_TXT, CONFIG_DB_TLS_CONNECT)) &&
+			NULL == CONFIG_DB_TLS_CA_FILE)
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "parameter \"DBTLSConnect\" value \"%s\" requires \"DBTLSCAFile\", but it"
+				" is not defined", CONFIG_DB_TLS_CONNECT);
+		exit(EXIT_FAILURE);
+	}
+
+	if ((NULL != CONFIG_DB_TLS_CERT_FILE || NULL != CONFIG_DB_TLS_KEY_FILE) &&
+			(NULL == CONFIG_DB_TLS_CERT_FILE || NULL == CONFIG_DB_TLS_KEY_FILE ||
+			NULL == CONFIG_DB_TLS_CA_FILE))
+	{
+		zabbix_log(LOG_LEVEL_CRIT, "parameter \"DBTLSKeyFile\" or \"DBTLSCertFile\" is defined, but"
+				" \"DBTLSKeyFile\", \"DBTLSCertFile\" or \"DBTLSCAFile\" is not defined");
+		exit(EXIT_FAILURE);
+	}
+}
+#endif
 
 /******************************************************************************
  *                                                                            *
@@ -79,7 +169,9 @@ int	DBconnect(int flag)
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() flag:%d", __func__, flag);
 
 	while (ZBX_DB_OK != (err = zbx_db_connect(CONFIG_DBHOST, CONFIG_DBUSER, CONFIG_DBPASSWORD,
-			CONFIG_DBNAME, CONFIG_DBSCHEMA, CONFIG_DBSOCKET, CONFIG_DBPORT)))
+			CONFIG_DBNAME, CONFIG_DBSCHEMA, CONFIG_DBSOCKET, CONFIG_DBPORT, CONFIG_DB_TLS_CONNECT,
+			CONFIG_DB_TLS_CERT_FILE, CONFIG_DB_TLS_KEY_FILE, CONFIG_DB_TLS_CA_FILE, CONFIG_DB_TLS_CIPHER,
+			CONFIG_DB_TLS_CIPHER_13)))
 	{
 		if (ZBX_DB_CONNECT_ONCE == flag)
 			break;
@@ -507,11 +599,7 @@ static size_t	get_string_field_size(unsigned char type)
  ******************************************************************************/
 char	*DBdyn_escape_string_len(const char *src, size_t length)
 {
-#if defined(HAVE_IBM_DB2)	/* IBM DB2 fields are limited by bytes rather than characters */
-	return zbx_db_dyn_escape_string(src, length, ZBX_SIZE_T_MAX, ESCAPE_SEQUENCE_ON);
-#else
 	return zbx_db_dyn_escape_string(src, ZBX_SIZE_T_MAX, length, ESCAPE_SEQUENCE_ON);
-#endif
 }
 
 /******************************************************************************
@@ -540,8 +628,6 @@ static char	*DBdyn_escape_field_len(const ZBX_FIELD *field, const char *src, zbx
 
 #if defined(HAVE_MYSQL) || defined(HAVE_ORACLE)
 	return zbx_db_dyn_escape_string(src, get_string_field_size(field->type), length, flag);
-#elif defined(HAVE_IBM_DB2)	/* IBM DB2 fields are limited by bytes rather than characters */
-	return zbx_db_dyn_escape_string(src, length, ZBX_SIZE_T_MAX, flag);
 #else
 	return zbx_db_dyn_escape_string(src, ZBX_SIZE_T_MAX, length, flag);
 #endif
@@ -729,6 +815,52 @@ zbx_uint64_t	DBget_maxid_num(const char *tablename, int num)
 		return DCget_nextid(tablename, num);
 
 	return DBget_nextid(tablename, num);
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: DBcheck_capabilities                                             *
+ *                                                                            *
+ * Purpose: checks DBMS for optional features and adjusting configuration     *
+ *                                                                            *
+ ******************************************************************************/
+void	DBcheck_capabilities(void)
+{
+#ifdef HAVE_POSTGRESQL
+	int	compression_available = OFF;
+
+	DBconnect(ZBX_DB_CONNECT_NORMAL);
+
+	/* Timescale compression feature is available in PostgreSQL 10.2 and TimescaleDB 1.5.0 */
+	if (100002 <= zbx_dbms_get_version())
+	{
+		DB_RESULT	result;
+		DB_ROW		row;
+		int		major, minor, patch, version;
+
+		if (NULL == (result = DBselect("select extversion from pg_extension where extname = 'timescaledb'")))
+			goto out;
+
+		if (NULL == (row = DBfetch(result)))
+			goto clean;
+
+		zabbix_log(LOG_LEVEL_DEBUG, "TimescaleDB version: %s", (char*)row[0]);
+
+		sscanf((const char*)row[0], "%d.%d.%d", &major, &minor, &patch);
+		version = major * 10000;
+		version += minor * 100;
+		version += patch;
+
+		if (10500 <= version)
+			compression_available = ON;
+clean:
+		DBfree_result(result);
+	}
+out:
+	DBexecute("update config set compression_availability=%d", compression_available);
+
+	DBclose();
+#endif
 }
 
 #define MAX_EXPRESSIONS	950
@@ -1293,7 +1425,7 @@ static int	DBregister_host_active(void)
 			" from actions"
 			" where eventsource=%d"
 				" and status=%d",
-			EVENT_SOURCE_AUTO_REGISTRATION,
+			EVENT_SOURCE_AUTOREGISTRATION,
 			ACTION_STATUS_ACTIVE);
 
 	if (NULL == DBfetch(result))
@@ -1411,8 +1543,8 @@ static void	process_autoreg_hosts(zbx_vector_ptr_t *autoreg_hosts, zbx_uint64_t 
 					break;
 				}
 
-				/* process with auto registration if the connection type was forced and */
-				/* is different from the last registered connection type                */
+				/* process with autoregistration if the connection type was forced and */
+				/* is different from the last registered connection type               */
 				if (ZBX_CONN_DEFAULT != autoreg_host->flag)
 				{
 					unsigned short	port;
@@ -1585,7 +1717,7 @@ void	DBregister_host_flush(zbx_vector_ptr_t *autoreg_hosts, zbx_uint64_t proxy_h
 		autoreg_host = (zbx_autoreg_host_t *)autoreg_hosts->values[i];
 
 		ts.sec = autoreg_host->now;
-		zbx_add_event(EVENT_SOURCE_AUTO_REGISTRATION, EVENT_OBJECT_ZABBIX_ACTIVE, autoreg_host->autoreg_hostid,
+		zbx_add_event(EVENT_SOURCE_AUTOREGISTRATION, EVENT_OBJECT_ZABBIX_ACTIVE, autoreg_host->autoreg_hostid,
 				&ts, TRIGGER_VALUE_PROBLEM, NULL, NULL, NULL, 0, 0, NULL, 0, NULL, 0, NULL, NULL);
 	}
 
@@ -1870,15 +2002,7 @@ int	DBtable_exists(const char *table_name)
 
 	table_name_esc = DBdyn_escape_string(table_name);
 
-#if defined(HAVE_IBM_DB2)
-	/* publib.boulder.ibm.com/infocenter/db2luw/v9r7/topic/com.ibm.db2.luw.admin.cmd.doc/doc/r0001967.html */
-	result = DBselect(
-			"select 1"
-			" from syscat.tables"
-			" where tabschema=user"
-				" and lower(tabname)='%s'",
-			table_name_esc);
-#elif defined(HAVE_MYSQL)
+#if defined(HAVE_MYSQL)
 	result = DBselect("show tables like '%s'", table_name_esc);
 #elif defined(HAVE_ORACLE)
 	result = DBselect(
@@ -1921,10 +2045,7 @@ int	DBtable_exists(const char *table_name)
 int	DBfield_exists(const char *table_name, const char *field_name)
 {
 	DB_RESULT	result;
-#if defined(HAVE_IBM_DB2)
-	char		*table_name_esc, *field_name_esc;
-	int		ret;
-#elif defined(HAVE_MYSQL)
+#if defined(HAVE_MYSQL)
 	char		*field_name_esc;
 	int		ret;
 #elif defined(HAVE_ORACLE)
@@ -1939,25 +2060,7 @@ int	DBfield_exists(const char *table_name, const char *field_name)
 	int		ret = FAIL;
 #endif
 
-#if defined(HAVE_IBM_DB2)
-	table_name_esc = DBdyn_escape_string(table_name);
-	field_name_esc = DBdyn_escape_string(field_name);
-
-	result = DBselect(
-			"select 1"
-			" from syscat.columns"
-			" where tabschema=user"
-				" and lower(tabname)='%s'"
-				" and lower(colname)='%s'",
-			table_name_esc, field_name_esc);
-
-	zbx_free(field_name_esc);
-	zbx_free(table_name_esc);
-
-	ret = (NULL == DBfetch(result) ? FAIL : SUCCEED);
-
-	DBfree_result(result);
-#elif defined(HAVE_MYSQL)
+#if defined(HAVE_MYSQL)
 	field_name_esc = DBdyn_escape_string(field_name);
 
 	result = DBselect("show columns from %s like '%s'",
@@ -2040,15 +2143,7 @@ int	DBindex_exists(const char *table_name, const char *index_name)
 	table_name_esc = DBdyn_escape_string(table_name);
 	index_name_esc = DBdyn_escape_string(index_name);
 
-#if defined(HAVE_IBM_DB2)
-	result = DBselect(
-			"select 1"
-			" from syscat.indexes"
-			" where tabschema=user"
-				" and lower(tabname)='%s'"
-				" and lower(indname)='%s'",
-			table_name_esc, index_name_esc);
-#elif defined(HAVE_MYSQL)
+#if defined(HAVE_MYSQL)
 	result = DBselect(
 			"show index from %s"
 			" where key_name='%s'",
@@ -2409,7 +2504,7 @@ static char	*zbx_db_format_values(ZBX_FIELD **fields, const zbx_db_value_t *valu
 				zbx_snprintf_alloc(&str, &str_alloc, &str_offset, "'%s'", value->str);
 				break;
 			case ZBX_TYPE_FLOAT:
-				zbx_snprintf_alloc(&str, &str_alloc, &str_offset, ZBX_FS_DBL, value->dbl);
+				zbx_snprintf_alloc(&str, &str_alloc, &str_offset, ZBX_FS_DBL64, value->dbl);
 				break;
 			case ZBX_TYPE_ID:
 			case ZBX_TYPE_UINT:
@@ -2878,8 +2973,7 @@ retry_oracle:
 					zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, "%d", value->i32);
 					break;
 				case ZBX_TYPE_FLOAT:
-					zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, ZBX_FS_DBL,
-							value->dbl);
+					zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, ZBX_FS_DBL64_SQL, value->dbl);
 					break;
 				case ZBX_TYPE_UINT:
 					zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset, ZBX_FS_UI64,
@@ -3310,9 +3404,6 @@ void	zbx_db_mock_field_init(zbx_db_mock_field_t *field, int field_type, int fiel
 #if defined(HAVE_ORACLE)
 			field->chars_num = field_len;
 			field->bytes_num = 4000;
-#elif defined(HAVE_IBM_DB2)
-			field->chars_num = -1;
-			field->bytes_num = field_len;
 #else
 			field->chars_num = field_len;
 			field->bytes_num = -1;
@@ -3366,4 +3457,52 @@ int	zbx_db_mock_field_append(zbx_db_mock_field_t *field, const char *text)
 	field->chars_num -= chars_num;
 
 	return SUCCEED;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_db_check_instanceid                                          *
+ *                                                                            *
+ * Purpose: checks instanceid value in config table and generates new         *
+ *          instance id if its empty                                          *
+ *                                                                            *
+ * Return value: SUCCEED - valid instance id either exists or was created     *
+ *               FAIL    - no valid instance id exists and could not create   *
+ *                         one                                                *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_db_check_instanceid(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	int		ret = SUCCEED;
+
+	DBconnect(ZBX_DB_CONNECT_NORMAL);
+
+	result = DBselect("select configid,instanceid from config order by configid");
+	if (NULL != (row = DBfetch(result)))
+	{
+		if (SUCCEED == DBis_null(row[1]) || '\0' == *row[1])
+		{
+			char	*token;
+
+			token = zbx_create_token(0);
+			if (ZBX_DB_OK > DBexecute("update config set instanceid='%s' where configid=%s", token, row[0]))
+			{
+				zabbix_log(LOG_LEVEL_ERR, "cannot update instance id in database");
+				ret = FAIL;
+			}
+			zbx_free(token);
+		}
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_ERR, "cannot read instance id from database");
+		ret = FAIL;
+	}
+	DBfree_result(result);
+
+	DBclose();
+
+	return ret;
 }

@@ -56,7 +56,7 @@ void	version(void)
 	printf("%s (Zabbix) %s\n", title_message, ZABBIX_VERSION);
 	printf("Revision %s %s, compilation time: %s %s\n\n", ZABBIX_REVISION, ZABBIX_REVDATE, __DATE__, __TIME__);
 	puts(copyright_message);
-#if defined(HAVE_POLARSSL) || defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
+#if defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	printf("\n");
 	zbx_tls_version();
 #endif
@@ -584,6 +584,67 @@ void	zbx_remove_chars(char *str, const char *charlist)
 
 /******************************************************************************
  *                                                                            *
+ * Function: zbx_str_printable_dyn                                            *
+ *                                                                            *
+ * Purpose: converts text to printable string by converting special           *
+ *          characters to escape sequences                                    *
+ *                                                                            *
+ * Parameters: text - [IN] the text to convert                                *
+ *                                                                            *
+ * Return value: The text converted in printable format                       *
+ *                                                                            *
+ ******************************************************************************/
+char	*zbx_str_printable_dyn(const char *text)
+{
+	size_t		out_alloc = 0;
+	const char	*pin;
+	char		*out, *pout;
+
+	for (pin = text; '\0' != *pin; pin++)
+	{
+		switch (*pin)
+		{
+			case '\n':
+			case '\t':
+			case '\r':
+				out_alloc += 2;
+				break;
+			default:
+				out_alloc++;
+				break;
+		}
+	}
+
+	out = zbx_malloc(NULL, ++out_alloc);
+
+	for (pin = text, pout = out; '\0' != *pin; pin++)
+	{
+		switch (*pin)
+		{
+			case '\n':
+				*pout++ = '\\';
+				*pout++ = 'n';
+				break;
+			case '\t':
+				*pout++ = '\\';
+				*pout++ = 't';
+				break;
+			case '\r':
+				*pout++ = '\\';
+				*pout++ = 'r';
+				break;
+			default:
+				*pout++ = *pin;
+				break;
+		}
+	}
+	*pout = '\0';
+
+	return out;
+}
+
+/******************************************************************************
+ *                                                                            *
  * Function: zbx_strlcpy                                                      *
  *                                                                            *
  * Purpose: Copy src to string dst of size siz. At most siz - 1 characters    *
@@ -1068,6 +1129,45 @@ char	*zbx_dyn_escape_string(const char *src, const char *charlist)
 	return dst;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_escape_string                                                *
+ *                                                                            *
+ * Purpose: escape characters in the source string to fixed output buffer     *
+ *                                                                            *
+ * Parameters: dst      - [OUT] the output buffer                             *
+ *             len      - [IN] the output buffer size                         *
+ *             src      - [IN] null terminated source string                  *
+ *             charlist - [IN] null terminated to-be-escaped character list   *
+ *                                                                            *
+ * Return value: SUCCEED - the string was escaped successfully.               *
+ *               FAIL    - output buffer is too small.                        *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_escape_string(char *dst, size_t len, const char *src, const char *charlist)
+{
+	for (; '\0' != *src; src++)
+	{
+		if (NULL != strchr(charlist, *src))
+		{
+			if (0 == --len)
+				return FAIL;
+			*dst++ = '\\';
+		}
+		else
+		{
+			if (0 == --len)
+				return FAIL;
+		}
+
+		*dst++ = *src;
+	}
+
+	*dst = '\0';
+
+	return SUCCEED;
+}
+
 char	*zbx_age2str(int age)
 {
 	size_t		offset = 0;
@@ -1312,9 +1412,7 @@ const char	*zbx_agent_type_string(zbx_item_type_t item_type)
 	{
 		case ITEM_TYPE_ZABBIX:
 			return "Zabbix agent";
-		case ITEM_TYPE_SNMPv1:
-		case ITEM_TYPE_SNMPv2c:
-		case ITEM_TYPE_SNMPv3:
+		case ITEM_TYPE_SNMP:
 			return "SNMP agent";
 		case ITEM_TYPE_IPMI:
 			return "IPMI agent";
@@ -2017,6 +2115,30 @@ size_t	zbx_strlen_utf8_nbytes(const char *text, size_t maxlen)
 	}
 
 	return sz;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_charcount_utf8_nbytes                                        *
+ *                                                                            *
+ * Purpose: calculates number of chars in utf8 text limited by maxlen bytes   *
+ *                                                                            *
+ ******************************************************************************/
+size_t	zbx_charcount_utf8_nbytes(const char *text, size_t maxlen)
+{
+	size_t	n = 0;
+
+	maxlen = zbx_strlen_utf8_nbytes(text, maxlen);
+
+	while ('\0' != *text && maxlen > 0)
+	{
+		if (0x80 != (0xc0 & *text++))
+			n++;
+
+		maxlen--;
+	}
+
+	return n;
 }
 
 /******************************************************************************
@@ -4004,11 +4126,31 @@ int	zbx_token_find(const char *expression, int pos, zbx_token_t *token, zbx_toke
 static size_t	zbx_no_function(const char *expr)
 {
 	const char	*ptr = expr;
-	int		len, c_l, c_r;
+	int		inside_quote = 0, len, c_l, c_r;
 	zbx_token_t	token;
 
 	while ('\0' != *ptr)
 	{
+		switch  (*ptr)
+		{
+			case '\\':
+				if (0 != inside_quote)
+					ptr++;
+				break;
+			case '"':
+				inside_quote = !inside_quote;
+				ptr++;
+				continue;
+		}
+
+		if (inside_quote)
+		{
+			if ('\0' == *ptr)
+				break;
+			ptr++;
+			continue;
+		}
+
 		if ('{' == *ptr && '$' == *(ptr + 1) && SUCCEED == zbx_user_macro_parse(ptr, &len, &c_l, &c_r))
 		{
 			ptr += len + 1;	/* skip to the position after user macro */
@@ -4169,6 +4311,22 @@ int	zbx_number_parse(const char *number, int *len)
 			continue;
 		}
 
+		if ('e' == number[*len] || 'E' == number[*len])
+		{
+			(*len)++;
+
+			if ('-' == number[*len] || '+' == number[*len])
+				(*len)++;
+
+			if (0 == isdigit(number[*len]))
+				return FAIL;
+
+			while (0 != isdigit(number[++(*len)]));
+
+			if ('.' == number[*len] ||'e' == number[*len] || 'E' == number[*len])
+				return FAIL;
+		}
+
 		if (1 > digits || 1 < dots)
 			return FAIL;
 
@@ -4206,75 +4364,151 @@ int	zbx_suffixed_number_parse(const char *number, int *len)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_number_find                                                  *
+ * Function: zbx_expression_next_constant                                     *
  *                                                                            *
- * Purpose: finds number inside expression starting at specified position     *
+ * Purpose: gets next constant (numeric/string value or unresolved user       *
+ *          macro) from trigger expression.                                   *
  *                                                                            *
- * Parameters: str        - [IN] the expression                               *
- *             pos        - [IN] the starting position                        *
- *             number_loc - [OUT] the number location                         *
+ * Parameters: src - [IN] the expression                                      *
+ *             pos - [IN] the starting position                               *
+ *             loc - [IN] the substring location                              *
  *                                                                            *
- * Return value: SUCCEED - the number was parsed successfully                 *
- *               FAIL    - expression does not contain number                 *
- *                                                                            *
- * Author: Eugene Grigorjev                                                   *
- *                                                                            *
- * Comments: !!! Don't forget to sync the code with PHP !!!                   *
- *           The token field locations are specified as offsets from the      *
- *           beginning of the expression.                                     *
+ * Return value: SUCCEED - the next constant was located.                     *
+ *               FAIL    - otherwise.                                         *
  *                                                                            *
  ******************************************************************************/
-int	zbx_number_find(const char *str, size_t pos, zbx_strloc_t *number_loc)
+int	zbx_expression_next_constant(const char *str, size_t pos, zbx_strloc_t *loc)
 {
-	const char	*s, *e;
-	int		len;
+	const char	*s;
+	zbx_token_t	token;
+	int		offset = 0, len;
 
-	for (s = str + pos; '\0' != *s; s++)	/* find start of number */
+	for (s = str + pos; '\0' != *s; s++)
 	{
-		if (0 == isdigit(*s) && ('.' != *s || 0 == isdigit(s[1])))
-			continue;
-
-		if (s != str && '{' == *(s - 1) && NULL != (e = strchr(s, '}')))
+		switch (*s)
 		{
-			/* skip functions '{65432}' */
-			s = e;
-			continue;
+			case '"':
+				loc->l = s - str;
+
+				for (++s;'\0' != *s; s++)
+				{
+					if ('"' == *s)
+					{
+						loc->r = s - str;
+						return SUCCEED;
+					}
+					if ('\\' == *s)
+					{
+						if ('\\' != s[1] && '"' != s[1])
+							return FAIL;
+						s++;
+					}
+				}
+				return FAIL;
+			case '{':
+				if (SUCCEED == zbx_token_find(str, s - str, &token, ZBX_TOKEN_SEARCH_BASIC))
+				{
+					if (ZBX_TOKEN_USER_MACRO == token.type)
+					{
+						*loc = token.loc;
+						return SUCCEED;
+					}
+					/* Skip all other tokens. Currently it can be only {TRIGGER.VALUE} macro. */
+					s = str + token.loc.r;
+				}
+				continue;
+			case '-':
+				offset = 1;
+				continue;
+			case '0':
+				ZBX_FALLTHROUGH;
+			case '1':
+				ZBX_FALLTHROUGH;
+			case '2':
+				ZBX_FALLTHROUGH;
+			case '3':
+				ZBX_FALLTHROUGH;
+			case '4':
+				ZBX_FALLTHROUGH;
+			case '5':
+				ZBX_FALLTHROUGH;
+			case '6':
+				ZBX_FALLTHROUGH;
+			case '7':
+				ZBX_FALLTHROUGH;
+			case '8':
+				ZBX_FALLTHROUGH;
+			case '9':
+				ZBX_FALLTHROUGH;
+			case '.':
+				if (SUCCEED != zbx_suffixed_number_parse(s, &len))
+					return FAIL;
+
+				loc->l = s - str - offset;
+				loc->r = s - str + len - 1;
+				return SUCCEED;
+			default:
+				offset = 0;
 		}
-
-		if (SUCCEED != zbx_suffixed_number_parse(s, &len))
-			continue;
-
-		/* number found */
-
-		number_loc->r = s + len - str - 1;
-
-		/* check for minus before number */
-		if (s > str + pos && '-' == *(s - 1))
-		{
-			/* and make sure it's unary */
-			if (s - 1 > str)
-			{
-				e = s - 2;
-
-				if (e > str && NULL != strchr(ZBX_UNIT_SYMBOLS, *e))
-					e--;
-
-				/* check that minus is not preceded by function, parentheses or (suffixed) number */
-				if ('}' != *e && ')' != *e && '.' != *e && 0 == isdigit(*e))
-					s--;
-			}
-			else	/* nothing before minus, it's definitely unary */
-				s--;
-		}
-
-		number_loc->l = s - str;
-
-		return SUCCEED;
 	}
-
 	return FAIL;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_expression_extract_constant                                  *
+ *                                                                            *
+ * Purpose: extracts constant from trigger expression unquoting/escaping if   *
+ *          necessary                                                         *
+ *                                                                            *
+ * Parameters: src - [IN] the source string                                   *
+ *             loc - [IN] the substring location                              *
+ *                                                                            *
+ * Return value: The constant.                                                *
+ *                                                                            *
+ ******************************************************************************/
+char	*zbx_expression_extract_constant(const char *src, const zbx_strloc_t *loc)
+{
+	char		*str, *pout;
+	const char	*pin;
+	size_t		len;
+
+	len = loc->r - loc->l + 1;
+	str = zbx_malloc(NULL, len + 1);
+
+	if ('"' == src[loc->l])
+	{
+		for (pout = str, pin = src + loc->l + 1; pin <= src + loc->r - 1; pin++)
+		{
+			if ('\\' == *pin)
+			{
+				pin++;
+				switch (*pin)
+				{
+					case '\\':
+						*pout++ = '\\';
+						break;
+					case '"':
+						*pout++ = '"';
+						break;
+					default:
+						THIS_SHOULD_NEVER_HAPPEN;
+						*pout++ = '?';
+				}
+			}
+			else
+				*pout++ = *pin;
+		}
+		*pout++  ='\0';
+	}
+	else
+	{
+		memcpy(str, src + loc->l, len);
+		str[len] = '\0';
+	}
+
+	return str;
+}
 
 /******************************************************************************
  *                                                                            *
@@ -5349,4 +5583,161 @@ int	zbx_str_extract(const char *text, size_t len, char **value)
 fail:
 	zbx_free(tmp);
 	return FAIL;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_truncate_itemkey                                             *
+ *                                                                            *
+ * Purpose: check the item key characters length and, if the length exceeds   *
+ *          max allowable characters length, truncate the item key, while     *
+ *          maintaining the right square bracket                              *
+ *                                                                            *
+ * Parameters: key      - [IN] item key for processing                        *
+ *             char_max - [IN] item key max characters length                 *
+ *             buf      - [IN/OUT] buffer for short version of item key       *
+ *             buf_len  - [IN] buffer size for short version of item key      *
+ *                                                                            *
+ * Return value: The item key that does not exceed passed length              *
+ *                                                                            *
+ ******************************************************************************/
+const char	*zbx_truncate_itemkey(const char *key, const size_t char_max, char *buf, const size_t buf_len)
+{
+#	define ZBX_SUFFIX	"..."
+#	define ZBX_BSUFFIX	"[...]"
+
+	size_t	key_byte_count, key_char_total;
+	int	is_bracket = 0;
+	char	*bracket_l;
+
+	if (char_max >= (key_char_total = zbx_strlen_utf8(key)))
+		return key;
+
+	if (NULL != (bracket_l = strchr(key, '[')))
+		is_bracket = 1;
+
+	if (char_max < ZBX_CONST_STRLEN(ZBX_SUFFIX) + 2 * is_bracket)	/* [...] or ... */
+		return key;
+
+	if (0 != is_bracket)
+	{
+		size_t	key_char_count, param_char_count, param_byte_count;
+
+		key_char_count = zbx_charcount_utf8_nbytes(key, bracket_l - key);
+		param_char_count = key_char_total - key_char_count;
+
+		if (param_char_count <= ZBX_CONST_STRLEN(ZBX_BSUFFIX))
+		{
+			if (char_max < param_char_count + ZBX_CONST_STRLEN(ZBX_SUFFIX))
+				return key;
+
+			key_byte_count = 1 + zbx_strlen_utf8_nchars(key, char_max - param_char_count -
+					ZBX_CONST_STRLEN(ZBX_SUFFIX));
+			param_byte_count = 1 + zbx_strlen_utf8_nchars(bracket_l, key_char_count);
+
+			if (buf_len < key_byte_count + ZBX_CONST_STRLEN(ZBX_SUFFIX) + param_byte_count - 1)
+				return key;
+
+			key_byte_count = zbx_strlcpy_utf8(buf, key, key_byte_count);
+			key_byte_count += zbx_strlcpy_utf8(&buf[key_byte_count], ZBX_SUFFIX, sizeof(ZBX_SUFFIX));
+			zbx_strlcpy_utf8(&buf[key_byte_count], bracket_l, param_byte_count);
+
+			return buf;
+		}
+
+		if (key_char_count + ZBX_CONST_STRLEN(ZBX_BSUFFIX) > char_max)
+		{
+			if (char_max <= ZBX_CONST_STRLEN(ZBX_SUFFIX) + ZBX_CONST_STRLEN(ZBX_BSUFFIX))
+				return key;
+
+			key_byte_count = 1 + zbx_strlen_utf8_nchars(key, char_max - ZBX_CONST_STRLEN(ZBX_SUFFIX) -
+					ZBX_CONST_STRLEN(ZBX_BSUFFIX));
+
+			if (buf_len < key_byte_count + ZBX_CONST_STRLEN(ZBX_SUFFIX) + ZBX_CONST_STRLEN(ZBX_BSUFFIX))
+				return key;
+
+			key_byte_count = zbx_strlcpy_utf8(buf, key, key_byte_count);
+			key_byte_count += zbx_strlcpy_utf8(&buf[key_byte_count], ZBX_SUFFIX, sizeof(ZBX_SUFFIX));
+			zbx_strlcpy_utf8(&buf[key_byte_count], ZBX_BSUFFIX, sizeof(ZBX_BSUFFIX));
+
+			return buf;
+		}
+	}
+
+	key_byte_count = 1 + zbx_strlen_utf8_nchars(key, char_max - (ZBX_CONST_STRLEN(ZBX_SUFFIX) + is_bracket));
+
+	if (buf_len < key_byte_count + ZBX_CONST_STRLEN(ZBX_SUFFIX) + is_bracket)
+		return key;
+
+	key_byte_count = zbx_strlcpy_utf8(buf, key, key_byte_count);
+	zbx_strlcpy_utf8(&buf[key_byte_count], ZBX_SUFFIX, sizeof(ZBX_SUFFIX));
+
+	if (0 != is_bracket)
+		zbx_strlcpy_utf8(&buf[key_byte_count + ZBX_CONST_STRLEN(ZBX_SUFFIX)], "]", sizeof("]"));
+
+	return buf;
+
+#	undef ZBX_SUFFIX
+#	undef ZBX_BSUFFIX
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_truncate_value                                               *
+ *                                                                            *
+ * Purpose: check the value characters length and, if the length exceeds      *
+ *          max allowable characters length, truncate the value               *
+ *                                                                            *
+ * Parameters: val      - [IN] value for processing                           *
+ *             char_max - [IN] value max characters length                    *
+ *             buf      - [IN/OUT] buffer for short version of value          *
+ *             buf_len  - [IN] buffer size for short version of value         *
+ *                                                                            *
+ * Return value: The value that does not exceed passed length                 *
+ *                                                                            *
+ ******************************************************************************/
+const char	*zbx_truncate_value(const char *val, const size_t char_max, char *buf, const size_t buf_len)
+{
+#	define ZBX_SUFFIX	"..."
+
+	size_t	key_byte_count;
+
+	if (char_max >= zbx_strlen_utf8(val))
+		return val;
+
+	key_byte_count = 1 + zbx_strlen_utf8_nchars(val, char_max - ZBX_CONST_STRLEN(ZBX_SUFFIX));
+
+	if (buf_len < key_byte_count + ZBX_CONST_STRLEN(ZBX_SUFFIX))
+		return val;
+
+	key_byte_count = zbx_strlcpy_utf8(buf, val, key_byte_count);
+	zbx_strlcpy_utf8(&buf[key_byte_count], ZBX_SUFFIX, sizeof(ZBX_SUFFIX));
+
+	return buf;
+
+#	undef ZBX_SUFFIX
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_print_double                                                 *
+ *                                                                            *
+ * Purpose: converts double value to string and truncates insignificant       *
+ *          precision                                                         *
+ *                                                                            *
+ * Parameters: buffer - [OUT] the output buffer                               *
+ *             size   - [IN] the output buffer size                           *
+ *             val    - [IN] double value to be converted                     *
+ *                                                                            *
+ * Return value: the oputput buffer with printed value                        *
+ *                                                                            *
+ ******************************************************************************/
+const char	*zbx_print_double(char *buffer, size_t size, double val)
+{
+	zbx_snprintf(buffer, size, "%.15G", val);
+
+	if (atof(buffer) != val)
+		zbx_snprintf(buffer, size, ZBX_FS_DBL64, val);
+
+	return buffer;
 }

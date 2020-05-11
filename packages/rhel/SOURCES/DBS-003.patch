@@ -1,0 +1,17 @@
+[DBS-003] Patch for Zabbix v4.4.0 to added Latest data in host settings page
+--- zabbix-4.4.5-orig/frontends/php/include/html.inc.php	2019-10-14 23:03:10.624511675 +0500
++++ izabbix-4.4.5/frontends/php/include/html.inc.php	2019-10-14 23:05:35.610755722 +0500
+@@ -363,6 +363,13 @@
+ 	 * the count of rows
+ 	 */
+ 	if ($lld_ruleid == 0) {
++		// latest data
++		if (!$is_template) {
++			$content_menu->addItem(
++				new CSpan(new CLink(_('Latest data'), 'latest.php?filter_set=1&hostids[]=' . $db_host['hostid']))
++			);
++		}
++
+ 		// applications
+ 		$applications = new CSpan([
+ 			new CLink(_('Applications'), 'applications.php?hostid='.$db_host['hostid']),

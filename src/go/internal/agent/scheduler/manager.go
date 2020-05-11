@@ -29,6 +29,7 @@ import (
 
 	"zabbix.com/internal/agent"
 	"zabbix.com/internal/agent/alias"
+	"zabbix.com/internal/agent/keyaccess"
 	"zabbix.com/internal/monitor"
 	"zabbix.com/pkg/conf"
 	"zabbix.com/pkg/glexpr"
@@ -76,7 +77,7 @@ type Scheduler interface {
 	UpdateTasks(clientID uint64, writer plugin.ResultWriter, refreshUnsupported int, expressions []*glexpr.Expression,
 		requests []*plugin.Request)
 	FinishTask(task performer)
-	PerformTask(key string, timeout time.Duration) (result string, err error)
+	PerformTask(key string, timeout time.Duration, clientID uint64) (result string, err error)
 	Query(command string) (status string)
 }
 
@@ -171,11 +172,17 @@ func (m *Manager) processUpdateRequest(update *updateRequest, now time.Time) {
 
 	for _, r := range update.requests {
 		var key string
+		var params []string
 		var err error
 		var p *pluginAgent
+
 		r.Key = m.aliases.Get(r.Key)
-		if key, _, err = itemutil.ParseKey(r.Key); err == nil {
-			if p, ok = m.plugins[key]; !ok {
+		if key, params, err = itemutil.ParseKey(r.Key); err == nil {
+			p, ok = m.plugins[key]
+			if ok {
+				ok = keyaccess.CheckRules(key, params)
+			}
+			if !ok {
 				err = fmt.Errorf("Unknown metric %s", key)
 			} else {
 				err = c.addRequest(p, r, update.sink, now)
@@ -183,7 +190,7 @@ func (m *Manager) processUpdateRequest(update *updateRequest, now time.Time) {
 		}
 
 		if err != nil {
-			if c.id != 0 {
+			if c.id > agent.MaxBuiltinClientID {
 				if tacc, ok := c.exporters[r.Itemid]; ok {
 					log.Debugf("deactivate exporter task for item %d because of error: %s", r.Itemid, err)
 					tacc.task().deactivate()
@@ -482,12 +489,13 @@ func (r resultWriter) PersistSlotsAvailable() int {
 	return 1
 }
 
-func (m *Manager) PerformTask(key string, timeout time.Duration) (result string, err error) {
+func (m *Manager) PerformTask(key string, timeout time.Duration, clientID uint64) (result string, err error) {
 	var lastLogsize uint64
 	var mtime int
 
 	w := make(resultWriter, 1)
-	m.UpdateTasks(0, w, 0, nil, []*plugin.Request{{Key: key, LastLogsize: &lastLogsize, Mtime: &mtime}})
+
+	m.UpdateTasks(clientID, w, 0, nil, []*plugin.Request{{Key: key, LastLogsize: &lastLogsize, Mtime: &mtime}})
 
 	select {
 	case r := <-w:

@@ -21,25 +21,16 @@ SUBDIRS = \
 	common \
 	simple \
 	dbmon \
-	@ARCH@
+	$(ARCH)
 
 EXTRA_DIST = \
-	aix/aix.c aix/hostname.c \
-	freebsd/freebsd.c freebsd/hostname.c \
-	hpux/hpux.c hpux/hostname.c \
-	linux/linux.c linux/hostname.c \
-	netbsd/netbsd.c netbsd/hostname.c \
-	openbsd/openbsd.c openbsd/hostname.c \
-	osf/osf.c osf/hostname.c \
-	osx/osx.c osx/hostname.c \
-	solaris/solaris.c solaris/hostname.c \
-	unknown/unknown.c unknown/hostname.c \
 	win32
 
 noinst_LIBRARIES = \
 	libzbxagentsysinfo.a \
 	libzbxproxysysinfo.a \
-	libzbxserversysinfo.a
+	libzbxserversysinfo.a \
+	libzbxagent2sysinfo.a
 
 # AGENT version of sysinfo library
 libzbxagentsysinfo_a_CFLAGS = \
@@ -52,6 +43,14 @@ libzbxagentsysinfo_a_CFLAGS = \
 
 libzbxagentsysinfo_a_SOURCES = \
 	specsysinfo.h \
+	sysinfo.c
+
+# AGENT2 version of sysinfo library
+libzbxagent2sysinfo_a_CFLAGS = \
+	-DWITH_COMMON_METRICS \
+	-DWITH_AGENT2_METRICS
+
+libzbxagent2sysinfo_a_SOURCES = \
 	sysinfo.c
 
 # SERVER version of sysinfo library

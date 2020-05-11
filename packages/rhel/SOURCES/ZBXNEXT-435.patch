@@ -1,0 +1,38 @@
+[ZBXNEXT-435] Add Oracle TNSNAMES connect support (https://support.zabbix.com/browse/ZBXNEXT-435)
+--- zabbix-4.4.5-orig/frontends/php/include/db.inc.php	2019-10-16 19:57:49 +0500
++++ zabbix-4.4.5/frontends/php/include/db.inc.php	2019-10-16 20:02:14 +0500
+@@ -113,6 +113,8 @@
+ 					if ($DB['DATABASE']) {
+ 						$connect .= '/'.$DB['DATABASE'];
+ 					}
++				} else {
++					$connect = $DB['DATABASE'];
+ 				}
+ 
+ 				$DB['DB'] = @oci_connect($DB['USER'], $DB['PASSWORD'], $connect, 'UTF8');
+--- zabbix-4.4.5-orig/src/libs/zbxdb/db.c	2019-10-16 19:58:02 +0500
++++ zabbix-4.4.5/src/libs/zbxdb/db.c	2019-10-16 20:01:14 +0500
+@@ -531,16 +531,20 @@
+ 
+ 	zbx_vector_ptr_create(&oracle.db_results);
+ 
+-	/* connection string format: [//]host[:port][/service name] */
+-
+-	if ('\0' != *host)
++	if (NULL != host && '\0' != *host)
+ 	{
++		/* connection string format: [//]host[:port][/service name] */
+ 		connect = zbx_strdcatf(connect, "//%s", host);
+ 		if (0 != port)
+ 			connect = zbx_strdcatf(connect, ":%d", port);
+ 		if (NULL != dbname && '\0' != *dbname)
+ 			connect = zbx_strdcatf(connect, "/%s", dbname);
+ 	}
++	else if (NULL != dbname && '\0' != *dbname)
++	{
++		/* use tnsname */
++		connect = strdup(dbname);
++	}
+ 	else
+ 		ret = ZBX_DB_FAIL;
+ 

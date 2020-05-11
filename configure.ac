@@ -19,9 +19,9 @@ dnl
 
 dnl Process this file with autoconf to produce a configure script.
 
-AC_INIT([Zabbix],[4.4.7])
+AC_INIT([Zabbix],[5.0.0])
 AC_CONFIG_SRCDIR(src/zabbix_server/server.c)
-AM_INIT_AUTOMAKE([subdir-objects  filename-length-max=99])
+AM_INIT_AUTOMAKE([subdir-objects filename-length-max=99])
 
 AC_MSG_NOTICE([Configuring $PACKAGE_NAME $PACKAGE_VERSION])
 
@@ -62,7 +62,7 @@ AC_CHECK_HEADERS(stdio.h stdlib.h string.h unistd.h netdb.h signal.h \
   stdarg.h winsock2.h pdh.h psapi.h sys/sem.h sys/ipc.h sys/shm.h Winldap.h \
   Winber.h lber.h ws2tcpip.h inttypes.h sys/file.h grp.h \
   execinfo.h sys/systemcfg.h sys/mnttab.h mntent.h sys/times.h \
-  dlfcn.h sys/utsname.h sys/un.h sys/protosw.h stddef.h limits.h)
+  dlfcn.h sys/utsname.h sys/un.h sys/protosw.h stddef.h limits.h float.h)
 AC_CHECK_HEADERS(resolv.h, [], [], [
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
@@ -1187,6 +1187,7 @@ if test "x$ARCH" = "xsolaris"; then
 	AC_MSG_RESULT(yes),
 	CFLAGS="$saved_CFLAGS"
 	AC_MSG_RESULT(no))
+	CFLAGS="${CFLAGS} -DDUK_F_OLD_SOLARIS"
 fi
 
 if test "x$ARCH" = "xhpux"; then
@@ -1488,22 +1489,6 @@ fi
 
 if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 
-	have_multirow_insert="no"
-
-	dnl Checking for IBM DB2 support
-	AX_LIB_IBM_DB2()
-	if test "x$want_ibm_db2" = "xyes"; then
-		if test "x$have_db" != "xno"; then
-			AC_MSG_ERROR([You can configure for only one database.])
-		fi
-
-		if test "x$found_ibm_db2" = "xyes"; then
-			have_db="IBM DB2"
-			have_multirow_insert="yes"
-		else
-			AC_MSG_ERROR([IBM DB2 library not found])
-		fi
-	fi
 
 	dnl Checking for MySQL support
 	AX_LIB_MYSQL()
@@ -1541,7 +1526,7 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	fi
 
 	dnl Checking for PostgreSQL support
-	AX_LIB_POSTGRESQL("8.1")
+	AX_LIB_POSTGRESQL("9.2")
 	if test "x$want_postgresql" = "xyes"; then
 		if test "x$have_db" != "xno"; then
 			AC_MSG_ERROR([You can configure for only one database.])
@@ -1602,7 +1587,7 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	AC_MSG_CHECKING(for Zabbix server/proxy database selection)
 	if test "x$have_db" = "xno"; then
 		AC_MSG_RESULT(error)
-		AC_MSG_ERROR([No database selected for Zabbix server/proxy. Use --with-ibm-db2 or --with-mysql or --with-oracle or --with-postgresql or --with-sqlite3.])
+		AC_MSG_ERROR([No database selected for Zabbix server/proxy. Use --with-mysql or --with-oracle or --with-postgresql or --with-sqlite3.])
 	else
 		AC_MSG_RESULT(ok)
 	fi
@@ -1615,9 +1600,9 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 		AC_MSG_RESULT(no)
 	fi
 
-	DB_CFLAGS="$IBM_DB2_CPPFLAGS $MYSQL_CFLAGS $ORACLE_CPPFLAGS $POSTGRESQL_CFLAGS $SQLITE3_CPPFLAGS"
-	DB_LDFLAGS="$IBM_DB2_LDFLAGS $MYSQL_LDFLAGS $ORACLE_LDFLAGS $POSTGRESQL_LDFLAGS $SQLITE3_LDFLAGS"
-	DB_LIBS="$IBM_DB2_LIBS $MYSQL_LIBS $ORACLE_LIBS $POSTGRESQL_LIBS $SQLITE3_LIBS"
+	DB_CFLAGS="$MYSQL_CFLAGS $ORACLE_CPPFLAGS $POSTGRESQL_CFLAGS $SQLITE3_CPPFLAGS"
+	DB_LDFLAGS="$MYSQL_LDFLAGS $ORACLE_LDFLAGS $POSTGRESQL_LDFLAGS $SQLITE3_LDFLAGS"
+	DB_LIBS="$MYSQL_LIBS $ORACLE_LIBS $POSTGRESQL_LIBS $SQLITE3_LIBS"
 
 	AC_SUBST(DB_CFLAGS)
 	AC_SUBST(DB_LDFLAGS)
@@ -1663,7 +1648,8 @@ if test "x$server" = "xyes" || test "x$proxy" = "xyes"; then
 	AC_SUBST(UNIXODBC_CFLAGS)
 
 	dnl Check for Net-SNMP [by default - skip]
-	LIBNETSNMP_CHECK_CONFIG([no])
+	LIBNETSNMP_CHECK_CONFIG([no], "5.3.0")
+
 	if test "x$want_netsnmp" = "xyes"; then
 		if test "x$found_netsnmp" != "xyes"; then
 			AC_MSG_ERROR([Invalid Net-SNMP directory - unable to find net-snmp-config])
@@ -1764,6 +1750,12 @@ PROXY_LIBS="$PROXY_LIBS $ZLIB_LIBS $LIBPTHREAD_LIBS"
 AGENT_LDFLAGS="$AGENT_LDFLAGS $ZLIB_LDFLAGS $LIBPTHREAD_LDFLAGS"
 AGENT_LIBS="$AGENT_LIBS $ZLIB_LIBS $LIBPTHREAD_LIBS"
 
+ZBXGET_LDFLAGS="$ZBXGET_LDFLAGS $ZLIB_LDFLAGS $LIBPTHREAD_LDFLAGS"
+ZBXGET_LIBS="$ZBXGET_LIBS $ZLIB_LIBS $LIBPTHREAD_LIBS"
+
+SENDER_LDFLAGS="$SENDER_LDFLAGS $ZLIB_LDFLAGS $LIBPTHREAD_LDFLAGS"
+SENDER_LIBS="$SENDER_LIBS $ZLIB_LIBS $LIBPTHREAD_LIBS"
+
 ZBXJS_LDFLAGS="$ZBXJS_LDFLAGS $ZLIB_LDFLAGS $LIBPTHREAD_LDFLAGS"
 ZBXJS_LIBS="$ZBXJS_LIBS $ZLIB_LIBS $LIBPTHREAD_LIBS"
 
@@ -1802,30 +1794,11 @@ if test "x$have_ipcservice" = "xyes"; then
 	PROXY_LIBS="$PROXY_LIBS $LIBEVENT_LIBS"
 fi
 
-dnl Check for mbed TLS (PolarSSL) libpolarssl [by default - skip]
-LIBMBEDTLS_CHECK_CONFIG([no])
-if test "x$want_mbedtls" = "xyes"; then
-	if test "x$have_tls" != "xno"; then
-		AC_MSG_ERROR([You can configure for only one TLS library (--with-mbedtls, --with-gnutls or --with-openssl).])
-	fi
-
-	if test "x$found_mbedtls" != "xyes"; then
-		AC_MSG_ERROR([mbed TLS (PolarSSL) library libpolarssl not found])
-	elif test "x$accept_mbedtls_version" != "xyes"; then
-		AC_MSG_ERROR([mbed TLS (PolarSSL) library version requirement not met (>= 1.3.9)])
-	else
-		have_tls="mbed TLS"
-	fi
-	TLS_CFLAGS="$MBEDTLS_CFLAGS"
-	TLS_LDFLAGS="$MBEDTLS_LDFLAGS"
-	TLS_LIBS="$MBEDTLS_LIBS"
-fi
-
 dnl Check for GnuTLS libgnutls [by default - skip]
 LIBGNUTLS_CHECK_CONFIG([no])
 if test "x$want_gnutls" = "xyes"; then
 	if test "x$have_tls" != "xno"; then
-		AC_MSG_ERROR([You can configure for only one TLS library (--with-mbedtls, --with-gnutls or --with-openssl).])
+		AC_MSG_ERROR([You can configure for only one TLS library (--with-gnutls or --with-openssl).])
 	fi
 
 	if test "x$found_gnutls" != "xyes"; then
@@ -1844,7 +1817,7 @@ dnl Check for OpenSSL libssl and libcrypto [by default - skip]
 LIBOPENSSL_CHECK_CONFIG([no])
 if test "x$want_openssl" = "xyes"; then
 	if test "x$have_tls" != "xno"; then
-		AC_MSG_ERROR([You can configure for only one TLS library (--with-mbedtls, --with-gnutls or --with-openssl).])
+		AC_MSG_ERROR([You can configure for only one TLS library (--with-gnutls or --with-openssl).])
 	fi
 
 	if test "x$found_openssl" != "xOpenSSL" -a "x$found_openssl" != "xOpenSSL (PSK not supported)"; then
@@ -1875,7 +1848,7 @@ ZBXGET_LIBS="$ZBXGET_LIBS $TLS_LIBS"
 SENDER_LDFLAGS="$SENDER_LDFLAGS $TLS_LDFLAGS"
 SENDER_LIBS="$SENDER_LIBS $TLS_LIBS"
 
-ZBXJS_LDFLAGS="$ZBXJS_LDFLAGS $TLS_LDFLAGS"
+ZBXJS_LDFLAGS="$ZLIB_LDFLAGS $TLS_LDFLAGS"
 ZBXJS_LIBS="$ZBXJS_LIBS $TLS_LIBS"
 
 if test "x$agent2" = "xyes"; then
@@ -2016,7 +1989,7 @@ CGO_LDFLAGS="$AGENT_LDFLAGS $LD_START_GROUP \
 	\${abs_top_builddir}/src/libs/zbxhttp/libzbxhttp.a \
 	\${abs_top_builddir}/src/libs/zbxcompress/libzbxcompress.a \
 	\${abs_top_builddir}/src/libs/zbxregexp/libzbxregexp.a \
-	\${abs_top_builddir}/src/libs/zbxsysinfo/libzbxagentsysinfo.a \
+	\${abs_top_builddir}/src/libs/zbxsysinfo/libzbxagent2sysinfo.a \
 	\${abs_top_builddir}/src/libs/zbxsysinfo/common/libcommonsysinfo.a \
 	\${abs_top_builddir}/src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
 	\${abs_top_builddir}/src/libs/zbxsysinfo/"$ARCH"/libspechostnamesysinfo.a \
@@ -2094,7 +2067,6 @@ m4_ifdef([CONF_TESTS],[CONF_TESTS(ZBXCMOCKA)])
 AC_OUTPUT([
 	Makefile
 	database/Makefile
-	database/ibm_db2/Makefile
 	database/mysql/Makefile
 	database/oracle/Makefile
 	database/postgresql/Makefile

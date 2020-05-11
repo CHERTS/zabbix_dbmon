@@ -31,7 +31,9 @@ import (
 	_ "zabbix.com/plugins"
 
 	"zabbix.com/internal/agent"
+	"zabbix.com/internal/agent/keyaccess"
 	"zabbix.com/internal/agent/remotecontrol"
+	"zabbix.com/internal/agent/resultcache"
 	"zabbix.com/internal/agent/scheduler"
 	"zabbix.com/internal/agent/serverconnector"
 	"zabbix.com/internal/agent/serverlistener"
@@ -248,7 +250,14 @@ func main() {
 		fatalExit("cannot validate configuration", err)
 	}
 
+	if err := log.Open(log.Console, log.Warning, "", 0); err != nil {
+		fatalExit("cannot initialize logger", err)
+	}
+
 	if argTest || argPrint {
+		if err := keyaccess.LoadRules(agent.Options.AllowKey, agent.Options.DenyKey); err != nil {
+			fatalExit("failed to load key access rules", err)
+		}
 		var level int
 		if argVerbose {
 			level = log.Trace
@@ -283,14 +292,14 @@ func main() {
 
 	if remoteCommand != "" {
 		if agent.Options.ControlSocket == "" {
-			fmt.Fprintf(os.Stderr, "Cannot send remote command: ControlSocket configuration parameter is not defined\n")
+			log.Errf("Cannot send remote command: ControlSocket configuration parameter is not defined")
 			os.Exit(0)
 		}
 
 		if reply, err := remotecontrol.SendCommand(agent.Options.ControlSocket, remoteCommand); err != nil {
-			fmt.Fprintf(os.Stderr, "Cannot send remote command: %s\n", err)
+			log.Errf("Cannot send remote command: %s", err)
 		} else {
-			fmt.Fprintf(os.Stdout, "%s\n", reply)
+			log.Infof(reply)
 		}
 		os.Exit(0)
 	}
@@ -331,6 +340,10 @@ func main() {
 		fatalExit("cannot parse the \"ServerActive\" parameter", err)
 	}
 
+	if err = resultcache.Prepare(&agent.Options, addresses); err != nil {
+		fatalExit("cannot prepare result cache", err)
+	}
+
 	if tlsConfig, err := agent.GetTLSConfig(&agent.Options); err != nil {
 		fatalExit("cannot use encryption configuration", err)
 	} else {
@@ -347,6 +360,11 @@ func main() {
 	defer pidFile.Delete()
 
 	log.Infof("using configuration file: %s", confFlag)
+
+	if err := keyaccess.LoadRules(agent.Options.AllowKey, agent.Options.DenyKey); err != nil {
+		log.Errf("Failed to load key access rules: %s", err.Error())
+		os.Exit(1)
+	}
 
 	if err = agent.InitUserParameterPlugin(agent.Options.UserParameter, agent.Options.UnsafeUserParameters); err != nil {
 		fatalExit("cannot initialize user parameters", err)
