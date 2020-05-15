@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-06T06:26:37Z</date>
+    <date>2020-05-15T05:38:06Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1871,7 +1871,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                                     <priority>HIGH</priority>
                                     <description>Размер базы '{#DBNAME}' превышает {$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}.&#13;
-Необходима консультация эксперта.</description>
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -1898,7 +1898,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                                     <priority>WARNING</priority>
                                     <description>Размер базы '{#DBNAME}' превышает {$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}.&#13;
-Необходима консультация эксперта.</description>
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -2034,6 +2034,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Database ID has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
+                                    <description>Идентификатор базы данных был изменен.&#13;
+Доведите информацию до эксперта.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <tags>
@@ -2114,6 +2116,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Database flashback mode has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
+                                    <description>Режим работы flashback был изменен.&#13;
+Доведите информацию до эксперта.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <tags>
@@ -2516,7 +2520,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Database role has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
-                                    <description>Роль базы данных '{#DBNAME}' была изменена.</description>
+                                    <description>Роль базы данных '{#DBNAME}' была изменена.&#13;
+Доведите информацию до эксперта.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <tags>
@@ -2571,6 +2576,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <name>Database switchover has been performed</name>
                             <opdata>(current: {ITEM.VALUE})</opdata>
                             <priority>INFO</priority>
+                            <description>Выполнен switchover базы данных.&#13;
+Доведите информацию до эксперта.</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
@@ -2681,7 +2688,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Number of datafile in tablespace '{#TSNAME}' has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
-                                    <description>Количество дата-файлов в табличном пространстве '{#TSNAME}' было изменено. Проверьте, что было выполнено - добавление файлов или удаление. Доведите информацию до эксперта.</description>
+                                    <description>Количество дата-файлов в табличном пространстве '{#TSNAME}' было изменено.&#13;
+Проверьте, что было выполнено - добавление файлов или удаление.&#13;
+Доведите информацию до эксперта.</description>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
                                         <dependency>
@@ -2828,7 +2837,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Tablespace '{#TSNAME}' is not available</name>
                                     <priority>HIGH</priority>
                                     <description>Данные о табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} (минут).&#13;
-Проверьте наличие данного табличного пространства, либо оно было удалено, либо zabbix-agent не присылает долго по нему данные.&#13;
+Проверьте наличие данного табличного пространства, либо оно было удалено, либо zabbix-agent не присылает слишком долго данные по нему.&#13;
 Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
@@ -2862,7 +2871,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Tablespace '{#TSNAME}' status has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>WARNING</priority>
-                                    <description>У табличного пространстве '{#TSNAME}' изменился статус. Доведите информацию до эксперта.</description>
+                                    <description>У табличного пространстве '{#TSNAME}' изменился статус.&#13;
+Доведите информацию до эксперта.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
@@ -2920,7 +2930,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <name>Free space in tablespace '{#TSNAME}'</name>
                             <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>HIGH</priority>
-                            <description>Свободное место в табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Необходимо расширить один из файлов в табличном пространстве или добавить новый.</description>
+                            <description>Свободное место в табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
+Необходимо расширить один из файлов в табличном пространстве или добавить новый.&#13;
+Доведите информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -2958,7 +2970,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <name>Free space in tablespace '{#TSNAME}'</name>
                             <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>WARNING</priority>
-                            <description>Свободное место в табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Необходимо расширить один из файлов в табличном пространстве или добавить новый.</description>
+                            <description>Свободное место в табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
+Необходимо расширить один из файлов в табличном пространстве или добавить новый.&#13;
+Доведите информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Free space in tablespace '{#TSNAME}'</name>
@@ -3078,6 +3092,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Apply lag is too high</name>
                                     <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                                     <priority>HIGH</priority>
+                                    <description>Отставание в применении redo-логов более {$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}&#13;
+Проверьте работу Data Guard.&#13;
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -3112,6 +3129,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Apply lag is too high</name>
                                     <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_APPLY_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                                     <priority>WARNING</priority>
+                                    <description>Отставание в применении redo-логов более {$DBS_ORACLE_APPLY_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}&#13;
+Проверьте работу Data Guard.&#13;
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Apply lag is too high</name>
@@ -3300,6 +3320,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Transport lag is too high</name>
                                     <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                                     <priority>HIGH</priority>
+                                    <description>Отставание в передаче redo-логов более {$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}&#13;
+Проверьте работу Data Guard и других подсистем.&#13;
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -3334,6 +3357,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Transport lag is too high</name>
                                     <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_TRANSPORT_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                                     <priority>WARNING</priority>
+                                    <description>Отставание в передаче redo-логов более {$DBS_ORACLE_TRANSPORT_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}&#13;
+Проверьте работу Data Guard и других подсистем.&#13;
+Доведите информацию до эксперта.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -3430,7 +3456,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Number of datafile in temporary tablespace '{#TSNAME}' has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
-                                    <description>Количество дата-файлов во временном табличном пространстве '{#TSNAME}' было изменено. Проверьте, что было выполнено - добавление файлов или удаление. Доведите информацию до эксперта.</description>
+                                    <description>Количество дата-файлов во временном табличном пространстве '{#TSNAME}' было изменено.&#13;
+Проверьте, что было выполнено - добавление файлов или удаление.&#13;
+Доведите информацию до эксперта.</description>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
                                         <dependency>
@@ -3611,7 +3639,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Temporary tablespace '{#TSNAME}' status has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>WARNING</priority>
-                                    <description>У временного табличного пространстве '{#TSNAME}' изменился статус. Доведите информацию до эксперта.</description>
+                                    <description>У временного табличного пространстве '{#TSNAME}' изменился статус.&#13;
+Доведите информацию до эксперта.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
@@ -3669,7 +3698,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <name>Free space in temporary tablespace '{#TSNAME}'</name>
                             <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>HIGH</priority>
-                            <description>Свободное место во временном табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Необходимо выяснить запрос который заполняет временное табличное пространство, так же нужно выяснить его параметры и сообщить заказчику. При критической ситуации с заполнением временного табличного пространстве необходимо прервать запрос и сообщить заказчику.</description>
+                            <description>Свободное место во временном табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
+Необходимо выяснить запрос который заполняет временное табличное пространство, так же нужно выяснить его параметры и сообщить заказчику.&#13;
+При критической ситуации с заполнением временного табличного пространстве необходимо прервать запрос и сообщить заказчику.&#13;
+Доведите информацию до эксперта.</description>
                             <manual_close>YES</manual_close>
                             <dependencies>
                                 <dependency>
@@ -3708,7 +3740,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <name>Free space in temporary tablespace '{#TSNAME}'</name>
                             <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>WARNING</priority>
-                            <description>Свободное место во временном табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Необходимо выяснить запрос который заполняет временное табличное пространство, так же нужно выяснить его параметры и сообщить заказчику. При критической ситуации с заполнением временного табличного пространстве необходимо прервать запрос и сообщить заказчику.</description>
+                            <description>Свободное место во временном табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
+Необходимо выяснить запрос который заполняет временное табличное пространство, так же нужно выяснить его параметры и сообщить заказчику.&#13;
+При критической ситуации с заполнением временного табличного пространстве необходимо прервать запрос и сообщить заказчику.&#13;
+Доведите информацию до эксперта.</description>
                             <manual_close>YES</manual_close>
                             <dependencies>
                                 <dependency>
@@ -3804,7 +3839,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Number of datafile in undo tablespace '{#TSNAME}' has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>INFO</priority>
-                                    <description>Количество дата-файлов во undo табличном пространстве '{#TSNAME}' было изменено. Проверьте, что было выполнено - добавление файлов или удаление. Доведите информацию до эксперта.</description>
+                                    <description>Количество дата-файлов во undo табличном пространстве '{#TSNAME}' было изменено.&#13;
+Проверьте, что было выполнено - добавление файлов или удаление.&#13;
+Доведите информацию до эксперта.</description>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
                                         <dependency>
@@ -3977,7 +4014,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Undo tablespace '{#TSNAME}' status has been changed</name>
                                     <opdata>(current: {ITEM.VALUE})</opdata>
                                     <priority>WARNING</priority>
-                                    <description>У undo табличного пространстве '{#TSNAME}' изменился статус. Доведите информацию до эксперта.</description>
+                                    <description>У undo табличного пространстве '{#TSNAME}' изменился статус.&#13;
+Доведите информацию до эксперта.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
@@ -4043,7 +4081,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <name>Free space in undo tablespace '{#TSNAME}'</name>
                             <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>HIGH</priority>
-                            <description>Свободное место в undo табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Необходимо выяснить запрос который заполняет табличное пространство, так же нужно выяснить его параметры и сообщить заказчику. Довести информацию до эксперта.</description>
+                            <description>Свободное место в undo табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
+Необходимо выяснить запрос который заполняет табличное пространство, так же нужно выяснить его параметры и сообщить заказчику.&#13;
+Доведите информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -4081,7 +4121,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <name>Free space in undo tablespace '{#TSNAME}'</name>
                             <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>WARNING</priority>
-                            <description>Свободное место в undo табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}. Необходимо выяснить запрос который заполняет табличное пространство, так же нужно выяснить его параметры и сообщить заказчику. Довести информацию до эксперта.</description>
+                            <description>Свободное место в undo табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
+Необходимо выяснить запрос который заполняет табличное пространство, так же нужно выяснить его параметры и сообщить заказчику.&#13;
+Доведите информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Free space in undo tablespace '{#TSNAME}'</name>
