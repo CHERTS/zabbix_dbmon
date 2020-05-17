@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-15T05:38:06Z</date>
+    <date>2020-05-17T19:00:01Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2655,6 +2655,16 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <type>DEPENDENT</type>
                     <key>oracle.permanent.tablespace.discovery[{$DBS_ORACLE_INSTANCE}]</key>
                     <delay>0</delay>
+                    <filter>
+                        <conditions>
+                            <condition>
+                                <macro>{#TSNAME}</macro>
+                                <value>{$DBS_ORACLE_PERMANENT_TS_EXCLUDE}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>A</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
                     <item_prototypes>
                         <item_prototype>
                             <name>[Oracle] Tablespace '{#TSNAME}': Data file number</name>
@@ -4334,6 +4344,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <description>Set 1 to disable alarm &quot;Database 'XXX' is NOARCHIVELOG mode.&quot;</description>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_PERMANENT_TS_EXCLUDE}</macro>
+                    <value>^(excludetsname1|excludetsname2)$</value>
+                    <description>List of exclude permanent tablespace name</description>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_PING_NODATA_CRIT}</macro>
                     <value>12m</value>
                 </macro>
@@ -4390,7 +4405,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_TBS_NODATA_WARN}</macro>
-                    <value>20m</value>
+                    <value>30m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT}</macro>
