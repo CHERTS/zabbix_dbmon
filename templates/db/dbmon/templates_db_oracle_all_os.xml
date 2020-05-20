@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-20T05:39:42Z</date>
+    <date>2020-05-20T11:25:43Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2791,6 +2791,27 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
                                 </application_prototype>
                             </application_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Tablespace '{#TSNAME}': Total free space, %</name>
+                            <type>CALCULATED</type>
+                            <key>oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace_pct]</key>
+                            <delay>5m</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>%</units>
+                            <params>((last(&quot;oracle.tablespace[unc10g,UNC10G,ASWEB_IDX,maxsize]&quot;)-(last(&quot;oracle.tablespace[unc10g,UNC10G,ASWEB_IDX,filesize]&quot;)-last(&quot;oracle.tablespace[unc10g,UNC10G,ASWEB_IDX,filefreespace]&quot;)))/last(&quot;oracle.tablespace[unc10g,UNC10G,ASWEB_IDX,maxsize]&quot;))*100</params>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
+                            </preprocessing>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] Tablespace '{#TSNAME}': Max size</name>
