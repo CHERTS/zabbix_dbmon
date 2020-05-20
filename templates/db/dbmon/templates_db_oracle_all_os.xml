@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-20T11:25:43Z</date>
+    <date>2020-05-20T11:52:33Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2786,6 +2786,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <history>30d</history>
                             <units>B</units>
                             <params>last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize]&quot;)-(last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filesize]&quot;)-last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filefreespace]&quot;))</params>
+                            <description>Total free space</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
@@ -2800,7 +2801,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
                             <units>%</units>
-                            <params>((last(&quot;oracle.tablespace[unc10g,UNC10G,ASWEB_IDX,maxsize]&quot;)-(last(&quot;oracle.tablespace[unc10g,UNC10G,ASWEB_IDX,filesize]&quot;)-last(&quot;oracle.tablespace[unc10g,UNC10G,ASWEB_IDX,filefreespace]&quot;)))/last(&quot;oracle.tablespace[unc10g,UNC10G,ASWEB_IDX,maxsize]&quot;))*100</params>
+                            <params>((last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize]&quot;)-(last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filesize]&quot;)-last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filefreespace]&quot;)))/last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},maxsize]&quot;))*100</params>
+                            <description>Total free space, %</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
@@ -2820,6 +2822,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <delay>0</delay>
                             <history>30d</history>
                             <units>B</units>
+                            <description>Max size of tablespace</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
@@ -2841,6 +2844,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <key>oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status]</key>
                             <delay>0</delay>
                             <history>30d</history>
+                            <description>Tablespace status (Online, Offline)</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
@@ -2946,6 +2950,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <history>30d</history>
                             <units>B</units>
                             <params>last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filesize]&quot;)-last(&quot;oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},filefreespace]&quot;)</params>
+                            <description>Used data size in the tablespace.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, TBS: {#TSNAME}, Info</name>
