@@ -130,7 +130,6 @@ static int	mysql_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	mysql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
 #endif
 {
-	int							ret = SYSINFO_RET_FAIL;
 	char						*mysql_host, *mysql_str_port;
 	unsigned short				mysql_port = 0;
 	struct zbx_db_connection	*mysql_conn;

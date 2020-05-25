@@ -723,9 +723,8 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
 #endif
 {
-	int				ret = SYSINFO_RET_FAIL, ping = 0;
-	char				*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance;
-	unsigned short			oracle_mode = ZBX_DB_OCI_DEFAULT;
+	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance;
+	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
 
 	if (NULL == CONFIG_ORACLE_USER)
@@ -1548,7 +1547,7 @@ int	ORACLE_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	int							ret = SYSINFO_RET_FAIL, ping = 0;
+	int							ret = SYSINFO_RET_FAIL;
 	char						*oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_dbname;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	unsigned int				oracle_db_status = 0;
@@ -1734,7 +1733,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
 #endif
 {
-	int							ret = SYSINFO_RET_FAIL, ping = 0;
+	int							ret = SYSINFO_RET_FAIL;
 	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_str_ts_type;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_ts_type = ORA_TS_PERMANENT;
 	struct zbx_db_connection	*oracle_conn;
