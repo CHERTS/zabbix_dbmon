@@ -130,7 +130,7 @@ static int	mysql_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	mysql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
 #endif
 {
-	int							ret = SYSINFO_RET_FAIL, ping = 0;
+	int							ret = SYSINFO_RET_FAIL;
 	char						*mysql_host, *mysql_str_port;
 	unsigned short				mysql_port = 0;
 	struct zbx_db_connection	*mysql_conn;
@@ -319,11 +319,11 @@ static int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HAN
 #endif
 {
 	int							ret = SYSINFO_RET_FAIL;
-	char						*mysql_host, *mysql_str_port, *c = NULL;
+	char						*mysql_host, *mysql_str_port;
 	unsigned short				mysql_port = 0;
 	struct zbx_db_connection	*mysql_conn;
 	struct zbx_db_result		mysql_result;
-	const char					*query = MYSQL_DB_DISCOVERY_DBS, *mysql_schema;
+	const char					*mysql_schema;
 	unsigned long				mysql_version;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
@@ -432,7 +432,7 @@ int	MYSQL_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type)
 {
 	int							ret = SYSINFO_RET_FAIL, db_ret = ZBX_DB_ERROR;
-	char						*mysql_host, *mysql_str_port, *mysql_top_table_num_str;
+	char						*mysql_host, *mysql_str_port, *mysql_top_table_num_str = NULL;
 	unsigned short				mysql_port = 0, mysql_top_table_num = 0;
 	struct zbx_db_connection	*mysql_conn;
 	struct zbx_db_result		mysql_result;

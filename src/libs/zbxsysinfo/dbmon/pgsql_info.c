@@ -299,7 +299,7 @@ static int	pgsql_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	pgsql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
 #endif
 {
-	int							ret = SYSINFO_RET_FAIL, ping = 0;
+	int							ret = SYSINFO_RET_FAIL;
 	char						*pg_conn_string;
 	struct zbx_db_connection	*pgsql_conn;
 
@@ -478,7 +478,7 @@ static int	pgsql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HAN
 #endif
 {
 	int							ret = SYSINFO_RET_FAIL;
-	char						*pgsql_conn_string, *c = NULL;
+	char						*pgsql_conn_string;
 	struct zbx_db_connection	*pgsql_conn;
 	struct zbx_db_result		pgsql_result;
 
