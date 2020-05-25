@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-20T11:52:33Z</date>
+    <date>2020-05-25T04:51:51Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -639,7 +639,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Size of redo log in last 1 hour</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.redolog_size_per_hour[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>5m</delay>
+                    <delay>20m</delay>
                     <history>30d</history>
                     <units>B</units>
                     <description>Size of redo log in last 1 hour</description>
@@ -653,7 +653,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Redo log switch rate</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>10m</delay>
+                    <delay>4m</delay>
                     <history>30d</history>
                     <description>Redo log switch rate per 1 hour.</description>
                     <applications>
@@ -4827,9 +4827,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}</expression>
+            <expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(15m)}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT} or {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
+            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(10m)}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT} or {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
             <name>Redolog switch rate per hour is too high</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}, alert started: {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
@@ -4850,9 +4850,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_WARN}</expression>
+            <expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(15m)}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_WARN}</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_WARN} or {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
+            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(10m)}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_WARN} or {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
             <name>Redolog switch rate per hour is too high</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_WARN}, alert started: {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
@@ -4866,8 +4866,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </dependency>
                 <dependency>
                     <name>Redolog switch rate per hour is too high</name>
-                    <expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}</expression>
-                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT} or {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
+                    <expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(15m)}&gt;{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}</expression>
+                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(10m)}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT} or {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
