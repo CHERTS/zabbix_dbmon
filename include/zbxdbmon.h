@@ -160,7 +160,7 @@ int zbx_db_clean_result(struct zbx_db_result *e_result);
 #if defined(HAVE_MYSQL)
 int zbx_db_execute_query_mysql(const struct zbx_db_connection *conn, struct zbx_db_result *m_result, const char *query);
 unsigned long zbx_db_get_version_mysql(const struct zbx_db_connection *conn);
-struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *user, const char *passwd, const char *dbname, const unsigned int port, const char *dbsocket);
+struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *user, const char *passwd, const char *dbname, const unsigned int port, const char *dbsocket, const unsigned int timeout);
 void zbx_db_close_mysql(struct zbx_db_connection *conn);
 #endif
 

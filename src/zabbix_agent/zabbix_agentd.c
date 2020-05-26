@@ -92,7 +92,8 @@ char	*CONFIG_TLS_CIPHER_CMD		= NULL;	/* not used in agent, defined for linking w
 #if defined(HAVE_DBMON)
 #if defined(HAVE_MYSQL)
 char	*CONFIG_MYSQL_USER		= NULL;
-char	*CONFIG_MYSQL_PASSWORD		= NULL;
+char	*CONFIG_MYSQL_PASSWORD	= NULL;
+int		CONFIG_MYSQL_TIMEOUT	= 5;
 #endif
 #if defined(HAVE_ORACLE)
 char	*CONFIG_ORACLE_USER = NULL;
@@ -869,6 +870,8 @@ static void	zbx_load_config(int requirement, ZBX_TASK_EX *task)
 			PARM_OPT,   0,          0},
 		{"MySQLPassword",		&CONFIG_MYSQL_PASSWORD,	TYPE_STRING,
 			PARM_OPT,   0,          0},
+		{ "MySQLTimeout",		&CONFIG_MYSQL_TIMEOUT,	TYPE_INT,
+			PARM_OPT,	1,			360 },
 #endif
 #if defined(HAVE_ORACLE)
 		{ "OracleUser",				&CONFIG_ORACLE_USER,	TYPE_STRING,

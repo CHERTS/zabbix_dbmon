@@ -318,11 +318,10 @@ unsigned long	zbx_db_get_version_mysql(const struct zbx_db_connection *conn)
  * Return pointer to a struct zbx_db_connection * on sucess, NULL on error
  */
 struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *user, const char *passwd, 
-												const char *dbname, const unsigned int port, const char *dbsocket)
+												const char *dbname, const unsigned int port, const char *dbsocket, const unsigned int timeout)
 {
 	struct zbx_db_connection	*conn = NULL;
-	my_bool						reconnect = 1;
-	my_bool						connect_timeout = 3;
+	char						reconnect = 1;
 	pthread_mutexattr_t			mutexattr;
 
 	if (NULL != host && NULL != dbname)
@@ -385,7 +384,7 @@ struct zbx_db_connection *zbx_db_connect_mysql(const char *host, const char *use
 				zabbix_log(LOG_LEVEL_WARNING, "In %s(): Cannot set MySQL options MYSQL_OPT_RECONNECT", __func__);
 
 			/* Set MYSQL_OPT_CONNECT_TIMEOUT to reconnect automatically when connection is closed by the server (to avoid CR_SERVER_GONE_ERROR) */
-			if (0 != mysql_options(((struct zbx_db_mysql *)conn->connection)->db_handle, MYSQL_OPT_CONNECT_TIMEOUT, &connect_timeout))
+			if (0 != mysql_options(((struct zbx_db_mysql *)conn->connection)->db_handle, MYSQL_OPT_CONNECT_TIMEOUT, &timeout))
 				zabbix_log(LOG_LEVEL_WARNING, "In %s(): Cannot set MySQL options MYSQL_OPT_CONNECT_TIMEOUT", __func__);
 
 			/* Initialize MUTEX for connection */

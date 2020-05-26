@@ -32,12 +32,14 @@
 
 extern char	*CONFIG_MYSQL_USER;
 extern char	*CONFIG_MYSQL_PASSWORD;
+extern int CONFIG_MYSQL_TIMEOUT;
 
 int init_config_done = 1;
 
 #define MYSQL_DEFAULT_USER		"root"
 #define MYSQL_DEFAULT_PASSWORD	"password"
 #define MYSQL_DEFAULT_DBNAME	"mysql"
+#define MYSQL_DEFAULT_TIMEOUT	"5"
 
 #define MYSQL_VERSION_DBS "SELECT /*DBS_001*/ VERSION() AS VERSION;"
 
@@ -150,6 +152,8 @@ static int	mysql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeo
 		CONFIG_MYSQL_USER = zbx_strdup(CONFIG_MYSQL_USER, MYSQL_DEFAULT_USER);
 	if (NULL == CONFIG_MYSQL_PASSWORD)
 		CONFIG_MYSQL_PASSWORD = zbx_strdup(CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_PASSWORD);
+	if (NULL == CONFIG_MYSQL_TIMEOUT)
+		CONFIG_MYSQL_TIMEOUT = zbx_strdup(CONFIG_MYSQL_TIMEOUT, MYSQL_DEFAULT_TIMEOUT);
 
 	mysql_host = get_rparam(request, 0);
 	mysql_str_port = get_rparam(request, 1);
@@ -172,7 +176,7 @@ static int	mysql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeo
 	ZBX_UNUSED(timeout_event);
 #endif
 
-	mysql_conn = zbx_db_connect_mysql(mysql_host, CONFIG_MYSQL_USER, CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_DBNAME, mysql_port, NULL);
+	mysql_conn = zbx_db_connect_mysql(mysql_host, CONFIG_MYSQL_USER, CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_DBNAME, mysql_port, NULL, CONFIG_MYSQL_TIMEOUT);
 
 	if (NULL != mysql_conn)
 	{
@@ -220,6 +224,8 @@ static int	mysql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned 
 		CONFIG_MYSQL_USER = zbx_strdup(CONFIG_MYSQL_USER, MYSQL_DEFAULT_USER);
 	if (NULL == CONFIG_MYSQL_PASSWORD)
 		CONFIG_MYSQL_PASSWORD = zbx_strdup(CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_PASSWORD);
+	if (NULL == CONFIG_MYSQL_TIMEOUT)
+		CONFIG_MYSQL_TIMEOUT = zbx_strdup(CONFIG_MYSQL_TIMEOUT, MYSQL_DEFAULT_TIMEOUT);
 
 	mysql_host = get_rparam(request, 0);
 	mysql_str_port = get_rparam(request, 1);
@@ -236,7 +242,7 @@ static int	mysql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned 
 		return SYSINFO_RET_FAIL;
 	}
 
-	mysql_conn = zbx_db_connect_mysql(mysql_host, CONFIG_MYSQL_USER, CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_DBNAME, mysql_port, NULL);
+	mysql_conn = zbx_db_connect_mysql(mysql_host, CONFIG_MYSQL_USER, CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_DBNAME, mysql_port, NULL, CONFIG_MYSQL_TIMEOUT);
 
 	if (NULL != mysql_conn)
 	{
@@ -343,6 +349,8 @@ static int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HAN
 		CONFIG_MYSQL_USER = zbx_strdup(CONFIG_MYSQL_USER, MYSQL_DEFAULT_USER);
 	if (NULL == CONFIG_MYSQL_PASSWORD)
 		CONFIG_MYSQL_PASSWORD = zbx_strdup(CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_PASSWORD);
+	if (NULL == CONFIG_MYSQL_TIMEOUT)
+		CONFIG_MYSQL_TIMEOUT = zbx_strdup(CONFIG_MYSQL_TIMEOUT, MYSQL_DEFAULT_TIMEOUT);
 
 	mysql_host = get_rparam(request, 0);
 	mysql_str_port = get_rparam(request, 1);
@@ -365,7 +373,7 @@ static int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HAN
 	ZBX_UNUSED(timeout_event);
 #endif
 
-	mysql_conn = zbx_db_connect_mysql(mysql_host, CONFIG_MYSQL_USER, CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_DBNAME, mysql_port, NULL);
+	mysql_conn = zbx_db_connect_mysql(mysql_host, CONFIG_MYSQL_USER, CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_DBNAME, mysql_port, NULL, CONFIG_MYSQL_TIMEOUT);
 
 	if (NULL != mysql_conn)
 	{
@@ -442,6 +450,8 @@ static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		CONFIG_MYSQL_USER = zbx_strdup(CONFIG_MYSQL_USER, MYSQL_DEFAULT_USER);
 	if (NULL == CONFIG_MYSQL_PASSWORD)
 		CONFIG_MYSQL_PASSWORD = zbx_strdup(CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_PASSWORD);
+	if (NULL == CONFIG_MYSQL_TIMEOUT)
+		CONFIG_MYSQL_TIMEOUT = zbx_strdup(CONFIG_MYSQL_TIMEOUT, MYSQL_DEFAULT_TIMEOUT);
 
 	mysql_host = get_rparam(request, 0);
 	mysql_str_port = get_rparam(request, 1);
@@ -467,7 +477,7 @@ static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		return SYSINFO_RET_FAIL;
 	}
 
-	mysql_conn = zbx_db_connect_mysql(mysql_host, CONFIG_MYSQL_USER, CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_DBNAME, mysql_port, NULL);
+	mysql_conn = zbx_db_connect_mysql(mysql_host, CONFIG_MYSQL_USER, CONFIG_MYSQL_PASSWORD, MYSQL_DEFAULT_DBNAME, mysql_port, NULL, CONFIG_MYSQL_TIMEOUT);
 
 	if (NULL != mysql_conn)
 	{
