@@ -715,7 +715,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 					query = PGSQL_XLOG_STAT_DBS;
 				}
 
-				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query);
+				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", query);
 			}
 			else
 			{
@@ -754,7 +754,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		}
 		else
 		{
-			db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query);
+			db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", query);
 		}
 
 		if (ZBX_DB_OK == db_ret)
