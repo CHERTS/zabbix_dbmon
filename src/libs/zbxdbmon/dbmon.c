@@ -44,10 +44,22 @@
 #endif
 
 static char	*last_db_strerror = NULL;
+
+#if defined(HAVE_MYSQL)
 static char	*last_mysql_db_strerror = NULL;
+#endif
+
+#if defined(HAVE_POSTGRESQL)
 static char	*last_pgsql_db_strerror = NULL;
+#endif
+
+#if defined(HAVE_ORACLE)
 static char	*last_oracle_db_strerror = NULL;
+#endif
+
+#if defined(HAVE_MSSQL)
 static char	*last_mssql_db_strerror = NULL;
+#endif
 
 void *zbx_db_malloc(size_t size)
 {

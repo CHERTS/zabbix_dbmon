@@ -23,12 +23,14 @@
 // function to determine if a string is null or empty
 #define strisnull(c)	(NULL == c || '\0' == *c)
 
+#if defined(HAVE_DBMON)
 static char *DB_TYPE[] = {
 	"MySQL",
 	"PostgreSQL",
 	"Oracle",
 	"MSSQL"
 };
+#endif
 
 #define ZBX_COL_TYPE_INT    0
 #define ZBX_COL_TYPE_DOUBLE 1
@@ -115,7 +117,7 @@ struct zbx_db_result {
 	struct zbx_db_data **data;
 };
 
-
+#if defined(HAVE_DBMON)
 typedef void *(*zbx_dbs_malloc_t)(size_t);
 typedef void *(*zbx_dbs_realloc_t)(void *, size_t);
 typedef void(*zbx_dbs_free_t)(void *);
@@ -153,7 +155,7 @@ unsigned long zbx_db_version(const struct zbx_db_connection *conn);
 int zbx_db_close_db(struct zbx_db_connection *conn);
 int zbx_db_clean_connection(struct zbx_db_connection *conn);
 int zbx_db_clean_result(struct zbx_db_result *e_result);
-unsigned int zbx_db_get_oracle_mode(int ora_mode);
+#endif
 
 #if defined(HAVE_MYSQL)
 int zbx_db_execute_query_mysql(const struct zbx_db_connection *conn, struct zbx_db_result *m_result, const char *query);
@@ -179,6 +181,7 @@ void zbx_db_close_pgsql(struct zbx_db_connection *conn);
 
 #define MAX_ZBX_DB_ORACLE_INSTANCE_LEN 8
 
+unsigned int zbx_db_get_oracle_mode(int ora_mode);
 int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx_db_result *o_result, const char *fmt, va_list args);
 struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const char *username, const char *userpasswd, unsigned int mode);
 void zbx_db_close_oracle(struct zbx_db_connection * conn);
