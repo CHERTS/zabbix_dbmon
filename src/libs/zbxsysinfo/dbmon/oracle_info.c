@@ -816,7 +816,7 @@ int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 	return zbx_execute_threaded_metric(oracle_instance_ping, request, result);
 }
 
-static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode, zbx_db_oracle_db_status oracle_need_dbstatus)
+static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode, zbx_db_oracle_db_status oracle_need_dbstatus)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
 	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *oracle_dbname,*oracle_standby_scn;

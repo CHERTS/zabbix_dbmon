@@ -428,7 +428,7 @@ int	MYSQL_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	//return mysql_get_discovery(request, result, NULL);
 }
 
-static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, char *query, zbx_db_result_type result_type)
+static int	mysql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query, zbx_db_result_type result_type)
 {
 	int							ret = SYSINFO_RET_FAIL, db_ret = ZBX_DB_ERROR;
 	char						*mysql_host, *mysql_str_port, *mysql_top_table_num_str = NULL;
@@ -637,7 +637,9 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	}
 
 	if (init_config_done != 0)
+	{
 		init_config_done = init_dbmon_config();
+	}
 
 	// Get the user SQL query parameter
 	query_key = get_rparam(request, 2);
@@ -668,7 +670,7 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	dbmon_log_result(result, LOG_LEVEL_TRACE, "Execute query: %s", query);
 
-	ret = mysql_make_result(request, result, (char *)query, query_result_type);
+	ret = mysql_make_result(request, result, query, query_result_type);
 
 	dbmon_param_free(params);
 out:
