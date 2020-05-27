@@ -261,7 +261,7 @@ static int	mysql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned 
 		}
 		else
 		{
-			if (ZBX_DB_OK == zbx_db_query_select(mysql_conn, &mysql_result, MYSQL_VERSION_DBS))
+			if (ZBX_DB_OK == zbx_db_query_select(mysql_conn, &mysql_result, "%s", MYSQL_VERSION_DBS))
 			{
 				ret = make_result(request, result, mysql_result, ZBX_DB_RES_TYPE_NOJSON);
 				zbx_db_clean_result(&mysql_result);
@@ -379,7 +379,7 @@ static int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HAN
 
 		if (0 == strcmp(request->key, "mysql.db.discovery"))
 		{
-			ret = zbx_db_query_select(mysql_conn, &mysql_result, MYSQL_DB_DISCOVERY_DBS);
+			ret = zbx_db_query_select(mysql_conn, &mysql_result, "%s", MYSQL_DB_DISCOVERY_DBS);
 		}
 		else if (0 == strcmp(request->key, "mysql.errorlog.discovery"))
 		{
@@ -387,7 +387,7 @@ static int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HAN
 		}
 		else if (0 == strcmp(request->key, "mysql.slave.discovery"))
 		{
-			ret = zbx_db_query_select(mysql_conn, &mysql_result, MYSQL_SLAVE_STATUS_DBS);
+			ret = zbx_db_query_select(mysql_conn, &mysql_result, "%s", MYSQL_SLAVE_STATUS_DBS);
 		}
 		else
 		{

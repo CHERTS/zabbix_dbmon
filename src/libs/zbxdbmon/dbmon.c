@@ -1053,6 +1053,22 @@ int zbx_db_clean_result(struct zbx_db_result *e_result)
 }
 
 #if defined(HAVE_ORACLE)
+/******************************************************************************
+ *                                                                            *
+ * Function: zbx_db_get_oracle_mode                                           *
+ *                                                                            *
+ * Return value:  ZBX_DB_OCI_DEFAULT or                                       *
+ *                ZBX_DB_OCI_SYSDBA or                                        *
+ *                ZBX_DB_OCI_SYSOPER or                                       *
+ *                ZBX_DB_OCI_SYSASM or                                        *
+ *                ZBX_DB_OCI_SYSASM or                                        *
+ *                ZBX_DB_OCI_PRELIM_AUTH                                      *
+ *                                                                            *
+ * Author: Mikhail Grigorev                                                   *
+ *                                                                            *
+ * Comments: return oracle auth mode                                          *
+ *                                                                            *
+ ******************************************************************************/
 unsigned int zbx_db_get_oracle_mode(int ora_mode)
 {
 	int rc = ZBX_DB_OCI_DEFAULT;

@@ -1507,7 +1507,7 @@ next:
 
 		if (ZBX_DB_OK == ret)
 		{
-			if (zbx_db_query_select(oracle_conn, &ora_result, query) == ZBX_DB_OK)
+			if (zbx_db_query_select(oracle_conn, &ora_result, "%s", query) == ZBX_DB_OK)
 			{
 				ret = make_result(request, result, ora_result, ZBX_DB_RES_TYPE_DISCOVERY);
 				zbx_db_clean_result(&ora_result);
