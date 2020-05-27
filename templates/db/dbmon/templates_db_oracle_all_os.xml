@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-25T04:51:51Z</date>
+    <date>2020-05-27T07:46:36Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -416,13 +416,13 @@
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</expression>
+                            <expression>{min(7m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</recovery_expression>
                             <name>Number of zombie processes is too high</name>
                             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>HIGH</priority>
-                            <description>Количество зомби процессов достигло критического уровня.&#13;
+                            <description>Количество зомби процессов достигло высокого уровня.&#13;
 Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
                             <dependencies>
                                 <dependency>
@@ -439,13 +439,13 @@
                             </tags>
                         </trigger>
                         <trigger>
-                            <expression>{avg(7m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}</expression>
+                            <expression>{min(7m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}</recovery_expression>
                             <name>Number of zombie processes is too high</name>
                             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}, alert started: {ITEM.VALUE1})</opdata>
                             <priority>WARNING</priority>
-                            <description>Количество зомби процессов достигло угрожающего уровня.&#13;
+                            <description>Количество зомби процессов достигло высокого уровня.&#13;
 Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
                             <dependencies>
                                 <dependency>
@@ -455,7 +455,7 @@
                                 </dependency>
                                 <dependency>
                                     <name>Number of zombie processes is too high</name>
-                                    <expression>{DBS_Template DB Oracle:oracle.instance.bad_processes[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].avg(5m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</expression>
+                                    <expression>{DBS_Template DB Oracle:oracle.instance.bad_processes[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(7m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</expression>
                                     <recovery_expression>{DBS_Template DB Oracle:oracle.instance.bad_processes[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
@@ -1496,7 +1496,7 @@ INSTANCE RECOVERY</description>
                         <item_prototype>
                             <name>[Oracle] Instance '{#INSTANCE}': Alert log '{#ALERTLOG}' content</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>log[&quot;{#ALERTLOG}&quot;,&quot;{$DBS_ORACLE_ALERTLOG_REGEXP}&quot;,,,skip]</key>
+                            <key>log[&quot;{#ALERTLOG}&quot;,&quot;{$DBS_ORACLE_ALERTLOG_REGEXP}&quot;,,,skip,,,{$DBS_ORACLE_ALERTLOG_OPTIONS}]</key>
                             <delay>10s</delay>
                             <history>30d</history>
                             <trends>0</trends>
@@ -4231,6 +4231,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_DBMON_AGENTD_NODATA_WARN}</macro>
                     <value>8m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_ALERTLOG_OPTIONS}</macro>
+                    <value>mtime-noreread</value>
+                    <description>mtime-reread or mtime-noreread, see detail https://www.zabbix.com/documentation/4.4/manual/introduction/whatsnew447</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_ALERTLOG_REGEXP}</macro>
