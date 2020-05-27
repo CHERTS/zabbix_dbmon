@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-06T06:29:03Z</date>
+    <date>2020-05-27T07:52:04Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1020,7 +1020,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of errors that occurred during calls to accept() on the listening port.</description>
+                    <description>Number of errors that occurred during calls to accept() on the listening port.&#13;
+Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                     <applications>
                         <application>
                             <name>MySQL: Connections</name>
@@ -1030,6 +1031,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                         <step>
                             <type>JSONPATH</type>
                             <params>$.CONNECTION_ERRORS_ACCEPT</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>CHANGE_PER_SECOND</type>
@@ -1047,7 +1050,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of refused connections due to internal server errors, for example out of memory errors, or failed thread starts.</description>
+                    <description>Number of refused connections due to internal server errors, for example out of memory errors, or failed thread starts.&#13;
+Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                     <applications>
                         <application>
                             <name>MySQL: Connections</name>
@@ -1057,6 +1061,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                         <step>
                             <type>JSONPATH</type>
                             <params>$.CONNECTION_ERRORS_INTERNAL</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>CHANGE_PER_SECOND</type>
@@ -1074,7 +1080,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of refused connections due to the max_connections limit being reached.</description>
+                    <description>Number of refused connections due to the max_connections limit being reached.&#13;
+Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                     <applications>
                         <application>
                             <name>MySQL: Connections</name>
@@ -1084,6 +1091,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                         <step>
                             <type>JSONPATH</type>
                             <params>$.CONNECTION_ERRORS_MAX_CONNECTIONS</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>CHANGE_PER_SECOND</type>
@@ -1123,7 +1132,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of errors while searching for the connecting client IP address.</description>
+                    <description>Number of errors while searching for the connecting client IP address.&#13;
+Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                     <applications>
                         <application>
                             <name>MySQL: Connections</name>
@@ -1133,6 +1143,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                         <step>
                             <type>JSONPATH</type>
                             <params>$.CONNECTION_ERRORS_PEER_ADDRESS</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>CHANGE_PER_SECOND</type>
@@ -1150,7 +1162,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of errors during calls to select() or poll() on the listening port. The client would not necessarily have been rejected in these cases.</description>
+                    <description>Number of errors during calls to select() or poll() on the listening port. The client would not necessarily have been rejected in these cases.&#13;
+Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                     <applications>
                         <application>
                             <name>MySQL: Connections</name>
@@ -1160,6 +1173,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                         <step>
                             <type>JSONPATH</type>
                             <params>$.CONNECTION_ERRORS_SELECT</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>CHANGE_PER_SECOND</type>
@@ -1177,7 +1192,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of connections the libwrap library refused.</description>
+                    <description>Number of connections the libwrap library refused.&#13;
+Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                     <applications>
                         <application>
                             <name>MySQL: Connections</name>
@@ -1187,6 +1203,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                         <step>
                             <type>JSONPATH</type>
                             <params>$.CONNECTION_ERRORS_TCPWRAP</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>CHANGE_PER_SECOND</type>
@@ -1699,7 +1717,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_free_memory]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>The amount of free memory for the query cache.</description>
+                    <description>The amount of free memory for the query cache.&#13;
+Removed in MySQL 8.0.3.</description>
                     <applications>
                         <application>
                             <name>MySQL: Query cache</name>
@@ -1709,6 +1728,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                         <step>
                             <type>JSONPATH</type>
                             <params>$.QCACHE_FREE_MEMORY</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1721,7 +1742,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_hits]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>The number of query cache hits.</description>
+                    <description>The number of query cache hits.&#13;
+Removed in MySQL 8.0.3.</description>
                     <applications>
                         <application>
                             <name>MySQL: Query cache</name>
@@ -1731,6 +1753,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                         <step>
                             <type>JSONPATH</type>
                             <params>$.QCACHE_HITS</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1743,7 +1767,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_inserts]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>The number of queries added to the query cache.</description>
+                    <description>The number of queries added to the query cache.&#13;
+Removed in MySQL 8.0.3.</description>
                     <applications>
                         <application>
                             <name>MySQL: Query cache</name>
@@ -1753,6 +1778,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                         <step>
                             <type>JSONPATH</type>
                             <params>$.QCACHE_INSERTS</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1765,7 +1792,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_lowmem_prunes]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>The number of queries that were deleted from the query cache because of low memory.</description>
+                    <description>The number of queries that were deleted from the query cache because of low memory.&#13;
+Removed in MySQL 8.0.3.</description>
                     <applications>
                         <application>
                             <name>MySQL: Query cache</name>
@@ -1775,6 +1803,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                         <step>
                             <type>JSONPATH</type>
                             <params>$.QCACHE_LOWMEM_PRUNES</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1787,7 +1817,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_not_cached]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>The number of noncached queries (not cacheable, or not cached due to the query_cache_type setting).</description>
+                    <description>The number of noncached queries (not cacheable, or not cached due to the query_cache_type setting).&#13;
+Removed in MySQL 8.0.3.</description>
                     <applications>
                         <application>
                             <name>MySQL: Query cache</name>
@@ -1797,6 +1828,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/table-cache.html</descrip
                         <step>
                             <type>JSONPATH</type>
                             <params>$.QCACHE_NOT_CACHED</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -3468,7 +3501,9 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.h
                     <delay>0</delay>
                     <history>30d</history>
                     <units>B</units>
-                    <description>Do not cache results that are larger than this number of bytes. The default value is 1MB.</description>
+                    <description>Do not cache results that are larger than this number of bytes.&#13;
+The default value is 1MB.&#13;
+Removed in MySQL 8.0.3.</description>
                     <applications>
                         <application>
                             <name>MySQL: Query cache</name>
@@ -3478,6 +3513,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.h
                         <step>
                             <type>JSONPATH</type>
                             <params>$.QUERY_CACHE_LIMIT</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3495,7 +3532,9 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.h
                     <delay>0</delay>
                     <history>30d</history>
                     <units>B</units>
-                    <description>The minimum size (in bytes) for blocks allocated by the query cache. The default value is 4096 (4KB).</description>
+                    <description>The minimum size (in bytes) for blocks allocated by the query cache.&#13;
+The default value is 4096 (4KB).&#13;
+Removed in MySQL 8.0.3.</description>
                     <applications>
                         <application>
                             <name>MySQL: Query cache</name>
@@ -3505,6 +3544,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.h
                         <step>
                             <type>JSONPATH</type>
                             <params>$.QUERY_CACHE_MIN_RES_UNIT</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3522,7 +3563,9 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.h
                     <delay>0</delay>
                     <history>30d</history>
                     <units>B</units>
-                    <description>The amount of memory allocated for caching query results. By default, the query cache is disabled.</description>
+                    <description>The amount of memory allocated for caching query results.&#13;
+By default, the query cache is disabled.&#13;
+Removed in MySQL 8.0.3.</description>
                     <applications>
                         <application>
                             <name>MySQL: Query cache</name>
@@ -3532,6 +3575,16 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.h
                         <step>
                             <type>JSONPATH</type>
                             <params>$.QUERY_CACHE_SIZE</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>if (value == 0) {
+  return 1;
+} else {
+  return value;
+}</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3551,7 +3604,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.h
                     <description>Set the query cache type.&#13;
 0 or OFF - Do not cache results in or retrieve results from the query cache. Note that this does not deallocate the query cache buffer. To do that, you should set query_cache_size to 0.&#13;
 1 or ON - Cache all cacheable query results except for those that begin with SELECT SQL_NO_CACHE.&#13;
-2 or DEMAND - Cache results only for cacheable queries that begin with SELECT SQL_CACHE.</description>
+2 or DEMAND - Cache results only for cacheable queries that begin with SELECT SQL_CACHE.&#13;
+Removed in MySQL 8.0.3.</description>
                     <applications>
                         <application>
                             <name>MySQL: Query cache</name>
@@ -3564,6 +3618,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.h
                         <step>
                             <type>JSONPATH</type>
                             <params>$.QUERY_CACHE_TYPE</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>JAVASCRIPT</type>
@@ -4515,7 +4571,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Log file '{#LOG_ERROR}' content</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>logrt[&quot;{#LOG_ERROR}&quot;,&quot;{$DBS_MYSQL_ERRORLOG_REGEXP}&quot;,,,skip]</key>
+                            <key>logrt[&quot;{#LOG_ERROR}&quot;,&quot;{$DBS_MYSQL_ERRORLOG_REGEXP}&quot;,,,skip,,,{$DBS_MYSQL_ERRORLOG_OPTIONS}]</key>
                             <delay>10s</delay>
                             <history>30d</history>
                             <trends>0</trends>
@@ -5649,6 +5705,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_MYSQL_DISABLE_SCHEDULER_DEADLOCK_DETECT}</macro>
                     <value>0</value>
                     <description>Disable trigger &quot;Deadlock detected during event scheduler is running&quot;</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_ERRORLOG_OPTIONS}</macro>
+                    <value>mtime-noreread</value>
+                    <description>mtime-reread or mtime-noreread, see detail https://www.zabbix.com/documentation/4.4/manual/introduction/whatsnew447</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_ERRORLOG_REGEXP}</macro>
