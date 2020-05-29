@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-27T07:52:04Z</date>
+    <date>2020-05-29T05:55:33Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1287,6 +1287,118 @@ Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
                             <params>5m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read key per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_key_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of row read requests (per second) based on an index value.&#13;
+A high value indicates indexes are regularly being used, which is usually positive.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.HANDLER_READ_KEY</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read next per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_next_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of requests (per second) to read the next row from an index (in order).&#13;
+Increments when doing an index scan or querying an index column with a range constraint.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.HANDLER_READ_NEXT</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read prev per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_prev_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of requests (per second) to read the previous row from an index (in order).&#13;
+Mostly used with ORDER BY DESC.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.HANDLER_READ_PREV</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read rnd next per second</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_rnd_next_rate]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Number of requests (per second) to read the next row.&#13;
+A large number of these may indicate many table scans and improperly used indexes.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.HANDLER_READ_RND_NEXT</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -2590,6 +2702,8 @@ NOBLOB: Log all columns (same as full), except for BLOB and TEXT columns that ar
                         <step>
                             <type>JSONPATH</type>
                             <params>$.BINLOG_ROW_IMAGE</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>JAVASCRIPT</type>
@@ -2638,16 +2752,10 @@ WARN: all transactions are allowed to violate GTID consistency, but a warning is
                     </valuemap>
                     <preprocessing>
                         <step>
-                            <type>JAVASCRIPT</type>
-                            <params>if (value.indexOf(&quot;ENFORCE_GTID_CONSISTENCY&quot;) &gt; -1) {
-  return value;
-} else {
-  return &quot;{\&quot;ENFORCE_GTID_CONSISTENCY\&quot;:\&quot;3\&quot;}&quot;;
-}</params>
-                        </step>
-                        <step>
                             <type>JSONPATH</type>
                             <params>$.ENFORCE_GTID_CONSISTENCY</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>JAVASCRIPT</type>
@@ -2697,17 +2805,10 @@ ON: Both new and replicated transactions must be GTID transactions.</description
                     </valuemap>
                     <preprocessing>
                         <step>
-                            <type>JAVASCRIPT</type>
-                            <params>var n = value.search(/.*\&quot;GTID_MODE\&quot;:.*/i);
-if (n &gt;= 0) {
-  return value;
-} else {
-  return &quot;{\&quot;GTID_MODE\&quot;:\&quot;4\&quot;}&quot;;
-}</params>
-                        </step>
-                        <step>
                             <type>JSONPATH</type>
                             <params>$.GTID_MODE</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>JAVASCRIPT</type>
@@ -2887,6 +2988,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-preload-buffer-poo
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_BUFFER_POOL_DUMP_AT_SHUTDOWN</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>JAVASCRIPT</type>
@@ -2960,6 +3063,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-preload-buffer-poo
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_BUFFER_POOL_LOAD_AT_STARTUP</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>JAVASCRIPT</type>
@@ -3189,6 +3294,8 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sy
                         <step>
                             <type>JSONPATH</type>
                             <params>$.INNODB_SORT_BUFFER_SIZE</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3378,6 +3485,108 @@ See more info from section 8.10.2, “The MyISAM Key Cache”: https://dev.mysql
     return 3;
     break;
 }</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Log error verbosity</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},log_error_verbosity]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The verbosity of the server in writing error, warning, and note messages to the error log.&#13;
+The following table shows the permitted values.&#13;
+&#13;
+Level:&#13;
+Error messages - 1&#13;
+Error and warning messages - 2&#13;
+Error, warning, and information messages - 3&#13;
+&#13;
+The default is 3.&#13;
+&#13;
+log_error_verbosity was added in MySQL 5.7.2. It is preferred over, and should be used instead of, the older log_warnings system variable.&#13;
+See the description of log_warnings for information about how that variable relates to log_error_verbosity. In particular, assigning a value to log_warnings assigns a value to log_error_verbosity and vice versa.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Query cache</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.LOG_ERROR_VERBOSITY</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Log warnings</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},log_warnings]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Whether to produce additional warning messages to the error log. As of MySQL 5.7.2, information items previously governed by log_warnings are governed by log_error_verbosity, which is preferred over, and should be used instead of, the older log_warnings system variable. (The log_warnings system variable and --log-warnings command-line option are deprecated and will be removed in a future MySQL release.)&#13;
+&#13;
+See detail info in https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_log_warnings</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Query cache</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.LOG_WARNINGS</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Long query time</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},long_query_time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>If a query takes longer than this many seconds, the server increments the Slow_queries status variable. If the slow query log is enabled, the query is logged to the slow query log file. This value is measured in real time, not CPU time, so a query that is under the threshold on a lightly loaded system might be above the threshold on a heavily loaded one. The minimum and default values of long_query_time are 0 and 10, respectively. The value can be specified to a resolution of microseconds. See Section 5.4.5, “The Slow Query Log” in URL: https://dev.mysql.com/doc/refman/5.7/en/slow-query-log.html&#13;
+&#13;
+Smaller values of this variable result in more statements being considered long-running, with the result that more space is required for the slow query log. For very small values (less than one second), the log may grow quite large in a small time. Increasing the number of statements considered long-running may also result in false positives for the “excessive Number of Long Running Processes” alert in MySQL Enterprise Monitor, especially if Group Replication is enabled. For these reasons, very small values should be used in test environments only, or, in production environments, only for a short period.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MySQL (thread_handling)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.LONG_QUERY_TIME</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3732,16 +3941,10 @@ See more info: https://mariadb.com/kb/en/replication-and-binary-log-system-varia
                     </valuemap>
                     <preprocessing>
                         <step>
-                            <type>JAVASCRIPT</type>
-                            <params>if (value.indexOf(&quot;SLAVE_PARALLEL_MODE&quot;) &gt; -1) {
-  return value;
-} else {
-  return &quot;{\&quot;SLAVE_PARALLEL_MODE\&quot;:\&quot;0\&quot;}&quot;;
-}</params>
-                        </step>
-                        <step>
                             <type>JSONPATH</type>
                             <params>$.SLAVE_PARALLEL_MODE</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>JAVASCRIPT</type>
@@ -3798,16 +4001,10 @@ If your replication topology uses multiple levels of slaves, LOGICAL_CLOCK may a
                     </valuemap>
                     <preprocessing>
                         <step>
-                            <type>JAVASCRIPT</type>
-                            <params>if (value.indexOf(&quot;SLAVE_PARALLEL_TYPE&quot;) &gt; -1) {
-  return value;
-} else {
-  return &quot;{\&quot;SLAVE_PARALLEL_TYPE\&quot;:\&quot;0\&quot;}&quot;;
-}</params>
-                        </step>
-                        <step>
                             <type>JSONPATH</type>
                             <params>$.SLAVE_PARALLEL_TYPE</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>JAVASCRIPT</type>
@@ -3848,6 +4045,8 @@ If your replication topology uses multiple levels of slaves, LOGICAL_CLOCK may a
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SLAVE_PARALLEL_WORKERS</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3879,6 +4078,8 @@ The value of this variable is a soft limit and can be set to match the normal wo
                         <step>
                             <type>JSONPATH</type>
                             <params>$.SLAVE_PENDING_JOBS_SIZE_MAX</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3908,16 +4109,10 @@ See more: https://dev.mysql.com/doc/refman/5.7/en/replication-options-slave.html
                     </valuemap>
                     <preprocessing>
                         <step>
-                            <type>JAVASCRIPT</type>
-                            <params>if (value.indexOf(&quot;SLAVE_PRESERVE_COMMIT_ORDER&quot;) &gt; -1) {
-  return value;
-} else {
-  return &quot;{\&quot;SLAVE_PRESERVE_COMMIT_ORDER\&quot;:\&quot;2\&quot;}&quot;;
-}</params>
-                        </step>
-                        <step>
                             <type>JSONPATH</type>
                             <params>$.SLAVE_PRESERVE_COMMIT_ORDER</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>JAVASCRIPT</type>
@@ -3932,6 +4127,82 @@ See more: https://dev.mysql.com/doc/refman/5.7/en/replication-options-slave.html
     return value;
     break;
 }</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Slow query log</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},slow_query_log]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Whether the slow query log is enabled.&#13;
+The value can be 0 (or OFF) to disable the log or 1 (or ON) to enable the log.&#13;
+The destination for log output is controlled by the log_output system variable; if that value is NONE, no log entries are written even if the log is enabled.&#13;
+&#13;
+“Slow” is determined by the value of the long_query_time variable. See Section 5.4.5, “The Slow Query Log”, URL: https://dev.mysql.com/doc/refman/5.7/en/slow-query-log.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MySQL (ON-OFF)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SLOW_QUERY_LOG</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;OFF&quot;:
+    return 0;
+    break;
+  case &quot;ON&quot;:
+    return 1;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Slow query log file</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},slow_query_log_file]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>The name of the slow query log file.&#13;
+The default value is host_name-slow.log, but the initial value can be changed with the --slow_query_log_file option.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.SLOW_QUERY_LOG_FILE</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -4202,16 +4473,10 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                     </valuemap>
                     <preprocessing>
                         <step>
-                            <type>JAVASCRIPT</type>
-                            <params>if (value.indexOf(&quot;WSREP_GTID_MODE&quot;) &gt; -1) {
-  return value;
-} else {
-  return &quot;{\&quot;WSREP_GTID_MODE\&quot;:\&quot;4\&quot;}&quot;;
-}</params>
-                        </step>
-                        <step>
                             <type>JSONPATH</type>
                             <params>$.WSREP_GTID_MODE</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>JAVASCRIPT</type>
