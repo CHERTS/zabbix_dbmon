@@ -939,8 +939,11 @@ if [ -n "${ZBX_AGENTD_PID}" ]; then
 	_debug_logging "Func: Main: ZBX_AGENTD_CMD=${ZBX_AGENTD_CMD}"
 	if [ -n "${ZBX_AGENTD_CMD}" ]; then
 		ZBX_AGENTD_BIN=$(${ECHO_BIN} "${ZBX_AGENTD_CMD}" | ${CUT_BIN} -d' ' -f1)
+		ZBX_AGENTD_CONF_FILE=$(${ECHO_BIN} "${ZBX_AGENTD_CMD}" | ${CUT_BIN} -d' ' -f3)
 		_debug_logging "Func: Main: Detected ZBX_AGENTD_BIN=${ZBX_AGENTD_BIN}"
 		_debug_logging "Func: Main: Standart ZABBIX_AGENTD_BIN=${ZABBIX_AGENTD_BIN}"
+		_debug_logging "Func: Main: Detect ZBX_AGENTD_CONF_FILE=${ZBX_AGENTD_CONF_FILE}"
+		_debug_logging "Func: Main: Standart ZBX_AGENTD_CONFIG_FILE=${ZBX_AGENTD_CONFIG_FILE}"
 		if [ -f "${ZBX_AGENTD_BIN}" ]; then
 			if [[ "${ZBX_AGENTD_BIN}" != "${ZABBIX_AGENTD_BIN}" ]]; then
 				ZBX_FILE_TYPE=0
@@ -952,6 +955,19 @@ if [ -n "${ZBX_AGENTD_PID}" ]; then
 				if [ ${ZBX_FILE_TYPE} -eq 1 ]; then
 					ZABBIX_AGENTD_BIN=${ZBX_AGENTD_BIN}
 				fi
+			fi
+		fi
+		if [ -f "${ZBX_AGENTD_CONF_FILE}" ]; then
+			if [[ "${ZBX_AGENTD_CONF_FILE}" != "${ZBX_AGENTD_CONFIG_FILE}" ]]; then
+				ZBX_AGENTD_CONFIG_FILE=${ZBX_AGENTD_CONF_FILE}
+				_debug_logging "Func: Main: New ZBX_AGENTD_CONFIG_FILE=${ZBX_AGENTD_CONFIG_FILE}"
+				ZBX_HOSTNAME=$(${ZABBIX_AGENTD_BIN} -c "${ZBX_AGENTD_CONFIG_FILE}" -t agent.hostname 2>/dev/null | ${CUT_BIN} -d'|' -f2- | ${SED_BIN} -e 's/]$//')
+				if [ -n "${ZBX_HOSTNAME}" ]; then
+					if [[ "${HOSTNAME}" != "${ZBX_HOSTNAME}" ]]; then
+						HOSTNAME="${ZBX_HOSTNAME}"
+					fi
+				fi
+				_debug_logging "Func: Main: New HOSTNAME=${HOSTNAME}"
 			fi
 		fi
 	fi
