@@ -205,8 +205,7 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 	ORA_DB_RESULT	result = NULL;
 	double			sec = 0;
 	sword			err = OCI_SUCCESS;
-	ub4				prefetch_rows = 200, counter, col_name_len;
-	text			*col_name;
+	ub4				prefetch_rows = 200, counter;
 
 	sql = zbx_dvsprintf(sql, fmt, args);
 
@@ -272,8 +271,9 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 	{
 		OCIParam	*parmdp = NULL;
 		OCIDefine	*defnp = NULL;
-		ub4			char_semantics;
+		ub4			char_semantics, col_name_len = 0;
 		ub2			col_width = 0, data_type = 0;
+		text		*col_name = NULL;
 
 		/* Request a parameter descriptor for position 1 in the select-list */
 		err = OCIParamGet((void *)result->stmthp, OCI_HTYPE_STMT, ((struct zbx_db_oracle *)conn->connection)->errhp, (void **)&parmdp, (ub4)counter);
@@ -307,17 +307,26 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 			if (OCI_SUCCESS == err)
 			{
 				/* Retrieve the column name attribute */
-				col_name_len = 0;
+				/* Retrieve the column name */
 				err = OCIAttrGet((void*)parmdp, (ub4)OCI_DTYPE_PARAM, (void**)&col_name, (ub4 *)&col_name_len,
 					(ub4)OCI_ATTR_NAME, (OCIError *)((struct zbx_db_oracle *)conn->connection)->errhp);
+
 				if (OCI_SUCCESS == err)
 				{
-					col_name_len++; /* Add 1 byte for terminating '\0' */
-					result->colname[counter - 1] = (text *)zbx_malloc(NULL, col_name_len);
-					*result->colname[counter - 1] = '\0';
-					result->colname_alloc[counter - 1] = col_name_len;
-					memcpy(result->colname[counter - 1], col_name, col_name_len);
+					if (0 != col_name_len)
+					{
+						//col_name_len++; /* Add 1 byte for terminating '\0' */
+						result->colname[counter - 1] = (text *)zbx_malloc(NULL, (size_t)col_name_len);
+						//*result->colname[counter - 1] = '\0';
+						result->colname_alloc[counter - 1] = (size_t)col_name_len;
+						memcpy((char *)result->colname[counter - 1], (char *)col_name, (size_t)col_name_len);
+
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(): ColName: %s, ColNameLength: %u", __func__, (char *)result->colname[counter - 1], col_name_len);
+					}
 				}
+
+				zbx_free(col_name);
+				col_name = NULL;
 			}
 
 			if (OCI_SUCCESS == err)
