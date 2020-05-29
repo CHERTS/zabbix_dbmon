@@ -315,18 +315,15 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 				{
 					if (0 != col_name_len)
 					{
-						//col_name_len++; /* Add 1 byte for terminating '\0' */
-						result->colname[counter - 1] = (text *)zbx_malloc(NULL, (size_t)col_name_len);
-						//*result->colname[counter - 1] = '\0';
+						col_name_len++; /* Add 1 byte for terminating '\0' */
+						result->colname[counter - 1] = (text *)zbx_malloc(NULL, col_name_len);
+						*result->colname[counter - 1] = '\0';
 						result->colname_alloc[counter - 1] = (size_t)col_name_len;
-						memcpy((char *)result->colname[counter - 1], (char *)col_name, (size_t)col_name_len);
+						memcpy((text *)result->colname[counter - 1], (text *)col_name, col_name_len);
 
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(): ColName: %s, ColNameLength: %u", __func__, (char *)result->colname[counter - 1], col_name_len);
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(): ColName: %s, ColNameLength: %u", __func__, (text *)result->colname[counter - 1], col_name_len);
 					}
 				}
-
-				zbx_free(col_name);
-				col_name = NULL;
 			}
 
 			if (OCI_SUCCESS == err)
