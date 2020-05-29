@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-06T06:31:09Z</date>
+    <date>2020-05-29T05:55:44Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3061,6 +3061,56 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </macros>
         </template>
     </templates>
+    <graphs>
+        <graph>
+            <name>[PgSQL] Checkpoints buffers</name>
+            <graph_items>
+                <graph_item>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_backend]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_clean]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>2774A4</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_checkpoint]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[PgSQL] Number of checkpoints</name>
+            <graph_items>
+                <graph_item>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_timed]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_req]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+    </graphs>
     <value_maps>
         <value_map>
             <name>DBS PostgreSQL (Instance ping)</name>
