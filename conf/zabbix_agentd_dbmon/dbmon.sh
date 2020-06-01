@@ -473,9 +473,24 @@ if [ -n "${ZBX_HOSTNAME}" ]; then
 	fi
 fi
 
-ZBX_CACHE_FILE_NAME=$(${PRINTF_BIN} "%s-%s-%s.cache" "${HOSTNAME}" "${DB_TYPE}" "${PARAM1}")
-ZBX_METRIC_FILE_NAME=$(${PRINTF_BIN} "%s-%s-%s.metrics" "${HOSTNAME}" "${DB_TYPE}" "${PARAM1}")
-ZBX_LOCK_FILE_NAME=$(${PRINTF_BIN} "%s-%s-%s.lock" "${HOSTNAME}" "${DB_TYPE}" "${PARAM1}")
+ZBX_SENDER_FULL_VERSION=$(${ZABBIX_SENDER_BIN} -V 2>/dev/null | ${GREP_BIN} "zabbix_sender (Zabbix)" | ${CUT_BIN} -d' ' -f3)
+ZBX_SENDER_MULTIPLE_SEND=0
+if [ -n "${ZBX_SENDER_FULL_VERSION}" ]; then
+	ZBX_SENDER_MAJOR_VERSION=$(${ECHO_BIN} "${ZBX_SENDER_FULL_VERSION}" | ${CUT_BIN} -d'.' -f1)
+	ZBX_SENDER_MINOR_VERSION=$(${ECHO_BIN} "${ZBX_SENDER_FULL_VERSION}" | ${CUT_BIN} -d'.' -f2)
+	if [ ${ZBX_SENDER_MAJOR_VERSION} -eq 4 ]; then
+		if [ ${ZBX_SENDER_MINOR_VERSION} -ge 2 ]; then
+			ZBX_SENDER_MULTIPLE_SEND=1
+		fi
+	fi
+	if [ ${ZBX_SENDER_MAJOR_VERSION} -ge 5 ]; then
+		ZBX_SENDER_MULTIPLE_SEND=1
+	fi
+fi
+
+ZBX_CACHE_FILE_NAME=$(${PRINTF_BIN} "%s-%s-%s_dbmon.cache" "${HOSTNAME}" "${DB_TYPE}" "${PARAM1}")
+ZBX_METRIC_FILE_NAME=$(${PRINTF_BIN} "%s-%s-%s_dbmon.metrics" "${HOSTNAME}" "${DB_TYPE}" "${PARAM1}")
+ZBX_LOCK_FILE_NAME=$(${PRINTF_BIN} "%s-%s-%s_dbmon.lock" "${HOSTNAME}" "${DB_TYPE}" "${PARAM1}")
 RANDOM_UNIQUE_HASH=$(_randhash)
 
 _search_oracle_sqlplus() {
@@ -512,8 +527,8 @@ case "${PARAM1}" in
 		DONOT_SEARCHING_ORACLE_SQLPLUS=1
 		if [ -n "${PARAM3}" ]; then
 			LISTENER_NAME="${PARAM3}"
-			ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-${LISTENER_NAME}.cache"
-			ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-${LISTENER_NAME}.metrics"
+			ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-${LISTENER_NAME}_dbmon.cache"
+			ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-${LISTENER_NAME}_dbmon.metrics"
 		else
 			message="The third parameter (listener name) is required (Ex: LISTENER)"
 			_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
@@ -538,8 +553,8 @@ case "${PARAM1}" in
 		fi
 		if [ -n "${PARAM4}" ]; then
 			LISTENER_NAME="${PARAM4}"
-			ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-${LISTENER_NAME}-${SERVICE_NAME}.cache"
-			ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-${LISTENER_NAME}-${SERVICE_NAME}.metrics"
+			ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-${LISTENER_NAME}-${SERVICE_NAME}_dbmon.cache"
+			ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-${LISTENER_NAME}-${SERVICE_NAME}_dbmon.metrics"
 		else
 			message="You must specify the fourth parameter (listener name) (Ex: LISTENER)"
 			_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
@@ -882,7 +897,7 @@ if [[ ${ZBX_CHECK_HOME_ACCESS} = "0" ]]; then
 fi
 
 DBS_SCRIPT_PID=$$
-ZBX_LOCK_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}.lock"
+ZBX_LOCK_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}_dbmon.lock"
 
 # Debug mode
 if [ ${DBS_ENABLE_DEBUG_MODE} -eq 1 ]; then
@@ -891,9 +906,9 @@ if [ ${DBS_ENABLE_DEBUG_MODE} -eq 1 ]; then
 	ZBX_CACHE_LIFETIME_ORA_LISTENER_INFO="1"
 	ZBX_CACHE_LIFETIME_ORA_SERVICE_INFO="1"
 	# Add debug prefix to cache and metrics file
-	ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-debug.cache"
-	ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-debug.metrics"
-	ZBX_LOCK_FILE_NAME="${ZBX_LOCK_FILE_NAME%.*}-debug.lock"
+	ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-debug_dbmon.cache"
+	ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-debug_dbmon.metrics"
+	ZBX_LOCK_FILE_NAME="${ZBX_LOCK_FILE_NAME%.*}-debug_dbmon.lock"
 	_logging "============================= DEBUG STARTED ============================="
 	_logging "Debug mode is enabled."
 	_logging "Script ${SCRIPT_NAME} PID: ${DBS_SCRIPT_PID}"
@@ -1022,60 +1037,66 @@ _run_zabbix_sender() {
 	local EXIT_CODE=0
 
 	if [ -f "${ZBX_STAT_FILE}" ]; then
-		# Check working zabbix-server
-		_check_zbx_cache_file_lifetime "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ${ZBX_SERVER_HEALTH_CHECK_CACHE_LIFETIME}
-		EXIT_CODE=$?
-		if [ ${EXIT_CODE} -eq 0 ]; then
-			ZBX_SERVERS=$(${CAT_BIN} "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}")
-			ZBX_WORKING_SERVER_ADDR=$(${ECHO_BIN} ${ZBX_SERVERS} | ${CUT_BIN} -d':' -f1)
-			ZBX_WORKING_SERVER_PORT=$(${ECHO_BIN} ${ZBX_SERVERS} | ${CUT_BIN} -d':' -f2)
-			ZBX_FOUND_WORKING_SERVER=1
-			_debug_logging "Func: ${FUNCNAME[0]}: ZabbixServerCache: ${ZBX_SERVERS}"
+		# Check working zabbix-server if zabbix-sender version < 4.2
+		if [ ${ZBX_SENDER_MULTIPLE_SEND} -eq 0 ]; then
+			_check_zbx_cache_file_lifetime "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ${ZBX_SERVER_HEALTH_CHECK_CACHE_LIFETIME}
+			EXIT_CODE=$?
+			if [ ${EXIT_CODE} -eq 0 ]; then
+				ZBX_SERVERS=$(${CAT_BIN} "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}")
+				ZBX_WORKING_SERVER_ADDR=$(${ECHO_BIN} ${ZBX_SERVERS} | ${CUT_BIN} -d':' -f1)
+				ZBX_WORKING_SERVER_PORT=$(${ECHO_BIN} ${ZBX_SERVERS} | ${CUT_BIN} -d':' -f2)
+				ZBX_FOUND_WORKING_SERVER=1
+				_debug_logging "Func: ${FUNCNAME[0]}: ZabbixServerCache: ${ZBX_SERVERS}"
+			else
+				OLD_IFS=$IFS
+				IFS=$' '
+				if [ -f "${ZBX_AGENTD_CONFIG_FILE}" ]; then
+					if [[ "${PLATFORM}" = "aix" ]]; then
+						ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+					else
+						ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+					fi
+				fi
+				ZBX_SERVERS_NUM=${#ZBX_SERVERS[*]}
+				_debug_logging "Func: ${FUNCNAME[0]}: ZBX_SERVERS_NUM=${ZBX_SERVERS_NUM}"
+				_debug_logging "Func: ${FUNCNAME[0]}: ZBX_SERVERS=$(declare -p ZBX_SERVERS | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
+				if [ ${ZBX_SERVERS_NUM} -ge 0 ]; then
+					for ((i=0; i<${#ZBX_SERVERS[@]}; i++)); do
+						_debug_logging "Func: ${FUNCNAME[0]}: ZabbixServer $i: ${ZBX_SERVERS[$i]}"
+						ZBX_SERVER_ADDR=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${CUT_BIN} -d':' -f1)
+						ZBX_CHECK_PORT=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${GREP_BIN} ':')
+						if [ -n "${ZBX_CHECK_PORT}" ]; then
+							ZBX_SERVER_PORT=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${CUT_BIN} -d':' -f2 )
+						else
+							ZBX_SERVER_PORT=${ZBX_SERVER_DEFAULT_PORT}
+						fi
+						if [ ${NC_ON_BASH} -eq 1 ]; then
+							_nc "${ZBX_SERVER_ADDR}" "${ZBX_SERVER_PORT}"
+							EXIT_CODE=$?
+						else
+							${ECHO_BIN} 'PING' | ${NC_BIN} -w 1 "${ZBX_SERVER_ADDR}" "${ZBX_SERVER_PORT}" >/dev/null 2>&1
+							EXIT_CODE=$?
+						fi
+						_debug_logging "Func: ${FUNCNAME[0]}: ExitCode: ${EXIT_CODE}, ZabbixServer: ${ZBX_SERVER_ADDR}:${ZBX_SERVER_PORT}"
+						if [ ${EXIT_CODE} -eq 0 ]; then
+							ZBX_FOUND_WORKING_SERVER=1
+							ZBX_WORKING_SERVER_ADDR=${ZBX_SERVER_ADDR}
+							ZBX_WORKING_SERVER_PORT=${ZBX_SERVER_PORT}
+							${ECHO_BIN} "${ZBX_WORKING_SERVER_ADDR}:${ZBX_WORKING_SERVER_PORT}" > "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}"
+							break
+						fi
+					done
+				fi
+				IFS=${OLD_IFS}
+				if [ ${ZBX_FOUND_WORKING_SERVER} -eq 0 ]; then
+					if [ -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ]; then
+						${RM_BIN} -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" >/dev/null 2>&1
+					fi
+				fi
+			fi
 		else
-			OLD_IFS=$IFS
-			IFS=$' '
-			if [ -f "${ZBX_AGENTD_CONFIG_FILE}" ]; then
-				if [[ "${PLATFORM}" = "aix" ]]; then
-					ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
-				else
-					ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
-				fi
-			fi
-			ZBX_SERVERS_NUM=${#ZBX_SERVERS[*]}
-			_debug_logging "Func: ${FUNCNAME[0]}: ZBX_SERVERS_NUM=${ZBX_SERVERS_NUM}"
-			_debug_logging "Func: ${FUNCNAME[0]}: ZBX_SERVERS=$(declare -p ZBX_SERVERS | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
-			if [ ${ZBX_SERVERS_NUM} -ge 0 ]; then
-				for ((i=0; i<${#ZBX_SERVERS[@]}; i++)); do
-					_debug_logging "Func: ${FUNCNAME[0]}: ZabbixServer $i: ${ZBX_SERVERS[$i]}"
-					ZBX_SERVER_ADDR=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${CUT_BIN} -d':' -f1)
-					ZBX_CHECK_PORT=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${GREP_BIN} ':')
-					if [ -n "${ZBX_CHECK_PORT}" ]; then
-						ZBX_SERVER_PORT=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${CUT_BIN} -d':' -f2 )
-					else
-						ZBX_SERVER_PORT=${ZBX_SERVER_DEFAULT_PORT}
-					fi
-					if [ ${NC_ON_BASH} -eq 1 ]; then
-						_nc "${ZBX_SERVER_ADDR}" "${ZBX_SERVER_PORT}"
-						EXIT_CODE=$?
-					else
-						${ECHO_BIN} 'PING' | ${NC_BIN} -w 1 "${ZBX_SERVER_ADDR}" "${ZBX_SERVER_PORT}" >/dev/null 2>&1
-						EXIT_CODE=$?
-					fi
-					_debug_logging "Func: ${FUNCNAME[0]}: ExitCode: ${EXIT_CODE}, ZabbixServer: ${ZBX_SERVER_ADDR}:${ZBX_SERVER_PORT}"
-					if [ ${EXIT_CODE} -eq 0 ]; then
-						ZBX_FOUND_WORKING_SERVER=1
-						ZBX_WORKING_SERVER_ADDR=${ZBX_SERVER_ADDR}
-						ZBX_WORKING_SERVER_PORT=${ZBX_SERVER_PORT}
-						${ECHO_BIN} "${ZBX_WORKING_SERVER_ADDR}:${ZBX_WORKING_SERVER_PORT}" > "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}"
-						break
-					fi
-				done
-			fi
-			IFS=${OLD_IFS}
-			if [ ${ZBX_FOUND_WORKING_SERVER} -eq 0 ]; then
-				if [ -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ]; then
-					${RM_BIN} -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" >/dev/null 2>&1
-				fi
+			if [ -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ]; then
+				${RM_BIN} -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" >/dev/null 2>&1
 			fi
 		fi
 		local SENDER_DATE_TIME=$(${DATE_BIN} "+%d.%m.%Y %H:%M:%S")
@@ -1713,63 +1734,65 @@ else
 fi
 
 if [[ "$PARAM1" = "dbs_check_zabbix_server" ]]; then
-	# Check working zabbix-server
-	ZBX_SERVERS=(127.0.0.1)
-	ZBX_SERVER_ADDR=""
-	ZBX_SERVER_PORT=""
-	ZBX_CHECK_PORT=""
-	ZBX_WORKING_SERVER_ADDR=""
-	ZBX_WORKING_SERVER_PORT=""
-	ZBX_FOUND_WORKING_SERVER=0
-	OLD_IFS=$IFS
-	IFS=$' '
-	if [ -f "${ZBX_AGENTD_CONFIG_FILE}" ]; then
-		if [[ "${PLATFORM}" = "aix" ]]; then
-			ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
-		else
-			ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
-		fi
-	fi
-	ZBX_SERVERS_NUM=${#ZBX_SERVERS[*]}
-	_debug_logging "Func: Main: ZBX_SERVERS_NUM=${ZBX_SERVERS_NUM}"
-	_debug_logging "Func: Main: ZBX_SERVERS=$(declare -p ZBX_SERVERS | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
-	if [ ${ZBX_SERVERS_NUM} -ge 0 ]; then
-		for ((i=0; i<${#ZBX_SERVERS[@]}; i++)); do
-			_debug_logging "Func: Main: ZabbixServer $i: ${ZBX_SERVERS[$i]}"
-			ZBX_SERVER_ADDR=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${CUT_BIN} -d':' -f1)
-			ZBX_CHECK_PORT=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${GREP_BIN} ':')
-			if [ -n "${ZBX_CHECK_PORT}" ]; then
-				ZBX_SERVER_PORT=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${CUT_BIN} -d':' -f2 )
+	if [ ${ZBX_SENDER_MULTIPLE_SEND} -eq 0 ]; then
+		# Check working zabbix-server
+		ZBX_SERVERS=(127.0.0.1)
+		ZBX_SERVER_ADDR=""
+		ZBX_SERVER_PORT=""
+		ZBX_CHECK_PORT=""
+		ZBX_WORKING_SERVER_ADDR=""
+		ZBX_WORKING_SERVER_PORT=""
+		ZBX_FOUND_WORKING_SERVER=0
+		OLD_IFS=$IFS
+		IFS=$' '
+		if [ -f "${ZBX_AGENTD_CONFIG_FILE}" ]; then
+			if [[ "${PLATFORM}" = "aix" ]]; then
+				ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
 			else
-				ZBX_SERVER_PORT=${ZBX_SERVER_DEFAULT_PORT}
-			fi
-			${ZABBIX_SENDER_BIN} -c "${ZBX_AGENTD_CONFIG_FILE}" -z "${ZBX_SERVER_ADDR}" -p "${ZBX_SERVER_PORT}" -s "${HOSTNAME}" -k "dbs.runshell[dbs_check_zabbix_server,${DB_TYPE},result]" -o 1 >/dev/null 2>&1
-			EXIT_CODE=$?
-			_debug_logging "Func: Main: ExitCode: ${EXIT_CODE}, ZabbixServer: ${ZBX_SERVER_ADDR}:${ZBX_SERVER_PORT}"
-			if [ ${EXIT_CODE} -eq 0 ]; then
-				_debug_logging "Func: Main: Found working zabbix-proxy or zabbix-server: ${ZBX_SERVER_ADDR}:${ZBX_SERVER_PORT}"
-				ZBX_FOUND_WORKING_SERVER=1
-				ZBX_WORKING_SERVER_ADDR=${ZBX_SERVER_ADDR}
-				ZBX_WORKING_SERVER_PORT=${ZBX_SERVER_PORT}
-				${ECHO_BIN} "${ZBX_WORKING_SERVER_ADDR}:${ZBX_WORKING_SERVER_PORT}" > "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}"
-				break
-			fi
-		done
-		IFS=${OLD_IFS}
-		if [ ${ZBX_FOUND_WORKING_SERVER} -eq 0 ]; then
-			if [ -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ]; then
-				${RM_BIN} -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" >/dev/null 2>&1
+				ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
 			fi
 		fi
-	fi
-	if [ -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ]; then
-		ZBX_SERVERS=$(${CAT_BIN} "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}")
-		if [ -n "${ZBX_SERVERS}" ]; then
-			ZBX_WORKING_SERVER_ADDR=$(${ECHO_BIN} ${ZBX_SERVERS} | ${CUT_BIN} -d':' -f1)
-			ZBX_WORKING_SERVER_PORT=$(${ECHO_BIN} ${ZBX_SERVERS} | ${CUT_BIN} -d':' -f2)
-			_debug_logging "Func: Main: ZabbixServerCache: ${ZBX_SERVERS}"
-		else
-			_debug_logging "Func: Main: ZabbixServerCache: <NotFound>"
+		ZBX_SERVERS_NUM=${#ZBX_SERVERS[*]}
+		_debug_logging "Func: Main: ZBX_SERVERS_NUM=${ZBX_SERVERS_NUM}"
+		_debug_logging "Func: Main: ZBX_SERVERS=$(declare -p ZBX_SERVERS | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
+		if [ ${ZBX_SERVERS_NUM} -ge 0 ]; then
+			for ((i=0; i<${#ZBX_SERVERS[@]}; i++)); do
+				_debug_logging "Func: Main: ZabbixServer $i: ${ZBX_SERVERS[$i]}"
+				ZBX_SERVER_ADDR=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${CUT_BIN} -d':' -f1)
+				ZBX_CHECK_PORT=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${GREP_BIN} ':')
+				if [ -n "${ZBX_CHECK_PORT}" ]; then
+					ZBX_SERVER_PORT=$(${ECHO_BIN} ${ZBX_SERVERS[$i]} | ${CUT_BIN} -d':' -f2 )
+				else
+					ZBX_SERVER_PORT=${ZBX_SERVER_DEFAULT_PORT}
+				fi
+				${ZABBIX_SENDER_BIN} -c "${ZBX_AGENTD_CONFIG_FILE}" -z "${ZBX_SERVER_ADDR}" -p "${ZBX_SERVER_PORT}" -s "${HOSTNAME}" -k "dbs.runshell[dbs_check_zabbix_server,${DB_TYPE},result]" -o 1 >/dev/null 2>&1
+				EXIT_CODE=$?
+				_debug_logging "Func: Main: ExitCode: ${EXIT_CODE}, ZabbixServer: ${ZBX_SERVER_ADDR}:${ZBX_SERVER_PORT}"
+				if [ ${EXIT_CODE} -eq 0 ]; then
+					_debug_logging "Func: Main: Found working zabbix-proxy or zabbix-server: ${ZBX_SERVER_ADDR}:${ZBX_SERVER_PORT}"
+					ZBX_FOUND_WORKING_SERVER=1
+					ZBX_WORKING_SERVER_ADDR=${ZBX_SERVER_ADDR}
+					ZBX_WORKING_SERVER_PORT=${ZBX_SERVER_PORT}
+					${ECHO_BIN} "${ZBX_WORKING_SERVER_ADDR}:${ZBX_WORKING_SERVER_PORT}" > "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}"
+					break
+				fi
+			done
+			IFS=${OLD_IFS}
+			if [ ${ZBX_FOUND_WORKING_SERVER} -eq 0 ]; then
+				if [ -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ]; then
+					${RM_BIN} -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" >/dev/null 2>&1
+				fi
+			fi
+		fi
+		if [ -f "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}" ]; then
+			ZBX_SERVERS=$(${CAT_BIN} "${ZBX_SERVER_HEALTH_CHECK_CACHE_FILE}")
+			if [ -n "${ZBX_SERVERS}" ]; then
+				ZBX_WORKING_SERVER_ADDR=$(${ECHO_BIN} ${ZBX_SERVERS} | ${CUT_BIN} -d':' -f1)
+				ZBX_WORKING_SERVER_PORT=$(${ECHO_BIN} ${ZBX_SERVERS} | ${CUT_BIN} -d':' -f2)
+				_debug_logging "Func: Main: ZabbixServerCache: ${ZBX_SERVERS}"
+			else
+				_debug_logging "Func: Main: ZabbixServerCache: <NotFound>"
+			fi
 		fi
 	fi
 	_logrotate
