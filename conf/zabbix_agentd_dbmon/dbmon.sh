@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-# Program: Database monitoring script for Zabbix <dbmon.sh>
+# Program: Oracle database monitoring script for Zabbix <dbmon.sh>
 #
 # Author: Mikhail Grigorev <sleuthhound at gmail dot com>
 # 
