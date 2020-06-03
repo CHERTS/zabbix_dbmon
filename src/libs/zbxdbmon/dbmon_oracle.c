@@ -315,9 +315,13 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 				{
 					if (0 != col_name_len)
 					{
+#ifndef _AIX
 						col_name_len++; /* Add 1 byte for terminating '\0' */
+#endif
 						result->colname[counter - 1] = (text *)zbx_malloc(NULL, col_name_len);
+#ifndef _AIX
 						*result->colname[counter - 1] = '\0';
+#endif
 						result->colname_alloc[counter - 1] = (size_t)col_name_len;
 						memcpy((text *)result->colname[counter - 1], (text *)col_name, col_name_len);
 
