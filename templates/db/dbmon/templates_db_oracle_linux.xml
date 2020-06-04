@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-19T20:12:42Z</date>
+    <date>2020-06-04T12:38:51Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -25,7 +25,7 @@
                 <item>
                     <name>[Oracle] Listener service '{$DBS_ORACLE_LSNR_SERVICE_NAME}', state</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME}]</key>
+                    <key>proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME},{$DBS_ORACLE_LSNR_SERVICE_USER},,{$DBS_ORACLE_LSNR_SERVICE_CMD_REGEXP}]</key>
                     <history>30d</history>
                     <applications>
                         <application>
@@ -89,8 +89,15 @@
             </tags>
             <macros>
                 <macro>
+                    <macro>{$DBS_ORACLE_LSNR_SERVICE_CMD_REGEXP}</macro>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_LSNR_SERVICE_NAME}</macro>
                     <value>tnslsnr</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_LSNR_SERVICE_USER}</macro>
+                    <value>oracle</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_SERVICE_NAME}</macro>
