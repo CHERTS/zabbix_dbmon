@@ -527,8 +527,8 @@ case "${PARAM1}" in
 		DONOT_SEARCHING_ORACLE_SQLPLUS=1
 		if [ -n "${PARAM3}" ]; then
 			LISTENER_NAME="${PARAM3}"
-			ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-${LISTENER_NAME}_dbmon.cache"
-			ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-${LISTENER_NAME}_dbmon.metrics"
+			ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-${LISTENER_NAME}.cache"
+			ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-${LISTENER_NAME}.metrics"
 		else
 			message="The third parameter (listener name) is required (Ex: LISTENER)"
 			_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
@@ -553,8 +553,8 @@ case "${PARAM1}" in
 		fi
 		if [ -n "${PARAM4}" ]; then
 			LISTENER_NAME="${PARAM4}"
-			ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-${LISTENER_NAME}-${SERVICE_NAME}_dbmon.cache"
-			ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-${LISTENER_NAME}-${SERVICE_NAME}_dbmon.metrics"
+			ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-${LISTENER_NAME}-${SERVICE_NAME}.cache"
+			ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-${LISTENER_NAME}-${SERVICE_NAME}.metrics"
 		else
 			message="You must specify the fourth parameter (listener name) (Ex: LISTENER)"
 			_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
@@ -583,7 +583,7 @@ fi
 if [ ! -d "${ZBX_HOME_DIR}" ]; then
 	ZBX_HOME_DIR="${ZBX_TMP_DIR}"
 else
-	ZBX_HOME_DIR="$(${ECHO_BIN} ${ZBX_HOME_DIR} | ${SED_BIN} 's/\/$//')"
+	ZBX_HOME_DIR="$(${ECHO_BIN} "${ZBX_HOME_DIR}" | ${SED_BIN} 's/\/$//')"
 fi
 
 # If changed ZBX_HOME_DIR then change the destination for the file log, collect and config.
@@ -897,50 +897,13 @@ if [[ ${ZBX_CHECK_HOME_ACCESS} = "0" ]]; then
 fi
 
 DBS_SCRIPT_PID=$$
-ZBX_LOCK_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}_dbmon.lock"
+ZBX_LOCK_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}.lock"
 
 # Debug mode
 if [ ${DBS_ENABLE_DEBUG_MODE} -eq 1 ]; then
-	ZBX_CACHE_DEFAULT_LIFETIME="1"
-	ZBX_CACHE_LIFETIME_DISCOVERY="1"
-	ZBX_CACHE_LIFETIME_ORA_LISTENER_INFO="1"
-	ZBX_CACHE_LIFETIME_ORA_SERVICE_INFO="1"
-	# Add debug prefix to cache and metrics file
-	ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-debug_dbmon.cache"
-	ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-debug_dbmon.metrics"
-	ZBX_LOCK_FILE_NAME="${ZBX_LOCK_FILE_NAME%.*}-debug_dbmon.lock"
 	_logging "============================= DEBUG STARTED ============================="
-	_logging "Debug mode is enabled."
-	_logging "Script ${SCRIPT_NAME} PID: ${DBS_SCRIPT_PID}"
-	ZBX_AGENTD_ACTIVE_PPID=$(_ppid)
-	if [ -n "${ZBX_AGENTD_ACTIVE_PPID}" ]; then
-		ZBX_AGENTD_PID=$(_ppid ${ZBX_AGENTD_ACTIVE_PPID})
-		_logging "Zabbix agentd active checks PID: ${ZBX_AGENTD_ACTIVE_PPID}"
-		_logging "Zabbix agentd PID: ${ZBX_AGENTD_PID}"
-	else
-		_logging "Zabbix agentd active checks PID: <NotFound>"
-	fi
-	_logging "Use netcat on bash: ${NC_ON_BASH}"
-	_logging "Script params: 1:${PARAM1}|2:${PARAM2}|3:${PARAM3}|4:${PARAM4}|5:${PARAM5}|6:${PARAM6}|7:${PARAM7}|8:${PARAM8}|9:${PARAM9}|10:${PARAM10}|11:${PARAM11}"
-	_logging "ZBX_CACHE_FILE_NAME=${ZBX_CACHE_FILE_NAME}"
-	_logging "ZBX_METRIC_FILE_NAME=${ZBX_METRIC_FILE_NAME}"
-	_logging "ZBX_LOCK_FILE_NAME=${ZBX_LOCK_FILE_NAME}"
-
-	# Debug config file params
-	if [ -n "${PARAM7}" ]; then
-		if [ -f "${PARAM7}" ]; then
-			_logging "Including config file '${PARAM7}'"
-		fi
-		if [[ "${DB_TYPE}" = "oracle" ]]; then
-			if [ -n "${ORACLE_HOME}" ]; then
-				_logging "\$ORACLE_HOME variable found, value = ${ORACLE_HOME}"
-				_logging "\$DBS_ORACLE_HOME variable found, value = ${DBS_ORACLE_HOME}"
-			fi
-			if [ -n "${ORACLE_SID}" ]; then
-				_logging "\$ORACLE_SID variable found, value = ${ORACLE_SID}"
-			fi
-		fi
-	fi
+	_logging "Func: Main: Debug mode is enabled."
+	_logging "Func: Main: Script ${SCRIPT_NAME} PID: ${DBS_SCRIPT_PID}"
 fi
 
 ZBX_AGENTD_ACTIVE_PPID=$(_ppid)
@@ -983,6 +946,58 @@ if [ -n "${ZBX_AGENTD_PID}" ]; then
 					fi
 				fi
 				_debug_logging "Func: Main: New HOSTNAME=${HOSTNAME}"
+			fi
+		fi
+	fi
+fi
+
+ZBX_CACHE_FILE_NAME=$(${PRINTF_BIN} "%s-%s-%s_dbmon.cache" "${HOSTNAME}" "${DB_TYPE}" "${PARAM1}")
+ZBX_METRIC_FILE_NAME=$(${PRINTF_BIN} "%s-%s-%s_dbmon.metrics" "${HOSTNAME}" "${DB_TYPE}" "${PARAM1}")
+ZBX_LOCK_FILE_NAME=$(${PRINTF_BIN} "%s-%s-%s_dbmon.lock" "${HOSTNAME}" "${DB_TYPE}" "${PARAM1}")
+
+case "${PARAM1}" in
+	listener_info)
+		ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-${LISTENER_NAME}.cache"
+		ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-${LISTENER_NAME}.metrics"
+		;;
+	service_info)
+		ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-${LISTENER_NAME}-${SERVICE_NAME}.cache"
+		ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-${LISTENER_NAME}-${SERVICE_NAME}.metrics"
+		;;
+esac
+
+# Debug mode
+if [ ${DBS_ENABLE_DEBUG_MODE} -eq 1 ]; then
+	ZBX_CACHE_DEFAULT_LIFETIME="1"
+	ZBX_CACHE_LIFETIME_DISCOVERY="1"
+	ZBX_CACHE_LIFETIME_ORA_LISTENER_INFO="1"
+	ZBX_CACHE_LIFETIME_ORA_SERVICE_INFO="1"
+	# Add debug prefix to cache and metrics file
+	ZBX_CACHE_FILE_NAME="${ZBX_CACHE_FILE_NAME%.*}-debug.cache"
+	ZBX_METRIC_FILE_NAME="${ZBX_METRIC_FILE_NAME%.*}-debug.metrics"
+	ZBX_LOCK_FILE_NAME="${ZBX_LOCK_FILE_NAME%.*}-debug.lock"
+	if [ -z "${ZBX_AGENTD_PID}" ]; then
+		_logging "Func: Main: Zabbix agentd active checks PID: <NotFound>"
+	fi
+	_logging "Func: Main: Use netcat on bash: ${NC_ON_BASH}"
+	_logging "Func: Main: Script params: 1:${PARAM1}|2:${PARAM2}|3:${PARAM3}|4:${PARAM4}|5:${PARAM5}|6:${PARAM6}|7:${PARAM7}|8:${PARAM8}|9:${PARAM9}|10:${PARAM10}|11:${PARAM11}"
+	_logging "Func: Main: ZBX_CACHE_FILE_NAME=${ZBX_CACHE_FILE_NAME}"
+	_logging "Func: Main: ZBX_METRIC_FILE_NAME=${ZBX_METRIC_FILE_NAME}"
+	_logging "Func: Main: ZBX_LOCK_FILE_NAME=${ZBX_LOCK_FILE_NAME}"
+	_logging "Func: Main: ZBX_SENDER_MULTIPLE_SEND=${ZBX_SENDER_MULTIPLE_SEND}"
+
+	# Debug config file params
+	if [ -n "${PARAM7}" ]; then
+		if [ -f "${PARAM7}" ]; then
+			_logging "Including config file '${PARAM7}'"
+		fi
+		if [[ "${DB_TYPE}" = "oracle" ]]; then
+			if [ -n "${ORACLE_HOME}" ]; then
+				_logging "\$ORACLE_HOME variable found, value = ${ORACLE_HOME}"
+				_logging "\$DBS_ORACLE_HOME variable found, value = ${DBS_ORACLE_HOME}"
+			fi
+			if [ -n "${ORACLE_SID}" ]; then
+				_logging "\$ORACLE_SID variable found, value = ${ORACLE_SID}"
 			fi
 		fi
 	fi
@@ -1109,15 +1124,15 @@ _run_zabbix_sender() {
 			local STAT_FILE_MTIME=$(${STAT_BIN} -c %y ${ZBX_STAT_FILE})
 		fi
 		if [ -f "${ZABBIX_SENDER_BIN}" ]; then
-			_debug_logging "Func: ${FUNCNAME[0]}: ZabbixServer: ${ZBX_WORKING_SERVER_ADDR}:${ZBX_WORKING_SERVER_PORT}"
 			local CURRENT_DATE=$(${DATE_BIN} +%s)
 			if [ ${ZBX_FOUND_WORKING_SERVER} -eq 1 ]; then
+				_debug_logging "Func: ${FUNCNAME[0]}: ZabbixServer: ${ZBX_WORKING_SERVER_ADDR}:${ZBX_WORKING_SERVER_PORT}"
 				_debug_logging "Func: ${FUNCNAME[0]}: Run: ${ZABBIX_SENDER_BIN} -c ${ZBX_AGENTD_CONFIG_FILE} -z ${ZBX_WORKING_SERVER_ADDR} -p ${ZBX_WORKING_SERVER_PORT} -s ${HOSTNAME} -T -i ${ZBX_STAT_FILE}"
-				${ZABBIX_SENDER_BIN} -c ${ZBX_AGENTD_CONFIG_FILE} -z ${ZBX_WORKING_SERVER_ADDR} -p ${ZBX_WORKING_SERVER_PORT} -s ${HOSTNAME} -T -i ${ZBX_STAT_FILE} >/dev/null 2>&1
+				${ZABBIX_SENDER_BIN} -c "${ZBX_AGENTD_CONFIG_FILE}" -z ${ZBX_WORKING_SERVER_ADDR} -p ${ZBX_WORKING_SERVER_PORT} -s ${HOSTNAME} -T -i "${ZBX_STAT_FILE}" >/dev/null 2>&1
 				EXIT_CODE=$?
 			else
 				_debug_logging "Func: ${FUNCNAME[0]}: Run: ${ZABBIX_SENDER_BIN} -c ${ZBX_AGENTD_CONFIG_FILE} -s ${HOSTNAME} -T -i ${ZBX_STAT_FILE}"
-				${ZABBIX_SENDER_BIN} -c ${ZBX_AGENTD_CONFIG_FILE} -s ${HOSTNAME} -T -i ${ZBX_STAT_FILE} >/dev/null 2>&1
+				${ZABBIX_SENDER_BIN} -c "${ZBX_AGENTD_CONFIG_FILE}" -s ${HOSTNAME} -T -i "${ZBX_STAT_FILE}" >/dev/null 2>&1
 				EXIT_CODE=$?
 			fi
 			if [ ${EXIT_CODE} -eq 0 ]; then
@@ -1131,9 +1146,9 @@ _run_zabbix_sender() {
 					done
 					RES_RESULT='"metric_value":['${RES_RESULT#,}']'
 					IFS=$OLD_IFS
-					_message "[{\"error_code\":\"0\",\"error_msg\":\"\",\"metric_file\":\"${ZBX_STAT_FILE}\",\"metric_size\":\"${FILE_SIZE}\",\"metric_mtime\":\"${STAT_FILE_MTIME}\",${RES_RESULT}}]" "1"
+					_message "[{\"error_code\":\"${EXIT_CODE}\",\"error_msg\":\"\",\"metric_file\":\"${ZBX_STAT_FILE}\",\"metric_size\":\"${FILE_SIZE}\",\"metric_mtime\":\"${STAT_FILE_MTIME}\",${RES_RESULT}}]" "1"
 				else
-					_message "[{\"error_code\":\"0\",\"error_msg\":\"\",\"metric_file\":\"${ZBX_STAT_FILE}\",\"metric_size\":\"${FILE_SIZE}\",\"metric_mtime\":\"${STAT_FILE_MTIME}\"}]" "1"
+					_message "[{\"error_code\":\"${EXIT_CODE}\",\"error_msg\":\"\",\"metric_file\":\"${ZBX_STAT_FILE}\",\"metric_size\":\"${FILE_SIZE}\",\"metric_mtime\":\"${STAT_FILE_MTIME}\"}]" "1"
 				fi
 			else
 				if [ ${DBS_ENABLE_DEBUG_MODE} -eq 1 ]; then
@@ -1142,10 +1157,10 @@ _run_zabbix_sender() {
 					else
 						message="An error occurred while sending data using zabbix-sender (${ZABBIX_SENDER_BIN} -c ${ZBX_AGENTD_CONFIG_FILE} -s ${HOSTNAME} -T -i ${ZBX_STAT_FILE})"
 					fi
-					_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\",\"metric_file\":\"${ZBX_STAT_FILE}\",\"metric_size\":\"${FILE_SIZE}\",\"metric_mtime\":\"${STAT_FILE_MTIME}\"}]" "1"
+					_message "[{\"error_code\":\"${EXIT_CODE}\",\"error_msg\":\"${message}\",\"metric_file\":\"${ZBX_STAT_FILE}\",\"metric_size\":\"${FILE_SIZE}\",\"metric_mtime\":\"${STAT_FILE_MTIME}\"}]" "1"
 				else
 					message="An error occurred while sending data using zabbix-sender."
-					_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
+					_message "[{\"error_code\":\"${EXIT_CODE}\",\"error_msg\":\"${message}\"}]" "1"
 				fi
 			fi
 		else
@@ -1378,69 +1393,65 @@ _oracle_service_discovery() {
 	local LSNCTRL_CHECK_ERROR=""
 	local TIME_NOW=""
 	local OLD_IFS=""
-	_check_zbx_cache_file_lifetime "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}" ${ZBX_CACHE_LIFETIME_DISCOVERY}
-	EXIT_CODE=$?
-	if [ ${EXIT_CODE} -eq 0 ]; then
-		_run_zabbix_sender "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+	OLD_IFS=$IFS
+	IFS=$'\n'
+	if [[ "${PLATFORM}" = "aix" ]]; then
+		PS_FIND=($(${PS_BIN} -eo user,args | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} -v "zabbix_get" | ${GREP_BIN} [t]nslsnr | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' 2>/dev/null))
 	else
-		OLD_IFS=$IFS
-		IFS=$'\n'
-		if [[ "${PLATFORM}" = "aix" ]]; then
-			PS_FIND=($(${PS_BIN} -eo user,args | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} [t]nslsnr | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' 2>/dev/null))
-		else
-			PS_FIND=($(${PS_BIN} -eo user,cmd | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} [t]nslsnr | ${SED_BIN} 's/^[ \t]*//;s/[ \t]*$//' 2>/dev/null))
-		fi
-		if [ $? -eq 0 ]; then
-			PS_FIND_NUM=${#PS_FIND[*]}
-			_debug_logging "Func: ${FUNCNAME[0]}: Found ${PS_FIND_NUM} tnslsnr process"
-			_debug_logging "Func: ${FUNCNAME[0]}: PS_FIND=$(declare -p PS_FIND | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
-			for ((i=0; i<${#PS_FIND[@]}; i++)); do
-				if [ -n "${PS_FIND[$i]}" ]; then
-					local ORA_LSNR_USER=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $1}')
-					local ORA_LSNR_PATH=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $2}')
-					local ORA_LSNR_NAME=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $3}')
-					if [ -f "${ORA_LSNR_PATH}"  ]; then
-						LISTENER_CTRL_BIN="$(${DIRNAME_BIN} "${ORA_LSNR_PATH}")/lsnrctl"
-						ORA_BIN_DIR=$(${DIRNAME_BIN} "${ORA_LSNR_PATH}")
-						ORA_HOME=${ORA_BIN_DIR%/*}
-						export ORACLE_HOME=${ORA_HOME}
-						if [ -f "${LISTENER_CTRL_BIN}" ]; then
-							_debug_logging "Func: ${FUNCNAME[0]}: ORA_LSNR_NAME=${ORA_LSNR_NAME}, ORA_LSNR_PATH=${ORA_LSNR_PATH}, ORA_LSNR_USER=${ORA_LSNR_USER}"
-							_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE '^ERROR|ERROR:|ORA-[0-9]{1,}|PLS-|SP2-|IMP-|TNS-[0-9]{1,}'"
-							LSNCTRL_CHECK_ERROR=$(${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE '^ERROR|ERROR:|ORA-[0-9]{1,}|PLS-|SP2-|IMP-|TNS-[0-9]{1,}')
-							_debug_logging "Func: ${FUNCNAME[0]}: LSNCTRL_CHECK_ERROR=${LSNCTRL_CHECK_ERROR}"
-							if [ -z "${LSNCTRL_CHECK_ERROR}" ]; then
-								_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE \"^service(*.)\" | ${GREP_BIN} -vi \"summary\" | ${AWK_BIN} -F' ' '{print \$2}' | ${TR_BIN} -d \\\""
-								LSNCTRL_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE "^service(.*)" | ${GREP_BIN} -vi "summary" | ${AWK_BIN} -F' ' '{print $2}' | ${TR_BIN} -d \") )
-								SERVICE_LIST_NUM=${#LSNCTRL_SERVICE_LIST[*]}
-								_debug_logging "Func: ${FUNCNAME[0]}: Found ${SERVICE_LIST_NUM} service."
-								for ((j=0; j<${#LSNCTRL_SERVICE_LIST[@]}; j++)); do
-									if [ -n "${LSNCTRL_SERVICE_LIST[$j]}" ]; then
-										SERVICELIST="${SERVICELIST},"'{"{#SERVICE_NAME}":"'${LSNCTRL_SERVICE_LIST[$j]}'","{#HOSTNAME}":"'${HOSTNAME}'","{#LSNR_NAME}":"'${ORA_LSNR_NAME}'","{#LSNR_PATH}":"'${LISTENER_CTRL_BIN}'"}'
-									fi
-								done
-							else
-								TIME_NOW=$(${DATE_BIN} +%s)
-								${ECHO_BIN} "${HOSTNAME} dbs.oracle.listener[${ORA_LSNR_NAME},status] ${TIME_NOW} 0" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-								_run_zabbix_sender "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-							fi
+		PS_FIND=($(${PS_BIN} -eo user,cmd | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} -v "zabbix_get" | ${GREP_BIN} [t]nslsnr | ${SED_BIN} 's/^[ \t]*//;s/[ \t]*$//' 2>/dev/null))
+	fi
+	if [ $? -eq 0 ]; then
+		PS_FIND_NUM=${#PS_FIND[*]}
+		_debug_logging "Func: ${FUNCNAME[0]}: Found ${PS_FIND_NUM} tnslsnr process"
+		_debug_logging "Func: ${FUNCNAME[0]}: PS_FIND=$(declare -p PS_FIND | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
+		for ((i=0; i<${#PS_FIND[@]}; i++)); do
+			if [ -n "${PS_FIND[$i]}" ]; then
+				local ORA_LSNR_USER=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $1}')
+				local ORA_LSNR_PATH=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $2}')
+				local ORA_LSNR_NAME=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $3}')
+				if [ -f "${ORA_LSNR_PATH}"  ]; then
+					LISTENER_CTRL_BIN="$(${DIRNAME_BIN} "${ORA_LSNR_PATH}")/lsnrctl"
+					ORA_BIN_DIR=$(${DIRNAME_BIN} "${ORA_LSNR_PATH}")
+					ORA_HOME=${ORA_BIN_DIR%/*}
+					export ORACLE_HOME=${ORA_HOME}
+					if [ -f "${LISTENER_CTRL_BIN}" ]; then
+						_debug_logging "Func: ${FUNCNAME[0]}: ORA_LSNR_NAME=${ORA_LSNR_NAME}, ORA_LSNR_PATH=${ORA_LSNR_PATH}, ORA_LSNR_USER=${ORA_LSNR_USER}"
+						_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE '^ERROR|ERROR:|ORA-[0-9]{1,}|PLS-|SP2-|IMP-|TNS-[0-9]{1,}'"
+						LSNCTRL_CHECK_ERROR=$(${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE '^ERROR|ERROR:|ORA-[0-9]{1,}|PLS-|SP2-|IMP-|TNS-[0-9]{1,}')
+						_debug_logging "Func: ${FUNCNAME[0]}: LSNCTRL_CHECK_ERROR=${LSNCTRL_CHECK_ERROR}"
+						if [ -z "${LSNCTRL_CHECK_ERROR}" ]; then
+							_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE \"^service(*.)\" | ${GREP_BIN} -vi \"summary\" | ${AWK_BIN} -F' ' '{print \$2}' | ${TR_BIN} -d \\\""
+							LSNCTRL_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE "^service(.*)" | ${GREP_BIN} -vi "summary" | ${AWK_BIN} -F' ' '{print $2}' | ${TR_BIN} -d \") )
+							SERVICE_LIST_NUM=${#LSNCTRL_SERVICE_LIST[*]}
+							_debug_logging "Func: ${FUNCNAME[0]}: Found ${SERVICE_LIST_NUM} service."
+							for ((j=0; j<${#LSNCTRL_SERVICE_LIST[@]}; j++)); do
+								if [ -n "${LSNCTRL_SERVICE_LIST[$j]}" ]; then
+									SERVICELIST="${SERVICELIST},"'{"{#SERVICE_NAME}":"'${LSNCTRL_SERVICE_LIST[$j]}'","{#HOSTNAME}":"'${HOSTNAME}'","{#LSNR_NAME}":"'${ORA_LSNR_NAME}'","{#LSNR_PATH}":"'${LISTENER_CTRL_BIN}'"}'
+								fi
+							done
 						else
-							_debug_logging "Func: ${FUNCNAME[0]}: ERROR: Binary file ${LISTENER_CTRL_BIN} not found."
+							TIME_NOW=$(${DATE_BIN} +%s)
+							${ECHO_BIN} "${HOSTNAME} dbmon.oracle.listener[${ORA_LSNR_NAME},status] ${TIME_NOW} 0" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+							_run_zabbix_sender "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
 						fi
 					else
-						_debug_logging "Func: ${FUNCNAME[0]}: ERROR: Binary file ${ORA_LSNR_PATH} not found."
+						_debug_logging "Func: ${FUNCNAME[0]}: ERROR: Binary file ${LISTENER_CTRL_BIN} not found."
 					fi
+				else
+					_debug_logging "Func: ${FUNCNAME[0]}: ERROR: Binary file ${ORA_LSNR_PATH} not found."
 				fi
-			done
-			if [ ${PS_FIND_NUM} -ne 0 ]; then
-				SERVICE_DISCOVERY_RESULT='{"data":['${SERVICELIST#,}']}'
-				_debug_logging "Func: ${FUNCNAME[0]}: SERVICE_LIST = ${SERVICE_DISCOVERY_RESULT}"
-				${ECHO_BIN} "${SERVICE_DISCOVERY_RESULT}"
-			else
-				${ECHO_BIN} "{\"data\":[]}"
 			fi
+		done
+		if [ ${PS_FIND_NUM} -ne 0 ]; then
+			SERVICE_DISCOVERY_RESULT='{"data":['${SERVICELIST#,}']}'
+			_debug_logging "Func: ${FUNCNAME[0]}: SERVICE_LIST = ${SERVICE_DISCOVERY_RESULT}"
+			${ECHO_BIN} "${SERVICE_DISCOVERY_RESULT}"
+		else
+			${ECHO_BIN} "{\"data\":[]}"
 		fi
 		IFS=${OLD_IFS}
+	else
+		${ECHO_BIN} "{\"data\":[]}"
 	fi
 }
 
@@ -1453,85 +1464,80 @@ _oracle_service_info() {
 	local LISTENER_NAME=$2
 	local LISTENER_PATH=$3
 	local EXIT_CODE=0
+	local LISTENER_CTRL_BIN=""
 	local INSTANCE_NAME=""
 	local INSTANCE_STATUS=""
 	local INSTANCE_STATUS_INT=0
 	local NUM_OF_INST_IN_SERVICE=0
 	local INSTANCE_IN_SERVICE_LIST=("")
-	_check_zbx_cache_file_lifetime "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}" ${ZBX_CACHE_LIFETIME_ORA_SERVICE_INFO}
-	EXIT_CODE=$?
-	if [ ${EXIT_CODE} -eq 0 ]; then
-		_run_zabbix_sender "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-	else
-		if [ -f "${LISTENER_PATH}"  ]; then
-			LISTENER_CTRL_BIN="$(${DIRNAME_BIN} "${LISTENER_PATH}")/lsnrctl"
-			local ORA_BIN_DIR=$(${DIRNAME_BIN} "${LISTENER_PATH}")
-			local ORA_HOME=${ORA_BIN_DIR%/*}
-			export ORACLE_HOME=${ORA_HOME}
-			if [ -f "${LISTENER_CTRL_BIN}" ]; then
-				local TIME_NOW=$(${DATE_BIN} +%s)
-				_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status \"${LISTENER_NAME}\" | ${GREP_BIN} 'Service \"${SERVICE_NAME}\"'"
-				local SERVICE_STATUS=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"")
-				if [ -n "${SERVICE_STATUS}" ]; then
-					if [[ "${PLATFORM}" = "aix" ]]; then
-						NUM_OF_INST_IN_SERVICE=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"" | ${SED_BIN} -n "s/.*has \([^ ]*\) instance.*/\1/p")
-					else
-						NUM_OF_INST_IN_SERVICE=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"" | ${SED_BIN} -r "s/.*has ([^ ]+) instance.*/\1/")
-					fi
-					_debug_logging "Func: ${FUNCNAME[0]}: NUM_OF_INST_IN_SERVICE=${NUM_OF_INST_IN_SERVICE}"
-					if [ -z "${NUM_OF_INST_IN_SERVICE}" ]; then
-						NUM_OF_INST_IN_SERVICE=0
-					fi
-					${ECHO_BIN} "${HOSTNAME} dbs.oracle.service[${LISTENER_NAME},${SERVICE_NAME},status] ${TIME_NOW} 1" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-					${ECHO_BIN} "${HOSTNAME} dbs.oracle.service[${LISTENER_NAME},${SERVICE_NAME},instance_number] ${TIME_NOW} \"${NUM_OF_INST_IN_SERVICE}\"" >> "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-					local OLD_IFS=$IFS
-					IFS=$'\n'
-					if [[ "${PLATFORM}" = "aix" ]]; then
-						INSTANCE_IN_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${NAWK_BIN} "\$0~s{for(c=NR-b;c<=NR+a;c++)r[c]=1}{q[NR]=\$0}END{for(c=1;c<=NR;c++)if(r[c])print q[c]}" b=0 a=${NUM_OF_INST_IN_SERVICE} s="Service \"${SERVICE_NAME}\"" | ${GREP_BIN} "Instance" | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' | ${SED_BIN} "s/\"//g") )
-					else
-						INSTANCE_IN_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"" -A ${NUM_OF_INST_IN_SERVICE} | ${TAIL_BIN} -n ${NUM_OF_INST_IN_SERVICE} | ${SED_BIN} "s/^[ \t]*//;s/[ ]*$//" | ${SED_BIN} "s/\"//g") )
-					fi
-					_debug_logging "Func: ${FUNCNAME[0]}: INSTANCE_IN_SERVICE_LIST=$(declare -p INSTANCE_IN_SERVICE_LIST | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
-					for ((i=0; i<${#INSTANCE_IN_SERVICE_LIST[@]}; i++)); do
-						if [ -n "${INSTANCE_IN_SERVICE_LIST[$i]}" ]; then
-							if [[ "${PLATFORM}" = "aix" ]]; then
-								INSTANCE_NAME=$(${ECHO_BIN} "${INSTANCE_IN_SERVICE_LIST[$i]}" | ${SED_BIN} -n "s/Instance \([^,]*\).*/\1/p")
-								INSTANCE_STATUS=$(${ECHO_BIN} "${INSTANCE_IN_SERVICE_LIST[$i]}" | ${SED_BIN} -n "s/.*status \([^,]*\).*/\1/p")
-							else
-								INSTANCE_NAME=$(${ECHO_BIN} "${INSTANCE_IN_SERVICE_LIST[$i]}" | ${SED_BIN} -r "s/Instance ([^,]+).*/\1/")
-								INSTANCE_STATUS=$(${ECHO_BIN} "${INSTANCE_IN_SERVICE_LIST[$i]}" | ${SED_BIN} -r "s/.*status ([^,]+).*/\1/")
-							fi
-							case ${INSTANCE_STATUS} in
-								UNKNOWN) 
-									INSTANCE_STATUS_INT=0
-									;;
-								READY)
-									INSTANCE_STATUS_INT=1
-									;;
-								*)
-									INSTANCE_STATUS_INT=2
-							esac
-							_debug_logging "Func: ${FUNCNAME[0]}: INSTANCE_NAME=${INSTANCE_NAME}|INSTANCE_STATUS=${INSTANCE_STATUS}"
-							#INSTANCELIST="${INSTANCELIST},"'{"{#INSTANCE_NAME}":"'${INSTANCE_NAME}'","{#INSTANCE_STATUS}":"'${INSTANCE_STATUS_INT}'"}'
-							INSTANCELIST="${INSTANCELIST},${INSTANCE_NAME}:${INSTANCE_STATUS}"
-						fi
-					done
-					IFS=$OLD_IFS
-					#INSTANCE_LIST_RESULT='['${INSTANCELIST#,}']'
-					INSTANCE_LIST_RESULT="\"${INSTANCELIST#,}\""
-					${ECHO_BIN} "${HOSTNAME} dbs.oracle.service[${LISTENER_NAME},${SERVICE_NAME},instance_list] ${TIME_NOW} ${INSTANCE_LIST_RESULT}" >> "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+	if [ -f "${LISTENER_PATH}"  ]; then
+		LISTENER_CTRL_BIN="$(${DIRNAME_BIN} "${LISTENER_PATH}")/lsnrctl"
+		local ORA_BIN_DIR=$(${DIRNAME_BIN} "${LISTENER_PATH}")
+		local ORA_HOME=${ORA_BIN_DIR%/*}
+		export ORACLE_HOME=${ORA_HOME}
+		if [ -f "${LISTENER_CTRL_BIN}" ]; then
+			local TIME_NOW=$(${DATE_BIN} +%s)
+			_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status \"${LISTENER_NAME}\" | ${GREP_BIN} 'Service \"${SERVICE_NAME}\"'"
+			local SERVICE_STATUS=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"")
+			if [ -n "${SERVICE_STATUS}" ]; then
+				if [[ "${PLATFORM}" = "aix" ]]; then
+					NUM_OF_INST_IN_SERVICE=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"" | ${SED_BIN} -n "s/.*has \([^ ]*\) instance.*/\1/p")
 				else
-					${ECHO_BIN} "${HOSTNAME} dbs.oracle.service[${LISTENER_NAME},${SERVICE_NAME},status] ${TIME_NOW} 0" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+					NUM_OF_INST_IN_SERVICE=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"" | ${SED_BIN} -r "s/.*has ([^ ]+) instance.*/\1/")
 				fi
-				_run_zabbix_sender "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+				_debug_logging "Func: ${FUNCNAME[0]}: NUM_OF_INST_IN_SERVICE=${NUM_OF_INST_IN_SERVICE}"
+				if [ -z "${NUM_OF_INST_IN_SERVICE}" ]; then
+					NUM_OF_INST_IN_SERVICE=0
+				fi
+				${ECHO_BIN} "${HOSTNAME} dbmon.oracle.service[${LISTENER_NAME},${SERVICE_NAME},status] ${TIME_NOW} 1" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+				${ECHO_BIN} "${HOSTNAME} dbmon.oracle.service[${LISTENER_NAME},${SERVICE_NAME},instance_number] ${TIME_NOW} \"${NUM_OF_INST_IN_SERVICE}\"" >> "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+				local OLD_IFS=$IFS
+				IFS=$'\n'
+				if [[ "${PLATFORM}" = "aix" ]]; then
+					INSTANCE_IN_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${NAWK_BIN} "\$0~s{for(c=NR-b;c<=NR+a;c++)r[c]=1}{q[NR]=\$0}END{for(c=1;c<=NR;c++)if(r[c])print q[c]}" b=0 a=${NUM_OF_INST_IN_SERVICE} s="Service \"${SERVICE_NAME}\"" | ${GREP_BIN} "Instance" | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' | ${SED_BIN} "s/\"//g") )
+				else
+					INSTANCE_IN_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"" -A ${NUM_OF_INST_IN_SERVICE} | ${TAIL_BIN} -n ${NUM_OF_INST_IN_SERVICE} | ${SED_BIN} "s/^[ \t]*//;s/[ ]*$//" | ${SED_BIN} "s/\"//g") )
+				fi
+				_debug_logging "Func: ${FUNCNAME[0]}: INSTANCE_IN_SERVICE_LIST=$(declare -p INSTANCE_IN_SERVICE_LIST | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
+				for ((i=0; i<${#INSTANCE_IN_SERVICE_LIST[@]}; i++)); do
+					if [ -n "${INSTANCE_IN_SERVICE_LIST[$i]}" ]; then
+						if [[ "${PLATFORM}" = "aix" ]]; then
+							INSTANCE_NAME=$(${ECHO_BIN} "${INSTANCE_IN_SERVICE_LIST[$i]}" | ${SED_BIN} -n "s/Instance \([^,]*\).*/\1/p")
+							INSTANCE_STATUS=$(${ECHO_BIN} "${INSTANCE_IN_SERVICE_LIST[$i]}" | ${SED_BIN} -n "s/.*status \([^,]*\).*/\1/p")
+						else
+							INSTANCE_NAME=$(${ECHO_BIN} "${INSTANCE_IN_SERVICE_LIST[$i]}" | ${SED_BIN} -r "s/Instance ([^,]+).*/\1/")
+							INSTANCE_STATUS=$(${ECHO_BIN} "${INSTANCE_IN_SERVICE_LIST[$i]}" | ${SED_BIN} -r "s/.*status ([^,]+).*/\1/")
+						fi
+						case ${INSTANCE_STATUS} in
+							UNKNOWN) 
+								INSTANCE_STATUS_INT=0
+								;;
+							READY)
+								INSTANCE_STATUS_INT=1
+								;;
+							*)
+								INSTANCE_STATUS_INT=2
+						esac
+						_debug_logging "Func: ${FUNCNAME[0]}: INSTANCE_NAME=${INSTANCE_NAME}|INSTANCE_STATUS=${INSTANCE_STATUS}"
+						#INSTANCELIST="${INSTANCELIST},"'{"{#INSTANCE_NAME}":"'${INSTANCE_NAME}'","{#INSTANCE_STATUS}":"'${INSTANCE_STATUS_INT}'"}'
+						INSTANCELIST="${INSTANCELIST},${INSTANCE_NAME}:${INSTANCE_STATUS}"
+					fi
+				done
+				IFS=$OLD_IFS
+				#INSTANCE_LIST_RESULT='['${INSTANCELIST#,}']'
+				INSTANCE_LIST_RESULT="\"${INSTANCELIST#,}\""
+				${ECHO_BIN} "${HOSTNAME} dbmon.oracle.service[${LISTENER_NAME},${SERVICE_NAME},instance_list] ${TIME_NOW} ${INSTANCE_LIST_RESULT}" >> "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
 			else
-				message="Binary file ${LISTENER_CTRL_BIN} not found."
-				_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
+				${ECHO_BIN} "${HOSTNAME} dbmon.oracle.service[${LISTENER_NAME},${SERVICE_NAME},status] ${TIME_NOW} 0" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
 			fi
+			_run_zabbix_sender "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
 		else
-			message="Binary file ${LISTENER_PATH} not found."
+			message="Binary file ${LISTENER_CTRL_BIN} not found."
 			_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
 		fi
+	else
+		message="Binary file ${LISTENER_PATH} not found."
+		_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
 	fi
 }
 
@@ -1548,61 +1554,55 @@ _oracle_listener_info() {
 	local OLD_IFS=""
 	local LSNCTRL_CHECK_ERROR=""
 	local LSNCTRL_ERROR=""
-	_check_zbx_cache_file_lifetime "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}" ${ZBX_CACHE_LIFETIME_ORA_LISTENER_INFO}
-	EXIT_CODE=$?
-	if [ ${EXIT_CODE} -eq 0 ]; then
-		_run_zabbix_sender "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-	else
-		if [ -f "${LISTENER_PATH}"  ]; then
-			LISTENER_CTRL_BIN="$(${DIRNAME_BIN} "${LISTENER_PATH}")/lsnrctl"
-			local ORA_BIN_DIR=$(${DIRNAME_BIN} "${LISTENER_PATH}")
-			local ORA_HOME=${ORA_BIN_DIR%/*}
-			export ORACLE_HOME=${ORA_HOME}
-			if [ -f "${LISTENER_CTRL_BIN}" ]; then
-				OLD_IFS=$IFS
-				IFS=$'\n'
-				if [[ "${PLATFORM}" = "aix" ]]; then
-					PS_FIND=($(${PS_BIN} -eo user,args | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} [t]nslsnr | ${GREP_BIN} "${LISTENER_NAME}" | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' 2>/dev/null))
-				else
-					PS_FIND=($(${PS_BIN} -eo user,cmd | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} [t]nslsnr | ${GREP_BIN} "${LISTENER_NAME}" | ${SED_BIN} 's/^[ \t]*//;s/[ \t]*$//' 2>/dev/null))
-				fi
-				if [ $? -eq 0 ]; then
-					PS_FIND_NUM=${#PS_FIND[*]}
-					_debug_logging "Func: ${FUNCNAME[0]}: Found ${PS_FIND_NUM} tnslsnr process"
-					_debug_logging "Func: ${FUNCNAME[0]}: PS_FIND=$(declare -p PS_FIND | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
-					local TIME_NOW=$(${DATE_BIN} +%s)
-					if [ ${PS_FIND_NUM} -gt 0 ]; then
-						_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status ${LISTENER_NAME} | ${GREP_BIN} -iE '^ERROR|ERROR:|ORA-[0-9]{1,}|PLS-|SP2-|IMP-|TNS-[0-9]{1,}'"
-						LSNCTRL_CHECK_ERROR=$(${LISTENER_CTRL_BIN} status ${LISTENER_NAME} | ${GREP_BIN} -iE '^ERROR|ERROR:|ORA-[0-9]{1,}|PLS-|SP2-|IMP-|TNS-[0-9]{1,}')
-						if [ -z "${LSNCTRL_CHECK_ERROR}" ]; then
-							if [[ "${PLATFORM}" = "aix" ]]; then
-								LSNCTRL_VERSION=$(${LISTENER_CTRL_BIN} status ${LISTENER_NAME} | ${GREP_BIN} -iE "^Version" | ${SED_BIN} -n "s/.*Version \([^ ]*\).*/\1/p")
-							else
-								LSNCTRL_VERSION=$(${LISTENER_CTRL_BIN} status ${LISTENER_NAME} | ${GREP_BIN} -iE "^Version" | ${SED_BIN} -r "s/.*Version ([^ ]+).*/\1/")
-							fi
-							${ECHO_BIN} "${HOSTNAME} dbs.oracle.listener[${LISTENER_NAME},status] ${TIME_NOW} 1" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-							${ECHO_BIN} "${HOSTNAME} dbs.oracle.listener[${LISTENER_NAME},version] ${TIME_NOW} \"${LSNCTRL_VERSION}\"" >> "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-							${ECHO_BIN} "${HOSTNAME} dbs.oracle.listener[${LISTENER_NAME},error] ${TIME_NOW} \"${LSNCTRL_CHECK_ERROR}\"" >> "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-						else
-							LSNCTRL_ERROR=$(${ECHO_BIN} "${LSNCTRL_CHECK_ERROR}" | ${HEAD_BIN} -1)
-							_debug_logging "Func: ${FUNCNAME[0]}: LSNCTRL_ERROR=${LSNCTRL_ERROR}"
-							${ECHO_BIN} "${HOSTNAME} dbs.oracle.listener[${LISTENER_NAME},status] ${TIME_NOW} 2" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-							${ECHO_BIN} "${HOSTNAME} dbs.oracle.listener[${LISTENER_NAME},error] ${TIME_NOW} \"${LSNCTRL_ERROR}\"" >> "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-						fi
-					else
-						${ECHO_BIN} "${HOSTNAME} dbs.oracle.listener[${LISTENER_NAME},status] ${TIME_NOW} 0" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-					fi
-					IFS=${OLD_IFS}
-					_run_zabbix_sender "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
-				fi
+	if [ -f "${LISTENER_PATH}"  ]; then
+		LISTENER_CTRL_BIN="$(${DIRNAME_BIN} "${LISTENER_PATH}")/lsnrctl"
+		local ORA_BIN_DIR=$(${DIRNAME_BIN} "${LISTENER_PATH}")
+		local ORA_HOME=${ORA_BIN_DIR%/*}
+		export ORACLE_HOME=${ORA_HOME}
+		if [ -f "${LISTENER_CTRL_BIN}" ]; then
+			OLD_IFS=$IFS
+			IFS=$'\n'
+			if [[ "${PLATFORM}" = "aix" ]]; then
+				PS_FIND=($(${PS_BIN} -eo user,args | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} -v "zabbix_get" | ${GREP_BIN} [t]nslsnr | ${GREP_BIN} "${LISTENER_NAME}" | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' 2>/dev/null))
 			else
-				message="Binary file ${LISTENER_CTRL_BIN} not found."
-				_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
+				PS_FIND=($(${PS_BIN} -eo user,cmd | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} -v "zabbix_get" | ${GREP_BIN} [t]nslsnr | ${GREP_BIN} "${LISTENER_NAME}" | ${SED_BIN} 's/^[ \t]*//;s/[ \t]*$//' 2>/dev/null))
+			fi
+			if [ $? -eq 0 ]; then
+				PS_FIND_NUM=${#PS_FIND[*]}
+				_debug_logging "Func: ${FUNCNAME[0]}: Found ${PS_FIND_NUM} tnslsnr process"
+				_debug_logging "Func: ${FUNCNAME[0]}: PS_FIND=$(declare -p PS_FIND | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
+				local TIME_NOW=$(${DATE_BIN} +%s)
+				if [ ${PS_FIND_NUM} -gt 0 ]; then
+					_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status ${LISTENER_NAME} | ${GREP_BIN} -iE '^ERROR|ERROR:|ORA-[0-9]{1,}|PLS-|SP2-|IMP-|TNS-[0-9]{1,}'"
+					LSNCTRL_CHECK_ERROR=$(${LISTENER_CTRL_BIN} status ${LISTENER_NAME} | ${GREP_BIN} -iE '^ERROR|ERROR:|ORA-[0-9]{1,}|PLS-|SP2-|IMP-|TNS-[0-9]{1,}')
+					if [ -z "${LSNCTRL_CHECK_ERROR}" ]; then
+						if [[ "${PLATFORM}" = "aix" ]]; then
+							LSNCTRL_VERSION=$(${LISTENER_CTRL_BIN} status ${LISTENER_NAME} | ${GREP_BIN} -iE "^Version" | ${SED_BIN} -n "s/.*Version \([^ ]*\).*/\1/p")
+						else
+							LSNCTRL_VERSION=$(${LISTENER_CTRL_BIN} status ${LISTENER_NAME} | ${GREP_BIN} -iE "^Version" | ${SED_BIN} -r "s/.*Version ([^ ]+).*/\1/")
+						fi
+						${ECHO_BIN} "${HOSTNAME} dbmon.oracle.listener[${LISTENER_NAME},status] ${TIME_NOW} 1" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+						${ECHO_BIN} "${HOSTNAME} dbmon.oracle.listener[${LISTENER_NAME},version] ${TIME_NOW} \"${LSNCTRL_VERSION}\"" >> "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+						${ECHO_BIN} "${HOSTNAME} dbmon.oracle.listener[${LISTENER_NAME},error] ${TIME_NOW} \"${LSNCTRL_CHECK_ERROR}\"" >> "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+					else
+						LSNCTRL_ERROR=$(${ECHO_BIN} "${LSNCTRL_CHECK_ERROR}" | ${HEAD_BIN} -1)
+						_debug_logging "Func: ${FUNCNAME[0]}: LSNCTRL_ERROR=${LSNCTRL_ERROR}"
+						${ECHO_BIN} "${HOSTNAME} dbmon.oracle.listener[${LISTENER_NAME},status] ${TIME_NOW} 2" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+						${ECHO_BIN} "${HOSTNAME} dbmon.oracle.listener[${LISTENER_NAME},error] ${TIME_NOW} \"${LSNCTRL_ERROR}\"" >> "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+					fi
+				else
+					${ECHO_BIN} "${HOSTNAME} dbmon.oracle.listener[${LISTENER_NAME},status] ${TIME_NOW} 0" > "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
+				fi
+				IFS=${OLD_IFS}
+				_run_zabbix_sender "${ZBX_HOME_DIR}/${ZBX_METRIC_FILE_NAME}"
 			fi
 		else
-			message="Binary file ${LISTENER_PATH} not found."
+			message="Binary file ${LISTENER_CTRL_BIN} not found."
 			_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
 		fi
+	else
+		message="Binary file ${LISTENER_PATH} not found."
+		_message "[{\"error_code\":\"1\",\"error_msg\":\"${message}\"}]" "1"
 	fi
 }
 
@@ -1765,7 +1765,7 @@ if [[ "$PARAM1" = "dbs_check_zabbix_server" ]]; then
 				else
 					ZBX_SERVER_PORT=${ZBX_SERVER_DEFAULT_PORT}
 				fi
-				${ZABBIX_SENDER_BIN} -c "${ZBX_AGENTD_CONFIG_FILE}" -z "${ZBX_SERVER_ADDR}" -p "${ZBX_SERVER_PORT}" -s "${HOSTNAME}" -k "dbs.runshell[dbs_check_zabbix_server,${DB_TYPE},result]" -o 1 >/dev/null 2>&1
+				${ZABBIX_SENDER_BIN} -c "${ZBX_AGENTD_CONFIG_FILE}" -z "${ZBX_SERVER_ADDR}" -p "${ZBX_SERVER_PORT}" -s "${HOSTNAME}" -k "dbmon.runshell[dbs_check_zabbix_server,${DB_TYPE},result]" -o 1 >/dev/null 2>&1
 				EXIT_CODE=$?
 				_debug_logging "Func: Main: ExitCode: ${EXIT_CODE}, ZabbixServer: ${ZBX_SERVER_ADDR}:${ZBX_SERVER_PORT}"
 				if [ ${EXIT_CODE} -eq 0 ]; then
