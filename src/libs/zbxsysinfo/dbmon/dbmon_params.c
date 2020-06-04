@@ -24,52 +24,53 @@
 
 int dbmon_param_len(DBMONparams params)
 {
-    int         len = 0;
-	DBMONparams    c = NULL;
+	int			len = 0;
+	DBMONparams	c = NULL;
 
-    if (NULL == params)
-        return 0;
+	if (NULL == params)
+		return 0;
 
-    for (c = params; *c; c++) 
-        len++;
+	for (c = params; *c; c++) 
+		len++;
 
-    return len;
+	return len;
 }
 
 char **dbmon_param_append(DBMONparams params, char *s)
 {
-    int len = 0;
+	int len = 0;
 
-    // never append nulls or empty strings
-    if(NULL == s || '\0' == *s)
-        return params;
+	// never append nulls or empty strings
+	if(NULL == s || '\0' == *s)
+		return params;
 
-    // allocate new array
-    if(NULL == params) {
-        params = zbx_malloc(params, sizeof(DBMONparams) * 2);
-        params[0] = strdup(s);
-        params[1] = NULL;
-        return params;
-    } 
+	// allocate new array
+	if(NULL == params)
+	{
+		params = zbx_malloc(params, sizeof(DBMONparams) * 2);
+		params[0] = strdup(s);
+		params[1] = NULL;
+		return params;
+	} 
 
-    // extend array and append
-    len = dbmon_param_len(params);
-    params = zbx_realloc(params, sizeof(DBMONparams) * (len + 2));
-    params[len] = strdup(s); // dup so we can free everything later
-    params[len + 1] = NULL;
+	// extend array and append
+	len = dbmon_param_len(params);
+	params = zbx_realloc(params, sizeof(DBMONparams) * (len + 2));
+	params[len] = strdup(s); // dup so we can free everything later
+	params[len + 1] = NULL;
 
-    return params;
+	return params;
 }
 
 void dbmon_param_free(DBMONparams params)
 {
 	DBMONparams p = NULL;
 
-    if (NULL == params)
-        return;
+	if (NULL == params)
+		return;
     
-    for (p = params; *p; p++)
-        zbx_free(*p);
+	for (p = params; *p; p++)
+		zbx_free(*p);
 
-    zbx_free(params);
+	zbx_free(params);
 }

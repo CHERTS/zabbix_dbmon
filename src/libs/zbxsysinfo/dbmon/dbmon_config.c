@@ -51,39 +51,40 @@ int query_count = 0;
  */
 static inline const char *get_dbmon_configfile()
 {
-    char *path = NULL;
+	char *path = NULL;
 
 	path = getenv("DBMONCONFIGFILE");
 
 	if (NULL == path || '\0' == *path)
 	{
-        path = DEFAULT_DBMON_CONFIG_FILE;
-    }
+		path = DEFAULT_DBMON_CONFIG_FILE;
+	}
 	else if (strlen(path) > MAX_GLOBBING_PATH_LENGTH)
 	{
-        zabbix_log(LOG_LEVEL_ERR, "In %s: environment DBMONCONFIGFILE exceeds maximum length of %i", __func__, MAX_GLOBBING_PATH_LENGTH);
-        return NULL;
-    }
+		zabbix_log(LOG_LEVEL_ERR, "In %s: environment DBMONCONFIGFILE exceeds maximum length of %i", __func__, MAX_GLOBBING_PATH_LENGTH);
+		return NULL;
+	}
     
-    return path;
+	return path;
 }
 
 static inline int add_named_query(const char *name, const char *query)
 {
-    int i = query_count - 1;
-    while(i >= 0 && (NULL == query_keys[i] || 0 > strcmp(name, query_keys[i])))
+	int i = query_count - 1;
+
+	while(i >= 0 && (NULL == query_keys[i] || 0 > strcmp(name, query_keys[i])))
 	{
-        query_keys[i+1] = query_keys[i];
-        query_values[i+1] = query_values[i];
-        query_keys[i] = NULL;
-        query_values[i] = NULL;
-        i--;
-    }
+		query_keys[i+1] = query_keys[i];
+		query_values[i+1] = query_values[i];
+		query_keys[i] = NULL;
+		query_values[i] = NULL;
+		i--;
+	}
 
-    query_keys[i+1] = strdup(name);
-    query_values[i+1] = strdup(query);
+	query_keys[i+1] = strdup(name);
+	query_values[i+1] = strdup(query);
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 /*
@@ -99,121 +100,121 @@ static inline int add_named_query(const char *name, const char *query)
  */
 const char *get_query_by_name(const char *key)
 {
-    int top = query_count - 1;
-    int mid = 0;
-    int bottom = 0;
-    int cmp = -1;
+	int top = query_count - 1;
+	int mid = 0;
+	int bottom = 0;
+	int cmp = -1;
 
-    while (bottom <= top)
+	while (bottom <= top)
 	{
-        mid = (bottom + top)/2;
-        cmp = strcmp(query_keys[mid], key);
-        if (cmp == 0)
+		mid = (bottom + top)/2;
+		cmp = strcmp(query_keys[mid], key);
+		if (cmp == 0)
 		{
-            return query_values[mid];
-        }
+			return query_values[mid];
+		}
 		else if (cmp > 0)
 		{
-            top = mid - 1;
-        }
+			top = mid - 1;
+		}
 		else if (cmp < 0)
 		{
-            bottom = mid + 1;
-        }
-    }
+			bottom = mid + 1;
+		}
+	}
 
-    return NULL;
+	return NULL;
 }
 
 static int read_config_queries(const config_setting_t *root)
 {
-    int                 i = 0;
-    const char          *key = NULL, *value = NULL;
-    config_setting_t    *node = NULL;
+	int                 i = 0;
+	const char          *key = NULL, *value = NULL;
+	config_setting_t    *node = NULL;
 
-    if (CONFIG_TYPE_GROUP != config_setting_type(root))
+	if (CONFIG_TYPE_GROUP != config_setting_type(root))
 	{
-        zabbix_log(LOG_LEVEL_ERR, "In %s: queries is not a valid configuration group", __func__);
-        return EXIT_FAILURE;
-    }
+		zabbix_log(LOG_LEVEL_ERR, "In %s: queries is not a valid configuration group", __func__);
+		return EXIT_FAILURE;
+	}
 
-    query_count = config_setting_length(root);
-    query_keys = (char**)zbx_calloc(query_keys, query_count + 1, sizeof(char*));
-    query_values = (char**)zbx_calloc(query_values, query_count + 1, sizeof(char*));
+	query_count = config_setting_length(root);
+	query_keys = (char**)zbx_calloc(query_keys, query_count + 1, sizeof(char*));
+	query_values = (char**)zbx_calloc(query_values, query_count + 1, sizeof(char*));
 
-    for (i = 0; i < query_count; i++)
+	for (i = 0; i < query_count; i++)
 	{
-        node = config_setting_get_elem(root, i);
-        key = config_setting_name(node);
+		node = config_setting_get_elem(root, i);
+		key = config_setting_name(node);
 
-        if (CONFIG_TYPE_STRING != config_setting_type(node))
+		if (CONFIG_TYPE_STRING != config_setting_type(node))
 		{
-            zabbix_log(LOG_LEVEL_ERR, "In %s: query '%s' is not a valid string", __func__, key);
-            return EXIT_FAILURE;
-        }
+			zabbix_log(LOG_LEVEL_ERR, "In %s: query '%s' is not a valid string", __func__, key);
+			return EXIT_FAILURE;
+		}
 
-        value = config_setting_get_string_elem(root, i);
+		value = config_setting_get_string_elem(root, i);
 
-        if (EXIT_SUCCESS != (add_named_query(key, value)))
-            return EXIT_FAILURE;
-    }
+		if (EXIT_SUCCESS != (add_named_query(key, value)))
+			return EXIT_FAILURE;
+	}
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 static int read_dbmon_config(const char *cfgfile)
 {
-    int                 i = 0;
-    int                 res = EXIT_FAILURE;
-    int                 cfglen = 0;
-    const char          *key = NULL;
-    config_t            cfg;
-    config_setting_t    *root, *node;
+	int                 i = 0;
+	int                 res = EXIT_FAILURE;
+	int                 cfglen = 0;
+	const char          *key = NULL;
+	config_t            cfg;
+	config_setting_t    *root, *node;
 
-    config_init(&cfg);
+	config_init(&cfg);
 
-    if (CONFIG_TRUE != (config_read_file(&cfg, cfgfile)))
+	if (CONFIG_TRUE != (config_read_file(&cfg, cfgfile)))
 	{
-        zabbix_log(LOG_LEVEL_ERR, "In %s: %s in %s:%i",	__func__, config_error_text(&cfg), cfgfile, config_error_line(&cfg));
-        goto out;
-    }
+		zabbix_log(LOG_LEVEL_ERR, "In %s: %s in %s:%i",	__func__, config_error_text(&cfg), cfgfile, config_error_line(&cfg));
+		goto out;
+	}
 
-    root = config_root_setting(&cfg);
-    cfglen = config_setting_length(root);
+	root = config_root_setting(&cfg);
+	cfglen = config_setting_length(root);
 
-    for (i = 0; i < cfglen; i++)
+	for (i = 0; i < cfglen; i++)
 	{
-        node = config_setting_get_elem(root, i);
-        key = config_setting_name(node);
+		node = config_setting_get_elem(root, i);
+		key = config_setting_name(node);
 
-        if (0 == strncmp(key, "queries", 8))
+		if (0 == strncmp(key, "queries", 8))
 		{
-            if (EXIT_SUCCESS != (read_config_queries(node)))
-                goto out;
-        }
+			if (EXIT_SUCCESS != (read_config_queries(node)))
+				goto out;
+		}
 		else
 		{
-            zabbix_log(LOG_LEVEL_ERR, "In %s: unrecognised configuration parameter: %s", __func__, key);
-            goto out;
-        }
-    }
+			zabbix_log(LOG_LEVEL_ERR, "In %s: unrecognised configuration parameter: %s", __func__, key);
+			goto out;
+		}
+	}
 
-    res = EXIT_SUCCESS;
+	res = EXIT_SUCCESS;
 out:
-    config_destroy(&cfg);
-    return res;
+	config_destroy(&cfg);
+	return res;
 }
 
 int init_dbmon_config()
 {
-    const char *cfgfile = get_dbmon_configfile();
+	const char *cfgfile = get_dbmon_configfile();
 
 	zabbix_log(LOG_LEVEL_INFORMATION, "In %s: using dbmon configuration file: %s", __func__, cfgfile);
 
-    if (EXIT_SUCCESS != (read_dbmon_config(cfgfile)))
-        return EXIT_FAILURE;
+	if (EXIT_SUCCESS != (read_dbmon_config(cfgfile)))
+		return EXIT_FAILURE;
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 int uninit_dbmon_config()
@@ -221,5 +222,5 @@ int uninit_dbmon_config()
 	zbx_free(query_keys);
 	zbx_free(query_values);
 	query_count = 0;
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
