@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-29T05:55:33Z</date>
+    <date>2020-06-02T13:11:58Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2195,6 +2195,9 @@ Removed in MySQL 8.0.3.</description>
                             <name>Server has slow queries</name>
                             <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_SLOW_QUERIES_MAX_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
                             <priority>WARNING</priority>
+                            <description>У экземпляра MySQL регистрируется рост числа медленных запросов.&#13;
+Более {$DBS_MYSQL_SLOW_QUERIES_MAX_WARN} запросов в секунду за последние 5 минут.&#13;
+Доведите информацию до заказчика и эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -6189,7 +6192,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>Buffer pool utilization is too low</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}%, alert started: {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
-            <description>Использование пула буферов InnoDB составляет менее {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}% за последние 5 минут.&#13;
+            <description>По прошествии 24 часов после запуска MySQL использование пула буферов InnoDB составляет менее {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}% за последние 5 минут.&#13;
 Это означает, что для пула буферов InnoDB выделено много оперативной памяти, которая в данный момент не используется и которую Вы можете легко перераспределить.&#13;
 Доведите информацию до эксперта.</description>
             <dependencies>
