@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-02T13:11:58Z</date>
+    <date>2020-06-04T13:05:03Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1216,15 +1216,20 @@ Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp tables on disk</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp tables on disk per second</name>
                     <type>DEPENDENT</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_disk_tables]</key>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_disk_tables_rate]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>The number of internal on-disk temporary tables created by the server while executing statements.</description>
+                    <value_type>FLOAT</value_type>
+                    <description>The number of internal on-disk temporary tables created by the server while executing statements.&#13;
+&#13;
+You can compare the number of internal on-disk temporary tables created to the total number of internal temporary tables created by comparing Created_tmp_disk_tables and Created_tmp_tables values.&#13;
+&#13;
+See also https://dev.mysql.com/doc/refman/5.7/en/internal-temporary-tables.html</description>
                     <applications>
                         <application>
-                            <name>MySQL: Status</name>
+                            <name>MySQL: Throughput</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1233,24 +1238,51 @@ Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                             <params>$.CREATED_TMP_DISK_TABLES</params>
                         </step>
                         <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
                         </step>
                     </preprocessing>
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_MYSQL_CREATED_TMP_TABLES_ON_DISK_WARN}</expression>
+                            <name>Number of internal on-disk temporary tables created per second is high</name>
+                            <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_CREATED_TMP_TABLES_ON_DISK_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
+                            <status>DISABLED</status>
+                            <priority>WARNING</priority>
+                            <description>Количество созданных временных таблиц на диске превышает порог.&#13;
+&#13;
+Когда временная таблица в памяти растет до количества байтов в tmp_table_size, то дальнейший ее рост приводит в созданию временной таблице уже на диске и переноса содержимого из памяти на диск, этот процесс увеличивает счетчик Created_tmp_disk_tables&#13;
+&#13;
+Возможно стоит увеличить параметры join_buffer_size и sort_buffer_size.&#13;
+Так же нужно рассмотреть возможность создания индексов, которые будут использоваться&#13;
+- в соединениях через eq_ref&#13;
+- сортирует по индексу в порядке&#13;
+&#13;
+Передайте данные эксперту.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp files on disk</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp files on disk per second</name>
                     <type>DEPENDENT</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_files]</key>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_files_rate]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>How many temporary files mysqld has created.</description>
+                    <value_type>FLOAT</value_type>
+                    <description>How many temporary files mysqld has created (per second).</description>
                     <applications>
                         <application>
-                            <name>MySQL: Status</name>
+                            <name>MySQL: Throughput</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1259,24 +1291,48 @@ Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                             <params>$.CREATED_TMP_FILES</params>
                         </step>
                         <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
                         </step>
                     </preprocessing>
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_MYSQL_CREATED_TMP_FILES_ON_DISK_WARN}</expression>
+                            <name>Number of temporary files created per second is high</name>
+                            <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_CREATED_TMP_FILES_ON_DISK_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
+                            <status>DISABLED</status>
+                            <priority>WARNING</priority>
+                            <description>Количество созданных временных файлов на диске превышает порог.&#13;
+Возможно требуется оптимизация SQL-запросов.&#13;
+Передайте данные эксперту.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp tables on memory</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp tables on memory per second</name>
                     <type>DEPENDENT</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_tables]</key>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_tables_rate]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>The number of internal temporary tables created by the server while executing statements.</description>
+                    <value_type>FLOAT</value_type>
+                    <description>The number of internal temporary tables created (per second) by the server while executing statements.&#13;
+&#13;
+You can compare the number of internal on-disk temporary tables created to the total number of internal temporary tables created by comparing Created_tmp_disk_tables and Created_tmp_tables values.&#13;
+&#13;
+See also https://dev.mysql.com/doc/refman/5.7/en/internal-temporary-tables.html</description>
                     <applications>
                         <application>
-                            <name>MySQL: Status</name>
+                            <name>MySQL: Throughput</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -1285,13 +1341,42 @@ Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                             <params>$.CREATED_TMP_TABLES</params>
                         </step>
                         <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
                         </step>
                     </preprocessing>
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_MYSQL_CREATED_TMP_TABLES_ON_MEMORY_WARN}</expression>
+                            <name>Number of internal temporary tables created per second is high</name>
+                            <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_CREATED_TMP_TABLES_ON_MEMORY_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
+                            <status>DISABLED</status>
+                            <priority>WARNING</priority>
+                            <description>Количество созданных временных таблиц в памяти превышает порог.&#13;
+&#13;
+Это происходит тогда, когда запрос выполняет объединение или сортировку (через ORDER BY) без преимущества индекса, в этом случае в памяти должна создается временная таблица (это увеличит счетчик Created_tmp_tables).&#13;
+Возможно стоит увеличить параметры tmp_table_size и max_heap_table_size, но имейте в виду, что настройка этих параметров не приводит к тому, что запросы ведут себя лучше.&#13;
+Фактически это приводит к тому, что неэффективные запросы ведут себя хуже, чем раньше.&#13;
+Когда временная таблица в памяти растет до количества байтов в tmp_table_size, то дальнейший ее рост приводит в созданию временной таблице уже на диске и переноса содержимого из памяти на диск, этот процесс увеличивает счетчик Created_tmp_disk_tables&#13;
+&#13;
+Возможно стоит увеличить параметры join_buffer_size и sort_buffer_size.&#13;
+Так же нужно рассмотреть возможность создания индексов, которые будут использоваться&#13;
+- в соединениях через eq_ref&#13;
+- сортирует по индексу в порядке&#13;
+&#13;
+Передайте данные эксперту.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read key per second</name>
@@ -2471,12 +2556,15 @@ See more info: https://mariadb.com/kb/en/thread-pool-in-mariadb/</description>
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads created</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads created per second</name>
                     <type>DEPENDENT</type>
-                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_created]</key>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_created_rate]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>The number of threads created to handle connections. If Threads_created is big, you may want to increase the thread_cache_size value. The cache miss rate can be calculated as Threads_created/Connections.</description>
+                    <value_type>FLOAT</value_type>
+                    <description>The number of threads created to handle connections (per second).&#13;
+If Threads_created is big, you may want to increase the thread_cache_size value.&#13;
+The cache miss rate can be calculated as Threads_created/Connections.</description>
                     <applications>
                         <application>
                             <name>MySQL: Connections</name>
@@ -2486,6 +2574,10 @@ See more info: https://mariadb.com/kb/en/thread-pool-in-mariadb/</description>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.THREADS_CREATED</params>
+                        </step>
+                        <step>
+                            <type>CHANGE_PER_SECOND</type>
+                            <params/>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -5956,6 +6048,21 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_MYSQL_CONNECTION_PRC_WARN}</macro>
                     <value>85</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_CREATED_TMP_FILES_ON_DISK_WARN}</macro>
+                    <value>10</value>
+                    <description>The maximum create tmp files on disk per second for trigger expression.</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_CREATED_TMP_TABLES_ON_DISK_WARN}</macro>
+                    <value>10</value>
+                    <description>The maximum create tmp tables on disk per second for trigger expression.</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_CREATED_TMP_TABLES_ON_MEMORY_WARN}</macro>
+                    <value>30</value>
+                    <description>The maximum create tmp tables on memory per second for trigger expression.</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_DBSIZE_CRIT}</macro>
