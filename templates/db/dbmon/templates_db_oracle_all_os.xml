@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-27T07:46:36Z</date>
+    <date>2020-06-06T14:12:46Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -921,7 +921,7 @@ INSTANCE RECOVERY</description>
                     <delay>0</delay>
                     <history>30d</history>
                     <units>B</units>
-                    <description>Amount of disk space (in bytes) free by flash recovery area (space_limit-space_used-space_reclaimable).</description>
+                    <description>Amount of disk space (in bytes) free by flash recovery area (space_limit-(space_used-space_reclaimable)).</description>
                     <applications>
                         <application>
                             <name>Oracle: Instance info</name>
@@ -1785,6 +1785,16 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.auditfiledest.discovery[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>1h</delay>
+                    <filter>
+                        <conditions>
+                            <condition>
+                                <macro>{#AUDITFILEDEST}</macro>
+                                <value>{$DBS_ORACLE_AUDITDIR_EXCLUDE}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>A</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
                     <item_prototypes>
                         <item_prototype>
                             <name>[Oracle] Instance '{#INSTANCE}', path '{#AUDITFILEDEST}' file count</name>
@@ -4264,6 +4274,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_ORACLE_APPLY_LAG_WARN_ALERT}</macro>
                     <value>8m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_AUDITDIR_EXCLUDE}</macro>
+                    <value>^(/mydir/exclude1|/mydir/exclude2)$</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_CF_BACKUP_CRIT}</macro>
