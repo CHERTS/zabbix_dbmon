@@ -283,7 +283,7 @@ else
 fi
 for ((i=0; i<${#COMMAND_EXIST_ARRAY[@]}; i++)); do
 	__CMDVAR=${COMMAND_EXIST_ARRAY[$i]}
-	CMD_FIND=$(${ECHO_BIN} "${__CMDVAR}" | ${TR_BIN} '[:upper:]' '[:lower:]')
+	CMD_FIND=$(${ECHO_BIN} "${__CMDVAR}" | ${TR_BIN} '[:upper:]' '[:lower:]' 2>/dev/null)
 	if _command_exists ${CMD_FIND} ; then
 		eval $__CMDVAR'_BIN'="'$(which ${CMD_FIND})'"
 		hash "${CMD_FIND}" >/dev/null 2>&1
@@ -609,7 +609,7 @@ _convert_date_format_istat_on_aix_to_stat_on_linux() {
 	local YEAR=""
 	local DATE_TIME_TMP=$(${ECHO_BIN} "${DATE_TIME}" | ${SED_BIN} -e 's/  / /g')
 	DATE_TIME="${DATE_TIME_TMP}"
-	local DATE_TIME_ARRAY=( $(${ECHO_BIN} "${DATE_TIME}" | ${TR_BIN} " " "\n") )
+	local DATE_TIME_ARRAY=( $(${ECHO_BIN} "${DATE_TIME}" 2>/dev/null | ${TR_BIN} " " "\n" 2>/dev/null) )
 
 	# Wed Jun 6 15:09:20 MSK 2018
 	MONTH=$(${ECHO_BIN} "${DATE_TIME}" | ${CUT_BIN} -d' ' -f2)
@@ -858,7 +858,7 @@ _logrotate() {
 	if [ ! -f "${FILENAME}" ]; then
 		return 1
 	fi
-	FILESIZE_IN_KB=$(${DU_BIN} -k "${FILENAME}" | ${TR_BIN} -s '\t' ' ' | ${CUT_BIN} -d' ' -f1)
+	FILESIZE_IN_KB=$(${DU_BIN} -k "${FILENAME}" 2>/dev/null | ${TR_BIN} -s '\t' ' ' 2>/dev/null | ${CUT_BIN} -d' ' -f1)
 	if [[ ${FILESIZE_IN_KB} =~ ${IS_NUM_REGEXP} ]] ; then
 		_debug_logging "Func: ${FUNCNAME[0]}: Size of log file '${FILENAME}' is ${FILESIZE_IN_KB} KB"
 		_debug_logging "Func: ${FUNCNAME[0]}: Max size of log file '${FILENAME}' is ${DBS_MAX_LOG_FILE_SIZE_IN_KB} KB"
@@ -1067,9 +1067,9 @@ _run_zabbix_sender() {
 				IFS=$' '
 				if [ -f "${ZBX_AGENTD_CONFIG_FILE}" ]; then
 					if [[ "${PLATFORM}" = "aix" ]]; then
-						ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+						ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} "ServerActive" | ${SED_BIN} -e 's/ServerActive=//g' -e 's/,/ /g' 2>/dev/null | ${TR_BIN} "\n" " " 2>/dev/null | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
 					else
-						ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+						ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} "ServerActive" | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' 2>/dev/null | ${TR_BIN} "\n" " " 2>/dev/null | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
 					fi
 				fi
 				ZBX_SERVERS_NUM=${#ZBX_SERVERS[*]}
@@ -1420,8 +1420,8 @@ _oracle_service_discovery() {
 						LSNCTRL_CHECK_ERROR=$(${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE '^ERROR|ERROR:|ORA-[0-9]{1,}|PLS-|SP2-|IMP-|TNS-[0-9]{1,}')
 						_debug_logging "Func: ${FUNCNAME[0]}: LSNCTRL_CHECK_ERROR=${LSNCTRL_CHECK_ERROR}"
 						if [ -z "${LSNCTRL_CHECK_ERROR}" ]; then
-							_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE \"^service(*.)\" | ${GREP_BIN} -vi \"summary\" | ${AWK_BIN} -F' ' '{print \$2}' | ${TR_BIN} -d \\\""
-							LSNCTRL_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE "^service(.*)" | ${GREP_BIN} -vi "summary" | ${AWK_BIN} -F' ' '{print $2}' | ${TR_BIN} -d \") )
+							_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE \"^service(*.)\" | ${GREP_BIN} -vi \"summary\" | ${AWK_BIN} -F' ' '{print \$2}' 2>/dev/null | ${TR_BIN} -d \\\""
+							LSNCTRL_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status ${ORA_LSNR_NAME} | ${GREP_BIN} -iE "^service(.*)" | ${GREP_BIN} -vi "summary" | ${AWK_BIN} -F' ' '{print $2}' 2>/dev/null | ${TR_BIN} -d \" 2>/dev/null) )
 							SERVICE_LIST_NUM=${#LSNCTRL_SERVICE_LIST[*]}
 							_debug_logging "Func: ${FUNCNAME[0]}: Found ${SERVICE_LIST_NUM} service."
 							for ((j=0; j<${#LSNCTRL_SERVICE_LIST[@]}; j++)); do
@@ -1747,9 +1747,9 @@ if [[ "$PARAM1" = "dbs_check_zabbix_server" ]]; then
 		IFS=$' '
 		if [ -f "${ZBX_AGENTD_CONFIG_FILE}" ]; then
 			if [[ "${PLATFORM}" = "aix" ]]; then
-				ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+				ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} "ServerActive" | ${SED_BIN} -e 's/ServerActive=//g' -e 's/,/ /g' 2>/dev/null | ${TR_BIN} "\n" " " 2>/dev/null | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
 			else
-				ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} ServerActive | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' | ${TR_BIN} "\n" " " | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
+				ZBX_SERVERS=($(${GREP_BIN} -v '^#' "${ZBX_AGENTD_CONFIG_FILE}" | ${GREP_BIN} "ServerActive" | ${SED_BIN} -e 's/\s//g' -e 's/ServerActive=//g' -e 's/,/ /g' 2>/dev/null | ${TR_BIN} "\n" " " 2>/dev/null | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//'))
 			fi
 		fi
 		ZBX_SERVERS_NUM=${#ZBX_SERVERS[*]}
