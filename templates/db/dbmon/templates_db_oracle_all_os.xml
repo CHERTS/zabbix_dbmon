@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-06T14:12:46Z</date>
+    <date>2020-06-08T19:08:12Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -4652,7 +4652,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB Oracle:oracle.instance.dbfiles[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}/{DBS_Template DB Oracle:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&gt;={$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}</expression>
             <name>Current number of data files is near its limit</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2})</opdata>
+            <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}%)</opdata>
             <priority>WARNING</priority>
             <description>Текущее количество дата-файлов близко к лимиту.&#13;
 Доведите информацию до эксперта.</description>
