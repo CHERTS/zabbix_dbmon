@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-08T19:08:12Z</date>
+    <date>2020-06-10T07:31:40Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1535,6 +1535,26 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                     <name>{{ITEM.VALUE}.iregsub(&quot;ORA-00600: (.*): (\[.*\])&quot;, &quot;Found ORA-00600 error: \2&quot;)}</name>
                                     <priority>WARNING</priority>
                                     <description>У экземпляра &quot;{#INSTANCE}&quot; обнаружена ошибка ORA-00600.&#13;
+Проверьте лог-файл &quot;{#ALERTLOG}&quot; для детального анализа ошибки.</description>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Alertlog</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{iregexp(&quot;ORA-03170:&quot;)}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>{{ITEM.VALUE}.iregsub(&quot;ORA-03170: (.*) \(undo segment ([0-9]+)\)&quot;, &quot;Found ORA-03170 error (undo segment: '\2'&quot;)}</name>
+                                    <priority>WARNING</priority>
+                                    <description>У экземпляра &quot;{#INSTANCE}&quot; обнаружена ошибка ORA-03170.&#13;
 Проверьте лог-файл &quot;{#ALERTLOG}&quot; для детального анализа ошибки.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
