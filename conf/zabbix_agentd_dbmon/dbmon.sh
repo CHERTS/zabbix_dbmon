@@ -41,10 +41,6 @@ SCRIPT_NAME=$(basename $0)
 # Database type
 DB_TYPE=${PARAM2}
 
-# Zabbix home dir and cache file
-ZBX_HOME_DIR=~zabbix
-ZBX_TMP_DIR=/tmp
-
 # Debug enable = 1, disabe = 0
 DBS_ENABLE_DEBUG_MODE=1
 # Logging
@@ -52,7 +48,7 @@ DBS_ENABLE_LOGGING=1
 DBS_LOG_FILE="/var/log/zabbix/${SCRIPT_NAME%.*}.log"
 DBS_MAX_LOG_FILE_SIZE_IN_KB=51200
 # Config
-DBS_CONFIG_FILE="${ZBX_HOME_DIR}/${SCRIPT_NAME%.*}.conf"
+DBS_CONFIG_FILE="${SCRIPT_DIR}/${SCRIPT_NAME%.*}.conf"
 
 # Config file
 if [ -f "${DBS_CONFIG_FILE}" ]; then
@@ -108,22 +104,14 @@ if _command_exists printf ; then
 		PRINTF_BIN="printf"
 	fi
 else
-	if [ ${DBS_ENABLE_DEBUG_MODE} -eq 1 ]; then
-		echo "ERROR: Command 'printf' not found." 
-	else
-		echo "ZBX_NOTSUPPORTED: Command 'printf' not found."
-	fi
+	echo "ZBX_NOTSUPPORTED: Command 'printf' not found."
 	exit 1
 fi
 
 if _command_exists date ; then
 	DATE_BIN=$(which date)
 else
-	if [ ${DBS_ENABLE_DEBUG_MODE} -eq 1 ]; then
-		echo "ERROR: Command 'date' not found."
-	else
-		echo "ZBX_NOTSUPPORTED: Command 'date' not found."
-	fi
+	echo "ZBX_NOTSUPPORTED: Command 'date' not found."
 	exit 1
 fi
 
@@ -166,26 +154,26 @@ for ((i=0; i<${#DB_TYPE_ARRAY[@]}; i++)); do
 	fi
 done
 if [ -z "${DB_TYPE}" ]; then
-	_message "Database type ${PARAM2} not supported."
+	_message "Database type '${PARAM2}' not supported."
 	exit 1
 fi
 
 if _command_exists tr ; then
 	TR_BIN=$(which tr)
 else
-	_message "Command tr not found."
+	_message "Command 'tr' not found."
 	exit 1
 fi
 
 if _command_exists grep ; then
 	GREP_BIN=$(which grep)
 else
-	_message "Command grep not found."
+	_message "Command 'grep' not found."
 	exit 1
 fi
 
 # Checking the availability of necessary utilities
-COMMAND_EXIST_ARRAY=(FILE DU SED ID GROUPS WHOAMI PS TAIL AWK CUT EXPR RM XARGS CAT WC DIRNAME TOUCH MD5SUM HEAD LS MV FIND READLINK EGREP)
+COMMAND_EXIST_ARRAY=(DU SED PS TAIL AWK CUT RM CAT WC DIRNAME TOUCH HEAD)
 for ((i=0; i<${#COMMAND_EXIST_ARRAY[@]}; i++)); do
 	__CMDVAR=${COMMAND_EXIST_ARRAY[$i]}
 	CMD_FIND=$(${ECHO_BIN} "${__CMDVAR}" | ${TR_BIN} '[:upper:]' '[:lower:]' 2>/dev/null)
@@ -193,7 +181,7 @@ for ((i=0; i<${#COMMAND_EXIST_ARRAY[@]}; i++)); do
 		eval $__CMDVAR'_BIN'="'$(which ${CMD_FIND})'"
 		hash "${CMD_FIND}" >/dev/null 2>&1
 	else
-		_message "Command ${CMD_FIND} not found."
+		_message "Command '${CMD_FIND}' not found."
 		exit 1
 	fi
 done
@@ -241,22 +229,16 @@ case "${PARAM1}" in
 esac
 
 if [[ "${DB_TYPE}" != "oracle" ]]; then
-	_message "Database type ${DB_TYPE} not supported."
+	_message "Database type '${DB_TYPE}' not supported."
 	exit 1
 fi
 
-if [ ! -d "${ZBX_HOME_DIR}" ]; then
-	ZBX_HOME_DIR="${ZBX_TMP_DIR}"
-else
-	ZBX_HOME_DIR="$(${ECHO_BIN} "${ZBX_HOME_DIR}" | ${SED_BIN} 's/\/$//' 2>/dev/null)"
-fi
-
-# If changed ZBX_HOME_DIR then change the destination for the file log, collect and config.
-DBS_CONFIG_FILE="${ZBX_HOME_DIR}/${SCRIPT_NAME%.*}.conf"
-
-if [ ! -d "${ZBX_HOME_DIR}" ]; then
-	_message "Zabbix home directory not found."
-	exit 1
+if [ ${DBS_ENABLE_LOGGING} -eq 1 ]; then
+	LOG_DIR=$(dirname "${DBS_LOG_FILE}")
+	if [ ! -d "${LOG_DIR}" ]; then
+		DBS_ENABLE_LOGGING=0
+		DBS_ENABLE_DEBUG_MODE=0
+	fi
 fi
 
 _logging() {
@@ -303,13 +285,11 @@ _logrotate() {
 
 DBS_SCRIPT_PID=$$
 
-# Debug mode
-if [ ${DBS_ENABLE_DEBUG_MODE} -eq 1 ]; then
-	_logging "============================= DEBUG STARTED ============================="
-	_logging "Func: Main: Debug mode is enabled."
-	_logging "Func: Main: Script ${SCRIPT_NAME} PID: ${DBS_SCRIPT_PID}"
-	_logging "Func: Main: Script params: 1:${PARAM1}|2:${PARAM2}|3:${PARAM3}|4:${PARAM4}|5:${PARAM5}|6:${PARAM6}|7:${PARAM7}|8:${PARAM8}|9:${PARAM9}|10:${PARAM10}|11:${PARAM11}"
-fi
+# Start
+_logging "============================= MAIN STARTED ============================="
+_logging "Func: Main: Debug mode: ${DBS_ENABLE_DEBUG_MODE}"
+_logging "Func: Main: Script ${SCRIPT_NAME} PID: ${DBS_SCRIPT_PID}"
+_logging "Func: Main: Script params: 1:${PARAM1}|2:${PARAM2}|3:${PARAM3}|4:${PARAM4}|5:${PARAM5}|6:${PARAM6}|7:${PARAM7}|8:${PARAM8}|9:${PARAM9}"
 
 # Init all subsys done
 INIT_ALL_SUBSYS=1
@@ -387,10 +367,10 @@ _oracle_service_discovery() {
 		else
 			${ECHO_BIN} "{\"data\":[]}"
 		fi
-		IFS=${OLD_IFS}
 	else
 		${ECHO_BIN} "{\"data\":[]}"
 	fi
+	IFS=${OLD_IFS}
 }
 
 # Function send Oracle service info to Zabbix server
@@ -409,6 +389,7 @@ _oracle_service_info() {
 	local NUM_OF_INST_IN_SERVICE=0
 	local SET_SERVICE_STATUS=0
 	local INSTANCE_IN_SERVICE_LIST=("")
+	local RESULT_STR=""
 	if [ -f "${LISTENER_PATH}"  ]; then
 		LISTENER_CTRL_BIN="$(${DIRNAME_BIN} "${LISTENER_PATH}")/lsnrctl"
 		local ORA_BIN_DIR=$(${DIRNAME_BIN} "${LISTENER_PATH}")
@@ -467,13 +448,68 @@ _oracle_service_info() {
 			else
 				SET_SERVICE_STATUS=0
 			fi
-			${ECHO_BIN} "{\"SERVICE_STATUS\":${SET_SERVICE_STATUS},\"SERVICE_INSTANCE_NUMBER\":${NUM_OF_INST_IN_SERVICE},\"SERVICE_INSTANCE_LIST\":\"${INSTANCE_LIST_RESULT}\"}"
+			RESULT_STR="{\"SERVICE_STATUS\":${SET_SERVICE_STATUS},\"SERVICE_INSTANCE_NUMBER\":${NUM_OF_INST_IN_SERVICE},\"SERVICE_INSTANCE_LIST\":\"${INSTANCE_LIST_RESULT}\"}"
+			_debug_logging "Func: ${FUNCNAME[0]}: RESULT = ${RESULT_STR}"
+			${ECHO_BIN} ${RESULT_STR}
 		else
-			_message "Binary file ${LISTENER_CTRL_BIN} not found."
+			_message "Binary file '${LISTENER_CTRL_BIN}' not found."
 		fi
 	else
-		_message "Binary file ${LISTENER_PATH} not found."
+		_message "Binary file '${LISTENER_PATH}' not found."
 	fi
+}
+
+# Function discovery Oracle listener for all running instance on server
+# RETURN: Zabbix JSON discovery
+_oracle_listener_discovery() {
+	local OLD_IFS=""
+	local PS_FIND=""
+	local PS_FIND_NUM=0
+	local LSNRLIST=""
+	local ORA_LSNR_USER=""
+	local ORA_LSNR_PATH=""
+	local ORA_LSNR_NAME=""
+	local ORA_LSNR_BIN_NAME=""
+	local LISTENER_DISCOVERY_RESULT=""
+	OLD_IFS=$IFS
+	IFS=$'\n'
+	if [[ "${PLATFORM}" = "aix" ]]; then
+		PS_FIND=($(${PS_BIN} -eo user,args | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} "[t]nslsnr" | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' 2>/dev/null))
+	else
+		PS_FIND=($(${PS_BIN} -eo user,cmd | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} "[t]nslsnr" | ${SED_BIN} 's/^[ \t]*//;s/[ \t]*$//' 2>/dev/null))
+	fi
+	if [ $? -eq 0 ]; then
+		PS_FIND_NUM=${#PS_FIND[*]}
+		_debug_logging "Func: ${FUNCNAME[0]}: Found ${PS_FIND_NUM} listener."
+		_debug_logging "Func: ${FUNCNAME[0]}: PS_FIND=$(declare -p PS_FIND | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
+		for ((i=0; i<${#PS_FIND[@]}; i++)); do
+			_debug_logging "Func: ${FUNCNAME[0]}: ARR[$i]: ${PS_FIND[$i]}"
+			if [ -n "${PS_FIND[$i]}" ]; then
+				ORA_LSNR_USER=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $1}')
+				ORA_LSNR_PATH=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $2}')
+				ORA_LSNR_NAME=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $3}')
+				if [ -f "${ORA_LSNR_PATH}" ]; then
+					ORA_LSNR_BIN_NAME=$(basename "${ORA_LSNR_PATH}")
+					if [[ "${ORA_LSNR_BIN_NAME}" = "tnslsnr" ]]; then
+						if [ -n "${ORA_LSNR_NAME}" ]; then
+							_debug_logging "Func: ${FUNCNAME[0]}: LSNR_USER:${ORA_LSNR_USER}|LSNR_NAME:${ORA_LSNR_NAME}|LSNR_PATH:${ORA_LSNR_PATH}"
+							LSNRLIST="${LSNRLIST},"'{"{#HOSTNAME}":"'${HOSTNAME}'","{#LSNR_NAME}":"'${ORA_LSNR_NAME}'","{#LSNR_PATH}":"'${ORA_LSNR_PATH}'","{#LSNR_USER}":"'${ORA_LSNR_USER}'"}'
+						fi
+					fi
+				fi
+			fi
+		done
+		if [ ${PS_FIND_NUM} -ne 0 ]; then
+			LISTENER_DISCOVERY_RESULT='{"data":['${LSNRLIST#,}']}'
+			_debug_logging "Func: ${FUNCNAME[0]}: LISTENER_LIST = ${LISTENER_DISCOVERY_RESULT}"
+			${ECHO_BIN} "${LISTENER_DISCOVERY_RESULT}"
+		else
+			${ECHO_BIN} "{\"data\":[]}"
+		fi
+	else
+		${ECHO_BIN} "{\"data\":[]}"
+	fi
+	IFS=$OLD_IFS
 }
 
 # Function send Oracle listener info to Zabbix server
@@ -491,6 +527,7 @@ _oracle_listener_info() {
 	local LSNCTRL_ERROR=""
 	local LSNCTRL_STATUS=0
 	local LSNCTRL_VERSION="0"
+	local RESULT_STR=""
 	if [ -f "${LISTENER_PATH}"  ]; then
 		LISTENER_CTRL_BIN="$(${DIRNAME_BIN} "${LISTENER_PATH}")/lsnrctl"
 		local ORA_BIN_DIR=$(${DIRNAME_BIN} "${LISTENER_PATH}")
@@ -527,70 +564,15 @@ _oracle_listener_info() {
 					LSNCTRL_STATUS=0
 				fi
 				IFS=${OLD_IFS}
-				${ECHO_BIN} "{\"LSNR_STATUS\":${LSNCTRL_STATUS},\"LSNR_VERSION\":\"${LSNCTRL_VERSION}\",\"LSNR_ERROR\":\"${LSNCTRL_ERROR}\"}"
 			fi
+			RESULT_STR="{\"LSNR_STATUS\":${LSNCTRL_STATUS},\"LSNR_VERSION\":\"${LSNCTRL_VERSION}\",\"LSNR_ERROR\":\"${LSNCTRL_ERROR}\"}"
+			_debug_logging "Func: ${FUNCNAME[0]}: RESULT = ${RESULT_STR}"
+			${ECHO_BIN} ${RESULT_STR}
 		else
-			_message "Binary file ${LISTENER_CTRL_BIN} not found."
+			_message "Binary file '${LISTENER_CTRL_BIN}' not found."
 		fi
 	else
-		_message "Binary file ${LISTENER_PATH} not found."
-	fi
-}
-
-# Function discovery Oracle listener for all running instance on server
-# RETURN: Zabbix JSON discovery
-_oracle_listener_discovery() {
-	if [[ "$#" -eq 1 ]]; then
-		local __RESULTVAR=$1
-	fi
-	local RESULT=""
-	local OLD_IFS=""
-	local PS_FIND=""
-	local PS_FIND_NUM=0
-	local LSNRLIST=""
-	local ORA_LSNR_USER=""
-	local ORA_LSNR_PATH=""
-	local ORA_LSNR_NAME=""
-	local ORA_LSNR_BIN_NAME=""
-	OLD_IFS=$IFS
-	IFS=$'\n'
-	if [[ "${PLATFORM}" = "aix" ]]; then
-		PS_FIND=($(${PS_BIN} -eo user,args | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} "[t]nslsnr" | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' 2>/dev/null))
-	else
-		PS_FIND=($(${PS_BIN} -eo user,cmd | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} "[t]nslsnr" | ${SED_BIN} 's/^[ \t]*//;s/[ \t]*$//' 2>/dev/null))
-	fi
-	if [ $? -eq 0 ]; then
-		PS_FIND_NUM=${#PS_FIND[*]}
-		_debug_logging "Func: ${FUNCNAME[0]}: Found ${PS_FIND_NUM} listener."
-		_debug_logging "Func: ${FUNCNAME[0]}: PS_FIND=$(declare -p PS_FIND | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
-		for ((i=0; i<${#PS_FIND[@]}; i++)); do
-			_debug_logging "Func: ${FUNCNAME[0]}: ARR[$i]: ${PS_FIND[$i]}"
-			if [ -n "${PS_FIND[$i]}" ]; then
-				ORA_LSNR_USER=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $1}')
-				ORA_LSNR_PATH=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $2}')
-				ORA_LSNR_NAME=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $3}')
-				if [ -f "${ORA_LSNR_PATH}" ]; then
-					ORA_LSNR_BIN_NAME=$(basename "${ORA_LSNR_PATH}")
-					if [[ "${ORA_LSNR_BIN_NAME}" = "tnslsnr" ]]; then
-						if [ -n "${ORA_LSNR_NAME}" ]; then
-							_debug_logging "Func: ${FUNCNAME[0]}: LSNR_USER:${ORA_LSNR_USER}|LSNR_NAME:${ORA_LSNR_NAME}|LSNR_PATH:${ORA_LSNR_PATH}"
-							LSNRLIST="${LSNRLIST},"'{"{#HOSTNAME}":"'${HOSTNAME}'","{#LSNR_NAME}":"'${ORA_LSNR_NAME}'","{#LSNR_PATH}":"'${ORA_LSNR_PATH}'","{#LSNR_USER}":"'${ORA_LSNR_USER}'"}'
-						fi
-					fi
-				fi
-			fi
-		done
-	fi
-	IFS=$OLD_IFS
-	if [[ ${PS_FIND_NUM} -ne 0 ]]; then
-		RESULT='{"data":['${LSNRLIST#,}']}'
-	else
-		RESULT='{"data":[]}'
-	fi
-	if [[ "$__RESULTVAR" ]]; then
-		eval $__RESULTVAR="'${RESULT}'"
-	else
-		${ECHO_BIN} "${RESULT}"
+		_message "Binary file '${LISTENER_PATH}' not found."
 	fi
 }
 
@@ -627,7 +609,7 @@ else
 	RCODE="1"
 fi
 
-# Debug mode
-_debug_logging "============================= DEBUG END ================================="
+# End
+_logging "============================= MAIN END ================================="
 
 exit ${RCODE}
