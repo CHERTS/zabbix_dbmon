@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-05-29T17:48:57Z</date>
+    <date>2020-06-14T19:40:42Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2396,7 +2396,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             </master_item>
                         </item_prototype>
                         <item_prototype>
-                            <name>[PgSQL] Database '{#DBNAME}': Disk blocks read per second</name>
+                            <name>[PgSQL] Database '{#DBNAME}': Total number of disk blocks read</name>
                             <type>DEPENDENT</type>
                             <key>pgsql.db.stat[{#DBNAME},blks_read.rate]</key>
                             <delay>0</delay>
@@ -2420,6 +2420,111 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
                                     <params>30m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Disk blocks read per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},blk_read_time.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>s</units>
+                            <description>Time spent reading data file blocks by backends, in milliseconds.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].blk_read_time</params>
+                                </step>
+                                <step>
+                                    <type>MULTIPLIER</type>
+                                    <params>0.001</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Disk blocks write per second</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},blk_write_time.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>s</units>
+                            <description>Time spent writing data file blocks by backends, in milliseconds</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].blk_write_time</params>
+                                </step>
+                                <step>
+                                    <type>MULTIPLIER</type>
+                                    <params>0.001</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Checksum failures</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},checksum_failures.rate]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <description>Number of data page checksum failures detected in this database.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].checksum_failures</params>
+                                    <error_handler>CUSTOM_ERROR</error_handler>
+                                    <error_handler_params>Checksum failures metric is supported only in PostgreSQL 12 or higher.</error_handler_params>
+                                </step>
+                                <step>
+                                    <type>MATCHES_REGEX</type>
+                                    <params>^\d*$</params>
+                                </step>
+                                <step>
+                                    <type>CHANGE_PER_SECOND</type>
+                                    <params/>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2541,6 +2646,32 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </tags>
                                 </trigger_prototype>
                             </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Backends connected</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.db.stat[{#DBNAME},numbackends]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Number of backends currently connected to this database.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$['{#DBNAME}'].numbackends</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
                         </item_prototype>
                         <item_prototype>
                             <name>[PgSQL] Database '{#DBNAME}': Temp_bytes written per second</name>
@@ -2844,6 +2975,26 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
+                            <name>Database '{#DBNAME}': Block read/write rate</name>
+                            <graph_items>
+                                <graph_item>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},blk_read_time.rate]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.stat[{#DBNAME},blk_write_time.rate]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
                             <name>Database '{#DBNAME}': Events</name>
                             <graph_items>
                                 <graph_item>
@@ -2876,6 +3027,83 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
                                         <key>pgsql.db.stat[{#DBNAME},xact_rollback.rate]</key>
+                                    </item>
+                                </graph_item>
+                            </graph_items>
+                        </graph_prototype>
+                        <graph_prototype>
+                            <name>Database '{#DBNAME}': Locks</name>
+                            <graph_items>
+                                <graph_item>
+                                    <color>F230E0</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.locks[{#DBNAME},accessexclusive]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>1</sortorder>
+                                    <color>F63100</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.locks[{#DBNAME},accessshare]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>2</sortorder>
+                                    <color>2774A4</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.locks[{#DBNAME},exclusive]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>3</sortorder>
+                                    <color>A54F10</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.locks[{#DBNAME},rowexclusive]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>4</sortorder>
+                                    <color>FC6EA3</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.locks[{#DBNAME},rowshare]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>5</sortorder>
+                                    <color>6C59DC</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.locks[{#DBNAME},share]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>6</sortorder>
+                                    <color>AC8C14</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.locks[{#DBNAME},sharerowexclusive]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>7</sortorder>
+                                    <color>611F27</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.locks[{#DBNAME},shareupdateexclusive]</key>
+                                    </item>
+                                </graph_item>
+                                <graph_item>
+                                    <sortorder>8</sortorder>
+                                    <drawtype>GRADIENT_LINE</drawtype>
+                                    <color>1A7C11</color>
+                                    <item>
+                                        <host>DBS_Template DB PostgreSQL</host>
+                                        <key>pgsql.db.locks[{#DBNAME},total]</key>
                                     </item>
                                 </graph_item>
                             </graph_items>
