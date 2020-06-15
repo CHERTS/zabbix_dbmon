@@ -519,18 +519,18 @@ FROM gv$services s join gv$instance i ON (s.inst_id = i.inst_id)"
 #define ORACLE_V11_PERMANENT_TS_INFO_DBS "\
 WITH \
 i AS (SELECT i.instance_name, d.name FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
-f AS (SELECT tablespace_name, SUM(bytes) file_free_space FROM dba_free_space GROUP BY tablespace_name), \
-m AS (SELECT tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
+f AS (SELECT tablespace_name, SUM(bytes) AS file_free_space FROM dba_free_space GROUP BY tablespace_name), \
+m AS (SELECT tablespace_name, SUM(bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
 d AS (SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'PERMANENT'), \
-df AS (SELECT tablespace_name, count(*) df_cnt from dba_data_files GROUP BY tablespace_name) \
+df AS (SELECT tablespace_name, count(*) AS df_cnt FROM dba_data_files GROUP BY tablespace_name) \
 SELECT i.instance_name AS INSTANCE, \
 	i.name AS DBNAME, \
 	d.tablespace_name AS TSNAME, \
 	df.df_cnt AS DF_NUMBER, \
-	decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
-	round(nvl(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, \
-	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
-	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+	DECODE(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	ROUND(NVL(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, \
+	ROUND(NVL(m.file_size, 0)) AS TS_FILE_SIZE, \
+	ROUND(NVL(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
 FROM i, f, m, d, df \
 WHERE d.tablespace_name = f.tablespace_name(+) \
 	AND d.tablespace_name = m.tablespace_name(+) \
@@ -538,20 +538,32 @@ WHERE d.tablespace_name = f.tablespace_name(+) \
 
 #define ORACLE_V12_PERMANENT_TS_INFO_DBS "\
 WITH \
-i AS (SELECT i.instance_name, decode(s.con_id, 0, d.name, p.name) AS name, s.tablespace_name, s.status \
+i AS (SELECT i.instance_name, DECODE(s.con_id, 0, d.name, p.name) AS name, s.tablespace_name, s.status \
 	FROM cdb_tablespaces s, v$containers p, gv$database d, gv$instance i \
 	WHERE p.con_id(+) = s.con_id AND d.inst_id = i.inst_id AND s.contents = 'PERMANENT'), \
 f AS (SELECT tablespace_name, SUM(bytes) file_free_space FROM dba_free_space GROUP BY tablespace_name), \
-m AS (SELECT tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
-df AS (SELECT tablespace_name, count(*) df_cnt from dba_data_files GROUP BY tablespace_name) \
+m AS (SELECT DECODE(t.con_id,0, d.name, p.name) AS name, t.tablespace_name, SUM(f.bytes) AS file_size, SUM(CASE WHEN f.autoextensible = 'NO' THEN f.bytes ELSE GREATEST(f.bytes, f.maxbytes) END) AS file_max_size, \
+		SUM(NVL((SELECT SUM(a.bytes) \
+			FROM cdb_free_space a \
+			WHERE a.tablespace_name = t.tablespace_name \
+				AND a.con_id = t.con_id \
+				AND a.file_id = f.file_id \
+				AND a.relative_fno = f.relative_fno \
+				), 0)) AS file_free_space \
+		FROM cdb_tablespaces t \
+		JOIN cdb_data_files f \
+		ON (f.tablespace_name = t.tablespace_name AND f.con_id = t.con_id ) \
+		CROSS JOIN v$database d left JOIN v$containers p ON (t.con_id = p.con_id) WHERE t.CONTENTS = 'PERMANENT' \
+		GROUP BY t.tablespace_name, DECODE(t.con_id,0, d.name, p.name)),  \
+df AS (SELECT tablespace_name, count(*) AS df_cnt FROM dba_data_files GROUP BY tablespace_name) \
 SELECT i.instance_name AS INSTANCE, \
 	i.name AS DBNAME, \
 	i.tablespace_name AS TSNAME, \
 	df.df_cnt AS DF_NUMBER, \
-	decode(i.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
-	round(nvl(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, \
-	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
-	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+	DECODE(i.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	ROUND(NVL(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, \
+	ROUND(NVL(m.file_size, 0)) AS TS_FILE_SIZE, \
+	ROUND(NVL(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
 FROM i, f, m, df \
 WHERE i.tablespace_name = f.tablespace_name(+) \
 	AND i.tablespace_name = m.tablespace_name(+) \
@@ -560,18 +572,18 @@ WHERE i.tablespace_name = f.tablespace_name(+) \
 #define ORACLE_V11_TEMPORARY_TS_INFO_DBS "\
 WITH \
 i AS(SELECT i.instance_name, d.name FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
-f as(SELECT t.tablespace_name tablespace_name, nvl(nvl((SELECT sum(bytes) FROM dba_temp_files tf WHERE tf.tablespace_name = t.tablespace_name), 0) - nvl((SELECT sum(s.blocks) FROM v$tempseg_usage s WHERE t.tablespace_name = s.tablespace), 0)*t.block_size, 0) as tbs_free from dba_tablespaces t WHERE t.contents = 'TEMPORARY' GROUP BY t.tablespace_name, t.block_size), \
-m as(SELECT d.tablespace_name tablespace_name, sum(d.bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_temp_files d GROUP BY d.tablespace_name), \
+f as(SELECT t.tablespace_name tablespace_name, NVL(NVL((SELECT sum(bytes) FROM dba_temp_files tf WHERE tf.tablespace_name = t.tablespace_name), 0) - nvl((SELECT sum(s.blocks) FROM v$tempseg_usage s WHERE t.tablespace_name = s.tablespace), 0)*t.block_size, 0) as tbs_free from dba_tablespaces t WHERE t.contents = 'TEMPORARY' GROUP BY t.tablespace_name, t.block_size), \
+m as(SELECT d.tablespace_name tablespace_name, SUM(d.bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_temp_files d GROUP BY d.tablespace_name), \
 d as(SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'TEMPORARY'), \
-df as(SELECT tablespace_name, count(*) df_cnt from dba_temp_files GROUP BY tablespace_name) \
+df as(SELECT tablespace_name, count(*) AS df_cnt FROM dba_temp_files GROUP BY tablespace_name) \
 SELECT i.instance_name AS INSTANCE, \
 	i.name AS DBNAME, \
 	d.tablespace_name AS TSNAME, \
 	df.df_cnt AS DF_NUMBER, \
-	decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
-	round(nvl(f.tbs_free, 0)) AS TS_FILE_FREE_SPACE, \
-	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
-	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+	DECODE(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	ROUND(NVL(f.tbs_free, 0)) AS TS_FILE_FREE_SPACE, \
+	ROUND(NVL(m.file_size, 0)) AS TS_FILE_SIZE, \
+	ROUND(NVL(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
 FROM i, f, m, d, df \
 WHERE d.tablespace_name = f.tablespace_name(+) \
 	AND d.tablespace_name = m.tablespace_name(+) \
@@ -582,18 +594,18 @@ WITH \
 i AS (SELECT i.instance_name, decode(s.con_id, 0, d.name, p.name) AS name, s.tablespace_name, s.status \
 	FROM cdb_tablespaces s, v$containers p, gv$database d, gv$instance i \
 	WHERE p.con_id(+) = s.con_id AND d.inst_id = i.inst_id AND s.contents = 'TEMPORARY'), \
-f as(SELECT t.tablespace_name tablespace_name, nvl(nvl((SELECT sum(bytes) FROM dba_temp_files tf WHERE tf.tablespace_name = t.tablespace_name), 0) - nvl((SELECT sum(s.blocks) FROM v$tempseg_usage s WHERE t.tablespace_name = s.tablespace), 0)*t.block_size, 0) as tbs_free from dba_tablespaces t WHERE t.contents = 'TEMPORARY' GROUP BY t.tablespace_name, t.block_size), \
-m as(SELECT d.tablespace_name tablespace_name, sum(d.bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_temp_files d GROUP BY d.tablespace_name), \
-d as(SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'TEMPORARY'), \
-df as(SELECT tablespace_name, count(*) df_cnt from dba_temp_files GROUP BY tablespace_name) \
+f AS (SELECT t.tablespace_name tablespace_name, NVL(NVL((SELECT sum(bytes) FROM dba_temp_files tf WHERE tf.tablespace_name = t.tablespace_name), 0) - nvl((SELECT sum(s.blocks) FROM v$tempseg_usage s WHERE t.tablespace_name = s.tablespace), 0)*t.block_size, 0) as tbs_free from dba_tablespaces t WHERE t.contents = 'TEMPORARY' GROUP BY t.tablespace_name, t.block_size), \
+m AS (SELECT d.tablespace_name tablespace_name, SUM(d.bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_temp_files d GROUP BY d.tablespace_name), \
+d AS (SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'TEMPORARY'), \
+df AS (SELECT tablespace_name, count(*) AS df_cnt FROM dba_temp_files GROUP BY tablespace_name) \
 SELECT i.instance_name AS INSTANCE, \
 	i.name AS DBNAME, \
 	d.tablespace_name AS TSNAME, \
 	df.df_cnt AS DF_NUMBER, \
-	decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
-	round(nvl(f.tbs_free, 0)) AS TS_FILE_FREE_SPACE, \
-	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
-	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+	DECODE(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	ROUND(NVL(f.tbs_free, 0)) AS TS_FILE_FREE_SPACE, \
+	ROUND(NVL(m.file_size, 0)) AS TS_FILE_SIZE, \
+	ROUND(NVL(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
 FROM i, f, m, d, df \
 WHERE d.tablespace_name = f.tablespace_name(+) \
 	AND d.tablespace_name = m.tablespace_name(+) \
@@ -601,19 +613,19 @@ WHERE d.tablespace_name = f.tablespace_name(+) \
 
 #define ORACLE_V11_UNDO_TS_INFO_DBS "\
 WITH \
-i AS(SELECT i.instance_name, d.name FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
-f as(SELECT tablespace_name, SUM(bytes) usedbytes FROM dba_undo_extents WHERE status = 'ACTIVE' GROUP BY tablespace_name), \
-m as(SELECT tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
-d as(SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'UNDO'), \
-df as(SELECT tablespace_name, count(*) df_cnt from dba_data_files GROUP BY tablespace_name) \
+i AS (SELECT i.instance_name, d.name FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
+f AS (SELECT tablespace_name, SUM(bytes) AS usedbytes FROM dba_undo_extents WHERE status = 'ACTIVE' GROUP BY tablespace_name), \
+m AS (SELECT tablespace_name, SUM(bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) AS file_max_size FROM dba_data_files GROUP BY tablespace_name), \
+d AS (SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'UNDO'), \
+df AS (SELECT tablespace_name, count(*) AS df_cnt FROM dba_data_files GROUP BY tablespace_name) \
 SELECT i.instance_name AS INSTANCE, \
 	i.name AS DBNAME, \
 	d.tablespace_name AS TSNAME, \
 	df.df_cnt AS DF_NUMBER, \
-	decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
-	round(nvl(f.usedbytes, 0)) AS TS_USED_BYTES, \
-	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
-	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+	DECODE(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	ROUND(NVL(f.usedbytes, 0)) AS TS_USED_BYTES, \
+	ROUND(NVL(m.file_size, 0)) AS TS_FILE_SIZE, \
+	ROUND(NVL(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
 FROM i, f, m, d, df \
 WHERE d.tablespace_name = f.tablespace_name(+) \
 	AND d.tablespace_name = m.tablespace_name(+) \
@@ -621,25 +633,29 @@ WHERE d.tablespace_name = f.tablespace_name(+) \
 
 #define ORACLE_V12_UNDO_TS_INFO_DBS "\
 WITH \
-i AS(SELECT i.instance_name, decode(s.con_id, 0, d.name, p.name) AS name, s.tablespace_name, s.status \
+i AS(SELECT i.instance_name, DECODE(s.con_id, 0, d.name, p.name) AS name, s.tablespace_name, s.status \
 	FROM cdb_tablespaces s, v$containers p, gv$database d, gv$instance i \
 	WHERE p.con_id(+) = s.con_id AND d.inst_id = i.inst_id AND s.contents = 'UNDO'), \
-f as(SELECT tablespace_name, SUM(bytes) usedbytes FROM dba_undo_extents WHERE status = 'ACTIVE' GROUP BY tablespace_name), \
-m as(SELECT tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
-d as(SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'UNDO'), \
-df as(SELECT tablespace_name, count(*) df_cnt from dba_data_files GROUP BY tablespace_name) \
+undo_exp AS (SELECT * FROM (SELECT tablespace_name, status, bytes, con_id FROM cdb_undo_extents u) pivot (SUM(bytes) AS used_space FOR status IN ('UNEXPIRED' AS unexpired, 'EXPIRED' AS expired, 'ACTIVE' AS active))), \
+files AS (SELECT tbs.con_id, tbs.tablespace_name, tbs.retention, SUM(NVL(bytes,1)) AS file_size, SUM(NVL(case when df.autoextensible = 'NO' THEN df.bytes \
+		ELSE GREATEST(df.bytes, df.maxbytes) END, 1)) AS file_max_size FROM cdb_tablespaces tbs LEFT JOIN cdb_data_files df ON (tbs.con_id = df.con_id AND tbs.tablespace_name = df.tablespace_name) \
+		WHERE tbs.contents = 'UNDO' GROUP BY tbs.con_id, tbs.tablespace_name, tbs.retention), \
+metrics AS (SELECT f.con_id, DECODE(f.con_id, 0, d.name, c.name) AS name, f.tablespace_name, f.file_size, f.file_max_size, f.retention, exp.unexpired_used_space, exp.expired_used_space, exp.active_used_space, \
+	CASE WHEN f.retention = 'GUARANTEE' THEN NVL(exp.active_used_space,0)+NVL(exp.unexpired_used_space,0) \
+		WHEN f.retention = 'NOGUARANTEE' THEN NVL(exp.active_used_space,0) \
+	END used_space FROM files f LEFT JOIN undo_exp exp ON (f.con_id = exp.con_id AND f.tablespace_name = exp.tablespace_name) CROSS JOIN v$database d JOIN v$containers c ON (c.con_id = f.con_id)), \
+df AS (SELECT tablespace_name, count(*) AS df_cnt FROM dba_data_files GROUP BY tablespace_name) \
 SELECT i.instance_name AS INSTANCE, \
 	i.name AS DBNAME, \
-	d.tablespace_name AS TSNAME, \
+	i.tablespace_name AS TSNAME, \
 	df.df_cnt AS DF_NUMBER, \
-	decode(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
-	round(nvl(f.usedbytes, 0)) AS TS_USED_BYTES, \
-	round(nvl(m.file_size, 0)) AS TS_FILE_SIZE, \
-	round(nvl(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
-FROM i, f, m, d, df \
-WHERE d.tablespace_name = f.tablespace_name(+) \
-	AND d.tablespace_name = m.tablespace_name(+) \
-	AND d.tablespace_name = df.tablespace_name(+)"
+	DECODE(i.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
+	ROUND(NVL(metrics.used_space, 0)) AS TS_USED_BYTES, \
+	ROUND(NVL(metrics.file_size, 0)) AS TS_FILE_SIZE, \
+	ROUND(NVL(metrics.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
+FROM i, metrics, df \
+WHERE i.tablespace_name = metrics.tablespace_name(+) \
+	AND i.tablespace_name = df.tablespace_name(+)"
 
 // Oracle v8i/9i/10g/11g (get alert log path)
 #define ORACLE_V11_ALERTLOG_INFO_DBS "\
