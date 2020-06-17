@@ -151,6 +151,8 @@ DB_TYPE_ARRAY=(oracle)
 for ((i=0; i<${#DB_TYPE_ARRAY[@]}; i++)); do
 	if [[ "${PARAM2}" = "${DB_TYPE_ARRAY[$i]}" ]]; then
 		DB_TYPE=${DB_TYPE_ARRAY[$i]}
+	else
+		DB_TYPE=""
 	fi
 done
 if [ -z "${DB_TYPE}" ]; then
@@ -188,7 +190,11 @@ done
 
 _randhash(){ < /dev/urandom tr -dc "A-Za-z0-9" | ${HEAD_BIN} -c${1:-5}; ${ECHO_BIN}; }
 
-RANDOM_UNIQUE_HASH=$(_randhash)
+if [[ "${PLATFORM}" = "aix" ]]; then
+	RANDOM_UNIQUE_HASH=$$
+else
+	RANDOM_UNIQUE_HASH=$(_randhash)
+fi
 
 # Check PARAM1
 case "${PARAM1}" in
@@ -227,11 +233,6 @@ case "${PARAM1}" in
 		fi
 		;;
 esac
-
-if [[ "${DB_TYPE}" != "oracle" ]]; then
-	_message "Database type '${DB_TYPE}' not supported."
-	exit 1
-fi
 
 if [ ${DBS_ENABLE_LOGGING} -eq 1 ]; then
 	LOG_DIR=$(dirname "${DBS_LOG_FILE}")
