@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-10T12:48:34Z</date>
+    <date>2020-06-17T18:32:59Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -59,12 +59,18 @@
                     <key>dbmon.runshell[listener_discovery,oracle]</key>
                     <delay>10m</delay>
                     <filter>
+                        <evaltype>AND</evaltype>
                         <conditions>
+                            <condition>
+                                <macro>{#LSNR_NAME}</macro>
+                                <value>{$DBS_ORACLE_LLD_INCLUDE_LISTENER}</value>
+                                <formulaid>A</formulaid>
+                            </condition>
                             <condition>
                                 <macro>{#LSNR_NAME}</macro>
                                 <value>{$DBS_ORACLE_LLD_EXCLUDE_LISTENER}</value>
                                 <operator>NOT_MATCHES_REGEX</operator>
-                                <formulaid>A</formulaid>
+                                <formulaid>B</formulaid>
                             </condition>
                         </conditions>
                     </filter>
@@ -239,11 +245,17 @@
                     <key>dbmon.runshell[service_discovery,oracle]</key>
                     <delay>10m</delay>
                     <filter>
+                        <evaltype>AND</evaltype>
                         <conditions>
                             <condition>
-                                <macro>{#LSNR_NAME}</macro>
+                                <macro>{#SERVICE_NAME}</macro>
                                 <value>{$DBS_ORACLE_LLD_EXCLUDE_SERVICE}</value>
                                 <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>B</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#LSNR_NAME}</macro>
+                                <value>{$DBS_ORACLE_LLD_INCLUDE_LISTENER}</value>
                                 <formulaid>A</formulaid>
                             </condition>
                         </conditions>
@@ -338,6 +350,10 @@
                                             <tag>Service</tag>
                                             <value>{#SERVICE_NAME}</value>
                                         </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Service</value>
+                                        </tag>
                                     </tags>
                                 </trigger_prototype>
                             </trigger_prototypes>
@@ -367,7 +383,7 @@
             <macros>
                 <macro>
                     <macro>{$DBS_ORACLE_DISABLE_SERVICES_ALARM}</macro>
-                    <value>1</value>
+                    <value>0</value>
                     <description>Disable alarm for service</description>
                 </macro>
                 <macro>
@@ -377,6 +393,10 @@
                 <macro>
                     <macro>{$DBS_ORACLE_LLD_EXCLUDE_SERVICE}</macro>
                     <value>^enter_exclude_service$</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_LLD_INCLUDE_LISTENER}</macro>
+                    <value>^.*$</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_LSNR_SERVICE_NAME}</macro>
