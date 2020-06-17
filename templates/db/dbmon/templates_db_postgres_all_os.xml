@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-15T19:15:31Z</date>
+    <date>2020-06-17T18:46:43Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2519,12 +2519,12 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                                 <step>
                                     <type>MATCHES_REGEX</type>
                                     <params>^\d*$</params>
-                                    <error_handler>CUSTOM_ERROR</error_handler>
-                                    <error_handler_params>Checksum failures metric is supported only in PostgreSQL 12 or higher.</error_handler_params>
                                 </step>
                                 <step>
                                     <type>CHANGE_PER_SECOND</type>
                                     <params/>
+                                    <error_handler>CUSTOM_VALUE</error_handler>
+                                    <error_handler_params>ZBX_NOTSUPPORTED: Checksum failures metric is supported only in PostgreSQL 12 or higher.</error_handler_params>
                                 </step>
                             </preprocessing>
                             <master_item>
