@@ -175,7 +175,11 @@ else
 fi
 
 # Checking the availability of necessary utilities
-COMMAND_EXIST_ARRAY=(DU SED PS TAIL AWK CUT RM CAT WC DIRNAME TOUCH HEAD)
+if [[ "${PLATFORM}" = "aix" ]]; then
+	COMMAND_EXIST_ARRAY=(DU SED PS TAIL AWK CUT RM CAT WC DIRNAME TOUCH HEAD NAWK)
+else
+	COMMAND_EXIST_ARRAY=(DU SED PS TAIL AWK CUT RM CAT WC DIRNAME TOUCH HEAD)
+fi
 for ((i=0; i<${#COMMAND_EXIST_ARRAY[@]}; i++)); do
 	__CMDVAR=${COMMAND_EXIST_ARRAY[$i]}
 	CMD_FIND=$(${ECHO_BIN} "${__CMDVAR}" | ${TR_BIN} '[:upper:]' '[:lower:]' 2>/dev/null)
