@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-02-05T09:44:44Z</date>
+    <date>2020-06-23T19:19:10Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -21,12 +21,312 @@
                     <name>DBS.Templates/Databases</name>
                 </group>
             </groups>
+            <items>
+                <item>
+                    <name>[Oracle] Service '{$DBS_ORACLE_SERVICE_NAME}_{$DBS_ORACLE_INSTANCE}', state</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc.num[{$DBS_ORACLE_SERVICE_NAME}_{$DBS_ORACLE_INSTANCE}]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Oracle listener discovery</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>dbmon.runshell[listener_discovery,oracle]</key>
+                    <delay>10m</delay>
+                    <filter>
+                        <evaltype>AND</evaltype>
+                        <conditions>
+                            <condition>
+                                <macro>{#LSNR_NAME}</macro>
+                                <value>{$DBS_ORACLE_LLD_INCLUDE_LISTENER}</value>
+                                <formulaid>A</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#LSNR_NAME}</macro>
+                                <value>{$DBS_ORACLE_LLD_EXCLUDE_LISTENER}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>B</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle] Listener: Last error</name>
+                            <type>DEPENDENT</type>
+                            <key>dbmon.oracle.listener[{#LSNR_NAME},error]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Listener: {#LSNR_NAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.LSNR_ERROR</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>dbmon.runshell[listener_info,oracle,{#LSNR_NAME},,{#LSNR_PATH}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Listener: Status</name>
+                            <type>DEPENDENT</type>
+                            <key>dbmon.oracle.listener[{#LSNR_NAME},status]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Listener: {#LSNR_NAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (listener_status)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.LSNR_STATUS</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>dbmon.runshell[listener_info,oracle,{#LSNR_NAME},,{#LSNR_PATH}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Listener: Version</name>
+                            <type>DEPENDENT</type>
+                            <key>dbmon.oracle.listener[{#LSNR_NAME},version]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Listener: {#LSNR_NAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.LSNR_VERSION</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>dbmon.runshell[listener_info,oracle,{#LSNR_NAME},,{#LSNR_PATH}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Get listener '{#LSNR_NAME}' info</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>dbmon.runshell[listener_info,oracle,{#LSNR_NAME},,{#LSNR_PATH}]</key>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>stubs</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Listener: Number of process '{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;}'</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;},{#LSNR_USER},,&quot;^.*{#LSNR_NAME}.*$&quot;]</key>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Listener: {#LSNR_NAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Oracle services discovery</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>dbmon.runshell[service_discovery,oracle]</key>
+                    <delay>10m</delay>
+                    <filter>
+                        <evaltype>AND</evaltype>
+                        <conditions>
+                            <condition>
+                                <macro>{#LSNR_NAME}</macro>
+                                <value>{$DBS_ORACLE_LLD_INCLUDE_LISTENER}</value>
+                                <formulaid>A</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#SERVICE_NAME}</macro>
+                                <value>{$DBS_ORACLE_LLD_EXCLUDE_SERVICE}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>B</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#SERVICE_NAME}</macro>
+                                <value>{$DBS_ORACLE_LLD_INCLUDE_SERVICE}</value>
+                                <formulaid>C</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle] Listener service: Instance list</name>
+                            <type>DEPENDENT</type>
+                            <key>dbmon.oracle.service[{#LSNR_NAME},{#SERVICE_NAME},instance_list]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Listener: {#LSNR_NAME}, Service: {#SERVICE_NAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.SERVICE_INSTANCE_LIST</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>dbmon.runshell[service_info,oracle,{#SERVICE_NAME},{#LSNR_NAME},{#LSNR_PATH}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Listener service: Instance number</name>
+                            <type>DEPENDENT</type>
+                            <key>dbmon.oracle.service[{#LSNR_NAME},{#SERVICE_NAME},instance_number]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Listener: {#LSNR_NAME}, Service: {#SERVICE_NAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.SERVICE_INSTANCE_NUMBER</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>dbmon.runshell[service_info,oracle,{#SERVICE_NAME},{#LSNR_NAME},{#LSNR_PATH}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Listener service: Status</name>
+                            <type>DEPENDENT</type>
+                            <key>dbmon.oracle.service[{#LSNR_NAME},{#SERVICE_NAME},status]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Listener: {#LSNR_NAME}, Service: {#SERVICE_NAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.SERVICE_STATUS</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>dbmon.runshell[service_info,oracle,{#SERVICE_NAME},{#LSNR_NAME},{#LSNR_PATH}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] Get service '{#SERVICE_NAME}' info</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>dbmon.runshell[service_info,oracle,{#SERVICE_NAME},{#LSNR_NAME},{#LSNR_PATH}]</key>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>stubs</name>
+                                </application>
+                            </applications>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
             <tags>
                 <tag>
                     <tag>OS</tag>
                     <value>AIX</value>
                 </tag>
             </tags>
+            <macros>
+                <macro>
+                    <macro>{$DBS_ORACLE_DISABLE_SERVICES_ALARM}</macro>
+                    <value>0</value>
+                    <description>Disable alarm for service</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_LLD_EXCLUDE_LISTENER}</macro>
+                    <value>^enter_exclude_listener$</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_LLD_EXCLUDE_SERVICE}</macro>
+                    <value>^enter_exclude_service$</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_LLD_INCLUDE_LISTENER}</macro>
+                    <value>^.*$</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_LLD_INCLUDE_SERVICE}</macro>
+                    <value>^.*$</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_LSNR_SERVICE_NAME}</macro>
+                    <value>tnslsnr</value>
+                    <description>Binary file for listener process</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_SERVICE_NAME}</macro>
+                    <value>ora_smon</value>
+                    <description>Oracle System Monitor Process name</description>
+                </macro>
+            </macros>
         </template>
     </templates>
+    <value_maps>
+        <value_map>
+            <name>DBS Oracle (listener_status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>STOPPED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>RUNNING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>ERROR</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
 </zabbix_export>
