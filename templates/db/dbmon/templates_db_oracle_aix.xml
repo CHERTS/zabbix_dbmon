@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-23T19:19:10Z</date>
+    <date>2020-06-23T19:46:22Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -158,8 +158,68 @@
                                     <name>Oracle: Listener: {#LSNR_NAME}, Info</name>
                                 </application_prototype>
                             </application_prototypes>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{max(#2)}=0</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{min(#2)}&gt;0</recovery_expression>
+                                    <name>Listener '{#LSNR_NAME}' has been stopped or crashed</name>
+                                    <priority>DISASTER</priority>
+                                    <description>Листенер '{#LSNR_NAME}' был остановлен или аварийно завершил свою работу.&#13;
+Зайдите на сервер заказчика и проверьте работу листенера '{#LSNR_NAME}'&#13;
+Доведите информацию до эксперта.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                            <expression>{DBS_Template Oracle for AIX:dbmon.agent.ping[{$DBS_ORACLE_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Listener</tag>
+                                            <value>{#LSNR_NAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Listener</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{DBS_Template Oracle for AIX:dbmon.oracle.listener[{#LSNR_NAME},error].strlen()}&gt;0 and {DBS_Template Oracle for AIX:dbmon.oracle.listener[{#LSNR_NAME},status].min(#2)}=2</expression>
+                            <name>Listener '{#LSNR_NAME}' error</name>
+                            <opdata>(current status: {ITEM.LASTVALUE2}): {ITEM.LASTVALUE1}</opdata>
+                            <priority>AVERAGE</priority>
+                            <description>Ошибка в работе листенера '{#LSNR_NAME}'.&#13;
+Зайдите на сервер заказчика и проверьте работу листенера '{#LSNR_NAME}'.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Listener '{#LSNR_NAME}' has been stopped or crashed</name>
+                                    <expression>{DBS_Template Oracle for AIX:proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;},{#LSNR_USER},,&quot;^.*{#LSNR_NAME}.*$&quot;].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle for AIX:proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;},{#LSNR_USER},,&quot;^.*{#LSNR_NAME}.*$&quot;].min(#2)}&gt;0</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template Oracle for AIX:dbmon.agent.ping[{$DBS_ORACLE_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Listener</tag>
+                                    <value>{#LSNR_NAME}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Listener</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                    </trigger_prototypes>
                 </discovery_rule>
                 <discovery_rule>
                     <name>Oracle services discovery</name>
@@ -252,6 +312,38 @@
                             <master_item>
                                 <key>dbmon.runshell[service_info,oracle,{#SERVICE_NAME},{#LSNR_NAME},{#LSNR_PATH}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{max(#2)}=0 and {$DBS_ORACLE_DISABLE_SERVICES_ALARM:&quot;{#LSNR_NAME}:{#SERVICE_NAME}&quot;}=0</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{min(#2)}&gt;0 or {$DBS_ORACLE_DISABLE_SERVICES_ALARM:&quot;{#LSNR_NAME}:{#SERVICE_NAME}&quot;}=1</recovery_expression>
+                                    <name>Service '{#SERVICE_NAME}' has been stopped or crashed</name>
+                                    <priority>WARNING</priority>
+                                    <description>Сервис '{#SERVICE_NAME}' остановлен или аварийно завершил работу.&#13;
+Зайдите на сервер и проверьте работу листенера '{#LSNR_NAME}' и сервиса '{#SERVICE_NAME}'.&#13;
+Доведите информацию до эксперта.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                            <expression>{DBS_Template Oracle for AIX:dbmon.agent.ping[{$DBS_ORACLE_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Listener</tag>
+                                            <value>{#LSNR_NAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Service</tag>
+                                            <value>{#SERVICE_NAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>Service</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] Get service '{#SERVICE_NAME}' info</name>
