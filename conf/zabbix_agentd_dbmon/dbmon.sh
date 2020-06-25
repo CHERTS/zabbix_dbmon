@@ -23,7 +23,7 @@ function ctrl_c() {
 # Script parameters:
 # 1 - ITEM
 # 2 - DBType (oracle)
-# 3 - Oracle listener name or Oracle service name
+# 3 - Oracle instance name OR Oracle listener name OR Oracle service name
 # 4 - Oracle service name
 # 5 - Oracle listener path
 # 6 - Not use
@@ -138,7 +138,7 @@ _message() {
 }
 
 if [ -z "${PARAM1}" ]; then
-	_message "The first parameter (items) is required (Ex: listener_discovery, service_discovery, listener_info, service_info)"
+	_message "The first parameter (items) is required (Ex: instance_status, listener_discovery, service_discovery, listener_info, service_info)"
 	exit 1
 fi
 
@@ -202,6 +202,20 @@ fi
 
 # Check PARAM1
 case "${PARAM1}" in
+	instance_status)
+		if [ -n "${PARAM3}" ]; then
+			INSTANCE_NAME="${PARAM3}"
+		else
+			_message "The third parameter (instance name) is required (Ex: orcl)"
+			exit 1
+		fi
+		if [ -n "${PARAM4}" ]; then
+			INSTANCE_TYPE="${PARAM4}"
+		else
+			_message "You must specify the fourth parameter (instance type) (Ex: oracle OR asm)"
+			exit 1
+		fi
+		;;
 	listener_info)
 		if [ -n "${PARAM3}" ]; then
 			LISTENER_NAME="${PARAM3}"
@@ -300,6 +314,38 @@ _logging "Func: Main: Script params: 1:${PARAM1}|2:${PARAM2}|3:${PARAM3}|4:${PAR
 INIT_ALL_SUBSYS=1
 
 ############################# ORACLE #############################
+
+# Function get Oracle instance status
+# RETURN: Number of running process
+_oracle_instance_status() {
+	local ORA_INSTANCE_NAME=$1
+	local ORA_INSTANCE_TYPE=${2:-"oracle"}
+	local PS_FIND=""
+	local PS_FIND_NUM=0
+	local EXIT_CODE=0
+	local OLD_IFS=""
+	local INST_FILTER="(.*)[o]ra_smon_${ORA_INSTANCE_NAME}$"
+	if [[ "${ORA_INSTANCE_TYPE}" = "asm" ]]; then
+		local ORA_INSTANCE_ESCAPE=$(${ECHO_BIN} "${ORA_INSTANCE_NAME}" | ${SED_BIN} 's/+/\\+/g')
+		INST_FILTER="(.*)[a]sm_smon_${ORA_INSTANCE_ESCAPE}$"
+	fi
+	OLD_IFS=$IFS
+	IFS=$'\n'
+	if [[ "${PLATFORM}" = "aix" ]]; then
+		PS_FIND=($(${PS_BIN} -eo user,args | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} -v "zabbix_get" | ${GREP_BIN} -E "${INST_FILTER}" | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' 2>/dev/null))
+	else
+		PS_FIND=($(${PS_BIN} -eo user,cmd | ${GREP_BIN} -v "${SCRIPT_NAME}" | ${GREP_BIN} -v "zabbix_get" | ${GREP_BIN} -E "${INST_FILTER}" | ${SED_BIN} 's/^[ \t]*//;s/[ \t]*$//' 2>/dev/null))
+	fi
+	if [ $? -eq 0 ]; then
+		PS_FIND_NUM=${#PS_FIND[*]}
+		_debug_logging "Func: ${FUNCNAME[0]}: Found ${PS_FIND_NUM} ora_smon_${ORA_INSTANCE_NAME} process"
+		_debug_logging "Func: ${FUNCNAME[0]}: PS_FIND=$(declare -p PS_FIND | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
+		${ECHO_BIN} "${PS_FIND_NUM}"
+	else
+		${ECHO_BIN} "0"
+	fi
+	IFS=${OLD_IFS}
+}
 
 # Function discovery Oracle listener services
 # RETURN: Zabbix JSON discovery
@@ -588,7 +634,12 @@ _oracle_listener_info() {
 RES=""
 EXIT_CODE=0
 
-if [[ "$PARAM1" = "listener_discovery" ]]; then
+if [[ "$PARAM1" = "instance_status" ]]; then
+	if [[ "${DB_TYPE}" = "oracle" ]]; then
+		_oracle_instance_status "${INSTANCE_NAME}" "${INSTANCE_TYPE}"
+	fi
+	RCODE="0"
+elif [[ "$PARAM1" = "listener_discovery" ]]; then
 	_logrotate
 	if [[ "${DB_TYPE}" = "oracle" ]]; then
 		_oracle_listener_discovery
