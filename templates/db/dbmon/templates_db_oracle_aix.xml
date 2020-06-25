@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-23T19:46:22Z</date>
+    <date>2020-06-25T19:23:02Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -25,13 +25,31 @@
                 <item>
                     <name>[Oracle] Service '{$DBS_ORACLE_SERVICE_NAME}_{$DBS_ORACLE_INSTANCE}', state</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>proc.num[{$DBS_ORACLE_SERVICE_NAME}_{$DBS_ORACLE_INSTANCE}]</key>
+                    <key>dbmon.runshell[instance_status,oracle,{$DBS_ORACLE_INSTANCE},oracle]</key>
                     <history>30d</history>
                     <applications>
                         <application>
                             <name>Oracle: Instance info</name>
                         </application>
                     </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(2m)}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(3m)}&gt;0</recovery_expression>
+                            <name>Instance '{$DBS_ORACLE_INSTANCE}' is not running</name>
+                            <priority>DISASTER</priority>
+                            <description>Основной процесс '{$DBS_ORACLE_SERVICE_NAME}_{$DBS_ORACLE_INSTANCE}' экземпляра '{$DBS_ORACLE_INSTANCE}' был остановлен или аварийно завершил работу (crash).&#13;
+Зайдите на сервер и проверьте состояние экземпляра, проверьте журнал alert_{$DBS_ORACLE_INSTANCE}.log на предмет ошибок работы.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
             </items>
             <discovery_rules>
@@ -349,6 +367,7 @@
                             <name>[Oracle] Get service '{#SERVICE_NAME}' info</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>dbmon.runshell[service_info,oracle,{#SERVICE_NAME},{#LSNR_NAME},{#LSNR_PATH}]</key>
+                            <delay>2m</delay>
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>TEXT</value_type>
