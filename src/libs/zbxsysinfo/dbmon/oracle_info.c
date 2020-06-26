@@ -518,13 +518,15 @@ FROM gv$services s join gv$instance i ON (s.inst_id = i.inst_id)"
 
 #define ORACLE_V11_PERMANENT_TS_INFO_DBS "\
 WITH \
-i AS (SELECT i.instance_name, d.name FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
+i AS (SELECT i.instance_name, d.name, d.open_mode, d.database_role FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
 f AS (SELECT tablespace_name, SUM(bytes) AS file_free_space FROM dba_free_space GROUP BY tablespace_name), \
 m AS (SELECT tablespace_name, SUM(bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_data_files GROUP BY tablespace_name), \
 d AS (SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'PERMANENT'), \
 df AS (SELECT tablespace_name, count(*) AS df_cnt FROM dba_data_files GROUP BY tablespace_name) \
 SELECT i.instance_name AS INSTANCE, \
 	i.name AS DBNAME, \
+	DECODE(i.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS DB_OPEN_MODE, \
+	DECODE(i.database_role, 'SNAPSHOT STANDBY', 1, 'LOGICAL STANDBY', 2, 'PHYSICAL STANDBY', 3, 'PRIMARY', 4, 0) AS DB_ROLE, \
 	d.tablespace_name AS TSNAME, \
 	df.df_cnt AS DF_NUMBER, \
 	DECODE(d.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
@@ -538,7 +540,7 @@ WHERE d.tablespace_name = f.tablespace_name(+) \
 
 #define ORACLE_V12_PERMANENT_TS_INFO_DBS "\
 WITH \
-i AS (SELECT i.instance_name, DECODE(s.con_id, 0, d.name, p.name) AS name, s.tablespace_name, s.status \
+i AS (SELECT i.instance_name, DECODE(s.con_id, 0, d.name, p.name) AS name, d.open_mode, d.database_role, s.tablespace_name, s.status \
 	FROM cdb_tablespaces s, v$containers p, gv$database d, gv$instance i \
 	WHERE p.con_id(+) = s.con_id AND d.inst_id = i.inst_id AND s.contents = 'PERMANENT'), \
 f AS (SELECT tablespace_name, SUM(bytes) file_free_space FROM dba_free_space GROUP BY tablespace_name), \
@@ -558,6 +560,8 @@ m AS (SELECT DECODE(t.con_id,0, d.name, p.name) AS name, t.tablespace_name, SUM(
 df AS (SELECT tablespace_name, count(*) AS df_cnt FROM dba_data_files GROUP BY tablespace_name) \
 SELECT i.instance_name AS INSTANCE, \
 	i.name AS DBNAME, \
+	DECODE(i.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS DB_OPEN_MODE, \
+	DECODE(i.database_role, 'SNAPSHOT STANDBY', 1, 'LOGICAL STANDBY', 2, 'PHYSICAL STANDBY', 3, 'PRIMARY', 4, 0) AS DB_ROLE, \
 	i.tablespace_name AS TSNAME, \
 	df.df_cnt AS DF_NUMBER, \
 	DECODE(i.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
