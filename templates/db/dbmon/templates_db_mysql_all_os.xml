@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-04T13:05:03Z</date>
+    <date>2020-06-30T07:00:19Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -594,7 +594,7 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                             <priority>DISASTER</priority>
                             <description>Тестовое подключение к экземпляру БД MySQL не успешно.&#13;
 Необходимо проверить работу экземпляра БД, проверьте error.log на предмет ошибок.&#13;
-Далее проверьте работу и настройки zabbix-agent.&#13;
+Возможно к MySQL слишком много подключений (достигнут max_connections) и агент не может подключиться для получения данных.&#13;
 Проверьте лог-файл zabbix-agent на предмет ошибок подключения к БД.</description>
                             <dependencies>
                                 <dependency>
@@ -1379,6 +1379,43 @@ See also https://dev.mysql.com/doc/refman/5.7/en/internal-temporary-tables.html<
                     </triggers>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read first</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_first]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of times the first entry in an index was read.&#13;
+If this value is high, it suggests that the server is doing a lot of full index scans (for example, SELECT col1 FROM foo, assuming that col1 is indexed).</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.HANDLER_READ_FIRST</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read first / Uptime per 1 hour</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_first_uptime_per_one_hour]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_first]&quot;)/last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},uptime]&quot;))*60*60</params>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read key per second</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_key_rate]</key>
@@ -1463,6 +1500,53 @@ Mostly used with ORDER BY DESC.</description>
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read rnd</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_rnd]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of requests to read a row based on a fixed position.&#13;
+This value is high if you are doing a lot of queries that require sorting of the result.&#13;
+You probably have a lot of queries that require MySQL to scan entire tables or you have joins that do not use keys properly.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.HANDLER_READ_RND</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read rnd next</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_rnd_next]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of requests to read the next row.&#13;
+A large number of these may indicate many table scans and improperly used indexes.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.HANDLER_READ_RND_NEXT</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read rnd next per second</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_rnd_next_rate]</key>
@@ -1489,6 +1573,34 @@ A large number of these may indicate many table scans and improperly used indexe
                     <master_item>
                         <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read rnd next / Uptime per 1 hour</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_rnd_next_uptime_per_one_hour]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_rnd_next]&quot;)/last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},uptime]&quot;))*60*60</params>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Handler read rnd / Uptime per 1 hour</name>
+                    <type>CALCULATED</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_rnd_uptime_per_one_hour]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <params>(last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},handler_read_rnd]&quot;)/last(&quot;mysql.status[{$DBS_MYSQL_INSTANCE},uptime]&quot;))*60*60</params>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: InnoDB buffer pool dirty pages</name>
@@ -2405,7 +2517,9 @@ Removed in MySQL 8.0.3.</description>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_immediate]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>The number of times that a request for a table lock could be granted immediately.</description>
+                    <description>The number of times that a request for a table lock could be granted immediately.&#13;
+&#13;
+See more: https://dev.mysql.com/doc/refman/5.7/en/internal-locking.html</description>
                     <applications>
                         <application>
                             <name>MySQL: Status</name>
@@ -2431,7 +2545,9 @@ Removed in MySQL 8.0.3.</description>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},table_locks_waited]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>The number of times that a request for a table lock could not be granted immediately and a wait was needed. If this is high and you have performance problems, you should first optimize your queries, and then either split your table or tables or use replication.</description>
+                    <description>The number of times that a request for a table lock could not be granted immediately and a wait was needed. If this is high and you have performance problems, you should first optimize your queries, and then either split your table or tables or use replication.&#13;
+&#13;
+See more: https://dev.mysql.com/doc/refman/5.7/en/internal-locking.html</description>
                     <applications>
                         <application>
                             <name>MySQL: Status</name>
@@ -6342,7 +6458,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
+            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(2m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
             <name>Too many connections</name>
             <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
@@ -6350,13 +6466,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
 Зайдите в консоль mysql и выполните SHOW PROCESSLIST;&#13;
 Проанализируйте кто занимает больше всего соединений, желательно уменьшить их количество.&#13;
 Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
-            <dependencies>
-                <dependency>
-                    <name>Instance access failed</name>
-                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
-                </dependency>
-            </dependencies>
             <tags>
                 <tag>
                     <tag>Instance</tag>
@@ -6375,13 +6484,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
 Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
             <dependencies>
                 <dependency>
-                    <name>Instance access failed</name>
-                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
-                </dependency>
-                <dependency>
                     <name>Too many connections</name>
-                    <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
+                    <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(2m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
                 </dependency>
             </dependencies>
             <tags>
@@ -6392,7 +6496,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
+            <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(2m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
             <name>Too many threads running</name>
             <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_CRIT}, alert started {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
@@ -6401,13 +6505,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
 SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|Sleep|Binlog Dump|Binlog Dump GTID)' AND ID != CONNECTION_ID() AND USER NOT REGEXP '(system user)' AND STATE NOT REGEXP '(slave|relay|event)';&#13;
 Проанализируйте кто занимает больше всего работающих соединений, желательно уменьшить их количество.&#13;
 Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
-            <dependencies>
-                <dependency>
-                    <name>Instance access failed</name>
-                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
-                </dependency>
-            </dependencies>
             <tags>
                 <tag>
                     <tag>Instance</tag>
@@ -6427,13 +6524,8 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
 Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
             <dependencies>
                 <dependency>
-                    <name>Instance access failed</name>
-                    <expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].max(#2)}=0</expression>
-                    <recovery_expression>{DBS_Template DB MySQL:mysql.ping[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}].min(#2)}=1</recovery_expression>
-                </dependency>
-                <dependency>
                     <name>Too many threads running</name>
-                    <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
+                    <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(2m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
                 </dependency>
             </dependencies>
             <tags>
