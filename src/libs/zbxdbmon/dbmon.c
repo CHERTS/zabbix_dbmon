@@ -1174,6 +1174,7 @@ char *zbx_check_oracle_conn_string(char *conn_string)
 	unsigned short	*oracle_int_port;
 
 	// Check service name in connection string
+	zabbix_log(LOG_LEVEL_TRACE, "In %s(): Check service name in Oracle connection string: %s", __func__, conn_string);
 	zbx_strsplit(conn_string, '/', &oracle_full_host, &oracle_service_name);
 
 	if (NULL == oracle_service_name)

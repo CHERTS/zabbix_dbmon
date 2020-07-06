@@ -68,6 +68,26 @@ typedef struct zbx_db_ora_result	*ORA_DB_RESULT;
 	} \
 }
 
+void ora_str_memcpy_alloc(text **str, ub4 *alloc_len, ub4 *offset, text *src, ub4 n)
+{
+	if (NULL == *str)
+	{
+		*alloc_len = n + 1;
+		*offset = 0;
+		*str = (text *)zbx_malloc(*str, *alloc_len);
+	}
+	else if (*offset + n >= *alloc_len)
+	{
+		while (*offset + n >= *alloc_len)
+			*alloc_len *= 2;
+		*str = (text *)zbx_realloc(*str, *alloc_len);
+	}
+
+	memcpy(*str + *offset, src, n);
+	*offset += n;
+	(*str)[*offset] = '\0';
+}
+
 /* server status: OCI_SERVER_NORMAL or OCI_SERVER_NOT_CONNECTED */
 static ub4 zbx_db_oci_dbserver_status(const struct zbx_db_connection *conn)
 {
@@ -315,17 +335,9 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 				{
 					if (0 != col_name_len)
 					{
-#ifndef _AIX
-						col_name_len++; /* Add 1 byte for terminating '\0' */
-#endif
-						result->colname[counter - 1] = (text *)zbx_malloc(NULL, col_name_len);
-#ifndef _AIX
-						*result->colname[counter - 1] = '\0';
-#endif
-						result->colname_alloc[counter - 1] = (size_t)col_name_len;
-						memcpy((text *)result->colname[counter - 1], (text *)col_name, col_name_len);
-
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(): ColName: %s, ColNameLength: %u", __func__, (text *)result->colname[counter - 1], col_name_len);
+						ub4 offset = 0;
+						ora_str_memcpy_alloc(&result->colname[counter - 1], &result->colname_alloc[counter - 1], &offset, col_name, col_name_len);
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(): ColName: %s, ColNameLength: %u, Offset: %u", __func__, (text *)result->colname[counter - 1], result->colname_alloc[counter - 1], offset);
 					}
 				}
 			}
@@ -687,7 +699,7 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 
 	if ('\0' != *conn_string)
 	{
-		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Check Oracle connection string: %s", __func__, conn_string);
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Check user and password in Oracle connection string: %s", __func__, conn_string);
 		
 		zbx_strsplit(conn_string, '@', &user_and_password, &other_conn_string);
 
@@ -743,6 +755,8 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 		}
 		else
 		{
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Check Oracle connection string: %s", __func__, user_and_password);
+
 			oracle_conn_string = zbx_check_oracle_conn_string(user_and_password);
 			oracle_user = zbx_strdup(NULL, username);
 			oracle_password = zbx_strdup(NULL, userpasswd);
@@ -852,12 +866,12 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 
 			/* Setup username and password */
 			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_user, (ub4)(NULL != oracle_user ? strlen(oracle_user) : 0),
-				OCI_ATTR_USERNAME, (void *)((struct zbx_db_oracle *)conn->connection)->errhp));
+				OCI_ATTR_USERNAME, ((struct zbx_db_oracle *)conn->connection)->errhp));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 8] Setup username - done", __func__);
 
 			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_password, (ub4)(NULL != oracle_password ? strlen(oracle_password) : 0),
-				OCI_ATTR_PASSWORD, (void *)((struct zbx_db_oracle *)conn->connection)->errhp));
+				OCI_ATTR_PASSWORD, ((struct zbx_db_oracle *)conn->connection)->errhp));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 9] Setup password - done", __func__);
 
@@ -871,7 +885,7 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->svchp, (ub4)OCI_HTYPE_SVCCTX, (void *)((struct zbx_db_oracle *)conn->connection)->authp,
 				(ub4)0, (ub4)OCI_ATTR_SESSION, ((struct zbx_db_oracle *)conn->connection)->errhp));
 
-			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 11]  Set the session attribute in the service context - done", __func__);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 11] Set the session attribute in the service context - done", __func__);
 		}
 out:
 		if (OCI_SUCCESS == ret)
