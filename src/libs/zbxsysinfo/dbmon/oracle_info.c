@@ -68,20 +68,37 @@ SELECT to_char(round(((sysdate - startup_time) * 60 * 60 * 24), 0)) AS UPTIME, \
 FROM v$instance \
 WHERE instance_name = '%s'"
 
-#define ORACLE_V11_DISCOVER_DB_DBS "\
+#define ORACLE_V11_DISCOVERY_DB_DBS "\
 SELECT i.instance_name AS INSTANCE, \
     i.host_name AS HOSTNAME, \
     d.name AS DBNAME \
 FROM gv$instance i, gv$database d \
-WHERE i.inst_id = d.inst_id"
+WHERE i.inst_id = d.inst_id \
+	AND i.instance_name= '%s'"
 
-#define ORACLE_V12_DISCOVER_DB_DBS "\
+#define ORACLE_V12_DISCOVERY_DB_DBS "\
 SELECT i.instance_name AS INSTANCE, \
     i.host_name AS HOSTNAME, \
     d.name AS DBNAME \
 FROM gv$instance i, gv$database d \
-WHERE i.inst_id = d.inst_id AND \
-	d.cdb = 'NO'"
+WHERE i.inst_id = d.inst_id \
+	AND i.instance_name= '%s'"
+
+#define ORACLE_V11_DISCOVERY_PDB_DBS "\
+SELECT i.instance_name AS INSTANCE, \
+	i.host_name AS HOSTNAME, \
+	d.name AS DBNAME \
+FROM gv$instance i, gv$database d \
+WHERE i.inst_id = d.inst_id \
+	AND i.instance_name = 'FAKEINSTANCENAME'"
+
+#define ORACLE_V12_DISCOVERY_PDB_DBS "\
+SELECT i.instance_name AS INSTANCE, \
+    i.host_name AS HOSTNAME, \
+    pd.name AS PDBNAME \
+FROM gv$instance i, gv$pdbs pd \
+WHERE i.inst_id = pd.inst_id \
+	AND i.instance_name= '%s'"
 
 #define ORACLE_V11_DB_INFO_DBS "\
 SELECT i.instance_name AS INSTANCE, \
@@ -374,16 +391,17 @@ SELECT i.instance_name AS INSTANCE, \
     d.name AS DBNAME \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
-	AND d.database_role <> 'PRIMARY'"
+	AND d.database_role <> 'PRIMARY' \
+	AND i.instance_name= '%s'"
 
-#define ORACLE_V12_DISCOVER_STANDBY_DBS "\
+#define ORACLE_V12_DISCOVERY_STANDBY_DBS "\
 SELECT i.instance_name AS INSTANCE, \
     i.host_name AS HOSTNAME, \
     d.name AS DBNAME \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
 	AND d.database_role <> 'PRIMARY' \
-	AND d.cdb = 'NO'"
+	AND i.instance_name= '%s'"
 
 #define ORACLE_STANDBY_LAG_DBS "\
 SELECT decode(name, 'apply lag', 'APPLY_LAG', 'transport lag', 'TRANSPORT_LAG', 'NONE') AS PARAM_NAME, \
@@ -471,7 +489,7 @@ FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
 	AND d.database_role = 'PRIMARY'"
 
-#define ORACLE_DISCOVER_ARLDEST_DBS "\
+#define ORACLE_DISCOVERY_ARLDEST_DBS "\
 SELECT i.INSTANCE_NAME AS INSTANCE, \
 	db.name AS DBNAME, \
 	bt.dest_name AS ARLDEST \
@@ -479,7 +497,8 @@ FROM gv$instance i \
 JOIN gv$database db ON (db.inst_id = i.inst_id) \
 JOIN gv$archive_dest bt ON (bt.inst_id = i.inst_id) \
 WHERE bt.status != 'INACTIVE' \
-	AND db.log_mode = 'ARCHIVELOG'"
+	AND db.log_mode = 'ARCHIVELOG' \
+	AND i.instance_name= '%s'"
 
 #define ORACLE_ARLDEST_INFO_DBS "\
 SELECT i.INSTANCE_NAME AS INSTANCE, \
@@ -508,13 +527,15 @@ WHERE i.instance_number = p.inst_id \
 #define ORACLE_V11_INSTANCE_SERVICES_DISCOVERY_DBS "\
 SELECT i.instance_name AS INSTANCE, \
 	s.name AS SERVICE_NAME \
-FROM gv$services s join gv$instance i on (s.inst_id = i.inst_id)"
+FROM gv$services s JOIN gv$instance i ON (s.inst_id = i.inst_id) \
+	AND i.instance_name= '%s'"
 
 #define ORACLE_V12_INSTANCE_SERVICES_DISCOVERY_DBS "\
 SELECT s.pdb AS PDB, \
 	i.instance_name AS INSTANCE, \
 	s.name AS SERVICE_NAME \
-FROM gv$services s join gv$instance i ON (s.inst_id = i.inst_id)"
+FROM gv$services s JOIN gv$instance i ON (s.inst_id = i.inst_id) \
+	AND i.instance_name= '%s'"
 
 #define ORACLE_V11_PERMANENT_TS_INFO_DBS "\
 WITH \
@@ -676,7 +697,8 @@ SELECT i.instance_name AS INSTANCE, regexp_replace(value, '(.*)([/\\])(trace|bdu
 	SELECT 'alert_' || instance_name || '.log' FROM v$instance) AS ALERTLOG \
 FROM gv$instance i, gv$parameter p \
 WHERE i.instance_number = p.inst_id \
-	AND p.name = 'background_dump_dest'"
+	AND p.name = 'background_dump_dest' \
+	AND i.instance_name= '%s'"
 
 // Oracle v11g/12c/18c (get discovery alert log path)
 #define ORACLE_V12_ALERTLOG_DISCOVERY_DBS "\
@@ -684,13 +706,15 @@ SELECT i.instance_name AS INSTANCE, regexp_replace(value, '(.*)([/\\])(trace|bdu
 	SELECT 'alert_' || instance_name || '.log' FROM v$instance) AS ALERTLOG \
 FROM gv$instance i, gv$diag_info d \
 WHERE i.inst_id = d.inst_id \
-	AND d.name = 'Diag Trace'"
+	AND d.name = 'Diag Trace' \
+	AND i.instance_name= '%s'"
 
 #define ORACLE_AUDIT_FILE_DEST_DISCOVERY_DBS "\
 SELECT i.INSTANCE_NAME AS INSTANCE, p.value AS AUDITFILEDEST \
 FROM gv$instance i, gv$parameter p \
 WHERE i.instance_number = p.inst_id \
-	AND p.name = 'audit_file_dest'"
+	AND p.name = 'audit_file_dest' \
+	AND i.instance_name= '%s'"
 
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
@@ -713,6 +737,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.backup.incr_file_num",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.backup.cf",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.db.discovery",						CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.pdb.discovery",					CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.db.info",							CF_HAVEPARAMS,		ORACLE_DB_INFO,					NULL},
 	{"oracle.db.incarnation",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.db.size",							CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
@@ -1307,7 +1332,7 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 	unsigned int				oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_ver_result, ora_dbstatus_result, ora_result;
-	const char					*query = ORACLE_V11_DISCOVER_DB_DBS;
+	const char					*query = ORACLE_V11_DISCOVERY_DB_DBS;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 
@@ -1440,12 +1465,17 @@ next:
 					}
 					else if (0 == strcmp(request->key, "oracle.db.discovery"))
 					{
-						query = ORACLE_V11_DISCOVER_DB_DBS;
+						query = ORACLE_V11_DISCOVERY_DB_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else if (0 == strcmp(request->key, "oracle.pdb.discovery"))
+					{
+						query = ORACLE_V11_DISCOVERY_PDB_DBS;
 						ret = ZBX_DB_OK;
 					}
 					else if (0 == strcmp(request->key, "oracle.archlogdest.discovery"))
 					{
-						query = ORACLE_DISCOVER_ARLDEST_DBS;
+						query = ORACLE_DISCOVERY_ARLDEST_DBS;
 						ret = ZBX_DB_OK;
 					}
 					else if (0 == strcmp(request->key, "oracle.alertlog.discovery"))
@@ -1470,17 +1500,22 @@ next:
 
 					if (0 == strcmp(request->key, "oracle.standby.discovery"))
 					{
-						query = ORACLE_V12_DISCOVER_STANDBY_DBS;
+						query = ORACLE_V12_DISCOVERY_STANDBY_DBS;
 						ret = ZBX_DB_OK;
 					}
 					else if (0 == strcmp(request->key, "oracle.db.discovery"))
 					{
-						query = ORACLE_V12_DISCOVER_DB_DBS;
+						query = ORACLE_V12_DISCOVERY_DB_DBS;
+						ret = ZBX_DB_OK;
+					}
+					else if (0 == strcmp(request->key, "oracle.pdb.discovery"))
+					{
+						query = ORACLE_V12_DISCOVERY_PDB_DBS;
 						ret = ZBX_DB_OK;
 					}
 					else if (0 == strcmp(request->key, "oracle.archlogdest.discovery"))
 					{
-						query = ORACLE_DISCOVER_ARLDEST_DBS;
+						query = ORACLE_DISCOVERY_ARLDEST_DBS;
 						ret = ZBX_DB_OK;
 					}
 					else if (0 == strcmp(request->key, "oracle.alertlog.discovery"))
@@ -1523,7 +1558,7 @@ next:
 
 		if (ZBX_DB_OK == ret)
 		{
-			if (zbx_db_query_select(oracle_conn, &ora_result, "%s", query) == ZBX_DB_OK)
+			if (zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance) == ZBX_DB_OK)
 			{
 				ret = make_result(request, result, ora_result, ZBX_DB_RES_TYPE_DISCOVERY);
 				zbx_db_clean_result(&ora_result);
