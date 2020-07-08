@@ -5,8 +5,8 @@ on:
     branches: [ master ]
     #tags:
     #- 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10  schedule:
-  schedule:
-    - cron: "0 12 * * 1-5"
+#  schedule:
+#    - cron: "0 12 * * 1-5"
 
 jobs:
   github-job:
@@ -31,10 +31,6 @@ jobs:
       with:
         name: zabbix_agentd ${{ matrix.os }}
         path: src/zabbix_agent/zabbix_agentd
-        name: zabbix_sender ${{ matrix.os }}
-        path: src/zabbix_sender/zabbix_sender
-        name: zabbix_get ${{ matrix.os }}
-        path: src/zabbix_get/zabbix_get
   ol7-job:
     name: Oracle Linux 7 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, ol7]
@@ -50,10 +46,6 @@ jobs:
       with:
         name: zabbix_agentd
         path: src/zabbix_agent/zabbix_agentd
-        name: zabbix_sender
-        path: src/zabbix_sender/zabbix_sender
-        name: zabbix_get
-        path: src/zabbix_get/zabbix_get
   ol7-oracle-job:
     name: Oracle Linux 7 (Oracle 12c)
     runs-on: [self-hosted, linux, ol7]
@@ -69,10 +61,6 @@ jobs:
       with:
         name: zabbix_agentd
         path: src/zabbix_agent/zabbix_agentd
-        name: zabbix_sender
-        path: src/zabbix_sender/zabbix_sender
-        name: zabbix_get
-        path: src/zabbix_get/zabbix_get
   debian9-job:
     name: Debian 9 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, debian9]
@@ -88,10 +76,6 @@ jobs:
       with:
         name: zabbix_agentd
         path: src/zabbix_agent/zabbix_agentd
-        name: zabbix_sender
-        path: src/zabbix_sender/zabbix_sender
-        name: zabbix_get
-        path: src/zabbix_get/zabbix_get
   debian10-job:
     name: Debian 10 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, debian10]
@@ -107,10 +91,6 @@ jobs:
       with:
         name: zabbix_agentd
         path: src/zabbix_agent/zabbix_agentd
-        name: zabbix_sender
-        path: src/zabbix_sender/zabbix_sender
-        name: zabbix_get
-        path: src/zabbix_get/zabbix_get
   windows10-job:
     name: Windows 10 (Oracle, MariaDB, PgSQL)
     runs-on: [self-hosted, windows, windows10]
@@ -118,3 +98,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Run build
       run: ./build.zabbix.dbmon.runner.x64.cmd
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd
+        path: bin/win64/zabbix_agentd.exe
