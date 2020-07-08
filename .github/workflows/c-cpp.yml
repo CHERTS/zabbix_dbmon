@@ -8,7 +8,7 @@ on:
 
 jobs:
   github-job:
-    name: Build on GitHub
+    name: Build on GitHub (MySQL, PgSQL)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -26,7 +26,7 @@ jobs:
     - name: Run make
       run: make
   ol7-job:
-    name: Build on Oracle Linux 7
+    name: Build on Oracle Linux 7 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, ol7]
     steps:
     - uses: actions/checkout@v2
@@ -37,8 +37,19 @@ jobs:
     - name: Run make
       run: make
   debian9-job:
-    name: Build on Debian 9
+    name: Build on Debian 9 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, debian9]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run bootstrap
+      run: ./bootstrap.sh
+    - name: Run configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: Run make
+      run: make
+  debian10-job:
+    name: Build on Debian 10 (MariaDB, PgSQL)
+    runs-on: [self-hosted, linux, debian10]
     steps:
     - uses: actions/checkout@v2
     - name: Run bootstrap
