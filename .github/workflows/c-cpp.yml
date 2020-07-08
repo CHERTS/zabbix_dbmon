@@ -8,7 +8,7 @@ on:
 
 jobs:
   github-job:
-    name: Build on GitHub (MySQL, PgSQL)
+    name: Ubuntu (MySQL, PgSQL)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -26,7 +26,7 @@ jobs:
     - name: Run make
       run: make
   ol7-job:
-    name: Build on Oracle Linux 7 (MariaDB, PgSQL)
+    name: Oracle Linux 7 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, ol7]
     steps:
     - uses: actions/checkout@v2
@@ -37,7 +37,7 @@ jobs:
     - name: Run make
       run: make
   ol7-oracle-job:
-    name: Build on Oracle Linux 7 (Oracle 12c)
+    name: Oracle Linux 7 (Oracle 12c)
     runs-on: [self-hosted, linux, ol7]
     steps:
     - uses: actions/checkout@v2
@@ -48,7 +48,7 @@ jobs:
     - name: Run make
       run: make
   debian9-job:
-    name: Build on Debian 9 (MariaDB, PgSQL)
+    name: Debian 9 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, debian9]
     steps:
     - uses: actions/checkout@v2
@@ -59,7 +59,7 @@ jobs:
     - name: Run make
       run: make
   debian10-job:
-    name: Build on Debian 10 (MariaDB, PgSQL)
+    name: Debian 10 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, debian10]
     steps:
     - uses: actions/checkout@v2
