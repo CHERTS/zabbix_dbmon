@@ -100,5 +100,5 @@ jobs:
       run: ./build.zabbix.dbmon.runner.x64.cmd
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix_agentd windows x64 oracle18ñ maria pgsql
+        name: zabbix_agentd windows x64 oracle18c maria pgsql
         path: bin/win64/zabbix_agentd.exe
