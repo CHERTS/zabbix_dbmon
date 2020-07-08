@@ -7,41 +7,32 @@ on:
     branches: [ master ]
 
 jobs:
-
-  job1:
-
-    build:
-
-      runs-on: ${{ matrix.os }}
-
-      strategy:
-        matrix:
-           os: [ubuntu-18.04, ubuntu-20.04]
-
-      steps:
-      - uses: actions/checkout@v2
-      - name: Install base dependencies
-        run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
-      - name: Install database dependencies
-        run: sudo apt-get install -y libmysqlclient-dev libpq-dev
-      - name: Run bootstrap
-        run: ./bootstrap.sh
-      - name: Run configure
-        run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
-      - name: Run make
-        run: make
-
-  job2:
-
-    build:
-
-      runs-on: [self-hosted, linux, ol7]
-
-      steps:
-      - uses: actions/checkout@v2
-      - name: Run bootstrap
-        run: ./bootstrap.sh
-      - name: Run configure
-        run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
-      - name: Run make
-        run: make
+  github-job:
+    name: Build on GitHub
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+         os: [ubuntu-18.04, ubuntu-20.04]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install base dependencies
+      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
+    - name: Install database dependencies
+      run: sudo apt-get install -y libmysqlclient-dev libpq-dev
+    - name: Run bootstrap
+      run: ./bootstrap.sh
+    - name: Run configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: Run make
+      run: make
+  ol7-job:
+    name: Build on Oracle Linux 7
+    runs-on: [self-hosted, linux, ol7]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run bootstrap
+      run: ./bootstrap.sh
+    - name: Run configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: Run make
+      run: make
