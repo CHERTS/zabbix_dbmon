@@ -5,8 +5,8 @@ on:
     branches: [ master ]
     #tags:
     #- 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10  schedule:
-#  schedule:
-#    - cron: "0 12 * * 1-5"
+  schedule:
+    - cron: "0 18 * * 1-5"
 
 jobs:
   github-job:
@@ -29,7 +29,7 @@ jobs:
       run: make
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix_agentd ${{ matrix.os }}
+        name: zabbix_agentd ${{ matrix.os }} mysql pgsql
         path: src/zabbix_agent/zabbix_agentd
   ol7-job:
     name: Oracle Linux 7 (MariaDB, PgSQL)
@@ -44,7 +44,7 @@ jobs:
       run: make
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix_agentd
+        name: zabbix_agentd ol7 maria pgsql
         path: src/zabbix_agent/zabbix_agentd
   ol7-oracle-job:
     name: Oracle Linux 7 (Oracle 12c)
@@ -59,7 +59,7 @@ jobs:
       run: make
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix_agentd
+        name: zabbix_agentd ol7 oracle12c
         path: src/zabbix_agent/zabbix_agentd
   debian9-job:
     name: Debian 9 (MariaDB, PgSQL)
@@ -74,7 +74,7 @@ jobs:
       run: make
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix_agentd
+        name: zabbix_agentd debian9 maria pgsql
         path: src/zabbix_agent/zabbix_agentd
   debian10-job:
     name: Debian 10 (MariaDB, PgSQL)
@@ -89,7 +89,7 @@ jobs:
       run: make
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix_agentd
+        name: zabbix_agentd debian10 maria pgsql
         path: src/zabbix_agent/zabbix_agentd
   windows10-job:
     name: Windows 10 (Oracle, MariaDB, PgSQL)
@@ -100,5 +100,5 @@ jobs:
       run: ./build.zabbix.dbmon.runner.x64.cmd
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix_agentd
+        name: zabbix_agentd windows x64 oracle maria pgsql
         path: bin/win64/zabbix_agentd.exe
