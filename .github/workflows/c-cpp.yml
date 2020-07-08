@@ -71,7 +71,7 @@ jobs:
       run: make
   windows10-job:
     name: Windows 10 (Oracle, MariaDB, PgSQL)
-    runs-on: [self-hosted, linux, windows10]
+    runs-on: [self-hosted, windows, windows10]
     steps:
     - uses: actions/checkout@v2
     - name: Run build
