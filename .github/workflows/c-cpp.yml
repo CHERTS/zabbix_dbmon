@@ -1,0 +1,24 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install base dependencies
+      run: apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
+    - name: Install database dependencies
+      run: apt-get install -y libmysqlclient-dev libpq-dev
+    - name: configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: make
+      run: make
+
