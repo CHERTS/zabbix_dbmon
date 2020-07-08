@@ -36,3 +36,14 @@ jobs:
       run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
     - name: Run make
       run: make
+  debian9-job:
+    name: Build on Debian 9
+    runs-on: [self-hosted, linux, debian9]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run bootstrap
+      run: ./bootstrap.sh
+    - name: Run configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: Run make
+      run: make
