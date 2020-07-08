@@ -69,3 +69,10 @@ jobs:
       run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
     - name: Run make
       run: make
+  windows10-job:
+    name: Windows 10 (Oracle, MariaDB, PgSQL)
+    runs-on: [self-hosted, linux, windows10]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run build
+      run: build.zabbix.dbmon.runner.x64.cmd
