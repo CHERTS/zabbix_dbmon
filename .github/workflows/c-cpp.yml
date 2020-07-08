@@ -3,10 +3,10 @@ name: C/C++ CI
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    #tags:
+    #- 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10  schedule:
   schedule:
-  - cron: "0 12 * * 1-5"
+    - cron: "0 12 * * 1-5"
 
 jobs:
   github-job:
@@ -27,6 +27,14 @@ jobs:
       run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
     - name: Run make
       run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd ${{ matrix.os }}
+        path: src/zabbix_agent/zabbix_agentd
+        name: zabbix_sender ${{ matrix.os }}
+        path: src/zabbix_sender/zabbix_sender
+        name: zabbix_get ${{ matrix.os }}
+        path: src/zabbix_get/zabbix_get
   ol7-job:
     name: Oracle Linux 7 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, ol7]
@@ -38,6 +46,14 @@ jobs:
       run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
     - name: Run make
       run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd
+        path: src/zabbix_agent/zabbix_agentd
+        name: zabbix_sender
+        path: src/zabbix_sender/zabbix_sender
+        name: zabbix_get
+        path: src/zabbix_get/zabbix_get
   ol7-oracle-job:
     name: Oracle Linux 7 (Oracle 12c)
     runs-on: [self-hosted, linux, ol7]
@@ -49,6 +65,14 @@ jobs:
       run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-oracle --with-oracle --with-oracle-lib=/u01/app/oracle/18c/dbhome_1/lib --with-oracle-include=/u01/app/oracle/18c/dbhome_1/rdbms/public --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
     - name: Run make
       run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd
+        path: src/zabbix_agent/zabbix_agentd
+        name: zabbix_sender
+        path: src/zabbix_sender/zabbix_sender
+        name: zabbix_get
+        path: src/zabbix_get/zabbix_get
   debian9-job:
     name: Debian 9 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, debian9]
@@ -60,6 +84,14 @@ jobs:
       run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
     - name: Run make
       run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd
+        path: src/zabbix_agent/zabbix_agentd
+        name: zabbix_sender
+        path: src/zabbix_sender/zabbix_sender
+        name: zabbix_get
+        path: src/zabbix_get/zabbix_get
   debian10-job:
     name: Debian 10 (MariaDB, PgSQL)
     runs-on: [self-hosted, linux, debian10]
@@ -71,6 +103,14 @@ jobs:
       run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
     - name: Run make
       run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd
+        path: src/zabbix_agent/zabbix_agentd
+        name: zabbix_sender
+        path: src/zabbix_sender/zabbix_sender
+        name: zabbix_get
+        path: src/zabbix_get/zabbix_get
   windows10-job:
     name: Windows 10 (Oracle, MariaDB, PgSQL)
     runs-on: [self-hosted, windows, windows10]
