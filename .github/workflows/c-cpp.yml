@@ -3,10 +3,10 @@ name: C/C++ CI
 on:
   push:
     branches: [ master ]
-    #tags:
-    #- 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10  schedule:
-  schedule:
-    - cron: "0 18 * * 1-5"
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10  schedule:
+#  schedule:
+#    - cron: "0 18 * * 1-5"
 
 jobs:
   github-job:
@@ -100,5 +100,5 @@ jobs:
       run: ./build.zabbix.dbmon.runner.x64.cmd
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix_agentd windows x64 oracle maria pgsql
+        name: zabbix_agentd windows x64 oracle18ñ maria pgsql
         path: bin/win64/zabbix_agentd.exe
