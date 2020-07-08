@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-25T19:26:43Z</date>
+    <date>2020-07-08T11:49:02Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1833,6 +1833,29 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <params>1h</params>
                                 </step>
                             </preprocessing>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;{$DBS_ORACLE_ADUMP_FILE_WARN:&quot;{#AUDITFILEDEST}&quot;}</expression>
+                                    <name>Number of audit files is too high</name>
+                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ADUMP_FILE_WARN:&quot;{#AUDITFILEDEST}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>Количество файлов аудита в каталоге '{#AUDITFILEDEST}' больше {$DBS_ORACLE_ADUMP_FILE_WARN:&quot;{#AUDITFILEDEST}&quot;}&#13;
+Выясните почему файлов аудита так много, возможно стоит удалить лишние файлы.&#13;
+Доведите информацию до эксперта.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                            <expression>{DBS_Template DB Oracle:dbmon.agent.ping[{$DBS_ORACLE_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Auditfiledest</tag>
+                                            <value>{#AUDITFILEDEST}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
                 </discovery_rule>
@@ -4261,6 +4284,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_DBMON_AGENTD_NODATA_WARN}</macro>
                     <value>8m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_ADUMP_FILE_WARN}</macro>
+                    <value>500000</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_ALERTLOG_OPTIONS}</macro>
