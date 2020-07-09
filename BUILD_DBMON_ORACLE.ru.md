@@ -21,9 +21,9 @@ yum install -y postgresql-devel postgresql-libs
 ### 2. Скачать и распаковать свежую версию исходного кода:
 
 ~~~~
-wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v4.4.7/zabbix-4.4.7.tar.gz
-tar -zxf zabbix-4.4.7.tar.gz
-cd zabbix-4.4.7
+wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.0/zabbix-5.0.0.tar.gz
+tar -zxf zabbix-5.0.0.tar.gz
+cd zabbix-5.0.0
 ~~~~
 
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL + PostgreSQL + Oracle 18c:
@@ -60,9 +60,9 @@ dnf install -y mariadb-devel postgresql-devel
 ### 2. Скачать и распаковать свежую версию исходного кода:
 
 ~~~~
-wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v4.4.7/zabbix-4.4.7.tar.gz
-tar -zxf zabbix-4.4.7.tar.gz
-cd zabbix-4.4.7
+wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.0/zabbix-5.0.0.tar.gz
+tar -zxf zabbix-5.0.0.tar.gz
+cd zabbix-5.0.0
 ~~~~
 
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL + PostgreSQL + Oracle 18c:
