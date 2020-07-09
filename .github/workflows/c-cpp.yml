@@ -1,13 +1,25 @@
 name: C/C++ CI
 
-on:
+#on:
 #  schedule:
 #    - cron: "0 18 * * 1-5"
-  push:
-    branches:
-      - master
-    tags:
-      - 'v*'
+#  push:
+#    branches:
+#      - master
+#    tags:
+#      - 'v*'
+
+name: Manually run
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Manually run build for all OS'
+        required: true
+        default: 'cherts'
+      home:
+        description: 'location'
+        required: false
 
 jobs:
   github-job:

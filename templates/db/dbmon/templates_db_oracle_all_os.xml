@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-07-08T11:49:02Z</date>
+    <date>2020-07-09T06:35:25Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1852,6 +1852,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <tag>
                                             <tag>Auditfiledest</tag>
                                             <value>{#AUDITFILEDEST}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
                                         </tag>
                                     </tags>
                                 </trigger_prototype>
