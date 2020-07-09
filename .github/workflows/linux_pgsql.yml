@@ -1,0 +1,85 @@
+name: LinuxOnlyPgSQL
+
+on:
+#  schedule:
+#    - cron: "0 18 * * 1-5"
+#  push:
+#    branches:
+#      - master
+#    tags:
+#      - 'v*'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Launch reason'
+        required: true
+        default: 'Update all binary'
+
+jobs:
+  github-job:
+    name: Ubuntu (PgSQL)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+         os: [ubuntu-18.04, ubuntu-20.04]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install base dependencies
+      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
+    - name: Install database dependencies
+      run: sudo apt-get install -y libpq-dev
+    - name: Run bootstrap
+      run: ./bootstrap.sh
+    - name: Run configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-postgresql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: Run make
+      run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd ${{ matrix.os }} pgsql
+        path: src/zabbix_agent/zabbix_agentd
+  ol7-job:
+    name: Oracle Linux 7 (PgSQL)
+    runs-on: [self-hosted, linux, ol7]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run bootstrap
+      run: ./bootstrap.sh
+    - name: Run configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-postgresql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: Run make
+      run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd ol7 pgsql
+        path: src/zabbix_agent/zabbix_agentd
+  debian9-job:
+    name: Debian 9 (PgSQL)
+    runs-on: [self-hosted, linux, debian9]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run bootstrap
+      run: ./bootstrap.sh
+    - name: Run configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-postgresql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: Run make
+      run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd debian9 pgsql
+        path: src/zabbix_agent/zabbix_agentd
+  debian10-job:
+    name: Debian 10 (PgSQL)
+    runs-on: [self-hosted, linux, debian10]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run bootstrap
+      run: ./bootstrap.sh
+    - name: Run configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-postgresql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: Run make
+      run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd debian10 pgsql
+        path: src/zabbix_agent/zabbix_agentd

@@ -1,0 +1,33 @@
+name: LinuxOnlyOracle
+
+on:
+#  schedule:
+#    - cron: "0 18 * * 1-5"
+#  push:
+#    branches:
+#      - master
+#    tags:
+#      - 'v*'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Launch reason'
+        required: true
+        default: 'Update all binary'
+
+jobs:
+  ol7-oracle-job:
+    name: Oracle Linux 7 (Oracle 18c)
+    runs-on: [self-hosted, linux, ol7]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run bootstrap
+      run: ./bootstrap.sh
+    - name: Run configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-oracle --with-oracle --with-oracle-lib=/u01/app/oracle/18c/dbhome_1/lib --with-oracle-include=/u01/app/oracle/18c/dbhome_1/rdbms/public --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: Run make
+      run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd ol7 oracle18c
+        path: src/zabbix_agent/zabbix_agentd

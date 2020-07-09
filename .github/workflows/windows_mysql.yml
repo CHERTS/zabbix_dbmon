@@ -1,0 +1,29 @@
+name: WindowsOnlyMySQL
+
+on:
+#  schedule:
+#    - cron: "0 18 * * 1-5"
+#  push:
+#    branches:
+#      - master
+#    tags:
+#      - 'v*'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Launch reason'
+        required: true
+        default: 'Update all binary'
+
+jobs:
+  windows10-job:
+    name: Windows 10 (MariaDB)
+    runs-on: [self-hosted, windows, windows10]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run build
+      run: ./build.zabbix.dbmon.runner.mysql.x64.cmd
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd windows x64 maria
+        path: bin/win64/zabbix_agentd.exe
