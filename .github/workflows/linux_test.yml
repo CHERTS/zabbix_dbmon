@@ -1,0 +1,37 @@
+name: LinuxTest
+
+on:
+#  schedule:
+#    - cron: "0 18 * * 1-5"
+#  push:
+#    branches:
+#      - master
+#    tags:
+#      - 'v*'
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Launch reason'
+        required: true
+        default: 'Update all binary'
+
+jobs:
+  github-job:
+    name: Ubuntu (MySQL, PgSQL)
+    runs-on: [ubuntu-18.04]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install base dependencies
+      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
+    - name: Install database dependencies
+      run: sudo apt-get install -y libmysqlclient-dev libpq-dev
+    - name: Run bootstrap
+      run: ./bootstrap.sh
+    - name: Run configure
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+    - name: Run make
+      run: make
+    - uses: actions/upload-artifact@v2
+      with:
+        name: zabbix_agentd ubuntu-18.04 mysql pgsql
+        path: src/zabbix_agent/zabbix_agentd
