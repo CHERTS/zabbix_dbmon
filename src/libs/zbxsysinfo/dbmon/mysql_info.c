@@ -169,7 +169,7 @@ static int	mysql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeo
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the mysql_ping() prototype as required by */
-	/* zbx_execute_threaded_metric() on MS Windows */
+	/* zbx_execute_dbmon_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
 
@@ -192,7 +192,7 @@ static int	mysql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeo
 
 int	MYSQL_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	return zbx_execute_threaded_metric(mysql_ping, request, result);
+	return zbx_execute_dbmon_threaded_metric(mysql_ping, request, result);
 }
 
 static int	mysql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned int ver_mode)
@@ -362,7 +362,7 @@ static int	mysql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HAN
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the mysql_get_discovery() prototype as required by */
-	/* zbx_execute_threaded_metric() on MS Windows */
+	/* zbx_execute_dbmon_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
 
@@ -425,7 +425,7 @@ out:
 
 int	MYSQL_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	return zbx_execute_threaded_metric(mysql_get_discovery, request, result);
+	return zbx_execute_dbmon_threaded_metric(mysql_get_discovery, request, result);
 	//return mysql_get_discovery(request, result, NULL);
 }
 
@@ -527,7 +527,7 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the mysql_get_result() prototype as required by */
-	/* zbx_execute_threaded_metric() on MS Windows */
+	/* zbx_execute_dbmon_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
 
@@ -578,7 +578,7 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 
 int	MYSQL_GET_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	return zbx_execute_threaded_metric(mysql_get_result, request, result);
+	return zbx_execute_dbmon_threaded_metric(mysql_get_result, request, result);
 }
 
 /*

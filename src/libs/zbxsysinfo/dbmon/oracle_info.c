@@ -830,7 +830,7 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the oracle_instance_ping() prototype as required by */
-	/* zbx_execute_threaded_metric() on MS Windows */
+	/* zbx_execute_dbmon_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
 
@@ -852,7 +852,7 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 
 int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	return zbx_execute_threaded_metric(oracle_instance_ping, request, result);
+	return zbx_execute_dbmon_threaded_metric(oracle_instance_ping, request, result);
 }
 
 static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode, zbx_db_oracle_db_status oracle_need_dbstatus)
@@ -1188,7 +1188,7 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the oracle_get_instance_result() prototype as required by */
-	/* zbx_execute_threaded_metric() on MS Windows */
+	/* zbx_execute_dbmon_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
 
@@ -1315,7 +1315,7 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 
 int	ORACLE_GET_INSTANCE_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	return zbx_execute_threaded_metric(oracle_get_instance_result, request, result);
+	return zbx_execute_dbmon_threaded_metric(oracle_get_instance_result, request, result);
 }
 
 #if !defined(_WINDOWS) && !defined(__MINGW32__)
@@ -1398,7 +1398,7 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the oracle_get_discovery() prototype as required by */
-	/* zbx_execute_threaded_metric() on MS Windows */
+	/* zbx_execute_dbmon_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
 
@@ -1586,7 +1586,7 @@ out:
 
 int	ORACLE_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	//return zbx_execute_threaded_metric(oracle_get_discovery, request, result);
+	//return zbx_execute_dbmon_threaded_metric(oracle_get_discovery, request, result);
 #if !defined(_WINDOWS) && !defined(__MINGW32__)
 	return oracle_get_discovery(request, result);
 #else
@@ -1881,7 +1881,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the oracle_ts_info() prototype as required by */
-	/* zbx_execute_threaded_metric() on MS Windows */
+	/* zbx_execute_dbmon_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
 
@@ -1963,7 +1963,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 
 int	ORACLE_TS_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	return zbx_execute_threaded_metric(oracle_ts_info, request, result);
+	return zbx_execute_dbmon_threaded_metric(oracle_ts_info, request, result);
 }
 #endif
 #endif

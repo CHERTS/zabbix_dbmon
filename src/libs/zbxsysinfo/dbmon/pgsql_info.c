@@ -324,7 +324,7 @@ static int	pgsql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeo
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the pgsql_ping() prototype as required by */
-	/* zbx_execute_threaded_metric() on MS Windows */
+	/* zbx_execute_dbmon_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
 
@@ -347,7 +347,7 @@ static int	pgsql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeo
 
 int	PGSQL_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	return zbx_execute_threaded_metric(pgsql_ping, request, result);
+	return zbx_execute_dbmon_threaded_metric(pgsql_ping, request, result);
 }
 
 static int	pgsql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned int ver_mode)
@@ -505,7 +505,7 @@ static int	pgsql_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HAN
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the pgsql_get_discovery() prototype as required by */
-	/* zbx_execute_threaded_metric() on MS Windows */
+	/* zbx_execute_dbmon_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
 
@@ -553,7 +553,7 @@ out:
 
 int	PGSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	return zbx_execute_threaded_metric(pgsql_get_discovery, request, result);
+	return zbx_execute_dbmon_threaded_metric(pgsql_get_discovery, request, result);
 	//return pgsql_get_discovery(request, result, NULL);
 }
 
@@ -792,7 +792,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 
 #if defined(_WINDOWS) && defined(__MINGW32__)
 	/* 'timeout_event' argument is here to make the pgsql_get_result() prototype as required by */
-	/* zbx_execute_threaded_metric() on MS Windows */
+	/* zbx_execute_dbmon_threaded_metric() on MS Windows */
 	ZBX_UNUSED(timeout_event);
 #endif
 
@@ -867,7 +867,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 
 int	PGSQL_GET_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
-	return zbx_execute_threaded_metric(pgsql_get_result, request, result);
+	return zbx_execute_dbmon_threaded_metric(pgsql_get_result, request, result);
 }
 #endif
 #endif
