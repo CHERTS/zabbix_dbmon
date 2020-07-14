@@ -22,6 +22,8 @@ require_once 'vendor/autoload.php';
 
 require_once dirname(__FILE__).'/../CElement.php';
 
+use Facebook\WebDriver\Remote\RemoteWebElement;
+
 /**
  * Multiselect element.
  */
@@ -40,18 +42,20 @@ class CMultiselectElement extends CElement {
 	/**
 	 * @inheritdoc
 	 */
-	public function __construct(RemoteWebElement $element, $options = []) {
-		parent::__construct($element, $options);
+	public static function createInstance(RemoteWebElement $element, $options = []) {
+		$instance = parent::createInstance($element, $options);
 
-		if ($this->mode === null) {
-			$this->mode = self::$default_mode;
+		if ($instance->mode === null) {
+			$instance->mode = self::$default_mode;
 		}
+
+		return $instance;
 	}
 
 	/**
 	 * Set default fill mode.
 	 *
-	 * @param integer $mode    MODE_SELECT or MODE_TYPE
+	 * @param integer $mode    MODE_SELECT, MODE_SELECT_MULTIPLE or MODE_TYPE
 	 */
 	public static function setDefaultFillMode($mode) {
 		self::$default_mode = $mode;
@@ -60,7 +64,7 @@ class CMultiselectElement extends CElement {
 	/**
 	 * Set fill mode.
 	 *
-	 * @param integer $mode    MODE_SELECT or MODE_TYPE
+	 * @param integer $mode    MODE_SELECT, MODE_SELECT_MULTIPLE or MODE_TYPE
 	 *
 	 * @return $this
 	 */
@@ -207,7 +211,7 @@ class CMultiselectElement extends CElement {
 		$this->getControls()->first()->click();
 
 		return COverlayDialogElement::find()->waitUntilPresent()
-				->all()->last()->waitUntilReady()->setDataContext($context);
+				->all()->last()->waitUntilReady()->setDataContext($context, $this->mode);
 	}
 
 	/**

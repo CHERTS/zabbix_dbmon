@@ -119,6 +119,9 @@ $tranStrings = [
 	'gtlc.js' => [
 		'S_MINUTE_SHORT' => _x('m', 'minute short')
 	],
+	'class.overlay.js' => [
+		'Operation details' => _('Operation details')
+	],
 	'dashboard.grid.js' => [
 		'Edit widget' => _('Edit widget'),
 		'Add widget' => _('Add widget'),
@@ -225,7 +228,7 @@ $tranStrings = [
 		'S_MUTE' => _('Mute'),
 		'S_CANNOT_SUPPORT_NOTIFICATION_AUDIO' => _('Cannot support notification audio for this device.'),
 		'S_UNMUTE' => _('Unmute'),
-		'S_CLEAR' => _('Clear'),
+		'S_CLOSE' => _('Close'),
 		'S_SNOOZE' => _('Snooze')
 	],
 	'class.cookie.js' => [
