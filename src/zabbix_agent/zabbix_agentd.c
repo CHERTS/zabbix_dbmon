@@ -90,10 +90,11 @@ char	*CONFIG_TLS_CIPHER_CMD13	= NULL;	/* not used in agent, defined for linking 
 char	*CONFIG_TLS_CIPHER_CMD		= NULL;	/* not used in agent, defined for linking with tls.c */
 
 #if defined(HAVE_DBMON)
+int	CONFIG_DB_TIMEOUT	= 60;
 #if defined(HAVE_MYSQL)
 char	*CONFIG_MYSQL_USER		= NULL;
 char	*CONFIG_MYSQL_PASSWORD	= NULL;
-int		CONFIG_MYSQL_TIMEOUT	= 5;
+int	CONFIG_MYSQL_TIMEOUT	= 5;
 #endif
 #if defined(HAVE_ORACLE)
 char	*CONFIG_ORACLE_USER = NULL;

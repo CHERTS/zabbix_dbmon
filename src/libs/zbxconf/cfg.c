@@ -33,7 +33,7 @@ int	CONFIG_LOG_FILE_SIZE	= 1;
 int	CONFIG_ALLOW_ROOT	= 0;
 int	CONFIG_TIMEOUT		= 3;
 #if defined(HAVE_DBMON)
-int	CONFIG_DB_TIMEOUT		= 60;
+int	CONFIG_DB_TIMEOUT	= 60;
 #endif
 
 static int	__parse_cfg_file(const char *cfg_file, struct cfg_line *cfg, int level, int optional, int strict);
