@@ -42,6 +42,9 @@
 #endif
 
 extern int	CONFIG_TIMEOUT;
+#if defined(HAVE_DBMON)
+extern int	CONFIG_DB_TIMEOUT;
+#endif
 
 static int	ONLY_ACTIVE(AGENT_REQUEST *request, AGENT_RESULT *result);
 static int	SYSTEM_RUN(AGENT_REQUEST *request, AGENT_RESULT *result);
