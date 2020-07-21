@@ -61,12 +61,18 @@ PATH=$ORACLE_HOME/bin:/sbin:/bin:/usr/sbin:/usr/bin
 LD_LIBRARY_PATH=/u01/app/oracle/18c/dbhome_1/lib:${LD_LIBRARY_PATH}
 ~~~~
 
-5. Запустить нового агента:
+5. Если Вы собрали агента с поддержкой мониторинга СУБД Oracle, то необходимо добавить пользователя zabbix в группу oinstall, таким образом агент сможет читать некоторые каталоги и файлы из $ORACLE_HOME:
+
+~~~~
+usermod -a -G oinstall zabbix
+~~~~
+
+6. Запустить нового агента:
 ~~~~
 systemctl start zabbix-agent
 ~~~~
 
-6. Проверить лог агента:
+7. Проверить лог агента:
 ~~~~
 tail -n20 /var/log/zabbix/zabbix_agentd.log
 ~~~~
@@ -91,7 +97,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd.log
 
 В нем Вы увидите с поддержкой мониторинга каких СУБД собран агент.
 
-7. Теперь Вы можете импортировать в Zabbix web-frontend новые шаблоны из папки templates\db\dbmon в следующей последовательности:
+8. Теперь Вы можете импортировать в Zabbix web-frontend новые шаблоны из папки templates\db\dbmon в следующей последовательности:
 
 Последовательность импорта шаблонов (НЕ НАРУШАЙТЕ ЕЕ!):
 ~~~~
@@ -127,7 +133,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd.log
 5. Добавьте зависимость от триггера "Service '{$DBS_PGSQL_SERVICE_NAME}' is not running" (Service 'postgresql-12' is not running)
 ~~~~
 
-8. Теперь подключите шаблон мониторинга к Вашему хосту в Zabbix web-frontend:
+9. Теперь подключите шаблон мониторинга к Вашему хосту в Zabbix web-frontend:
 
 Для мониторинга MySQL в Linux шаблон "MySQL for Linux (Active, DBMON)"
 
