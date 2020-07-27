@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-30T07:00:19Z</date>
+    <date>2020-07-27T09:36:21Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -749,7 +749,8 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                             <name>Server has aborted connections</name>
                             <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_ABORTED_CONN_MAX_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
                             <priority>AVERAGE</priority>
-                            <description>Обнаружен высокий процент отклоненных соединений. Доведите информацию до эксперта.</description>
+                            <description>Обнаружен высокий процент отклоненных соединений.&#13;
+Доведите информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Instance access failed</name>
@@ -4936,10 +4937,11 @@ For InnoDB, INDEX_LENGTH is the approximate amount of space allocated for non-cl
                                 <trigger_prototype>
                                     <expression>{nodata({$DBS_MYSQL_DB_NODATA_WARN:&quot;{#DBNAME}&quot;})}=1</expression>
                                     <name>Database '{#DBNAME}' is not available</name>
-                                    <priority>HIGH</priority>
-                                    <description>Более {$DBS_MYSQL_DB_NODATA_WARN} (минут) не поступает информация о базе данных '{#DBNAME}'.&#13;
-Зайдите на сервер и проверьте наличие этой базы данных, возможно она была удалена.&#13;
-Доведите информацию до эксперта.</description>
+                                    <priority>WARNING</priority>
+                                    <description>Данные о состоянии базы данных '{#DBNAME}' не поступали более {$DBS_MYSQL_DB_NODATA_WARN:&quot;{#DBNAME}&quot;}.&#13;
+Проверьте наличие базы данных, возможно она была удалена.&#13;
+Так же проверьте работу zabbix-agent, возможно есть проблемы в его работе.&#13;
+Передайте данные эксперту.</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -6498,7 +6500,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(2m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
             <name>Too many threads running</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_CRIT}, alert started {ITEM.VALUE1})</opdata>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT}%, alert started {ITEM.VALUE1})</opdata>
             <priority>HIGH</priority>
             <description>Текущее количество работающих потоков очень велико.&#13;
 Зайдите в консоль mysql и выполните:&#13;
@@ -6515,7 +6517,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
         <trigger>
             <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_WARN} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
             <name>Too many threads running</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_WARN}, alert started {ITEM.VALUE1})</opdata>
+            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_RUNNING_PRC_WARN}%, alert started {ITEM.VALUE1})</opdata>
             <priority>WARNING</priority>
             <description>Текущее количество работающих тредов (потоков) велико.&#13;
 Зайдите в консоль mysql и выполните:&#13;
