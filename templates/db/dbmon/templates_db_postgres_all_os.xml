@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-06-17T18:46:43Z</date>
+    <date>2020-07-27T09:36:51Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1906,6 +1906,34 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <master_item>
                                 <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{nodata({$DBS_PGSQL_DB_NODATA_WARN:&quot;{#DBNAME}&quot;})}=1</expression>
+                                    <name>Database '{#DBNAME}' is not available</name>
+                                    <priority>WARNING</priority>
+                                    <description>Данные о состоянии базы данных '{#DBNAME}' не поступали более {$DBS_PGSQL_DB_NODATA_WARN:&quot;{#DBNAME}&quot;}.&#13;
+Проверьте наличие базы данных, возможно она была удалена.&#13;
+Так же проверьте работу zabbix-agent, возможно есть проблемы в его работе.&#13;
+Передайте данные эксперту.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_PGSQL_INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[PgSQL] Database '{#DBNAME}': Description</name>
