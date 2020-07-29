@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-07-27T09:36:51Z</date>
+    <date>2020-07-29T10:59:35Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -576,6 +576,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
+                    <description>Get all database info</description>
                     <applications>
                         <application>
                             <name>stubs</name>
@@ -1640,6 +1641,29 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <params>30m</params>
                         </step>
                     </preprocessing>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;18000000</expression>
+                            <name>Age of oldest xid is too big</name>
+                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: 18000000, alert started: {ITEM.VALUE1})</opdata>
+                            <priority>AVERAGE</priority>
+                            <description>Возраст самого старого XID слишком велик.&#13;
+Возможно близка ситуация зацикливания счетчика транзакций (см. https://postgrespro.ru/docs/postgresql/12/routine-vacuuming#VACUUM-FOR-WRAPAROUND)&#13;
+Срочно доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Ping</name>
@@ -3277,7 +3301,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_DB_NODATA_WARN}</macro>
-                    <value>1h</value>
+                    <value>2h</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_DEADLOCKS_MAX_WARN}</macro>
@@ -3317,6 +3341,54 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </macros>
         </template>
     </templates>
+    <triggers>
+        <trigger>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_WARN} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
+            <name>Total number of connections is too high</name>
+            <opdata>(current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE2})</opdata>
+            <priority>WARNING</priority>
+            <description>Текущее количество соединений велико.&#13;
+Проанализируйте откуда идут соединения к кластеру.&#13;
+Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
+            <dependencies>
+                <dependency>
+                    <name>Total number of connections is too very high</name>
+                    <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
+                </dependency>
+                <dependency>
+                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
+            <name>Total number of connections is too very high</name>
+            <opdata>(current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE2})</opdata>
+            <priority>HIGH</priority>
+            <description>Текущее количество соединений очень велико.&#13;
+Проанализируйте откуда идут соединения к кластеру.&#13;
+Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
+            <dependencies>
+                <dependency>
+                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+    </triggers>
     <graphs>
         <graph>
             <name>[PgSQL] Checkpoints buffers</name>
