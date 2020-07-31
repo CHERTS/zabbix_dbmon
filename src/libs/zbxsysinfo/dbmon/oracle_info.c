@@ -559,34 +559,21 @@ WHERE d.tablespace_name = f.tablespace_name(+) \
 
 #define ORACLE_V12_PERMANENT_TS_INFO_DBS "\
 WITH \
-i AS (SELECT i.instance_name, DECODE(s.con_id, 0, d.name, p.name) AS name, s.tablespace_name, s.status \
-	FROM cdb_tablespaces s, v$containers p, gv$database d, gv$instance i \
-	WHERE p.con_id(+) = s.con_id AND d.inst_id = i.inst_id AND s.contents = 'PERMANENT'), \
-m AS (SELECT DECODE(t.con_id,0, d.name, p.name) AS name, t.tablespace_name, SUM(f.bytes) AS file_size, SUM(CASE WHEN f.autoextensible = 'NO' THEN f.bytes ELSE GREATEST(f.bytes, f.maxbytes) END) AS file_max_size, \
-		SUM(NVL((SELECT SUM(a.bytes) \
-			FROM cdb_free_space a \
-			WHERE a.tablespace_name = t.tablespace_name \
-				AND a.con_id = t.con_id \
-				AND a.file_id = f.file_id \
-				AND a.relative_fno = f.relative_fno \
-				), 0)) AS file_free_space \
-		FROM cdb_tablespaces t \
-		JOIN cdb_data_files f \
-		ON (f.tablespace_name = t.tablespace_name AND f.con_id = t.con_id ) \
-		CROSS JOIN v$database d left JOIN v$containers p ON (t.con_id = p.con_id) WHERE t.CONTENTS = 'PERMANENT' \
-		GROUP BY t.tablespace_name, DECODE(t.con_id,0, d.name, p.name)),  \
-df AS (SELECT tablespace_name, count(*) AS df_cnt FROM dba_data_files GROUP BY tablespace_name) \
-SELECT i.instance_name AS INSTANCE, \
-	i.name AS DBNAME, \
-	i.tablespace_name AS TSNAME, \
-	df.df_cnt AS DF_NUMBER, \
-	DECODE(i.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) AS TS_STATUS, \
-	ROUND(NVL(m.file_free_space, 0)) AS TS_FILE_FREE_SPACE, \
+d AS (SELECT i.instance_name, p.con_id, decode(p.con_id, 0, d.name, p.name) AS dbname FROM v$containers p, v$database d, v$instance i), \
+tbs AS(SELECT t.con_id, t.tablespace_name, DECODE(t.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) ts_status, COUNT(file_id) df_cnt FROM cdb_tablespaces t, cdb_data_files d WHERE t.con_id = d.con_id AND t.tablespace_name = d.tablespace_name AND t.contents = 'PERMANENT' GROUP BY t.con_id, t.tablespace_name, t.status), \
+free AS(SELECT con_id, tablespace_name, SUM(bytes) file_free_space FROM cdb_free_space WHERE(con_id, tablespace_name) IN(SELECT con_id, tablespace_name FROM tbs) GROUP BY con_id, tablespace_name), \
+maxsz AS(SELECT con_id, tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM cdb_data_files WHERE(con_id, tablespace_name) IN(SELECT con_id, tablespace_name FROM tbs) GROUP BY con_id, tablespace_name), \
+spc AS( \
+	SELECT m.con_id, m.tablespace_name, \
+	ROUND(NVL(f.file_free_space, 0)) AS TS_FILE_FREE_SPACE, \
 	ROUND(NVL(m.file_size, 0)) AS TS_FILE_SIZE, \
 	ROUND(NVL(m.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
-FROM i, m, df \
-WHERE i.tablespace_name = m.tablespace_name(+) \
-	AND i.tablespace_name = df.tablespace_name(+)"
+	FROM maxsz m, free f WHERE m.con_id = f.con_id(+) AND m.tablespace_name = f.tablespace_name(+)) \
+SELECT ts.con_id AS CONID, d.instance_name AS INSTANCE, d.dbname AS DBNAME, ts.tablespace_name AS TSNAME, ts.df_cnt AS DF_NUMBER, ts.ts_status AS TS_STATUS, s.TS_FILE_FREE_SPACE AS TS_FILE_FREE_SPACE, s.TS_FILE_SIZE AS TS_FILE_SIZE, s.TS_FILE_MAX_SIZE AS TS_FILE_MAX_SIZE \
+	FROM spc s, tbs ts, d \
+	WHERE d.con_id = s.con_id \
+	AND s.con_id = ts.con_id \
+	AND s.tablespace_name = ts.tablespace_name"
 
 #define ORACLE_V11_TEMPORARY_TS_INFO_DBS "\
 WITH \
