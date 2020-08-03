@@ -143,6 +143,38 @@ FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
 	AND d.name = '%s'"
 
+#define ORACLE_V12_PDB_INFO_DBS "\
+SELECT i.instance_name AS INSTANCE, \
+	i.host_name AS HOSTNAME, \
+	pd.dbid AS PDB_DBID, \
+	pd.name AS PDB_NAME, \
+	decode(pd.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'MIGRATE', 4, 0) AS PDB_OPEN_MODE, \
+	NVL(total_size, 0) AS PDB_SIZE, \
+	TO_CHAR(CAST(pd.open_time as timestamp WITH time zone), 'YYYY-MM-DD_HH24_MI_SS_TZH_TZM AS PDB_OPEN_DATETIME, \
+	((CAST(pd.open_time as date) - TO_DATE('1970-01-01', 'YYYY-MM-DD')) * 86400) AS PDB_OPEN_UNIXTIME, \
+	ROUND((sysdate - cast(pd.open_time as date)) * 86400, 0) AS PDB_UPTIME, \
+	decode(pd.recovery_status, 'ENABLED', 1, 'DISABLED', 0, 2) AS PDB_RECOVERY_STATUS \
+FROM gv$instance i, gv$pdbs pd \
+WHERE i.inst_id = pd.inst_id \
+	AND i.instance_name = '%s'"
+
+#define ORACLE_V18_PDB_INFO_DBS "\
+SELECT i.instance_name AS INSTANCE, \
+	i.host_name AS HOSTNAME, \
+	pd.dbid AS PDB_DBID, \
+	pd.name AS PDB_NAME, \
+	decode(pd.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'MIGRATE', 4, 0) AS PDB_OPEN_MODE, \
+	NVL(total_size, 0) AS PDB_SIZE, \
+	to_char(cast(pd.open_time as timestamp WITH time zone), 'YYYY-MM-DD_HH24:MI:SS_TZH:TZM') AS PDB_OPEN_DATETIME, \
+	ROUND((sysdate - cast(pd.open_time as date)) * 86400, 0) AS PDB_UPTIME, \
+	((cast(pd.open_time as date) - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400) AS PDB_OPEN_UNIXTIME, \
+	decode(pd.recovery_status, 'ENABLED', 1, 'DISABLED', 0, 2) AS PDB_RECOVERY_STATUS, \
+	decode(proxy_pdb, 'YES', 1, 'NO', 0, 2) AS PDB_PROXY, \
+	local_undo AS PDB_LOCAL_UNDO \
+FROM gv$instance i, gv$pdbs pd \
+WHERE i.inst_id = pd.inst_id \
+	AND i.instance_name = '%s'"
+
 #define ORACLE_CHECK_DB_OPEN_MODE_DBS "\
 SELECT decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
 FROM gv$instance i, gv$database d \
@@ -722,10 +754,11 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.backup.incr_file_num",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.backup.cf",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.db.discovery",						CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
-	{"oracle.pdb.discovery",					CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.db.info",							CF_HAVEPARAMS,		ORACLE_DB_INFO,					NULL},
 	{"oracle.db.incarnation",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.db.size",							CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.pdb.discovery",					CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.pdb.info",							CF_HAVEPARAMS,		ORACLE_PDB_INFO,				NULL},
 	{"oracle.standby.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.standby.lag",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.standby.mrp_status",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
@@ -1741,6 +1774,190 @@ next:
 		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_dbname))
 		{
 			ret = make_result(request, result, ora_result, ZBX_DB_RES_TYPE_ONEROW);
+			zbx_db_clean_result(&ora_result);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
+		}
+
+		zbx_db_close_db(oracle_conn);
+		zbx_db_clean_connection(oracle_conn);
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		ret = SYSINFO_RET_FAIL;
+	}
+out:
+	return ret;
+}
+
+int	ORACLE_PDB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int							ret = SYSINFO_RET_FAIL;
+	char						*oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version;
+	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
+	unsigned int				oracle_db_status = 0;
+	struct zbx_db_connection	*oracle_conn;
+	struct zbx_db_result		ora_ver_result, ora_dbstatus_result, ora_result;
+	const char					*query = ORACLE_V12_PDB_INFO_DBS;
+
+	if (NULL == CONFIG_ORACLE_USER)
+		CONFIG_ORACLE_USER = zbx_strdup(CONFIG_ORACLE_USER, ORACLE_DEFAULT_USER);
+	if (NULL == CONFIG_ORACLE_PASSWORD)
+		CONFIG_ORACLE_PASSWORD = zbx_strdup(CONFIG_ORACLE_PASSWORD, ORACLE_DEFAULT_PASSWORD);
+	if (NULL == CONFIG_ORACLE_INSTANCE)
+		CONFIG_ORACLE_INSTANCE = zbx_strdup(CONFIG_ORACLE_INSTANCE, ORACLE_DEFAULT_INSTANCE);
+
+	if (3 < request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (3 > request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too few options."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	oracle_conn_string = get_rparam(request, 0);
+	oracle_instance = get_rparam(request, 1);
+	oracle_str_mode = get_rparam(request, 2);
+
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): request->nparam = %d", __func__, request->key, request->nparam);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[0] = %s", __func__, request->key, oracle_conn_string);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[1] = %s", __func__, request->key, oracle_instance);
+	zabbix_log(LOG_LEVEL_TRACE, "Is %s(%s): nparam[2] = %s", __func__, request->key, oracle_str_mode);
+
+	if (NULL == oracle_conn_string || '\0' == *oracle_conn_string)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter (connection string)."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (NULL == oracle_instance || '\0' == *oracle_instance)
+	{
+		oracle_instance = CONFIG_ORACLE_INSTANCE;
+	}
+
+	if (NULL == oracle_str_mode || '\0' == *oracle_str_mode)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode)."));
+		return SYSINFO_RET_FAIL;
+	}
+	else
+	{
+		if (SUCCEED != is_ushort(oracle_str_mode, &oracle_mode))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits."));
+			return SYSINFO_RET_FAIL;
+		}
+
+		if (5 < oracle_mode)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter (mode). Use only digits (0 - 5)."));
+			return SYSINFO_RET_FAIL;
+		}
+	}
+
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+
+	if (oracle_conn != NULL)
+	{
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_dbstatus_result, ORACLE_CHECK_SUSPEND_MODE_DBS, oracle_instance))
+		{
+			oracle_db_status = get_int_one_result(request, result, 0, 0, ora_dbstatus_result);
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Instance: %s, Need_DBStatus: %s, Current_DBStatus: %s", __func__, request->key, oracle_instance, ORA_DB_STATUS[1], ORA_DB_STATUS[oracle_db_status]);
+			zbx_db_clean_result(&ora_dbstatus_result);
+
+			if (oracle_db_status == ORA_ACTIVE)
+				goto next;
+			else if (oracle_db_status == ORA_ANY_STATUS)
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Oracle instance '%s' not found.", __func__, request->key, oracle_instance);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Oracle instance not found"));
+				ret = SYSINFO_RET_FAIL;
+				zbx_db_close_db(oracle_conn);
+				zbx_db_clean_connection(oracle_conn);
+				goto out;
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Database status not ACTIVE. Instance has SUSPENDED or INSTANCE RECOVERY mode."));
+				ret = SYSINFO_RET_FAIL;
+				zbx_db_close_db(oracle_conn);
+				zbx_db_clean_connection(oracle_conn);
+				goto out;
+			}
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
+			zbx_db_close_db(oracle_conn);
+			zbx_db_clean_connection(oracle_conn);
+			goto out;
+		}
+	next:
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_ver_result, ORACLE_VERSION_DBS, oracle_instance))
+		{
+			ora_version = get_str_one_result(request, result, 0, 0, ora_ver_result);
+			zbx_db_clean_result(&ora_ver_result);
+
+			if (NULL != ora_version)
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version: %s", __func__, request->key, ora_version);
+
+				if (0 > zbx_strcmp_natural(ora_version, "12.0.0.0.0"))
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Oracle version < 12, pluggable database not supported", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Oracle version < 12, pluggable database not supported"));
+					ret = SYSINFO_RET_FAIL;
+					zbx_db_close_db(oracle_conn);
+					zbx_db_clean_connection(oracle_conn);
+					goto out;
+				}
+
+				if (0 > zbx_strcmp_natural(ora_version, "18.0.0.0.0"))
+				{
+					query = ORACLE_V12_PDB_INFO_DBS;
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle version < 18, use query '%s'", __func__, request->key, query);
+				}
+				else
+				{
+					query = ORACLE_V18_PDB_INFO_DBS;
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle version >= 18, use query '%s'", __func__, request->key, query);
+				}
+			}
+			else
+			{
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get Oracle version in db_info procedure"));
+				ret = SYSINFO_RET_FAIL;
+				zbx_db_close_db(oracle_conn);
+				zbx_db_clean_connection(oracle_conn);
+				goto out;
+			}
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			ret = SYSINFO_RET_FAIL;
+			zbx_db_close_db(oracle_conn);
+			zbx_db_clean_connection(oracle_conn);
+			goto out;
+		}
+
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance))
+		{
+			ret = make_result(request, result, ora_result, ZBX_DB_RES_TYPE_MULTIROW);
 			zbx_db_clean_result(&ora_result);
 		}
 		else
