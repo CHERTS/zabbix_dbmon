@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-07-09T06:35:25Z</date>
+    <date>2020-08-04T07:06:51Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1444,6 +1444,20 @@ INSTANCE RECOVERY</description>
                     </master_item>
                 </item>
                 <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' PDB info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>5m</delay>
+                    <history>1h</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' permanent tablespace info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
@@ -1982,6 +1996,39 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': CDB</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},cdb]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Possible values are:&#13;
+ - YES if the database is a CDB&#13;
+ - NO if the database is not a CDB</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle (yes_no)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.CDB</params>
+                                    <error_handler>CUSTOM_ERROR</error_handler>
+                                    <error_handler_params>CDB not supported</error_handler_params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>30m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Controlfile creation date</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},controlfile_created]</key>
@@ -2002,7 +2049,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>5m</params>
+                                    <params>1h</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2132,7 +2179,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>5m</params>
+                                    <params>1h</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2449,7 +2496,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>5m</params>
+                                    <params>1h</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2535,7 +2582,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>5m</params>
+                                    <params>1h</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2708,6 +2755,269 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     </preprocessing>
                 </discovery_rule>
                 <discovery_rule>
+                    <name>Oracle pluggable database discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.pdb.database.discovery[{$DBS_ORACLE_INSTANCE}]</key>
+                    <delay>0</delay>
+                    <filter>
+                        <conditions>
+                            <condition>
+                                <macro>{#PDBNAME}</macro>
+                                <value>{$DBS_ORACLE_PDBNAME_EXCLUDE}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>A</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle] PDB '{#PDBNAME}': DBID</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.pdb[{#INSTANCE},{#PDBNAME},pdb_dbid]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>PDB identifier calculated when the PDB is created and stored in all file headers associated with the PDB</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, PDB: {#PDBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.PDB_NAME==&quot;{#PDBNAME}&quot;)].PDB_DBID.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] PDB '{#PDBNAME}': Local undo</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.pdb[{#INSTANCE},{#PDBNAME},pdb_local_undo]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Shows whether the PDB is in local undo.&#13;
+&#13;
+Possible values:&#13;
+1 – PDB is in local undo mode&#13;
+0 – PDB is in shared undo mode&#13;
+&#13;
+This column is not relevant for CDB$ROOT.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, PDB: {#PDBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle 18c (local_undo)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.PDB_NAME==&quot;{#PDBNAME}&quot;)].PDB_LOCAL_UNDO.first()</params>
+                                    <error_handler>CUSTOM_ERROR</error_handler>
+                                    <error_handler_params>Available starting with Oracle Database 18c</error_handler_params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>10m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] PDB '{#PDBNAME}': Name</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.pdb[{#INSTANCE},{#PDBNAME},pdb_name]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Name of the PDB</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, PDB: {#PDBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.PDB_NAME==&quot;{#PDBNAME}&quot;)].PDB_NAME.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] PDB '{#PDBNAME}': Open mode</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.pdb[{#INSTANCE},{#PDBNAME},pdb_open_mode]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Open mode information. Possible values:&#13;
+- MOUNTED&#13;
+- READ WRITE&#13;
+- READ ONLY&#13;
+- MIGRATE</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, PDB: {#PDBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle 12c (pdb_open_mode)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.PDB_NAME==&quot;{#PDBNAME}&quot;)].PDB_OPEN_MODE.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] PDB '{#PDBNAME}': Open time</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.pdb[{#INSTANCE},{#PDBNAME},pdb_open_unixtime]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>unixtime</units>
+                            <description>Date and time when the database was last opened.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, PDB: {#PDBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.PDB_NAME==&quot;{#PDBNAME}&quot;)].PDB_OPEN_UNIXTIME.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] PDB '{#PDBNAME}': Proxy PDB</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.pdb[{#INSTANCE},{#PDBNAME},pdb_proxy]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Indicates whether this PDB is a proxy PDB (YES) or not (NO)</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, PDB: {#PDBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle 18c (proxy_pdb)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.PDB_NAME==&quot;{#PDBNAME}&quot;)].PDB_PROXY.first()</params>
+                                    <error_handler>CUSTOM_ERROR</error_handler>
+                                    <error_handler_params>Available starting with Oracle Database 18c</error_handler_params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>10m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] PDB '{#PDBNAME}': Recovery status</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.pdb[{#INSTANCE},{#PDBNAME},pdb_recovery_status]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Shows whether recovery is enabled or disabled for the PDB.&#13;
+Possible values:&#13;
+- ENABLED&#13;
+- DISABLED</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, PDB: {#PDBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS Oracle 12c (recovery_status)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.PDB_NAME==&quot;{#PDBNAME}&quot;)].PDB_RECOVERY_STATUS.first()</params>
+                                    <error_handler>CUSTOM_ERROR</error_handler>
+                                    <error_handler_params>Available starting with Oracle Database 12c Release 1 (12.1.0.2)</error_handler_params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>10m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] PDB '{#PDBNAME}': Size</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.pdb[{#INSTANCE},{#PDBNAME},pdb_size]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <description>Disk space (in bytes) used by the container, including both data and temp files.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, PDB: {#PDBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.PDB_NAME==&quot;{#PDBNAME}&quot;)].PDB_SIZE.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(pdbs){
+    return {
+        &quot;{#INSTANCE}&quot;: pdbs.INSTANCE,
+        &quot;{#PDBNAME}&quot;: pdbs.PDB_NAME
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
                     <name>Oracle permanent tablespace discovery</name>
                     <type>DEPENDENT</type>
                     <key>oracle.permanent.tablespace.discovery[{$DBS_ORACLE_INSTANCE}]</key>
@@ -2738,7 +3048,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].DF_NUMBER.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].DF_NUMBER.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -2806,7 +3116,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_FREE_SPACE.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_FREE_SPACE.first()</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2828,7 +3138,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_SIZE.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_SIZE.first()</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2888,7 +3198,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_MAX_SIZE.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_MAX_SIZE.first()</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -2913,7 +3223,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_STATUS.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_STATUS.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3532,7 +3842,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].DF_NUMBER.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].DF_NUMBER.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3600,7 +3910,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_FREE_SPACE.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_FREE_SPACE.first()</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -3622,7 +3932,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_SIZE.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_SIZE.first()</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -3658,7 +3968,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_MAX_SIZE.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_MAX_SIZE.first()</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -3682,7 +3992,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_STATUS.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_STATUS.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3915,7 +4225,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].DF_NUMBER.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].DF_NUMBER.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -3997,7 +4307,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_SIZE.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_SIZE.first()</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -4033,7 +4343,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_MAX_SIZE.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_FILE_MAX_SIZE.first()</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -4057,7 +4367,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_STATUS.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_STATUS.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -4158,7 +4468,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.TSNAME== &quot;{#TSNAME}&quot;)].TS_USED_BYTES.first()</params>
+                                    <params>$[?(@.DBNAME==&quot;{#DBNAME}&quot; &amp;&amp; @.TSNAME== &quot;{#TSNAME}&quot;)].TS_USED_BYTES.first()</params>
                                 </step>
                             </preprocessing>
                             <master_item>
@@ -4446,6 +4756,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_ORACLE_NOARCHIVELOG}</macro>
                     <value>0</value>
                     <description>Set 1 to disable alarm &quot;Database 'XXX' is NOARCHIVELOG mode.&quot;</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PDBNAME_EXCLUDE}</macro>
+                    <value>^(excludepdbname1|excludepdbname2)$</value>
+                    <description>List of exclude pluggable database name</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_PERMANENT_TS_EXCLUDE}</macro>
@@ -5644,6 +5959,78 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <mapping>
                     <value>2</value>
                     <newvalue>NO</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle 12c (pdb_open_mode)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>MOUNTED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>READ WRITE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>READ ONLY</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>MIGRATE</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle 12c (recovery_status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>DISABLED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>ENABLED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle 18c (local_undo)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>PDB is in shared undo mode</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>PDB is in local undo mode</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS Oracle 18c (proxy_pdb)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>NO</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>YES</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>UNKNOWN</newvalue>
                 </mapping>
             </mappings>
         </value_map>
