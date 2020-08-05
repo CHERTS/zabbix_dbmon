@@ -46,7 +46,7 @@ jobs:
     - name: Run bootstrap
       run: ./bootstrap.sh
     - name: Run configure
-      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+      run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql=/usr/pgsql-10/bin/pg_config --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
     - name: Run make
       run: make
     - uses: actions/upload-artifact@v2
