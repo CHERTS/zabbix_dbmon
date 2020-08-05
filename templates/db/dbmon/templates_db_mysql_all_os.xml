@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-08-05T05:20:20Z</date>
+    <date>2020-08-05T06:37:38Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1249,7 +1249,7 @@ See also https://dev.mysql.com/doc/refman/5.7/en/internal-temporary-tables.html<
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>The number of internal on-disk temporary tables created by the server while executing statements.&#13;
+                    <description>The number of internal on-disk temporary tables created (per second) by the server while executing statements.&#13;
 &#13;
 You can compare the number of internal on-disk temporary tables created to the total number of internal temporary tables created by comparing Created_tmp_disk_tables and Created_tmp_tables values.&#13;
 &#13;
@@ -2718,6 +2718,30 @@ See more info: https://mariadb.com/kb/en/thread-pool-in-mariadb/</description>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.THREADS_CONNECTED</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Threads created</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},threads_created]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of threads created to handle connections.&#13;
+If Threads_created is big, you may want to increase the thread_cache_size value.&#13;
+The cache miss rate can be calculated as Threads_created/Connections.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Connections</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.THREADS_CREATED</params>
                         </step>
                     </preprocessing>
                     <master_item>
