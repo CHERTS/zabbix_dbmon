@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-07-27T09:36:21Z</date>
+    <date>2020-08-05T05:20:20Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -329,7 +329,7 @@
                     </applications>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Open file limit used</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Open file limit used, %</name>
                     <type>CALCULATED</type>
                     <key>mysql.perf[{$DBS_MYSQL_INSTANCE},files_open_pct]</key>
                     <delay>10m</delay>
@@ -345,7 +345,7 @@
                     </applications>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Key buffer used</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Key buffer used, %</name>
                     <type>CALCULATED</type>
                     <key>mysql.perf[{$DBS_MYSQL_INSTANCE},key_buffer_used_pct]</key>
                     <delay>10m</delay>
@@ -458,7 +458,7 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     </preprocessing>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Table locks acquired immediately</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Table locks acquired immediately, %</name>
                     <type>CALCULATED</type>
                     <key>mysql.perf[{$DBS_MYSQL_INSTANCE},table_locks_immediate_pct]</key>
                     <delay>10m</delay>
@@ -474,7 +474,7 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     </applications>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Sorts requiring temporary tables</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Sorts requiring temporary tables, %</name>
                     <type>CALCULATED</type>
                     <key>mysql.perf[{$DBS_MYSQL_INSTANCE},temp_sort_table_pct]</key>
                     <delay>10m</delay>
@@ -490,7 +490,7 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     </applications>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Temporary tables created on disk</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Temporary tables created on disk, %</name>
                     <type>CALCULATED</type>
                     <key>mysql.perf[{$DBS_MYSQL_INSTANCE},temp_table_disk_created_pct]</key>
                     <delay>10m</delay>
@@ -1217,6 +1217,32 @@ Introduced: MariaDB 10.0.4 / MySQL 5.6.5</description>
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp tables on disk</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_disk_tables]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of internal on-disk temporary tables created by the server while executing statements.&#13;
+&#13;
+You can compare the number of internal on-disk temporary tables created to the total number of internal temporary tables created by comparing Created_tmp_disk_tables and Created_tmp_tables values.&#13;
+&#13;
+See also https://dev.mysql.com/doc/refman/5.7/en/internal-temporary-tables.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CREATED_TMP_DISK_TABLES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp tables on disk per second</name>
                     <type>DEPENDENT</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_disk_tables_rate]</key>
@@ -1318,6 +1344,32 @@ See also https://dev.mysql.com/doc/refman/5.7/en/internal-temporary-tables.html<
                             </dependencies>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp tables on memory</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},created_tmp_tables]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of internal temporary tables created by the server while executing statements.&#13;
+&#13;
+You can compare the number of internal on-disk temporary tables created to the total number of internal temporary tables created by comparing Created_tmp_disk_tables and Created_tmp_tables values.&#13;
+&#13;
+See also https://dev.mysql.com/doc/refman/5.7/en/internal-temporary-tables.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Throughput</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.CREATED_TMP_TABLES</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Created tmp tables on memory per second</name>
@@ -2147,7 +2199,7 @@ Removed in MySQL 8.0.3.</description>
                     </master_item>
                 </item>
                 <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Query cache used</name>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Query cache used, %</name>
                     <type>CALCULATED</type>
                     <key>mysql.status[{$DBS_MYSQL_INSTANCE},qcache_used_pct]</key>
                     <delay>10m</delay>
