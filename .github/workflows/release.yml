@@ -26,7 +26,7 @@ jobs:
     - name: Upgrade packages
       run: sudo apt-get upgrade -y
     - name: Install base dependencies
-      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass default-jdk libxml2-dev libssl-dev libcurl4-openssl-dev libsnmp-dev libevent-dev libsqlite3-dev libpcre2-dev libssh2-1-dev libopenipmi-dev unixodbc-dev libldap2-dev
+      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass default-jdk libxml2-dev libssl-dev libcurl4-openssl-dev libsnmp-dev libevent-dev libsqlite3-dev libpcre2-dev libssh2-1-dev libopenipmi-dev unixodbc-dev libldap2-dev libconfig-dev
     - name: Install database dependencies
       run: sudo apt-get install -y libmysqlclient-dev
     - name: Run bootstrap
