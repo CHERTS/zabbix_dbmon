@@ -150,9 +150,9 @@ SELECT i.instance_name AS INSTANCE, \
 	pd.name AS PDB_NAME, \
 	decode(pd.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'MIGRATE', 4, 0) AS PDB_OPEN_MODE, \
 	NVL(total_size, 0) AS PDB_SIZE, \
-	TO_CHAR(CAST(pd.open_time as timestamp WITH time zone), 'YYYY-MM-DD_HH24_MI_SS_TZH_TZM AS PDB_OPEN_DATETIME, \
-	((CAST(pd.open_time as date) - TO_DATE('1970-01-01', 'YYYY-MM-DD')) * 86400) AS PDB_OPEN_UNIXTIME, \
+	to_char(cast(pd.open_time as timestamp WITH time zone), 'YYYY-MM-DD_HH24:MI:SS_TZH:TZM') AS PDB_OPEN_DATETIME, \
 	ROUND((sysdate - cast(pd.open_time as date)) * 86400, 0) AS PDB_UPTIME, \
+	((cast(pd.open_time as date) - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400) AS PDB_OPEN_UNIXTIME, \
 	decode(pd.recovery_status, 'ENABLED', 1, 'DISABLED', 0, 2) AS PDB_RECOVERY_STATUS \
 FROM gv$instance i, gv$pdbs pd \
 WHERE i.inst_id = pd.inst_id \
