@@ -899,7 +899,7 @@ static void	zbx_load_config(int requirement, ZBX_TASK_EX *task)
 			PARM_OPT,	0,			0},
 #if defined(HAVE_DBMON)
 		{ "DBTimeout",			&CONFIG_DB_TIMEOUT,			TYPE_INT,
-			PARM_OPT,	1,			180 },
+			PARM_OPT,	1,			300 },
 #if defined(HAVE_MYSQL)
 		{"MySQLUser",			&CONFIG_MYSQL_USER,	TYPE_STRING,
 			PARM_OPT,   0,          0},
