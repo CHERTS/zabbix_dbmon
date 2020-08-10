@@ -40,7 +40,7 @@ jobs:
     - name: Run make gettext
       run: make gettext
     - name: Run create bin, img and styles directory
-      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./frontends/php/assets/img ./frontends/php/assets/styles
+      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/php/assets/img ./ui/php/assets/styles
     - name: Run make css
       run: make css
     - name: Run make dist
