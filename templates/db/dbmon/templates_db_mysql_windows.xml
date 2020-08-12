@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-12T12:19:55Z</date>
+    <date>2020-08-12T08:47:53Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -152,6 +152,13 @@
             <description>Служба '{$DBS_MYSQL_SERVICE_NAME}' была остановлена или аварийно завершила работу (crash).&#13;
 Зайдите на сервер и проверьте состояние службы, проверьте журнал событий Windows на предмет ошибок работы службы.&#13;
 Доведите информацию до заказчика и эксперта.</description>
+            <dependencies>
+                <dependency>
+                    <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is not found</name>
+                    <expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].last()}=255</expression>
+                    <recovery_expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].max(2m)}=0 or {DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},startup].last()}=3</recovery_expression>
+                </dependency>
+            </dependencies>
             <tags>
                 <tag>
                     <tag>Service</tag>
