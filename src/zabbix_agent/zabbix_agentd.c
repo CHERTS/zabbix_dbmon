@@ -102,6 +102,7 @@ char	*CONFIG_ORACLE_PASSWORD = NULL;
 char	*CONFIG_ORACLE_INSTANCE = NULL;
 char	*CONFIG_ORACLE_PRIMARY_USER = NULL;
 char	*CONFIG_ORACLE_PRIMARY_PASSWORD = NULL;
+int		CONFIG_ORACLE_IGNORE_CONN_STRING = 0;
 #endif
 #endif
 
@@ -919,6 +920,8 @@ static void	zbx_load_config(int requirement, ZBX_TASK_EX *task)
 			PARM_OPT,   0,          0 },
 		{ "OraclePrimaryPassword",	&CONFIG_ORACLE_PRIMARY_PASSWORD,	TYPE_STRING,
 			PARM_OPT,   0,          0 },
+		{ "OracleIgnoreConnString",	&CONFIG_ORACLE_IGNORE_CONN_STRING,		TYPE_INT,
+			PARM_OPT,	0,			1 },
 #endif
 #endif
 		{NULL}

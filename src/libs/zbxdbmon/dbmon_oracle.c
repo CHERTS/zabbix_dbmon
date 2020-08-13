@@ -694,8 +694,10 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 	sword						err = OCI_SUCCESS;
 	static ub2					csid = 0;
 	pthread_mutexattr_t			mutexattr;
-	char						*user_and_password, *other_conn_string, *oracle_conn_string = NULL, *oracle_user, *oracle_password;
+	char						*user_and_password, *other_conn_string, *oracle_conn_string = NULL, *oracle_user = NULL, *oracle_password = NULL;
 	char						*parse_oracle_user, *parse_oracle_password;
+	char						*oracle_sid = NULL, *oracle_home = NULL, *tns_admin = NULL, *two_task = NULL;
+	int							use_oracle_enviroment = 0;
 
 	if ('\0' != *conn_string)
 	{
@@ -764,8 +766,85 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 	}
 	else
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "In %s(): Oracle connection string is empty.", __func__);
-		return conn;
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle connection string is empty", __func__);
+#ifdef _WINDOWS
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Checking set enviroment variables ORACLE_SID, LOCAL and ORACLE_HOME...", __func__);
+#else
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Checking set enviroment variables ORACLE_SID, TWO_TASK and ORACLE_HOME...", __func__);
+#endif
+
+		oracle_sid = getenv("ORACLE_SID");
+		oracle_home = getenv("ORACLE_HOME");
+		tns_admin = getenv("TNS_ADMIN");
+#ifdef _WINDOWS
+		two_task = getenv("LOCAL");
+#else
+		two_task = getenv("TWO_TASK");
+#endif
+
+		if (NULL == oracle_sid || '\0' == *oracle_sid)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_SID not set", __func__);
+
+			if (NULL == two_task || '\0' == *two_task)
+			{
+#ifdef _WINDOWS
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable LOCAL not set. Abort connection", __func__);
+#else
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable TWO_TASK not set. Abort connection", __func__);
+#endif
+				return conn;
+			}
+			else
+			{
+#ifdef _WINDOWS
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Use enviroment variable LOCAL", __func__);
+#else
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Use enviroment variable TWO_TASK", __func__);
+#endif
+				oracle_conn_string = two_task;
+			}
+		}
+		else
+		{
+			if (NULL == two_task || '\0' == *two_task)
+			{
+#ifdef _WINDOWS
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable LOCAL not set, use ORACLE_SID variable", __func__);
+#else
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable TWO_TASK not set, use ORACLE_SID variable", __func__);
+#endif
+				oracle_conn_string = oracle_sid;
+			}
+			else
+			{
+#ifdef _WINDOWS
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_SID is set, but use LOCAL variable", __func__);
+#else
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_SID is set, but use TWO_TASK variable", __func__);
+#endif
+				oracle_conn_string = two_task;
+			}
+		}
+
+		if (NULL == oracle_home || '\0' == *oracle_home)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_HOME not set. Abort connection", __func__);
+			return conn;
+		}
+
+		use_oracle_enviroment = 1;
+		oracle_user = zbx_strdup(NULL, username);
+		oracle_password = zbx_strdup(NULL, userpasswd);
+	}
+
+	if (1 == use_oracle_enviroment)
+	{
+#ifdef _WINDOWS
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Use Oracle enviroment variables: ORACLE_SID=%s, LOCAL=%s, ORACLE_HOME=%s, TNS_ADMIN=%s", __func__, oracle_sid, two_task, oracle_home, tns_admin);
+#else
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Use Oracle enviroment variables: ORACLE_SID=%s, TWO_TASK=%s, ORACLE_HOME=%s, TNS_ADMIN=%s", __func__, oracle_sid, two_task, oracle_home, tns_admin);
+#endif
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle connection string: %s", __func__, oracle_conn_string);
@@ -852,11 +931,18 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 5] Allocate session handle - done", __func__);
 
 			/* Create a server context */
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+			if (0 == use_oracle_enviroment)
+			{
+				zbx_db_ora_check(err, conn, oracle_conn_string, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
 				(const text *)oracle_conn_string, (sb4)strlen(oracle_conn_string), (ub4)OCI_DEFAULT));
+			}
+			else
+			{
+				zbx_db_ora_check(err, conn, oracle_conn_string, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+					(const text *) "", (sb4)0, (ub4)OCI_DEFAULT));
+			}
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 6] Create a server context - done", __func__);
-
 
 			/* Set attribute server context in the service context */
 			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX,
