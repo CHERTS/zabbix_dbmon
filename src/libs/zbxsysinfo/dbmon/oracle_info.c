@@ -153,7 +153,7 @@ SELECT i.instance_name AS INSTANCE, \
 	NVL(total_size, 0) AS PDB_SIZE, \
 	to_char(cast(pd.open_time as timestamp WITH time zone), 'YYYY-MM-DD_HH24:MI:SS_TZH:TZM') AS PDB_OPEN_DATETIME, \
 	ROUND((sysdate - cast(pd.open_time as date)) * 86400, 0) AS PDB_UPTIME, \
-	((cast(pd.open_time as date) - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400) AS PDB_OPEN_UNIXTIME, \
+	ROUND(((cast(pd.open_time as date) - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400), 0) AS PDB_OPEN_UNIXTIME, \
 	decode(pd.recovery_status, 'ENABLED', 1, 'DISABLED', 0, 2) AS PDB_RECOVERY_STATUS \
 FROM gv$instance i, gv$pdbs pd \
 WHERE i.inst_id = pd.inst_id \
@@ -168,7 +168,7 @@ SELECT i.instance_name AS INSTANCE, \
 	NVL(total_size, 0) AS PDB_SIZE, \
 	to_char(cast(pd.open_time as timestamp WITH time zone), 'YYYY-MM-DD_HH24:MI:SS_TZH:TZM') AS PDB_OPEN_DATETIME, \
 	ROUND((sysdate - cast(pd.open_time as date)) * 86400, 0) AS PDB_UPTIME, \
-	((cast(pd.open_time as date) - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400) AS PDB_OPEN_UNIXTIME, \
+	ROUND(((cast(pd.open_time as date) - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400), 0) AS PDB_OPEN_UNIXTIME, \
 	decode(pd.recovery_status, 'ENABLED', 1, 'DISABLED', 0, 2) AS PDB_RECOVERY_STATUS, \
 	decode(proxy_pdb, 'YES', 1, 'NO', 0, 2) AS PDB_PROXY, \
 	local_undo AS PDB_LOCAL_UNDO \
