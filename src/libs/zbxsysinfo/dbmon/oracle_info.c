@@ -1933,7 +1933,7 @@ int	ORACLE_PDB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 				if (0 > zbx_strcmp_natural(ora_version, "12.0.0.0.0"))
 				{
-					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Oracle version < 12, pluggable database not supported", __func__, request->key);
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle version < 12, pluggable database not supported", __func__, request->key);
 					SET_MSG_RESULT(result, zbx_strdup(NULL, "Oracle version < 12, pluggable database not supported"));
 					ret = SYSINFO_RET_FAIL;
 					zbx_db_close_db(oracle_conn);
