@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-08-05T06:37:38Z</date>
+    <date>2020-08-18T05:04:34Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -747,7 +747,7 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                         <trigger>
                             <expression>{min(5m)}&gt;{$DBS_MYSQL_ABORTED_CONN_MAX_WARN}</expression>
                             <name>Server has aborted connections</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_ABORTED_CONN_MAX_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
+                            <opdata>current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_ABORTED_CONN_MAX_WARN} for 5m, alert started {ITEM.VALUE1}</opdata>
                             <priority>AVERAGE</priority>
                             <description>Обнаружен высокий процент отклоненных соединений.&#13;
 Доведите информацию до эксперта.</description>
@@ -1276,7 +1276,7 @@ See also https://dev.mysql.com/doc/refman/5.7/en/internal-temporary-tables.html<
                         <trigger>
                             <expression>{min(5m)}&gt;{$DBS_MYSQL_CREATED_TMP_TABLES_ON_DISK_WARN}</expression>
                             <name>Number of internal on-disk temporary tables created per second is high</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_CREATED_TMP_TABLES_ON_DISK_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
+                            <opdata>current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_CREATED_TMP_TABLES_ON_DISK_WARN} for 5m, alert started {ITEM.VALUE1}</opdata>
                             <status>DISABLED</status>
                             <priority>WARNING</priority>
                             <description>Количество созданных временных таблиц на диске превышает порог.&#13;
@@ -1329,7 +1329,7 @@ See also https://dev.mysql.com/doc/refman/5.7/en/internal-temporary-tables.html<
                         <trigger>
                             <expression>{min(5m)}&gt;{$DBS_MYSQL_CREATED_TMP_FILES_ON_DISK_WARN}</expression>
                             <name>Number of temporary files created per second is high</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_CREATED_TMP_FILES_ON_DISK_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
+                            <opdata>current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_CREATED_TMP_FILES_ON_DISK_WARN} for 5m, alert started {ITEM.VALUE1}</opdata>
                             <status>DISABLED</status>
                             <priority>WARNING</priority>
                             <description>Количество созданных временных файлов на диске превышает порог.&#13;
@@ -1405,7 +1405,7 @@ See also https://dev.mysql.com/doc/refman/5.7/en/internal-temporary-tables.html<
                         <trigger>
                             <expression>{min(5m)}&gt;{$DBS_MYSQL_CREATED_TMP_TABLES_ON_MEMORY_WARN}</expression>
                             <name>Number of internal temporary tables created per second is high</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_CREATED_TMP_TABLES_ON_MEMORY_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
+                            <opdata>current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_CREATED_TMP_TABLES_ON_MEMORY_WARN} for 5m, alert started {ITEM.VALUE1}</opdata>
                             <status>DISABLED</status>
                             <priority>WARNING</priority>
                             <description>Количество созданных временных таблиц в памяти превышает порог.&#13;
@@ -2443,7 +2443,7 @@ Removed in MySQL 8.0.3.</description>
                         <trigger>
                             <expression>{min(5m)}&gt;{$DBS_MYSQL_SLOW_QUERIES_MAX_WARN}</expression>
                             <name>Server has slow queries</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_SLOW_QUERIES_MAX_WARN} for 5m, alert started {ITEM.VALUE1})</opdata>
+                            <opdata>current: {ITEM.LASTVALUE1}, over {$DBS_MYSQL_SLOW_QUERIES_MAX_WARN} for 5m, alert started {ITEM.VALUE1}</opdata>
                             <priority>WARNING</priority>
                             <description>У экземпляра MySQL регистрируется рост числа медленных запросов.&#13;
 Более {$DBS_MYSQL_SLOW_QUERIES_MAX_WARN} запросов в секунду за последние 5 минут.&#13;
@@ -2826,7 +2826,7 @@ The cache miss rate can be calculated as Threads_created/Connections.</descripti
                             <expression>{change()}&lt;0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Instance '{$DBS_MYSQL_INSTANCE}' has just been restarted</name>
-                            <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
+                            <opdata>current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
                             <priority>DISASTER</priority>
                             <description>Процесс (сервис) mysqld был перезапущен.&#13;
 Необходимо проверить факт перезапуска на сервере заказчика, проверить логи (error.log), далее уточнить в чате кто произвел перезапуск.&#13;
@@ -2951,7 +2951,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/binary-log.html</descript
                             <expression>{diff()}=1</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Setting 'binlog_format' has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Настройка 'binlog_format' была изменена.&#13;
 Данная настройка отвечает за формат бинарного лога и важна при репликации.&#13;
@@ -3131,7 +3131,7 @@ ON: Both new and replicated transactions must be GTID transactions.</description
                             <expression>{diff()}=1</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Setting 'gtid_mode' has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Настройка 'gtid_mode' была изменена.&#13;
 Данная настройка отвечает за включение/отключение режима GTID и важна при репликации.&#13;
@@ -3946,7 +3946,7 @@ If max_relay_log_size is 0, the value of max_binlog_size applies to relay logs a
                             <expression>{diff()}=1 and {last()}&gt;0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Setting 'max_connections' has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Настройка 'max_connections' была изменена.&#13;
 Данная настройка отвечает за максимальное количество соединений к экземпляру MySQL и является очень важной.&#13;
@@ -4799,7 +4799,7 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                             <expression>{diff()}=1</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Setting 'wsrep_gtid_mode' has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Настройка 'wsrep_gtid_mode' была изменена.&#13;
 Данная настройка отвечает за включение/отключение режима GTID и важна при репликации.&#13;
@@ -4834,7 +4834,7 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                             <expression>{diff()}=1 and {strlen()}&gt;0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Version of MySQL has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Версия экземпляра MySQL была изменена.&#13;
 Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
@@ -5041,7 +5041,7 @@ For InnoDB, INDEX_LENGTH is the approximate amount of space allocated for non-cl
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{last()}&lt;={$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}</recovery_expression>
                                     <name>Size of database '{#DBNAME}' has increased</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>HIGH</priority>
                                     <description>Размер базы данных '{#DBNAME}' превысил порог {$DBS_MYSQL_DBSIZE_CRIT:&quot;{#DBNAME}&quot;}.&#13;
 Необходимо довести информацию до эксперта для дальнейшего анализа состояния базы данных.</description>
@@ -5068,7 +5068,7 @@ For InnoDB, INDEX_LENGTH is the approximate amount of space allocated for non-cl
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{last()}&lt;={$DBS_MYSQL_DBSIZE_WARN:&quot;{#DBNAME}&quot;}</recovery_expression>
                                     <name>Size of database '{#DBNAME}' has increased</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_DBSIZE_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_DBSIZE_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>WARNING</priority>
                                     <description>Размер базы данных '{#DBNAME}' превысил порог {$DBS_MYSQL_DBSIZE_WARN:&quot;{#DBNAME}&quot;}.&#13;
 Необходимо довести информацию до эксперта для дальнейшего анализа состояния базы данных.</description>
@@ -5351,7 +5351,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{max(5m)}&lt;={$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}</recovery_expression>
                                     <name>Replication lag is too high</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>HIGH</priority>
                                     <description>Очень высокое отставание slave реплики.&#13;
 Проверьте состояние с помощью команды &quot;SHOW SLAVE STATUS\G&quot;.&#13;
@@ -5387,7 +5387,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{max(5m)}&lt;={$DBS_MYSQL_APPLY_LAG_WARN:&quot;{#MASTER_UUID}&quot;}</recovery_expression>
                                     <name>Replication lag is too high</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_APPLY_LAG_WARN:&quot;{#MASTER_UUID}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_APPLY_LAG_WARN:&quot;{#MASTER_UUID}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>WARNING</priority>
                                     <description>Высокое отставание slave реплики.&#13;
 Проверьте состояние с помощью команды &quot;SHOW SLAVE STATUS\G&quot;.&#13;
@@ -5601,7 +5601,7 @@ As with the I/O thread, this should normally be Yes.</description>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}=1</recovery_expression>
                             <name>Replication process is stopped due to an error (IO thread not running)</name>
-                            <opdata>(last errno: {ITEM.LASTVALUE2})</opdata>
+                            <opdata>last errno: {ITEM.LASTVALUE2}</opdata>
                             <priority>HIGH</priority>
                             <description>Репликация остановлена (IO thread) в результате критической ошибки.&#13;
 Проверьте состояние ошибок репликации с помощью команды &quot;SHOW SLAVE STATUS\G&quot;.&#13;
@@ -5637,7 +5637,7 @@ As with the I/O thread, this should normally be Yes.</description>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}=1</recovery_expression>
                             <name>Replication process is stopped due to an error (SQL thread not running)</name>
-                            <opdata>(last errno: {ITEM.LASTVALUE2})</opdata>
+                            <opdata>last errno: {ITEM.LASTVALUE2}</opdata>
                             <priority>HIGH</priority>
                             <description>Репликация остановлена (SQL thread) в результате критической ошибки.&#13;
 Проверьте состояние ошибок репликации с помощью команды &quot;SHOW SLAVE STATUS\G&quot;.&#13;
@@ -6491,7 +6491,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&lt;24h</recovery_expression>
             <name>Buffer pool utilization is too low</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}%, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}%, alert started: {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>
             <description>По прошествии 24 часов после запуска MySQL использование пула буферов InnoDB составляет менее {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}% за последние 5 минут.&#13;
 Это означает, что для пула буферов InnoDB выделено много оперативной памяти, которая в данный момент не используется и которую Вы можете легко перераспределить.&#13;
@@ -6513,7 +6513,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},qcache_efficiency].avg(30m)}&lt;{$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_limit].last()}&gt;0 and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},query_cache_type].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&gt;24h</expression>
             <name>Query cache efficiency is very low</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}%, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}%, alert started: {ITEM.VALUE1}</opdata>
             <url>https://dev.mysql.com/doc/refman/5.7/en/query-cache-status-and-maintenance.html</url>
             <priority>WARNING</priority>
             <description>Процент эффективности кэша запросов, составляет менее {$DBS_MYSQL_QCACHE_EFFICIENCY_PRC_WARN}%, указывает на проблему с производительностью. Постарайтесь сократить набор результатов, создав более строгие запросы. Если это невозможно, Вы можете постепенно увеличивать параметр query_cache_limit, чтобы большее количество ваших наборов результатов действительно попадало в кеш. Увеличивайте query_cache_limit постепенно, сильно высокие значения могут снизить производительность.</description>
@@ -6538,7 +6538,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(2m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
             <name>Too many connections</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1}</opdata>
             <priority>HIGH</priority>
             <description>Текущее количество открытых соединений очень велико (потоков в состоянии connected).&#13;
 Зайдите в консоль mysql и выполните SHOW PROCESSLIST;&#13;
@@ -6554,7 +6554,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_CONNECTION_PRC_WARN} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0</expression>
             <name>Too many connections</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, alert started {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>
             <description>Текущее количество открытых соединений велико (потоков в состоянии connected).&#13;
 Зайдите в консоль mysql и выполните SHOW PROCESSLIST;&#13;
@@ -6576,7 +6576,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(2m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
             <name>Too many threads running</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT}%, alert started {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_RUNNING_PRC_CRIT}%, alert started {ITEM.VALUE1}</opdata>
             <priority>HIGH</priority>
             <description>Текущее количество работающих потоков очень велико.&#13;
 Зайдите в консоль mysql и выполните:&#13;
@@ -6593,7 +6593,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
         <trigger>
             <expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_running].min(3m)}/{DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}*100&gt;{$DBS_MYSQL_THREADS_RUNNING_PRC_WARN} and {DBS_Template DB MySQL:mysql.variable[{$DBS_MYSQL_INSTANCE},max_connections].last()}&gt;0 and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},threads_connected].last()}&gt;0</expression>
             <name>Too many threads running</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_RUNNING_PRC_WARN}%, alert started {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_THREADS_RUNNING_PRC_WARN}%, alert started {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>
             <description>Текущее количество работающих тредов (потоков) велико.&#13;
 Зайдите в консоль mysql и выполните:&#13;

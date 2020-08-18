@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-07-29T10:59:35Z</date>
+    <date>2020-08-18T05:04:47Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1579,7 +1579,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <expression>{change()}&lt;0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Instance '{$DBS_PGSQL_INSTANCE}' has just been restarted</name>
-                            <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
+                            <opdata>current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
                             <priority>DISASTER</priority>
                             <description>Процесс (сервис) postgres был перезапущен.&#13;
 Необходимо проверить факт перезапуска на сервере заказчика, проверить логи (postgres.log), далее уточнить в чате кто произвел перезапуск.&#13;
@@ -1645,7 +1645,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                         <trigger>
                             <expression>{last()}&gt;18000000</expression>
                             <name>Age of oldest xid is too big</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: 18000000, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: 18000000, alert started: {ITEM.VALUE1}</opdata>
                             <priority>AVERAGE</priority>
                             <description>Возраст самого старого XID слишком велик.&#13;
 Возможно близка ситуация зацикливания счетчика транзакций (см. https://postgrespro.ru/docs/postgresql/12/routine-vacuuming#VACUUM-FOR-WRAPAROUND)&#13;
@@ -1795,12 +1795,23 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <expression>{diff()}=1 and {strlen()}&gt;0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Version of PostgreSQL has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Версия экземпляра PostgreSQL была изменена.&#13;
 Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
                             <tags>
                                 <tag>
                                     <tag>Instance</tag>
@@ -2617,7 +2628,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                                 <trigger_prototype>
                                     <expression>{min(5m)}&gt;{$DBS_PGSQL_CONFLICTS_MAX_WARN:&quot;{#DBNAME}&quot;}</expression>
                                     <name>Too many recovery conflicts over last 5 minutes</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_CONFLICTS_MAX_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_CONFLICTS_MAX_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>AVERAGE</priority>
                                     <description>The primary and standby servers are in many ways loosely connected.&#13;
 Actions on the primary will have an effect on the standby.&#13;
@@ -2677,7 +2688,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                 <trigger_prototype>
                                     <expression>{min(5m)}&gt;{$DBS_PGSQL_DEADLOCKS_MAX_WARN:&quot;{#DBNAME}&quot;}</expression>
                                     <name>Deadlock has been occurred over last 5 minutes</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_DEADLOCKS_MAX_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_DEADLOCKS_MAX_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>HIGH</priority>
                                     <dependencies>
                                         <dependency>
@@ -3275,6 +3286,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>8m</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_PGSQL_CACHE_HITRATIO_MIN_WARN}</macro>
+                    <value>90</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_PGSQL_CONFLICTS_MAX_WARN}</macro>
                     <value>0</value>
                 </macro>
@@ -3343,9 +3358,35 @@ return JSON.stringify({&quot;data&quot;: output})</params>
     </templates>
     <triggers>
         <trigger>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.cache.hit[{$DBS_PGSQL_CONN_STRING}].max(5m)}&lt;{$DBS_PGSQL_CACHE_HITRATIO_MIN_WARN} and {DBS_Template DB PostgreSQL:pgsql.instance[{$DBS_PGSQL_INSTANCE},uptime].last()}&gt;48h</expression>
+            <name>Cache hit ratio too low</name>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_CACHE_HITRATIO_MIN_WARN}, alert started: {ITEM.VALUE1}</opdata>
+            <priority>WARNING</priority>
+            <description>Процент успешного попадания в кэш слишком мал.&#13;
+Проверьте статистику в pg_statio_user_tables и pg_statio_user_indexes&#13;
+Доведите информацию до эксперта.</description>
+            <dependencies>
+                <dependency>
+                    <name>Instance access failed</name>
+                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                </dependency>
+                <dependency>
+                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
             <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_WARN} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
             <name>Total number of connections is too high</name>
-            <opdata>(current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE2})</opdata>
+            <opdata>current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE2}</opdata>
             <priority>WARNING</priority>
             <description>Текущее количество соединений велико.&#13;
 Проанализируйте откуда идут соединения к кластеру.&#13;
@@ -3370,7 +3411,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
             <name>Total number of connections is too very high</name>
-            <opdata>(current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE2})</opdata>
+            <opdata>current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE2}</opdata>
             <priority>HIGH</priority>
             <description>Текущее количество соединений очень велико.&#13;
 Проанализируйте откуда идут соединения к кластеру.&#13;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-08-04T07:06:51Z</date>
+    <date>2020-08-18T05:04:40Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -161,7 +161,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_CRIT}</recovery_expression>
                             <name>No archived log backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_CRIT})</opdata>
+                            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_CRIT}</opdata>
                             <priority>HIGH</priority>
                             <description>Очень давно не выполнялся бэкап архивных логов экземпляра.&#13;
 Актуально только если экземпляр в режиме ARCHIVELOG.&#13;
@@ -190,7 +190,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;={$DBS_ORACLE_ALOG_BACKUP_WARN}</recovery_expression>
                             <name>No archived log backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_WARN})</opdata>
+                            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ALOG_BACKUP_WARN}</opdata>
                             <priority>WARNING</priority>
                             <description>Давно не выполнялся бэкап архивных логов экземпляра.&#13;
 Актуально только если экземпляр в режиме ARCHIVELOG.&#13;
@@ -240,7 +240,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;={$DBS_ORACLE_CF_BACKUP_CRIT}</recovery_expression>
                             <name>No control file backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_CRIT})</opdata>
+                            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_CRIT}</opdata>
                             <priority>HIGH</priority>
                             <description>Очень давно не выполнялся бэкап контрол файла (control file) экземпляра.&#13;
 Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
@@ -268,7 +268,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;={$DBS_ORACLE_CF_BACKUP_WARN}</recovery_expression>
                             <name>No control file backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_WARN})</opdata>
+                            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_CF_BACKUP_WARN}</opdata>
                             <priority>WARNING</priority>
                             <description>Давно не выполнялся бэкап контрол файла (control file) экземпляра.&#13;
 Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
@@ -317,7 +317,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;={$DBS_ORACLE_FULL_BACKUP_CRIT}</recovery_expression>
                             <name>No full database backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_CRIT})</opdata>
+                            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_CRIT}</opdata>
                             <priority>HIGH</priority>
                             <description>Очень давно не выполнялся полный бэкап экземпляра.&#13;
 Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
@@ -345,7 +345,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;={$DBS_ORACLE_FULL_BACKUP_WARN}</recovery_expression>
                             <name>No full database backups</name>
-                            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_WARN})</opdata>
+                            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_FULL_BACKUP_WARN}</opdata>
                             <priority>WARNING</priority>
                             <description>Давно не выполнялся полный бэкап экземпляра.&#13;
 Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
@@ -420,7 +420,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</recovery_expression>
                             <name>Number of zombie processes is too high</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>HIGH</priority>
                             <description>Количество зомби процессов достигло высокого уровня.&#13;
 Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
@@ -443,7 +443,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}</recovery_expression>
                             <name>Number of zombie processes is too high</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>WARNING</priority>
                             <description>Количество зомби процессов достигло высокого уровня.&#13;
 Выясните какие процессы превратились в зомби, по возможности завершите эти процессы.</description>
@@ -694,7 +694,7 @@
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;{$DBS_ORACLE_RESUMABLE_COUNT_CRIT}</recovery_expression>
                             <name>Resumable sessions suspended due to lack of space in tablespace</name>
-                            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_RESUMABLE_COUNT_CRIT}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_RESUMABLE_COUNT_CRIT}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>DISASTER</priority>
                             <description>Одно или несколько табличных пространств полностью заполнены.&#13;
 Срочно доведите информацию до эксперта!</description>
@@ -733,7 +733,7 @@
                             <expression>{diff()}=1</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Version of Oracle has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Версия экземпляра Oracle была изменена.&#13;
 Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.).&#13;
@@ -820,7 +820,7 @@ A single ALTER SYSTEM QUIESCE RESTRICTED statement quiesces all instances in an 
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;&gt;3</recovery_expression>
                             <name>Automatic archiving status is failed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>DISASTER</priority>
                             <dependencies>
                                 <dependency>
@@ -874,7 +874,7 @@ INSTANCE RECOVERY</description>
                             <expression>{diff()}=1</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Database status has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Статус базы данных был изменен. Скорее всего была выполнена операция ALTER SYSTEM SUSPEND которая останавливает все операции ввода/вывода (I/O) для файлов данных и управляющих файлов. Приостановленное состояние позволяет создавать резервные копии базы данных без вмешательства операций ввода-вывода. Когда база данных приостановлена, всем существующим операциям ввода-вывода разрешается завершиться и любые новые обращения к базе данных переводятся в состояние очереди.</description>
                             <type>MULTIPLE</type>
@@ -964,7 +964,7 @@ INSTANCE RECOVERY</description>
                             <expression>{diff()}=1</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Size for FRA has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Размер области Fast Recovery Area (FRA) был изменен.&#13;
 Необходимо выяснить кто изменил размер FRA и какие были причины.&#13;
@@ -1202,7 +1202,7 @@ INSTANCE RECOVERY</description>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{last()}&lt;&gt;1</recovery_expression>
                             <name>Database is not mounted</name>
-                            <opdata>(current: {ITEM.VALUE1})</opdata>
+                            <opdata>current: {ITEM.VALUE1}</opdata>
                             <priority>WARNING</priority>
                             <dependencies>
                                 <dependency>
@@ -1222,7 +1222,7 @@ INSTANCE RECOVERY</description>
                             <expression>{diff()}=1 and {last()}&lt;5 and {$DBS_ORACLE_DISABLE_INSTANCE_STATUS_ALARM}=0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Instance status has been changed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>DISASTER</priority>
                             <description>Статус экземпляр был изменен.&#13;
 Выясните причину изменения состояния экземпляра.&#13;
@@ -1265,7 +1265,7 @@ INSTANCE RECOVERY</description>
                             <expression>{change()}&lt;0 and {$DBS_ORACLE_DISABLE_INSTANCE_RESTART_ALARM}=0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Instance '{$DBS_ORACLE_INSTANCE}' has just been restarted</name>
-                            <opdata>(current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE})</opdata>
+                            <opdata>current uptime: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
                             <priority>DISASTER</priority>
                             <description>Экземпляр был перезапущен.&#13;
 Необходимо убедиться в том, что он действительно был перезапущен, если так, то проверить alert.log на предмет причин перезапуска.&#13;
@@ -1534,6 +1534,10 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                     <manual_close>YES</manual_close>
                                     <tags>
                                         <tag>
+                                            <tag>ErrorName</tag>
+                                            <value>CorruptBlock</value>
+                                        </tag>
+                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -1546,13 +1550,21 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                 <trigger_prototype>
                                     <expression>{iregexp(&quot;ORA-00600:&quot;)}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
-                                    <name>{{ITEM.VALUE}.iregsub(&quot;ORA-00600: (.*): (\[.*\])&quot;, &quot;Found ORA-00600 error: \2&quot;)}</name>
+                                    <name>{{ITEM.VALUE}.iregsub(&quot;ORA-00600: (.*): (.*)&quot;, &quot;Found ORA-00600 error: \2&quot;)}</name>
                                     <priority>WARNING</priority>
                                     <description>У экземпляра &quot;{#INSTANCE}&quot; обнаружена ошибка ORA-00600.&#13;
 Проверьте лог-файл &quot;{#ALERTLOG}&quot; для детального анализа ошибки.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <tags>
+                                        <tag>
+                                            <tag>ErrorCode</tag>
+                                            <value>{{ITEM.VALUE}.iregsub(&quot;ORA-00600:.*: \[(.*?)\]\,&quot;, &quot;\1&quot;)}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>ErrorName</tag>
+                                            <value>ORA-00600</value>
+                                        </tag>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
@@ -1574,6 +1586,10 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                     <manual_close>YES</manual_close>
                                     <tags>
                                         <tag>
+                                            <tag>ErrorName</tag>
+                                            <value>ORA-03170</value>
+                                        </tag>
+                                        <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
                                         </tag>
@@ -1594,6 +1610,10 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <tags>
+                                        <tag>
+                                            <tag>ErrorName</tag>
+                                            <value>ORA-19909</value>
+                                        </tag>
                                         <tag>
                                             <tag>Instance</tag>
                                             <value>{#INSTANCE}</value>
@@ -1776,7 +1796,7 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template DB Oracle:oracle.archlogdest[{#INSTANCE},{#ARLDEST},status].max(#2)}&lt;=3 or {DBS_Template DB Oracle:oracle.archlogdest[{#INSTANCE},{#ARLDEST},status].last()}=5</recovery_expression>
                             <name>Error '{#ARLDEST}'</name>
-                            <opdata>(status: {ITEM.VALUE2}): {ITEM.VALUE1}</opdata>
+                            <opdata>status: {ITEM.VALUE2}): {ITEM.VALUE1}</opdata>
                             <priority>HIGH</priority>
                             <description>Ошибка archive log destination</description>
                             <dependencies>
@@ -1851,7 +1871,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <trigger_prototype>
                                     <expression>{last()}&gt;{$DBS_ORACLE_ADUMP_FILE_WARN:&quot;{#AUDITFILEDEST}&quot;}</expression>
                                     <name>Number of audit files is too high</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ADUMP_FILE_WARN:&quot;{#AUDITFILEDEST}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_ADUMP_FILE_WARN:&quot;{#AUDITFILEDEST}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>WARNING</priority>
                                     <description>Количество файлов аудита в каталоге '{#AUDITFILEDEST}' больше {$DBS_ORACLE_ADUMP_FILE_WARN:&quot;{#AUDITFILEDEST}&quot;}&#13;
 Выясните почему файлов аудита так много, возможно стоит удалить лишние файлы.&#13;
@@ -1939,7 +1959,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{last()}&lt;={$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
                                     <name>Size of database '{#DBNAME}' has increased</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>HIGH</priority>
                                     <description>Размер базы '{#DBNAME}' превышает {$DBS_ORACLE_DBSIZE_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}.&#13;
 Доведите информацию до эксперта.</description>
@@ -1966,7 +1986,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{last()}&lt;={$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
                                     <name>Size of database '{#DBNAME}' has increased</name>
-                                    <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>WARNING</priority>
                                     <description>Размер базы '{#DBNAME}' превышает {$DBS_ORACLE_DBSIZE_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}.&#13;
 Доведите информацию до эксперта.</description>
@@ -2089,7 +2109,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>DataGuard broker has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -2136,7 +2156,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database ID has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <description>Идентификатор базы данных был изменен.&#13;
 Доведите информацию до эксперта.</description>
@@ -2218,7 +2238,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database flashback mode has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <description>Режим работы flashback был изменен.&#13;
 Доведите информацию до эксперта.</description>
@@ -2270,7 +2290,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Force logging mode has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -2320,7 +2340,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database guard mode has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -2400,7 +2420,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database archive log mode has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -2453,7 +2473,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1 and {$DBS_ORACLE_DISABLE_DB_STATUS_ALARM:&quot;{#INSTANCE}:{#DBNAME}&quot;}=0</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database status has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>DISASTER</priority>
                                     <description>Статус базы данных '{#DBNAME}' изменился.&#13;
 Доведите информацию до эксперта.</description>
@@ -2541,7 +2561,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database protection mode has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
@@ -2622,7 +2642,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Database role has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <description>Роль базы данных '{#DBNAME}' была изменена.&#13;
 Доведите информацию до эксперта.</description>
@@ -2678,7 +2698,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <expression>{DBS_Template DB Oracle:oracle.db[{#INSTANCE},{#DBNAME},switchover].diff()}=1 and {DBS_Template DB Oracle:oracle.db.incarnation[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}].diff()}=0</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>Database switchover has been performed</name>
-                            <opdata>(current: {ITEM.VALUE})</opdata>
+                            <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Выполнен switchover базы данных.&#13;
 Доведите информацию до эксперта.</description>
@@ -2795,6 +2815,38 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <master_item>
                                 <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Pluggable database ID has been changed</name>
+                                    <opdata>current: {ITEM.LASTVALUE}</opdata>
+                                    <priority>INFO</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>PDB</tag>
+                                            <value>{#PDBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>PDB</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] PDB '{#PDBNAME}': Local undo</name>
@@ -2889,6 +2941,38 @@ This column is not relevant for CDB$ROOT.</description>
                             <master_item>
                                 <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Pluggable database status has been changed</name>
+                                    <opdata>current: {ITEM.LASTVALUE}</opdata>
+                                    <priority>HIGH</priority>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{#INSTANCE}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>PDB</tag>
+                                            <value>{#PDBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Subsystem</tag>
+                                            <value>PDB</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] PDB '{#PDBNAME}': Open time</name>
@@ -3063,7 +3147,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Number of datafile in tablespace '{#TSNAME}' has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <description>Количество дата-файлов в табличном пространстве '{#TSNAME}' было изменено.&#13;
 Проверьте, что было выполнено - добавление файлов или удаление.&#13;
@@ -3271,7 +3355,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Tablespace '{#TSNAME}' status has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>WARNING</priority>
                                     <description>У табличного пространстве '{#TSNAME}' изменился статус.&#13;
 Доведите информацию до эксперта.</description>
@@ -3331,7 +3415,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;{$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
                             <name>Free space in tablespace '{#TSNAME}'</name>
-                            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>HIGH</priority>
                             <description>Свободное место в табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
 Необходимо расширить один из файлов в табличном пространстве или добавить новый.&#13;
@@ -3371,7 +3455,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;{$DBS_ORACLE_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
                             <name>Free space in tablespace '{#TSNAME}'</name>
-                            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>WARNING</priority>
                             <description>Свободное место в табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
 Необходимо расширить один из файлов в табличном пространстве или добавить новый.&#13;
@@ -3493,7 +3577,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{last()}&lt;{$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
                                     <name>Apply lag is too high</name>
-                                    <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>HIGH</priority>
                                     <description>Отставание в применении redo-логов более {$DBS_ORACLE_APPLY_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}&#13;
 Проверьте работу Data Guard.&#13;
@@ -3530,7 +3614,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{last()}&lt;{$DBS_ORACLE_APPLY_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
                                     <name>Apply lag is too high</name>
-                                    <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_APPLY_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_APPLY_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>WARNING</priority>
                                     <description>Отставание в применении redo-логов более {$DBS_ORACLE_APPLY_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}&#13;
 Проверьте работу Data Guard.&#13;
@@ -3721,7 +3805,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{last()}&lt;{$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
                                     <name>Transport lag is too high</name>
-                                    <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>HIGH</priority>
                                     <description>Отставание в передаче redo-логов более {$DBS_ORACLE_TRANSPORT_LAG_CRIT:&quot;{#INSTANCE}:{#DBNAME}&quot;}&#13;
 Проверьте работу Data Guard и других подсистем.&#13;
@@ -3758,7 +3842,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                                     <recovery_expression>{last()}&lt;{$DBS_ORACLE_TRANSPORT_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}</recovery_expression>
                                     <name>Transport lag is too high</name>
-                                    <opdata>(lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_TRANSPORT_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                                    <opdata>lag: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_TRANSPORT_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>WARNING</priority>
                                     <description>Отставание в передаче redo-логов более {$DBS_ORACLE_TRANSPORT_LAG_WARN:&quot;{#INSTANCE}:{#DBNAME}&quot;}&#13;
 Проверьте работу Data Guard и других подсистем.&#13;
@@ -3857,7 +3941,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Number of datafile in temporary tablespace '{#TSNAME}' has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <description>Количество дата-файлов во временном табличном пространстве '{#TSNAME}' было изменено.&#13;
 Проверьте, что было выполнено - добавление файлов или удаление.&#13;
@@ -4040,7 +4124,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Temporary tablespace '{#TSNAME}' status has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>WARNING</priority>
                                     <description>У временного табличного пространстве '{#TSNAME}' изменился статус.&#13;
 Доведите информацию до эксперта.</description>
@@ -4099,7 +4183,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;={$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
                             <name>Free space in temporary tablespace '{#TSNAME}'</name>
-                            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>HIGH</priority>
                             <description>Свободное место во временном табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
 Необходимо выяснить запрос который заполняет временное табличное пространство, так же нужно выяснить его параметры и сообщить заказчику.&#13;
@@ -4141,7 +4225,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;={$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
                             <name>Free space in temporary tablespace '{#TSNAME}'</name>
-                            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>WARNING</priority>
                             <description>Свободное место во временном табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
 Необходимо выяснить запрос который заполняет временное табличное пространство, так же нужно выяснить его параметры и сообщить заказчику.&#13;
@@ -4240,7 +4324,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Number of datafile in undo tablespace '{#TSNAME}' has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>INFO</priority>
                                     <description>Количество дата-файлов во undo табличном пространстве '{#TSNAME}' было изменено.&#13;
 Проверьте, что было выполнено - добавление файлов или удаление.&#13;
@@ -4415,7 +4499,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <expression>{diff()}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
                                     <name>Undo tablespace '{#TSNAME}' status has been changed</name>
-                                    <opdata>(current: {ITEM.VALUE})</opdata>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
                                     <priority>WARNING</priority>
                                     <description>У undo табличного пространстве '{#TSNAME}' изменился статус.&#13;
 Доведите информацию до эксперта.</description>
@@ -4482,7 +4566,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;={$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
                             <name>Free space in undo tablespace '{#TSNAME}'</name>
-                            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>HIGH</priority>
                             <description>Свободное место в undo табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_CRIT:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
 Необходимо выяснить запрос который заполняет табличное пространство, так же нужно выяснить его параметры и сообщить заказчику.&#13;
@@ -4522,7 +4606,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},freespace].last()}&gt;={$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} or {DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=2 or {DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].last()}=3</recovery_expression>
                             <name>Free space in undo tablespace '{#TSNAME}'</name>
-                            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1})</opdata>
+                            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>WARNING</priority>
                             <description>Свободное место в undo табличном пространстве '{#TSNAME}' составляет менее {$DBS_ORACLE_UNDO_TBS_FREESPACE_MB_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}.&#13;
 Необходимо выяснить запрос который заполняет табличное пространство, так же нужно выяснить его параметры и сообщить заказчику.&#13;
@@ -5018,7 +5102,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB Oracle:oracle.instance.dbfiles[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}/{DBS_Template DB Oracle:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},db_files].last()}*100&gt;={$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}</expression>
             <name>Current number of data files is near its limit</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}%)</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, max: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_TOTAL_DBFILE_PRC_WARN}%</opdata>
             <priority>WARNING</priority>
             <description>Текущее количество дата-файлов близко к лимиту.&#13;
 Доведите информацию до эксперта.</description>
@@ -5041,7 +5125,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_free].last()}&gt;={$DBS_ORACLE_FRA_FREE_CRIT} or {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;0</recovery_expression>
             <name>FRA usage is to high</name>
-            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_FREE_CRIT}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_FREE_CRIT}, alert started: {ITEM.VALUE1}</opdata>
             <priority>HIGH</priority>
             <description>Область Fast Recovery Area (FRA) заполнена до критического уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
@@ -5067,7 +5151,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_free].last()}&gt;={$DBS_ORACLE_FRA_FREE_WARN} or {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;0</recovery_expression>
             <name>FRA usage is to high</name>
-            <opdata>(free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_FREE_WARN}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_FREE_WARN}, alert started: {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>
             <description>Область Fast Recovery Area (FRA) заполнена до угрожающего уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
@@ -5098,7 +5182,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT} or {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;1</recovery_expression>
             <name>FRA usage is to high</name>
-            <opdata>(used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_CRIT}%, alert started: {ITEM.VALUE1}%)</opdata>
+            <opdata>used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_CRIT}%, alert started: {ITEM.VALUE1}%</opdata>
             <priority>HIGH</priority>
             <description>Область Fast Recovery Area (FRA) заполнена до критического уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
@@ -5124,7 +5208,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_WARN} or {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;1</recovery_expression>
             <name>FRA usage is to high</name>
-            <opdata>(used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_WARN}%, alert started: {ITEM.VALUE1}%)</opdata>
+            <opdata>used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_WARN}%, alert started: {ITEM.VALUE1}%</opdata>
             <priority>WARNING</priority>
             <description>Область Fast Recovery Area (FRA) заполнена до угрожающего уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
@@ -5155,7 +5239,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
             <name>No incremental database backups</name>
-            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_CRIT})</opdata>
+            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_CRIT}</opdata>
             <priority>HIGH</priority>
             <description>Очень давно не выполнялся инкрементальный бэкап экземпляра.&#13;
 Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
@@ -5183,7 +5267,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_WARN} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
             <name>No incremental database backups</name>
-            <opdata>(last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_WARN})</opdata>
+            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_WARN}</opdata>
             <priority>WARNING</priority>
             <description>Давно не выполнялся инкрементальный бэкап экземпляра.&#13;
 Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
@@ -5216,7 +5300,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(10m)}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_CRIT} or {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
             <name>Redolog switch rate per hour is too high</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}, alert started: {ITEM.VALUE1}</opdata>
             <priority>HIGH</priority>
             <description>Генерация redo log черезвычайно высокая, возможно в базу интенсивно пишутся данные.&#13;
 Доведите информацию до эксперта.</description>
@@ -5239,7 +5323,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(10m)}&lt;={$DBS_ORACLE_REDOLOG_SW_RATE_WARN} or {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},status].last()}&lt;3</recovery_expression>
             <name>Redolog switch rate per hour is too high</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_WARN}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_REDOLOG_SW_RATE_WARN}, alert started: {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>
             <description>Генерация redo log слишком высокая, возможно в базу интенсивно пишутся данные.&#13;
 Доведите информацию до эксперта.</description>
@@ -5267,7 +5351,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(8m)}/{DBS_Template DB Oracle:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_CRIT}</recovery_expression>
             <name>Too many processes</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1}</opdata>
             <priority>HIGH</priority>
             <description>Черезвычайно много работающих процессов.&#13;
 Доведите информацию до эксперта.</description>
@@ -5290,7 +5374,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},processes_current].max(10m)}/{DBS_Template DB Oracle:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},processes].last()}*100&lt;{$DBS_ORACLE_PROCESSES_PRC_WARN}</recovery_expression>
             <name>Too many processes</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_PROCESSES_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>
             <description>Слишком много работающих процессов.&#13;
 Доведите информацию до эксперта.</description>
@@ -5318,7 +5402,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(8m)}/{DBS_Template DB Oracle:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_CRIT}</recovery_expression>
             <name>Too many sessions</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1}</opdata>
             <priority>HIGH</priority>
             <description>Черезвычайно много открытых сессий.&#13;
 Доведите информацию до эксперта.</description>
@@ -5341,7 +5425,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},sessions_current].max(10m)}/{DBS_Template DB Oracle:oracle.instance_parameter[{$DBS_ORACLE_INSTANCE},sessions].last()}*100&lt;{$DBS_ORACLE_SESSIONS_PRC_WARN}</recovery_expression>
             <name>Too many sessions</name>
-            <opdata>(current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1})</opdata>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_SESSIONS_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>
             <description>Слишком много открытых сессий.&#13;
 Доведите информацию до эксперта.</description>
