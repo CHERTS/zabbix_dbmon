@@ -928,16 +928,8 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 5] Allocate session handle - done", __func__);
 
 			/* Create a server context */
-			if (0 == use_oracle_enviroment)
-			{
-				zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
-					(const text *)oracle_conn_string, (sb4)strlen(oracle_conn_string), (ub4)OCI_DEFAULT));
-			}
-			else
-			{
-				zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
-					(const text *) "", (sb4)0, (ub4)OCI_DEFAULT));
-			}
+			zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+				(const text *)oracle_conn_string, (sb4)strlen(oracle_conn_string), (ub4)OCI_DEFAULT));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 6] Create a server context - done", __func__);
 
