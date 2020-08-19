@@ -40,6 +40,7 @@ if not exist "%OPENSSL_PATH%\lib\%VS_ARCH%" (
 
 cd build\win32\project
 copy ..\include\config.h ..\..\..\include\ >nul 2>&1
+
 echo Build Zabbix Agent %ZBX_ARCH%...
 rem nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIBDIR="%OPENSSL_PATH%\lib" PCREINCDIR="%PCRE_PATH%\pcre-%PCRE_VER%-%VS_ARCH%\include" PCRELIBDIR="%PCRE_PATH%\pcre-%PCRE_VER%-%VS_ARCH%\lib" /f Makefile_agent
 nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" /f Makefile_agent
