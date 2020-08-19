@@ -703,7 +703,7 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 #ifdef _WINDOWS
 	const char					*two_task_env = "LOCAL";
 #else
-								*two_task_env = "TWO_TASK";
+	const char					*two_task_env = "TWO_TASK";
 #endif
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
