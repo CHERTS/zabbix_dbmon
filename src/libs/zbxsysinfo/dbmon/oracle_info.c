@@ -783,7 +783,7 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeout_event)
 #endif
 {
-	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance;
+	char						*check_error = NULL, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *conn_error = NULL;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	struct zbx_db_connection	*oracle_conn;
 
@@ -856,9 +856,9 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 #endif
 
 	if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
-		oracle_conn_string = "";
+		oracle_conn_string = NULL;
 
-	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
 
 	if (oracle_conn != NULL)
 	{
@@ -871,6 +871,8 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 		SET_UI64_RESULT(result, 0);
 	}
 
+	zbx_free(conn_error);
+
 	return SYSINFO_RET_OK;
 }
 
@@ -882,7 +884,7 @@ int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode, zbx_db_oracle_db_status oracle_need_dbstatus)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *oracle_dbname,*oracle_standby_scn;
+	char						*check_error = NULL, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *oracle_dbname, *oracle_standby_scn, *conn_error = NULL;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	unsigned int				oracle_db_open_mode = 0, oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
@@ -981,14 +983,14 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, cons
 
 	if (0 == strcmp(request->key, "oracle.standby.apply_lag"))
 	{
-		oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_PRIMARY_USER, CONFIG_ORACLE_PRIMARY_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+		oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_PRIMARY_USER, CONFIG_ORACLE_PRIMARY_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
 	}
 	else
 	{
 		if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
-			oracle_conn_string = "";
+			oracle_conn_string = NULL;
 
-		oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+		oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
 	}
 
 	if (NULL != oracle_conn)
@@ -1196,11 +1198,17 @@ exec_db_query:
 	else
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		if (NULL != conn_error)
+			SET_MSG_RESULT(result, zbx_strdup(NULL, conn_error));
+		else
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
+
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
+
+	zbx_free(conn_error);
 
 	return ret;
 }
@@ -1352,7 +1360,7 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 #endif
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version;
+	char						*check_error = NULL, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *conn_error = NULL;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	unsigned int				oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
@@ -1430,9 +1438,9 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 #endif
 
 	if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
-		oracle_conn_string = "";
+		oracle_conn_string = NULL;
 
-	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
 
 	if (oracle_conn != NULL)
 	{
@@ -1605,11 +1613,16 @@ next:
 	else
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		if (NULL != conn_error)
+			SET_MSG_RESULT(result, zbx_strdup(NULL, conn_error));
+		else
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
+
+	zbx_free(conn_error);
 
 	return ret;
 }
@@ -1627,7 +1640,7 @@ int	ORACLE_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int							ret = SYSINFO_RET_FAIL;
-	char						*oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_dbname;
+	char						*oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_dbname, *conn_error = NULL;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	unsigned int				oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
@@ -1702,9 +1715,9 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 	}
 
 	if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
-		oracle_conn_string = "";
+		oracle_conn_string = NULL;
 
-	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
 
 	if (oracle_conn != NULL)
 	{
@@ -1802,17 +1815,23 @@ next:
 	else
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		if (NULL != conn_error)
+			SET_MSG_RESULT(result, zbx_strdup(NULL, conn_error));
+		else
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
+
 out:
+	zbx_free(conn_error);
+
 	return ret;
 }
 
 int	ORACLE_PDB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	int							ret = SYSINFO_RET_FAIL;
-	char						*oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version;
+	char						*oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *conn_error = NULL;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	unsigned int				oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
@@ -1879,9 +1898,9 @@ int	ORACLE_PDB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 	}
 
 	if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
-		oracle_conn_string = "";
+		oracle_conn_string = NULL;
 
-	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
 
 	if (oracle_conn != NULL)
 	{
@@ -1989,10 +2008,17 @@ int	ORACLE_PDB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 	else
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		if (NULL != conn_error)
+			SET_MSG_RESULT(result, zbx_strdup(NULL, conn_error));
+		else
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
+
 out:
+	if (NULL != conn_error)
+		zbx_free(conn_error);
+
 	return ret;
 }
 
@@ -2003,7 +2029,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 #endif
 {
 	int							ret = SYSINFO_RET_FAIL;
-	char						*check_error, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_str_ts_type;
+	char						*check_error = NULL, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_str_ts_type, *conn_error = NULL;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_ts_type = ORA_TS_PERMANENT;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
@@ -2106,9 +2132,9 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 #endif
 
 	if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
-		oracle_conn_string = "";
+		oracle_conn_string = NULL;
 
-	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode));
+	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
 
 	if (oracle_conn != NULL)
 	{
@@ -2177,9 +2203,14 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 	else
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		if (NULL != conn_error)
+			SET_MSG_RESULT(result, zbx_strdup(NULL, conn_error));
+		else
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
 		ret = SYSINFO_RET_FAIL;
 	}
+
+	zbx_free(conn_error);
 
 	return ret;
 }

@@ -57,12 +57,14 @@ struct zbx_db_ora_result
 
 typedef struct zbx_db_ora_result	*ORA_DB_RESULT;
 
-#define zbx_db_ora_check(str_err, str_conn, str_connect, func) \
+#define zbx_db_ora_check(str_err, str_conn, str_connect, str_error, func) \
 { \
 	str_err = func; \
 	if (OCI_SUCCESS != str_err) \
 	{ \
 		zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3001, str_err, zbx_db_oci_error(str_conn, str_err, NULL), str_connect); \
+		if (NULL != str_error) \
+			*str_error = zbx_dsprintf(NULL, "Error connecting to database: %s", zbx_db_oci_error(str_conn, str_err, NULL)); \
 		ret = OCI_ERROR; \
 		goto out; \
 	} \
@@ -687,7 +689,7 @@ void zbx_db_close_conn_oracle(struct zbx_db_connection *conn)
  * Opens a database connection to a Oracle database
  * Return pointer to a struct zbx_db_connection * on sucess, NULL on error
  */
-struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const char *username, const char *userpasswd, unsigned int mode)
+struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const char *username, const char *userpasswd, unsigned int mode, char **error)
 {
 	struct zbx_db_connection	*conn = NULL;
 	int							ret = OCI_SUCCESS;
@@ -698,8 +700,68 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 	char						*parse_oracle_user, *parse_oracle_password;
 	char						*oracle_sid = NULL, *oracle_home = NULL, *tns_admin = NULL, *two_task = NULL;
 	int							use_oracle_enviroment = 0;
+#ifdef _WINDOWS
+	const char					*two_task_env = "LOCAL";
+#else
+								*two_task_env = "TWO_TASK";
+#endif
 
-	if ('\0' != *conn_string)
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
+
+	if (NULL == conn_string || '\0' == *conn_string)
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle connection string is empty (see OracleIgnoreConnString parameters in config file)", __func__);
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Checking set enviroment variables ORACLE_SID, %s and ORACLE_HOME...", __func__, two_task_env);
+
+		oracle_sid = getenv("ORACLE_SID");
+		oracle_home = getenv("ORACLE_HOME");
+		tns_admin = getenv("TNS_ADMIN");
+		two_task = getenv(two_task_env);
+
+		if (NULL == oracle_sid || '\0' == *oracle_sid)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_SID not set", __func__);
+
+			if (NULL == two_task || '\0' == *two_task)
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable %s not set. Abort connection", __func__, two_task_env);
+				if (NULL != error)
+					*error = zbx_dsprintf(NULL, "Enviroment variable %s not set. Abort connection", two_task_env);
+				return conn;
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Use enviroment variable %s", __func__, two_task_env);
+				oracle_conn_string = two_task;
+			}
+		}
+		else
+		{
+			if (NULL == two_task || '\0' == *two_task)
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable %s not set, use ORACLE_SID variable", __func__, two_task_env);
+				oracle_conn_string = oracle_sid;
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_SID is set, but use %s variable", __func__, two_task_env);
+				oracle_conn_string = two_task;
+			}
+		}
+
+		if (NULL == oracle_home || '\0' == *oracle_home)
+		{
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_HOME not set. Abort connection", __func__);
+			if (NULL != error)
+				*error = zbx_dsprintf(NULL, "Enviroment variable ORACLE_HOME not set. Abort connection");
+			return conn;
+		}
+
+		use_oracle_enviroment = 1;
+		oracle_user = zbx_strdup(NULL, username);
+		oracle_password = zbx_strdup(NULL, userpasswd);
+	}
+	else
 	{
 		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Check user and password in Oracle connection string: %s", __func__, conn_string);
 		
@@ -726,6 +788,8 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 				else
 				{
 					zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle user password not found in config file.", __func__);
+					if (NULL != error)
+						*error = zbx_dsprintf(NULL, "Oracle user password not found in config file");
 					return conn;
 				}
 			}
@@ -746,6 +810,8 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 					else
 					{
 						zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle user password not found in config file.", __func__);
+						if (NULL != error)
+							*error = zbx_dsprintf(NULL, "Oracle user password not found in config file");
 						return conn;
 					}
 				}
@@ -764,87 +830,10 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 			oracle_password = zbx_strdup(NULL, userpasswd);
 		}
 	}
-	else
-	{
-		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle connection string is empty", __func__);
-#ifdef _WINDOWS
-		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Checking set enviroment variables ORACLE_SID, LOCAL and ORACLE_HOME...", __func__);
-#else
-		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Checking set enviroment variables ORACLE_SID, TWO_TASK and ORACLE_HOME...", __func__);
-#endif
-
-		oracle_sid = getenv("ORACLE_SID");
-		oracle_home = getenv("ORACLE_HOME");
-		tns_admin = getenv("TNS_ADMIN");
-#ifdef _WINDOWS
-		two_task = getenv("LOCAL");
-#else
-		two_task = getenv("TWO_TASK");
-#endif
-
-		if (NULL == oracle_sid || '\0' == *oracle_sid)
-		{
-			zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_SID not set", __func__);
-
-			if (NULL == two_task || '\0' == *two_task)
-			{
-#ifdef _WINDOWS
-				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable LOCAL not set. Abort connection", __func__);
-#else
-				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable TWO_TASK not set. Abort connection", __func__);
-#endif
-				return conn;
-			}
-			else
-			{
-#ifdef _WINDOWS
-				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Use enviroment variable LOCAL", __func__);
-#else
-				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Use enviroment variable TWO_TASK", __func__);
-#endif
-				oracle_conn_string = two_task;
-			}
-		}
-		else
-		{
-			if (NULL == two_task || '\0' == *two_task)
-			{
-#ifdef _WINDOWS
-				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable LOCAL not set, use ORACLE_SID variable", __func__);
-#else
-				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable TWO_TASK not set, use ORACLE_SID variable", __func__);
-#endif
-				oracle_conn_string = oracle_sid;
-			}
-			else
-			{
-#ifdef _WINDOWS
-				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_SID is set, but use LOCAL variable", __func__);
-#else
-				zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_SID is set, but use TWO_TASK variable", __func__);
-#endif
-				oracle_conn_string = two_task;
-			}
-		}
-
-		if (NULL == oracle_home || '\0' == *oracle_home)
-		{
-			zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Enviroment variable ORACLE_HOME not set. Abort connection", __func__);
-			return conn;
-		}
-
-		use_oracle_enviroment = 1;
-		oracle_user = zbx_strdup(NULL, username);
-		oracle_password = zbx_strdup(NULL, userpasswd);
-	}
 
 	if (1 == use_oracle_enviroment)
 	{
-#ifdef _WINDOWS
-		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Use Oracle enviroment variables: ORACLE_SID=%s, LOCAL=%s, ORACLE_HOME=%s, TNS_ADMIN=%s", __func__, oracle_sid, two_task, oracle_home, tns_admin);
-#else
-		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Use Oracle enviroment variables: ORACLE_SID=%s, TWO_TASK=%s, ORACLE_HOME=%s, TNS_ADMIN=%s", __func__, oracle_sid, two_task, oracle_home, tns_admin);
-#endif
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Use Oracle enviroment variables: ORACLE_SID=%s, %s=%s, ORACLE_HOME=%s, TNS_ADMIN=%s", __func__, oracle_sid, two_task_env, two_task, oracle_home, tns_admin);
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle connection string: %s", __func__, oracle_conn_string);
@@ -858,6 +847,8 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 		if (NULL == conn)
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error allocating memory for conn", __func__);
+			if (NULL != error)
+				*error = zbx_dsprintf(NULL, "Error allocating memory for conn");
 			return NULL;
 		}
 
@@ -867,6 +858,8 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 		if (NULL == conn->connection)
 		{
 			zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error allocating memory for conn->connection", __func__);
+			if (NULL != error)
+				*error = zbx_dsprintf(NULL, "Error allocating memory for conn->connection");
 			zbx_db_free(conn);
 			conn = NULL;
 			return NULL;
@@ -887,6 +880,8 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 				{
 					zabbix_log(LOG_LEVEL_CRIT, "In %s(): Cannot find out the ID of \"UTF8\" character set."
 						" Relying on current \"NLS_LANG\" settings.", __func__);
+					if (NULL != error)
+						*error = zbx_dsprintf(NULL, "Cannot find out the ID of UTF8 character set");
 					break;	/* use default environment with character set derived from NLS_LANG */
 				}
 
@@ -898,6 +893,8 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 			{
 				zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error create Oracle environment", __func__);
 				zbx_db_err_log(ZBX_DB_TYPE_ORACLE, ERR_Z3001, err, zbx_db_oci_error(conn, err, NULL), oracle_conn_string);
+				if (NULL != error)
+					*error = zbx_dsprintf(NULL, "Error create Oracle environment: %s", zbx_db_oci_error(conn, err, NULL));
 				ret = OCI_ERROR;
 			}
 		}
@@ -907,25 +904,25 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 1] Create environment - done", __func__);
 
 			/* Allocate an error handle */
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
+			zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
 				(void **)&((struct zbx_db_oracle *)conn->connection)->errhp, OCI_HTYPE_ERROR, (size_t)0, (void **)0));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 2] Allocate an error handle - done", __func__);
 
 			/* Allocate server contexts */
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
+			zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
 				(void **)&((struct zbx_db_oracle *)conn->connection)->srvhp, OCI_HTYPE_SERVER, (size_t)0, (void **)0));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 3] Allocate server contexts - done", __func__);
 
 			/* Allocate service contexts */
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
+			zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
 				(void **)&((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX, (size_t)0, (void **)0));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 4] Allocate service contexts - done", __func__);
 
 			/* Allocate session handle */
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
+			zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIHandleAlloc((void *)((struct zbx_db_oracle *)conn->connection)->envhp,
 				(void **)&((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_AUTHINFO, (size_t)0, (void **)0));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 5] Allocate session handle - done", __func__);
@@ -933,42 +930,42 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 			/* Create a server context */
 			if (0 == use_oracle_enviroment)
 			{
-				zbx_db_ora_check(err, conn, oracle_conn_string, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
-				(const text *)oracle_conn_string, (sb4)strlen(oracle_conn_string), (ub4)OCI_DEFAULT));
+				zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+					(const text *)oracle_conn_string, (sb4)strlen(oracle_conn_string), (ub4)OCI_DEFAULT));
 			}
 			else
 			{
-				zbx_db_ora_check(err, conn, oracle_conn_string, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+				zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIServerAttach(((struct zbx_db_oracle *)conn->connection)->srvhp, ((struct zbx_db_oracle *)conn->connection)->errhp,
 					(const text *) "", (sb4)0, (ub4)OCI_DEFAULT));
 			}
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 6] Create a server context - done", __func__);
 
 			/* Set attribute server context in the service context */
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX,
+			zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->svchp, OCI_HTYPE_SVCCTX,
 				(void *)((struct zbx_db_oracle *)conn->connection)->srvhp, (ub4)0, OCI_ATTR_SERVER, ((struct zbx_db_oracle *)conn->connection)->errhp));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 7] Set attribute server context in the service context - done", __func__);
 
 			/* Setup username and password */
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_user, (ub4)(NULL != oracle_user ? strlen(oracle_user) : 0),
+			zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_user, (ub4)(NULL != oracle_user ? strlen(oracle_user) : 0),
 				OCI_ATTR_USERNAME, ((struct zbx_db_oracle *)conn->connection)->errhp));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 8] Setup username - done", __func__);
 
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_password, (ub4)(NULL != oracle_password ? strlen(oracle_password) : 0),
+			zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->authp, OCI_HTYPE_SESSION, (text *)oracle_password, (ub4)(NULL != oracle_password ? strlen(oracle_password) : 0),
 				OCI_ATTR_PASSWORD, ((struct zbx_db_oracle *)conn->connection)->errhp));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 9] Setup password - done", __func__);
 
 			// Mode is OCI_DEFAULT or OCI_SYSDBA or OCI_SYSOPER or OCI_SYSASM or OCI_SYSDGD or OCI_PRELIM_AUTH
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCISessionBegin((void *)((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
+			zbx_db_ora_check(err, conn, oracle_conn_string, error, OCISessionBegin((void *)((struct zbx_db_oracle *)conn->connection)->svchp, ((struct zbx_db_oracle *)conn->connection)->errhp,
 				((struct zbx_db_oracle *)conn->connection)->authp, (ub4)OCI_CRED_RDBMS, (ub4)mode));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 10] OCISessionBegin, set mode %d - done", __func__, (ub4)mode);
 
 			/* Set the session attribute in the service context */
-			zbx_db_ora_check(err, conn, oracle_conn_string, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->svchp, (ub4)OCI_HTYPE_SVCCTX, (void *)((struct zbx_db_oracle *)conn->connection)->authp,
+			zbx_db_ora_check(err, conn, oracle_conn_string, error, OCIAttrSet((void *)((struct zbx_db_oracle *)conn->connection)->svchp, (ub4)OCI_HTYPE_SVCCTX, (void *)((struct zbx_db_oracle *)conn->connection)->authp,
 				(ub4)0, (ub4)OCI_ATTR_SESSION, ((struct zbx_db_oracle *)conn->connection)->errhp));
 
 			zabbix_log(LOG_LEVEL_TRACE, "In %s(): [Stage 11] Set the session attribute in the service context - done", __func__);
@@ -995,6 +992,8 @@ out:
 			conn = NULL;
 		}
 	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
 
 	return conn;
 }

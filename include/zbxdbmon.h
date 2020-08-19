@@ -183,7 +183,7 @@ void zbx_db_close_pgsql(struct zbx_db_connection *conn);
 
 unsigned int zbx_db_get_oracle_mode(int ora_mode);
 int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx_db_result *o_result, const char *fmt, va_list args);
-struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const char *username, const char *userpasswd, unsigned int mode);
+struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const char *username, const char *userpasswd, unsigned int mode, char **error);
 void zbx_db_close_oracle(struct zbx_db_connection * conn);
 int	zbx_check_oracle_instance_name(const char *instance, char **error);
 char *zbx_check_oracle_conn_string(char *conn_string);
