@@ -710,7 +710,7 @@ struct zbx_db_connection *zbx_db_connect_oracle(const char *conn_string, const c
 
 	if (NULL == conn_string || '\0' == *conn_string)
 	{
-		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle connection string is empty (see OracleIgnoreConnString parameters in config file)", __func__);
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Oracle connection string is empty (see OracleUseLocalEnv parameters in config file)", __func__);
 		zabbix_log(LOG_LEVEL_DEBUG, "In %s(): Checking set enviroment variables ORACLE_SID, %s and ORACLE_HOME...", __func__, two_task_env);
 
 		oracle_sid = getenv("ORACLE_SID");
