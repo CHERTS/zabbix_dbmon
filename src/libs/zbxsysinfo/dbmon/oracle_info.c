@@ -33,7 +33,7 @@ extern char	*CONFIG_ORACLE_PASSWORD;
 extern char	*CONFIG_ORACLE_INSTANCE;
 extern char	*CONFIG_ORACLE_PRIMARY_USER;
 extern char	*CONFIG_ORACLE_PRIMARY_PASSWORD;
-extern int CONFIG_ORACLE_IGNORE_CONN_STRING;
+extern int CONFIG_ORACLE_USE_LOCAL_ENV;
 
 #define ORACLE_DEFAULT_USER	"sys"
 #define ORACLE_DEFAULT_PASSWORD	"sys"
@@ -855,7 +855,7 @@ static int	oracle_instance_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 	ZBX_UNUSED(timeout_event);
 #endif
 
-	if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
+	if (1 == CONFIG_ORACLE_USE_LOCAL_ENV)
 		oracle_conn_string = NULL;
 
 	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
@@ -987,7 +987,7 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, cons
 	}
 	else
 	{
-		if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
+		if (1 == CONFIG_ORACLE_USE_LOCAL_ENV)
 			oracle_conn_string = NULL;
 
 		oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
@@ -1437,7 +1437,7 @@ static int	oracle_get_discovery(AGENT_REQUEST *request, AGENT_RESULT *result, HA
 	ZBX_UNUSED(timeout_event);
 #endif
 
-	if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
+	if (1 == CONFIG_ORACLE_USE_LOCAL_ENV)
 		oracle_conn_string = NULL;
 
 	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
@@ -1714,7 +1714,7 @@ int	ORACLE_DB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
+	if (1 == CONFIG_ORACLE_USE_LOCAL_ENV)
 		oracle_conn_string = NULL;
 
 	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
@@ -1897,7 +1897,7 @@ int	ORACLE_PDB_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 		}
 	}
 
-	if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
+	if (1 == CONFIG_ORACLE_USE_LOCAL_ENV)
 		oracle_conn_string = NULL;
 
 	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
@@ -2131,7 +2131,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 	ZBX_UNUSED(timeout_event);
 #endif
 
-	if (1 == CONFIG_ORACLE_IGNORE_CONN_STRING)
+	if (1 == CONFIG_ORACLE_USE_LOCAL_ENV)
 		oracle_conn_string = NULL;
 
 	oracle_conn = zbx_db_connect_oracle(oracle_conn_string, CONFIG_ORACLE_USER, CONFIG_ORACLE_PASSWORD, zbx_db_get_oracle_mode(oracle_mode), &conn_error);
