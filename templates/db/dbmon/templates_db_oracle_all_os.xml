@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-08-18T05:04:40Z</date>
+    <date>2020-08-21T12:27:45Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1752,10 +1752,6 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                     <type>JSONPATH</type>
                                     <params>$[?(@.ARLDEST== &quot;{#ARLDEST}&quot;)].LOG_STATUS.first()</params>
                                 </step>
-                                <step>
-                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>10m</params>
-                                </step>
                             </preprocessing>
                             <master_item>
                                 <key>oracle.archlogdest.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -1796,7 +1792,7 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{DBS_Template DB Oracle:oracle.archlogdest[{#INSTANCE},{#ARLDEST},status].max(#2)}&lt;=3 or {DBS_Template DB Oracle:oracle.archlogdest[{#INSTANCE},{#ARLDEST},status].last()}=5</recovery_expression>
                             <name>Error '{#ARLDEST}'</name>
-                            <opdata>status: {ITEM.VALUE2}): {ITEM.VALUE1}</opdata>
+                            <opdata>status: {ITEM.VALUE2}: {ITEM.VALUE1}</opdata>
                             <priority>HIGH</priority>
                             <description>Ошибка archive log destination</description>
                             <dependencies>
@@ -4912,7 +4908,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_TBS_NODATA_WARN}</macro>
-                    <value>30m</value>
+                    <value>2h</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT}</macro>
