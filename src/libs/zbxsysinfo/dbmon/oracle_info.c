@@ -232,18 +232,30 @@ WHERE i.instance_number = p.inst_id \
 	AND i.instance_name = '%s' \
 	AND p.name in('db_files', 'processes', 'sessions')"
 
-#define ORACLE_LASTPATCH_INFO_DBS "\
+#define ORACLE_V11_LASTPATCH_INFO_DBS "\
 SELECT TO_CHAR(ACTION_TIME, 'DD-MON-YYYY HH24:MI:SS') AS LAST_PATCHSET_ACTION_TIME, \
 	ACTION AS LAST_PATCHSET_ACTION, \
 	VERSION AS LAST_PATCHSET_VERSION, \
 	COMMENTS AS LAST_PATCHSET_COMMENTS \
 FROM sys.registry$history  \
 WHERE namespace = 'SERVER'  \
-	AND ACTION IN('APPLY', 'UPGRADE')  \
+	AND ACTION IN('APPLY', 'RU_APPLY', 'UPGRADE')  \
 	AND action_time = (SELECT max(action_time) \
 			FROM sys.registry$history \
 			WHERE namespace = 'SERVER' \
-				AND ACTION IN('APPLY', 'UPGRADE') \
+				AND ACTION IN('APPLY', 'RU_APPLY', 'UPGRADE') \
+)"
+
+#define ORACLE_V12_LASTPATCH_INFO_DBS "\
+SELECT TO_CHAR(ACTION_TIME, 'DD-MON-YYYY HH24:MI:SS') AS LAST_PATCHSET_ACTION_TIME, \
+	ACTION AS LAST_PATCHSET_ACTION, \
+	PATCH_ID AS LAST_PATCHSET_VERSION, \
+	DESCRIPTION AS LAST_PATCHSET_COMMENTS \
+FROM sys.dba_registry_sqlpatch \
+WHERE ACTION IN('APPLY')  \
+	AND action_time = (SELECT max(action_time) \
+			FROM sys.dba_registry_sqlpatch \
+			WHERE ACTION IN ('APPLY') AND FLAGS IN ('N') \
 )"
 
 #define ORACLE_INSTANCE_RESOURCE_INFO_DBS "\
@@ -876,7 +888,7 @@ int	ORACLE_INSTANCE_PING(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query, zbx_db_result_type result_type, zbx_db_oracle_db_role oracle_need_db_role, unsigned int oracle_need_open_mode, zbx_db_oracle_db_status oracle_need_dbstatus)
 {
 	int							ret = SYSINFO_RET_FAIL, ping = 0;
-	char						*check_error = NULL, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *oracle_dbname, *oracle_standby_scn, *conn_error = NULL;
+	char						*check_error = NULL, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *oracle_dbname, *oracle_standby_scn, *conn_error = NULL, *ora_version;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT;
 	unsigned int				oracle_db_open_mode = 0, oracle_db_status = 0;
 	struct zbx_db_connection	*oracle_conn;
@@ -1090,6 +1102,39 @@ exec_inst_query:
 				{
 					ret = zbx_db_query_select(oracle_conn, &ora_result, query, oracle_standby_scn);
 				}
+				else if (0 == strcmp(request->key, "oracle.instance.patch_info"))
+				{
+					if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_VERSION_DBS, oracle_instance))
+					{
+						ora_version = get_str_one_result(request, result, 0, 0, ora_result);
+
+						if (NULL != ora_version)
+						{
+							zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Oracle version: %s", __func__, request->key, ora_version);
+
+							if (0 > zbx_strcmp_natural(ora_version, "12.0.0.0.0"))
+							{
+								query = ORACLE_V11_LASTPATCH_INFO_DBS;
+								zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle version < 12, use query '%s'", __func__, request->key, query);
+							}
+							else
+							{
+								query = ORACLE_V12_LASTPATCH_INFO_DBS;
+								zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Oracle version >= 12, use query '%s'", __func__, request->key, query);
+							}
+						}
+
+						zbx_db_clean_result(&ora_result);
+
+						ret = zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance);
+					}
+					else
+					{
+						zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+						SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query "));
+						ret = SYSINFO_RET_FAIL;
+					}
+				}
 				else
 				{
 					ret = zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance);
@@ -1235,7 +1280,7 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.patch_info"))
 	{
-		ret = oracle_make_result(request, result, ORACLE_LASTPATCH_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_PRIMARY, 0, ORA_ACTIVE);
+		ret = oracle_make_result(request, result, ORACLE_V11_LASTPATCH_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_PRIMARY, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.instance.resource"))
 	{
