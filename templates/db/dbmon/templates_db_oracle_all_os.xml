@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-08-21T12:27:45Z</date>
+    <date>2020-08-23T14:09:49Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1550,7 +1550,7 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                                 <trigger_prototype>
                                     <expression>{iregexp(&quot;ORA-00600:&quot;)}=1</expression>
                                     <recovery_mode>NONE</recovery_mode>
-                                    <name>{{ITEM.VALUE}.iregsub(&quot;ORA-00600: (.*): (.*)&quot;, &quot;Found ORA-00600 error: \2&quot;)}</name>
+                                    <name>{{ITEM.VALUE}.iregsub(&quot;ORA-00600:.*?: (.*)&quot;, &quot;Found ORA-00600 error: \1&quot;)}</name>
                                     <priority>WARNING</priority>
                                     <description>У экземпляра &quot;{#INSTANCE}&quot; обнаружена ошибка ORA-00600.&#13;
 Проверьте лог-файл &quot;{#ALERTLOG}&quot; для детального анализа ошибки.</description>
