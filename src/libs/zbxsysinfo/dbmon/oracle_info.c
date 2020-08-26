@@ -194,6 +194,13 @@ WHERE i.inst_id = d.inst_id \
 	AND i.instance_name = '%s' \
 	AND d.name = '%s'"
 
+#define ORACLE_CHECK_INST_OPEN_MODE_WITHOUT_DBROLE_DBS "\
+SELECT decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
+FROM gv$instance i, gv$database d \
+WHERE i.inst_id = d.inst_id \
+	AND i.status in('MOUNTED', 'OPEN') \
+	AND i.instance_name = '%s'"
+
 #define ORACLE_CHECK_INST_OPEN_MODE_DBS "\
 SELECT decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
 FROM gv$instance i, gv$database d \
@@ -1007,9 +1014,9 @@ static int	oracle_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, cons
 				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Instance: %s, Need_DBStatus: %s, Current_DBStatus: %s", __func__, request->key, oracle_instance, ORA_DB_STATUS[oracle_need_dbstatus], ORA_DB_STATUS[oracle_db_status]);
 				zbx_db_clean_result(&ora_result);
 
-				if (oracle_db_status == ORA_ACTIVE)
+				if (ORA_ACTIVE == oracle_db_status)
 					goto next;
-				else if (oracle_db_status == ORA_ANY_STATUS)
+				else if (ORA_ANY_STATUS == oracle_db_status)
 				{
 					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Oracle instance '%s' not found.", __func__, request->key, oracle_instance);
 					SET_MSG_RESULT(result, zbx_strdup(NULL, "Oracle instance not found"));
@@ -1053,7 +1060,6 @@ next:
 
 						if (oracle_db_open_mode > oracle_need_open_mode)
 						{
-							
 							goto exec_inst_query;
 						}
 						else
@@ -2068,6 +2074,7 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 	int							ret = SYSINFO_RET_FAIL;
 	char						*check_error = NULL, *oracle_conn_string, *oracle_str_mode, *oracle_instance, *ora_version, *oracle_str_ts_type, *conn_error = NULL;
 	unsigned short				oracle_mode = ZBX_DB_OCI_DEFAULT, oracle_ts_type = ORA_TS_PERMANENT;
+	unsigned int				oracle_db_open_mode = 0;
 	struct zbx_db_connection	*oracle_conn;
 	struct zbx_db_result		ora_result;
 	char						*query = ORACLE_V11_PERMANENT_TS_INFO_DBS;
@@ -2225,7 +2232,34 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 
 			zbx_db_clean_result(&ora_result);
 
-			ret = oracle_make_result(request, result, query, ZBX_DB_RES_TYPE_MULTIROW, ORA_PRIMARY, 0, ORA_ACTIVE);
+			if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, ORACLE_CHECK_INST_OPEN_MODE_WITHOUT_DBROLE_DBS, oracle_instance))
+			{
+				oracle_db_open_mode = get_int_one_result(request, result, 0, 0, ora_result);
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Instance: %s, Open_Mode: %u (1 - MOUNTED, 2 - READ WRITE, 3 - READ ONLY, 4 - READ ONLY WITH APPLY)", __func__, request->key, oracle_instance, oracle_db_open_mode);
+				zbx_db_clean_result(&ora_result);
+
+				// 0 - UNKNOWN
+				// 1 - MOUNTED
+				// 2 - READ WRITE
+				// 3 - READ ONLY
+				// 4 - READ ONLY WITH APPLY
+				if (2 <= oracle_db_open_mode)
+				{
+					ret = oracle_make_result(request, result, query, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ACTIVE);
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Instance closed for reading information (may be database not open with read-write or read-only or read-only-with-apply)", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Instance closed for reading information (may be database not open with read-write or read-only or read-only-with-apply)"));
+					ret = SYSINFO_RET_FAIL;
+				}
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+				ret = SYSINFO_RET_FAIL;
+			}
 		}
 		else
 		{
