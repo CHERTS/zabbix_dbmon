@@ -32,18 +32,16 @@ jobs:
     - name: Run bootstrap
       run: ./bootstrap.sh
     - name: Run configure
-      run: ./configure --sysconfdir=/etc/zabbix
-    - name: Run make
-      run: make
-    - name: Run make dbschema
+      run: ./configure
+    - name: Build dbschema
       run: make dbschema
-    - name: Run make gettext
+    - name: Build gettext
       run: make gettext
     - name: Run create bin, img and styles directory
       run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
-    - name: Run make css
+    - name: Build css
       run: make css
-    - name: Run make dist
+    - name: Build dist
       run: make dist
     - uses: actions/upload-artifact@v2
       with:
