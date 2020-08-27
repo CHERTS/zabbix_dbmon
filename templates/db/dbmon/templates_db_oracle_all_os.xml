@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-08-23T14:09:49Z</date>
+    <date>2020-08-27T12:32:36Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2352,6 +2352,34 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     </tags>
                                 </trigger_prototype>
                             </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[Oracle] DB '{#DBNAME}': Hostname</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.db[{#INSTANCE},{#DBNAME},hostname]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Hostname</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: Instance: {#INSTANCE}, DB: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.HOSTNAME</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.db.info[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
+                            </master_item>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] DB '{#DBNAME}': Archive log mode</name>
