@@ -40,17 +40,17 @@ extern int CONFIG_ORACLE_USE_LOCAL_ENV;
 #define ORACLE_DEFAULT_INSTANCE	"orcl"
 
 #define ORACLE_CHECK_SUSPEND_MODE_DBS "\
-SELECT decode(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY', 3, 0) DBSTATUS \
+SELECT DECODE(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY', 3, 0) DBSTATUS \
 FROM v$instance \
 WHERE instance_name = '%s'"
 
 /*#define ORACLE_CHECK_ARCHIVELOG_MODE_DBS "\
-SELECT decode(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER \
+SELECT DECODE(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER \
 FROM v$instance \
 WHERE instance_name = '%s'"*/
 
 #define ORACLE_CHECK_ARCHIVELOG_MODE_DBS "\
-SELECT decode(d.log_mode,'NOARCHIVELOG',1,'ARCHIVELOG',2,'MANUAL',3,0) log_mode \
+SELECT DECODE(d.log_mode,'NOARCHIVELOG',1,'ARCHIVELOG',2,'MANUAL',3,0) log_mode \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id AND i.instance_name = '%s' AND d.name = '%s'"
 
@@ -60,12 +60,13 @@ FROM v$instance \
 WHERE instance_name = '%s'"
 
 #define ORACLE_INSTANCE_INFO_DBS "\
-SELECT to_char(round(((sysdate - startup_time) * 60 * 60 * 24), 0)) AS UPTIME, \
-	decode(status, 'STARTED', 1, 'MOUNTED', 2, 'OPEN', 3, 'OPEN MIGRATE', 4, 0) AS STATUS, \
-	decode(parallel, 'YES', 1, 'NO', 2, 0) PARALLEL, \
-	decode(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER, \
-	decode(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY', 3, 0) DBSTATUS, \
-	decode(active_state, 'NORMAL', 1, 'QUIESCING', 2, 'QUIESCED', 3, 0) AS ACTIVESTATE \
+SELECT host_name AS HOSTNAME, \
+	TO_CHAR(round(((sysdate - startup_time) * 60 * 60 * 24), 0)) AS UPTIME, \
+	DECODE(status, 'STARTED', 1, 'MOUNTED', 2, 'OPEN', 3, 'OPEN MIGRATE', 4, 0) AS STATUS, \
+	DECODE(parallel, 'YES', 1, 'NO', 2, 0) PARALLEL, \
+	DECODE(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER, \
+	DECODE(database_status, 'ACTIVE', 1, 'SUSPENDED', 2, 'INSTANCE RECOVERY', 3, 0) DBSTATUS, \
+	DECODE(active_state, 'NORMAL', 1, 'QUIESCING', 2, 'QUIESCED', 3, 0) AS ACTIVESTATE \
 FROM v$instance \
 WHERE instance_name = '%s'"
 
@@ -104,17 +105,17 @@ WHERE i.inst_id = pd.inst_id \
 #define ORACLE_V11_DB_INFO_DBS "\
 SELECT i.instance_name AS INSTANCE, \
     i.host_name AS HOSTNAME, \
-	decode(d.log_mode,'NOARCHIVELOG',1,'ARCHIVELOG',2,'MANUAL',3,0) log_mode, \
-	to_char(cast(d.resetlogs_time as timestamp WITH time zone),'YYYY-MM-DD_HH24_MI_SS_TZH_TZM') RESETLOGS_TIME, \
-	to_char(cast(d.controlfile_created as timestamp WITH time zone),'YYYY-MM-DD_HH24_MI_SS_TZH_TZM') CONTROLFILE_CREATED, \
-	decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) OPEN_MODE, \
-	decode(d.protection_mode, 'MAXIMUM PROTECTION', 1, 'MAXIMUM AVAILABILITY', 2, 'RESYNCHRONIZATION', 3, 'MAXIMUM PERFORMANCE', 4, 'UNPROTECTED', 5, 0) PROTECTION_MODE, \
+	DECODE(d.log_mode,'NOARCHIVELOG',1,'ARCHIVELOG',2,'MANUAL',3,0) log_mode, \
+	TO_CHAR(cast(d.resetlogs_time as timestamp WITH time zone),'YYYY-MM-DD_HH24_MI_SS_TZH_TZM') RESETLOGS_TIME, \
+	TO_CHAR(cast(d.controlfile_created as timestamp WITH time zone),'YYYY-MM-DD_HH24_MI_SS_TZH_TZM') CONTROLFILE_CREATED, \
+	DECODE(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) OPEN_MODE, \
+	DECODE(d.protection_mode, 'MAXIMUM PROTECTION', 1, 'MAXIMUM AVAILABILITY', 2, 'RESYNCHRONIZATION', 3, 'MAXIMUM PERFORMANCE', 4, 'UNPROTECTED', 5, 0) PROTECTION_MODE, \
 	SWITCHOVER# AS SWITCHOVER_NUMBER, \
-	decode(d.dataguard_broker, 'ENABLED', 1, 'DISABLED', 2, 0) DATAGUARD_BROKER, \
-	decode(d.guard_status, 'ALL', 1, 'STANDBY', 2, 'NONE', 3, 0) GUARD_STATUS, \
-	decode(d.force_logging, 'YES', 1, 'NO', 2, 0) FORCE_LOGGING, \
-	decode(d.flashback_on, 'YES', 1, 'NO', 2, 'RESTORE POINT ONLY', 3, 0) FLASHBACK_ON, \
-	decode(d.database_role, 'SNAPSHOT STANDBY', 1, 'LOGICAL STANDBY', 2, 'PHYSICAL STANDBY', 3, 'PRIMARY', 4, 0) DATABASE_ROLE, \
+	DECODE(d.dataguard_broker, 'ENABLED', 1, 'DISABLED', 2, 0) DATAGUARD_BROKER, \
+	DECODE(d.guard_status, 'ALL', 1, 'STANDBY', 2, 'NONE', 3, 0) GUARD_STATUS, \
+	DECODE(d.force_logging, 'YES', 1, 'NO', 2, 0) FORCE_LOGGING, \
+	DECODE(d.flashback_on, 'YES', 1, 'NO', 2, 'RESTORE POINT ONLY', 3, 0) FLASHBACK_ON, \
+	DECODE(d.database_role, 'SNAPSHOT STANDBY', 1, 'LOGICAL STANDBY', 2, 'PHYSICAL STANDBY', 3, 'PRIMARY', 4, 0) DATABASE_ROLE, \
 	d.dbid AS DBID, \
 	d.name AS DBNAME, \
 	d.platform_name AS PLATFORM_NAME \
@@ -125,18 +126,18 @@ WHERE i.inst_id = d.inst_id \
 #define ORACLE_V12_DB_INFO_DBS "\
 SELECT i.instance_name AS INSTANCE, \
     i.host_name AS HOSTNAME, \
-	decode(d.log_mode,'NOARCHIVELOG',1,'ARCHIVELOG',2,'MANUAL',3,0) log_mode, \
-	to_char(cast(d.resetlogs_time as timestamp WITH time zone),'YYYY-MM-DD_HH24_MI_SS_TZH_TZM') RESETLOGS_TIME, \
-	to_char(cast(d.controlfile_created as timestamp WITH time zone),'YYYY-MM-DD_HH24_MI_SS_TZH_TZM') CONTROLFILE_CREATED, \
-	decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) OPEN_MODE, \
-	decode(d.protection_mode, 'MAXIMUM PROTECTION', 1, 'MAXIMUM AVAILABILITY', 2, 'RESYNCHRONIZATION', 3, 'MAXIMUM PERFORMANCE', 4, 'UNPROTECTED', 5, 0) PROTECTION_MODE, \
+	DECODE(d.log_mode,'NOARCHIVELOG',1,'ARCHIVELOG',2,'MANUAL',3,0) log_mode, \
+	TO_CHAR(cast(d.resetlogs_time as timestamp WITH time zone),'YYYY-MM-DD_HH24_MI_SS_TZH_TZM') RESETLOGS_TIME, \
+	TO_CHAR(cast(d.controlfile_created as timestamp WITH time zone),'YYYY-MM-DD_HH24_MI_SS_TZH_TZM') CONTROLFILE_CREATED, \
+	DECODE(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) OPEN_MODE, \
+	DECODE(d.protection_mode, 'MAXIMUM PROTECTION', 1, 'MAXIMUM AVAILABILITY', 2, 'RESYNCHRONIZATION', 3, 'MAXIMUM PERFORMANCE', 4, 'UNPROTECTED', 5, 0) PROTECTION_MODE, \
 	SWITCHOVER# AS SWITCHOVER_NUMBER, \
-	decode(d.dataguard_broker, 'ENABLED', 1, 'DISABLED', 2, 0) DATAGUARD_BROKER, \
-	decode(d.guard_status, 'ALL', 1, 'STANDBY', 2, 'NONE', 3, 0) GUARD_STATUS, \
-	decode(d.force_logging, 'YES', 1, 'NO', 2, 0) FORCE_LOGGING, \
-	decode(d.flashback_on, 'YES', 1, 'NO', 2, 'RESTORE POINT ONLY', 3, 0) FLASHBACK_ON, \
-	decode(d.database_role, 'SNAPSHOT STANDBY', 1, 'LOGICAL STANDBY', 2, 'PHYSICAL STANDBY', 3, 'PRIMARY', 4, 0) DATABASE_ROLE, \
-	decode(d.cdb,'YES',1,'NO',2,0) AS CDB, \
+	DECODE(d.dataguard_broker, 'ENABLED', 1, 'DISABLED', 2, 0) DATAGUARD_BROKER, \
+	DECODE(d.guard_status, 'ALL', 1, 'STANDBY', 2, 'NONE', 3, 0) GUARD_STATUS, \
+	DECODE(d.force_logging, 'YES', 1, 'NO', 2, 0) FORCE_LOGGING, \
+	DECODE(d.flashback_on, 'YES', 1, 'NO', 2, 'RESTORE POINT ONLY', 3, 0) FLASHBACK_ON, \
+	DECODE(d.database_role, 'SNAPSHOT STANDBY', 1, 'LOGICAL STANDBY', 2, 'PHYSICAL STANDBY', 3, 'PRIMARY', 4, 0) DATABASE_ROLE, \
+	DECODE(d.cdb,'YES',1,'NO',2,0) AS CDB, \
 	d.dbid AS DBID, \
 	d.name AS DBNAME, \
 	d.platform_name AS PLATFORM_NAME \
@@ -149,12 +150,12 @@ SELECT i.instance_name AS INSTANCE, \
 	i.host_name AS HOSTNAME, \
 	pd.dbid AS PDB_DBID, \
 	pd.name AS PDB_NAME, \
-	decode(pd.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'MIGRATE', 4, 0) AS PDB_OPEN_MODE, \
+	DECODE(pd.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'MIGRATE', 4, 0) AS PDB_OPEN_MODE, \
 	NVL(total_size, 0) AS PDB_SIZE, \
-	to_char(cast(pd.open_time as timestamp WITH time zone), 'YYYY-MM-DD_HH24:MI:SS_TZH:TZM') AS PDB_OPEN_DATETIME, \
+	TO_CHAR(cast(pd.open_time as timestamp WITH time zone), 'YYYY-MM-DD_HH24:MI:SS_TZH:TZM') AS PDB_OPEN_DATETIME, \
 	ROUND((sysdate - cast(pd.open_time as date)) * 86400, 0) AS PDB_UPTIME, \
 	ROUND(((cast(pd.open_time as date) - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400), 0) AS PDB_OPEN_UNIXTIME, \
-	decode(pd.recovery_status, 'ENABLED', 1, 'DISABLED', 0, 2) AS PDB_RECOVERY_STATUS \
+	DECODE(pd.recovery_status, 'ENABLED', 1, 'DISABLED', 0, 2) AS PDB_RECOVERY_STATUS \
 FROM gv$instance i, gv$pdbs pd \
 WHERE i.inst_id = pd.inst_id \
 	AND i.instance_name = '%s'"
@@ -164,20 +165,20 @@ SELECT i.instance_name AS INSTANCE, \
 	i.host_name AS HOSTNAME, \
 	pd.dbid AS PDB_DBID, \
 	pd.name AS PDB_NAME, \
-	decode(pd.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'MIGRATE', 4, 0) AS PDB_OPEN_MODE, \
+	DECODE(pd.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'MIGRATE', 4, 0) AS PDB_OPEN_MODE, \
 	NVL(total_size, 0) AS PDB_SIZE, \
-	to_char(cast(pd.open_time as timestamp WITH time zone), 'YYYY-MM-DD_HH24:MI:SS_TZH:TZM') AS PDB_OPEN_DATETIME, \
+	TO_CHAR(cast(pd.open_time as timestamp WITH time zone), 'YYYY-MM-DD_HH24:MI:SS_TZH:TZM') AS PDB_OPEN_DATETIME, \
 	ROUND((sysdate - cast(pd.open_time as date)) * 86400, 0) AS PDB_UPTIME, \
 	ROUND(((cast(pd.open_time as date) - to_date('1970-01-01', 'YYYY-MM-DD')) * 86400), 0) AS PDB_OPEN_UNIXTIME, \
-	decode(pd.recovery_status, 'ENABLED', 1, 'DISABLED', 0, 2) AS PDB_RECOVERY_STATUS, \
-	decode(proxy_pdb, 'YES', 1, 'NO', 0, 2) AS PDB_PROXY, \
+	DECODE(pd.recovery_status, 'ENABLED', 1, 'DISABLED', 0, 2) AS PDB_RECOVERY_STATUS, \
+	DECODE(proxy_pdb, 'YES', 1, 'NO', 0, 2) AS PDB_PROXY, \
 	local_undo AS PDB_LOCAL_UNDO \
 FROM gv$instance i, gv$pdbs pd \
 WHERE i.inst_id = pd.inst_id \
 	AND i.instance_name = '%s'"
 
 #define ORACLE_CHECK_DB_OPEN_MODE_DBS "\
-SELECT decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
+SELECT DECODE(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
 	AND d.database_role = '%s' \
@@ -186,7 +187,7 @@ WHERE i.inst_id = d.inst_id \
 	AND d.name = '%s'"
 
 #define ORACLE_CHECK_STANDBY_DB_OPEN_MODE_DBS "\
-SELECT decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
+SELECT DECODE(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
 	AND d.database_role <> 'PRIMARY' \
@@ -195,14 +196,14 @@ WHERE i.inst_id = d.inst_id \
 	AND d.name = '%s'"
 
 #define ORACLE_CHECK_INST_OPEN_MODE_WITHOUT_DBROLE_DBS "\
-SELECT decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
+SELECT DECODE(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
 	AND i.status in('MOUNTED', 'OPEN') \
 	AND i.instance_name = '%s'"
 
 #define ORACLE_CHECK_INST_OPEN_MODE_DBS "\
-SELECT decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
+SELECT DECODE(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
 	AND d.database_role = '%s' \
@@ -210,7 +211,7 @@ WHERE i.inst_id = d.inst_id \
 	AND i.instance_name = '%s'"
 
 #define ORACLE_CHECK_STANDBY_INST_OPEN_MODE_DBS "\
-SELECT decode(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
+SELECT DECODE(d.open_mode, 'MOUNTED', 1, 'READ WRITE', 2, 'READ ONLY', 3, 'READ ONLY WITH APPLY', 4, 0) AS OPEN_MODE \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
 	AND d.database_role <> 'PRIMARY' \
@@ -218,16 +219,16 @@ WHERE i.inst_id = d.inst_id \
 	AND i.instance_name = '%s'"
 
 #define ORACLE_DB_INCARNATION_INFO_DBS "\
-SELECT nvl(incarnation#, 0) AS INCARNATION \
+SELECT NVL(incarnation#, 0) AS INCARNATION \
 FROM v$database_incarnation \
 WHERE status = 'CURRENT'"
 
 #define ORACLE_DB_SIZE_INFO_DBS "\
-SELECT nvl(sum(bytes), 0) AS DBSIZE \
+SELECT NVL(SUM(bytes), 0) AS DBSIZE \
 FROM v$datafile"
 
 #define ORACLE_PDB_SIZE_INFO_DBS "\
-SELECT nvl(sum(d.bytes), 0) AS PDB_SIZE \
+SELECT NVL(SUM(d.bytes), 0) AS PDB_SIZE \
 FROM v$datafile d, v$pdbs p \
 WHERE d.con_id = p.con_id \
 	AND p.name = '%s'"
@@ -267,26 +268,26 @@ WHERE ACTION IN('APPLY')  \
 
 #define ORACLE_INSTANCE_RESOURCE_INFO_DBS "\
 SELECT r.resource_name AS RNAME, \
-	nvl(r.current_utilization, 0) AS RVALUE \
+	NVL(r.current_utilization, 0) AS RVALUE \
 FROM gv$instance i, gv$resource_limit r \
 WHERE i.instance_number = r.inst_id \
 	AND i.instance_name = '%s' \
 	AND r.resource_name in('processes', 'sessions')"
 
 #define ORACLE_INSTANCE_DB_FILES_CURRENT_DBS "\
-SELECT nvl(count(*), 0) AS DB_FILES_CURRENT \
+SELECT NVL(count(*), 0) AS DB_FILES_CURRENT \
 FROM gv$instance i, gv$datafile d \
 WHERE i.instance_number = d.inst_id \
 	AND i.instance_name = '%s'"
 
 #define ORACLE_INSTANCE_RESUMABLE_COUNT_DBS "\
-SELECT nvl(count(rr.instance_id),0) AS RESUMABLE_COUNT \
+SELECT NVL(count(rr.instance_id),0) AS RESUMABLE_COUNT \
 FROM(SELECT r.instance_id FROM dba_resumable r WHERE r.STATUS = 'SUSPENDED') rr \
 RIGHT JOIN gv$instance i ON i.inst_id = rr.instance_id \
 GROUP BY i.INSTANCE_NAME"
 
 #define ORACLE_INSTANCE_COUNT_BAD_PROCESSES_DBS "\
-SELECT nvl(count(pp.addr), 0) AS COUNT_BAD_PROCESSES FROM \
+SELECT NVL(count(pp.addr), 0) AS COUNT_BAD_PROCESSES FROM \
 (SELECT p.addr, inst_id \
 	FROM gv$process p \
 	WHERE p.program <> 'PSEUDO' \
@@ -304,10 +305,12 @@ RIGHT JOIN gv$instance i ON i.INST_ID = pp.INST_ID \
 GROUP BY i.INSTANCE_NAME"
 
 #define ORACLE_INSTANCE_FRA_INFO_DBS "\
-SELECT name AS FRA_LOCATION_NAME, number_of_files AS FRA_FILE_NUM, space_limit AS FRA_SPACE_LIMIT, \
+SELECT name AS FRA_LOCATION_NAME, \
+	number_of_files AS FRA_FILE_NUM, \
+	space_limit AS FRA_SPACE_LIMIT, \
 	space_used AS FRA_SPACE_USED, space_reclaimable AS FRA_SPACE_RECLAIMABLE, (space_limit-(space_used-space_reclaimable)) AS FRA_SPACE_FREE, \
-	decode(space_limit, 0, 0, round(((space_used - space_reclaimable) / space_limit) * 100, 2)) AS FRA_USED_PCT, \
-	decode(space_limit, 0, 100, round(100 - ((space_used - space_reclaimable) / space_limit) * 100, 2)) AS FRA_FREE_PCT \
+	DECODE(space_limit, 0, 0, ROUND(((space_used - space_reclaimable) / space_limit) * 100, 2)) AS FRA_USED_PCT, \
+	DECODE(space_limit, 0, 100, ROUND(100 - ((space_used - space_reclaimable) / space_limit) * 100, 2)) AS FRA_FREE_PCT \
 FROM v$recovery_file_dest"
 
 #define ORACLE_INSTANCE_REDOLOG_SWITCH_RATE_INFO_DBS "\
@@ -319,9 +322,9 @@ WITH a AS(SELECT cnt, thread# , row_number() over(partition by thread# order by 
 		GROUP BY a.thread#, a.dest_id \
 	) \
 ) \
-SELECT nvl(sum(cnt), 0) AS REDOLOG_SWITCH_RATE \
+SELECT NVL(sum(cnt), 0) AS REDOLOG_SWITCH_RATE \
 FROM( \
-	SELECT t.thread# as thread, nvl((SELECT cnt FROM a WHERE a.thread# = t.thread# AND rn = 1), 0) cnt FROM v$thread t WHERE t.status = 'OPEN' \
+	SELECT t.thread# as thread, NVL((SELECT cnt FROM a WHERE a.thread# = t.thread# AND rn = 1), 0) cnt FROM v$thread t WHERE t.status = 'OPEN' \
 )"
 
 #define ORACLE_INSTANCE_REDOLOG_SIZE_INFO_DBS "\
@@ -333,20 +336,20 @@ WHERE first_time >= sysdate-1/24 \
 	AND type = 'LOCAL'"
 
 #define ORACLE_INSTANCE_ARCHIVE_LOG_BACKUP_INFO_DBS "\
-SELECT nvl((SELECT to_char(round((sysdate-(max(c.start_time)))*24*60*60, 0)) \
+SELECT NVL((SELECT TO_CHAR(round((sysdate-(max(c.start_time)))*24*60*60, 0)) \
 FROM v$backup_set c, v$backup_piece p \
 WHERE c.backup_type = 'L' \
 	AND c.set_stamp = p.set_stamp \
 	AND c.set_count = p.set_count), \
-to_char((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_ARCHIVE_LOG_BACKUP FROM dual"
+TO_CHAR((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_ARCHIVE_LOG_BACKUP FROM dual"
 
 #define ORACLE_INSTANCE_FULL_BACKUP_INFO_DBS "\
-SELECT nvl((SELECT to_char(round((sysdate-(min(completion_time)))*24*60*60,0)) \
+SELECT NVL((SELECT TO_CHAR(round((sysdate-(min(completion_time)))*24*60*60,0)) \
 FROM( \
 	SELECT CASE \
-	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time < greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then sysdate \
-	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time >= greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD'))) \
-	ELSE nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')) \
+	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time < greatest(NVL(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), NVL(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then sysdate \
+	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time >= greatest(NVL(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), NVL(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD'))) \
+	ELSE NVL(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')) \
 	END completion_time, \
 	a.FILE# \
 	FROM( \
@@ -369,15 +372,15 @@ FROM( \
 		FROM v$backup_datafile c, v$backup_piece p \
 		WHERE(c.incremental_level = 0 or c.incremental_level is null) AND c.file#  > 0 AND  c.set_stamp = p.set_stamp  AND c.set_count = p.set_count \
 		))), \
-to_char((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_FULL_BACKUP FROM dual"
+TO_CHAR((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_FULL_BACKUP FROM dual"
 
 #define ORACLE_INSTANCE_INCR_BACKUP_FILE_NUM_DBS "\
-SELECT to_char(count(*)) AS LAST_INCR_BACKUP_FILE_NUM \
+SELECT TO_CHAR(count(*)) AS LAST_INCR_BACKUP_FILE_NUM \
 FROM v$backup_datafile c, v$backup_piece p \
 WHERE incremental_level > 0 \
 AND  c.set_stamp = p.set_stamp \
 AND c.set_count = p.set_count \
-AND c.completion_time > (SELECT min(nvl(completion_time, to_date('1970-01-01', 'YYYY-MM-DD'))) \
+AND c.completion_time > (SELECT min(NVL(completion_time, to_date('1970-01-01', 'YYYY-MM-DD'))) \
 	FROM(SELECT max(c.completion_time) as completion_time, c.FILE# as FILE# \
 		FROM  v$backup_datafile c, v$backup_piece p \
 		WHERE c.FILE# > 0 AND(c.incremental_level = 0 or c.incremental_level is null) \
@@ -397,12 +400,12 @@ AND c.completion_time > (SELECT min(nvl(completion_time, to_date('1970-01-01', '
 )"
 
 #define ORACLE_INSTANCE_INCR_BACKUP_INFO_DBS "\
-SELECT nvl((SELECT to_char(round((sysdate-(min(completion_time)))*24*60*60, 0)) \
+SELECT NVL((SELECT TO_CHAR(round((sysdate-(min(completion_time)))*24*60*60, 0)) \
 FROM( \
 	SELECT CASE \
-	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time < greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then sysdate \
-	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time >= greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD'))) \
-	ELSE nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')) \
+	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time < greatest(NVL(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), NVL(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then sysdate \
+	WHEN(e.enabled = 'READ ONLY' AND e.checkpoint_time >= greatest(NVL(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), NVL(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')))) then greatest(nvl(a.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')), nvl(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD'))) \
+	ELSE NVL(b.completion_time, to_date('1970-01-01', 'YYYY-MM-DD')) \
 	END completion_time, \
 	a.FILE# \
 	FROM( \
@@ -427,15 +430,15 @@ FROM( \
 		FROM v$backup_datafile c, v$backup_piece p \
 		WHERE(c.incremental_level = 0 or c.incremental_level is null) AND c.file#  > 0 AND c.set_stamp = p.set_stamp AND c.set_count = p.set_count \
 		))), \
-to_char((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_INCR_BACKUP FROM dual"
+TO_CHAR((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_INCR_BACKUP FROM dual"
 
 #define ORACLE_INSTANCE_CF_BACKUP_INFO_DBS "\
-SELECT nvl((SELECT to_char(round((sysdate-(max(c.start_time)))*24*60*60, 0)) \
+SELECT NVL((SELECT TO_CHAR(round((sysdate-(max(c.start_time)))*24*60*60, 0)) \
 	FROM v$backup_set c, v$backup_piece p \
 	WHERE c.controlfile_included in('YES', 'SBY') \
 	AND c.set_stamp = p.set_stamp \
 	AND c.set_count = p.set_count), \
-to_char((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_CF_BACKUP FROM dual"
+TO_CHAR((cast(SYS_EXTRACT_UTC(SYSTIMESTAMP) as date)-to_date('01011970', 'ddmmyyyy'))*24*60*60)) AS LAST_CF_BACKUP FROM dual"
 
 #define ORACLE_V11_DISCOVER_STANDBY_DBS "\
 SELECT i.instance_name AS INSTANCE, \
@@ -456,20 +459,20 @@ WHERE i.inst_id = d.inst_id \
 	AND i.instance_name= '%s'"
 
 #define ORACLE_STANDBY_LAG_DBS "\
-SELECT decode(name, 'apply lag', 'APPLY_LAG', 'transport lag', 'TRANSPORT_LAG', 'NONE') AS PARAM_NAME, \
-nvl(to_char(extract(day from to_dsinterval(value))*24*60*60+extract(hour from to_dsinterval(value))*60*60+extract(minute from to_dsinterval(value))*60+extract(second from to_dsinterval(value))), to_char(86400)) AS LAG_VALUE \
+SELECT DECODE(name, 'apply lag', 'APPLY_LAG', 'transport lag', 'TRANSPORT_LAG', 'NONE') AS PARAM_NAME, \
+NVL(TO_CHAR(extract(day from to_dsinterval(value))*24*60*60+extract(hour from to_dsinterval(value))*60*60+extract(minute from to_dsinterval(value))*60+extract(second from to_dsinterval(value))), to_char(86400)) AS LAG_VALUE \
 FROM v$dataguard_stats \
 WHERE name IN('apply lag', 'transport lag') \
 union all \
-SELECT decode(name, 'apply lag', 'APPLY_TIME_COMPUTED', 'transport lag', 'TRANSPORT_TIME_COMPUTED', 'NONE') AS PARAM_NAME, \
-	to_char(nvl(round(abs((sysdate - to_date(TIME_COMPUTED, 'mm/dd/yyyy hh24:mi:ss'))*24*60*60),0), 86400)) AS TIME_COMPUTED_LAG_VALUE \
+SELECT DECODE(name, 'apply lag', 'APPLY_TIME_COMPUTED', 'transport lag', 'TRANSPORT_TIME_COMPUTED', 'NONE') AS PARAM_NAME, \
+	TO_CHAR(NVL(round(abs((sysdate - to_date(TIME_COMPUTED, 'mm/dd/yyyy hh24:mi:ss'))*24*60*60),0), 86400)) AS TIME_COMPUTED_LAG_VALUE \
 FROM v$dataguard_stats \
 WHERE name IN('apply lag', 'transport lag')"
 
 #define ORACLE_STANDBY_MRP_STATUS_DBS "\
 SELECT b.status AS MRP_STATUS, b.mrp_cnt AS MRP_CNT \
 FROM(SELECT a.status, a.mrp_cnt, max(a.status) over() mx \
-	FROM(SELECT decode(nvl(status, 'NULL'), 'UNUSED', 1, 'ALLOCATED', 2, 'CONNECTED', 3, 'ATTACHED', 4, 'IDLE', 5, 'ERROR', 6, 'OPENING', 7, 'CLOSING', 8, 'WRITING', 9, 'RECEIVING', 10, 'ANNOUNCING', 11, 'REGISTERING', 12, 'WAIT_FOR_LOG', 13, 'WAIT_FOR_GAP', 14, 'APPLYING_LOG', 15, 0) AS status, count(*) AS mrp_cnt \
+	FROM(SELECT DECODE(NVL(status, 'NULL'), 'UNUSED', 1, 'ALLOCATED', 2, 'CONNECTED', 3, 'ATTACHED', 4, 'IDLE', 5, 'ERROR', 6, 'OPENING', 7, 'CLOSING', 8, 'WRITING', 9, 'RECEIVING', 10, 'ANNOUNCING', 11, 'REGISTERING', 12, 'WAIT_FOR_LOG', 13, 'WAIT_FOR_GAP', 14, 'APPLYING_LOG', 15, 0) AS status, count(*) AS mrp_cnt \
 		FROM v$managed_standby \
 		WHERE process LIKE 'MRP%%' \
 		GROUP by process, status \
@@ -495,7 +498,7 @@ SELECT thread# AS THREAD_NUM, TRUNC((sysdate - to_date('1970-01-01', 'YYYY-MM-DD
 FROM ( \
 	SELECT thread#, MAX(sequence#), MAX(next_time) AS next_time FROM v$archived_log l \
 	WHERE RESETLOGS_CHANGE# = (SELECT RESETLOGS_CHANGE# FROM v$database) \
-		AND sequence# < nvl((SELECT MIN(cs) \
+		AND sequence# < NVL((SELECT MIN(cs) \
 		FROM (SELECT thread#, cs FROM ( \
 			SELECT thread#, sequence# AS cs, LEAD(sequence#, 1) OVER (PARTITION BY thread# ORDER BY sequence#) AS hs, \
 				LEAD(sequence#, 1) OVER (PARTITION BY thread# ORDER BY sequence#) - sequence# AS dt \
@@ -507,7 +510,7 @@ FROM ( \
 GROUP BY thread# \
 UNION ALL \
 SELECT thread#, MAX(sequence#), MAX(last_time) AS next_time FROM v$standby_log l \
-WHERE sequence# < nvl((select min(cs) \
+WHERE sequence# < NVL((select min(cs) \
 FROM (SELECT thread#, cs FROM ( \
 		SELECT thread#, sequence# AS cs, LEAD(sequence#, 1) OVER (PARTITION BY thread# ORDER BY sequence#) AS hs, \
 			LEAD (sequence#, 1) OVER (PARTITION BY thread# ORDER BY sequence#) - sequence# AS dt \
@@ -556,10 +559,10 @@ WHERE bt.status != 'INACTIVE' \
 SELECT i.INSTANCE_NAME AS INSTANCE, \
 	db.name AS DBNAME, \
 	d.dest_name AS ARLDEST, \
-	decode(d.status, 'VALID', 1, 'INACTIVE', 2, 'DEFERRED', 3, 'ERROR', 4, 'DISABLED', 5, 'BAD PARAM', 6, 'ALTERNATE', 7, 'FULL', 8, 0) AS LOG_STATUS, \
-	decode(d.target, 'PRIMARY', 1, 'STANDBY', 2, 'LOCAL', 3, 'REMOTE', 4, 0) AS LOG_TARGET, \
-	decode(d.archiver, 'ARCH', 1, 'FOREGROUND', 2, 'LGWR', 3, 'RFS', 4, 0) AS LOG_ARCHIVER, \
-	nvl(d.log_sequence, 0) AS LOG_SEQUENCE, \
+	DECODE(d.status, 'VALID', 1, 'INACTIVE', 2, 'DEFERRED', 3, 'ERROR', 4, 'DISABLED', 5, 'BAD PARAM', 6, 'ALTERNATE', 7, 'FULL', 8, 0) AS LOG_STATUS, \
+	DECODE(d.target, 'PRIMARY', 1, 'STANDBY', 2, 'LOCAL', 3, 'REMOTE', 4, 0) AS LOG_TARGET, \
+	DECODE(d.archiver, 'ARCH', 1, 'FOREGROUND', 2, 'LGWR', 3, 'RFS', 4, 0) AS LOG_ARCHIVER, \
+	NVL(d.log_sequence, 0) AS LOG_SEQUENCE, \
 	replace(d.error, '\"', '|') AS LOG_ERROR \
 FROM gv$archive_dest d, gv$database db, gv$instance i \
 WHERE d.status != 'INACTIVE' \
@@ -569,7 +572,7 @@ WHERE d.status != 'INACTIVE' \
 #define ORACLE_INSTANCE_PARAMETERS_INFO_DBS "\
 SELECT i.instance_name AS INSTANCE, \
 	p.name AS PARAMETER, \
-	to_char(p.value) AS PVALUE \
+	TO_CHAR(p.value) AS PVALUE \
 FROM gv$instance i, gv$parameter p \
 WHERE i.instance_number = p.inst_id \
 	AND p.type IN(3, 6) \
@@ -611,7 +614,7 @@ WHERE d.tablespace_name = f.tablespace_name(+) \
 
 #define ORACLE_V12_PERMANENT_TS_INFO_DBS "\
 WITH \
-d AS (SELECT i.instance_name, p.con_id, decode(p.con_id, 0, d.name, p.name) AS dbname FROM v$containers p, v$database d, v$instance i), \
+d AS (SELECT i.instance_name, p.con_id, DECODE(p.con_id, 0, d.name, p.name) AS dbname FROM v$containers p, v$database d, v$instance i), \
 tbs AS (SELECT t.con_id, t.tablespace_name, DECODE(t.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) ts_status, COUNT(file_id) df_cnt FROM cdb_tablespaces t, cdb_data_files d WHERE t.con_id = d.con_id AND t.tablespace_name = d.tablespace_name AND t.contents = 'PERMANENT' GROUP BY t.con_id, t.tablespace_name, t.status), \
 free AS (SELECT con_id, tablespace_name, SUM(bytes) file_free_space FROM cdb_free_space WHERE(con_id, tablespace_name) IN(SELECT con_id, tablespace_name FROM tbs) GROUP BY con_id, tablespace_name), \
 maxsz AS (SELECT con_id, tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM cdb_data_files WHERE(con_id, tablespace_name) IN(SELECT con_id, tablespace_name FROM tbs) GROUP BY con_id, tablespace_name), \
@@ -630,7 +633,7 @@ SELECT ts.con_id AS CONID, d.instance_name AS INSTANCE, d.dbname AS DBNAME, ts.t
 #define ORACLE_V11_TEMPORARY_TS_INFO_DBS "\
 WITH \
 i AS(SELECT i.instance_name, d.name FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
-f AS (SELECT t.tablespace_name tablespace_name, NVL(NVL((SELECT sum(bytes) FROM dba_temp_files tf WHERE tf.tablespace_name = t.tablespace_name), 0) - nvl((SELECT sum(s.blocks) FROM v$tempseg_usage s WHERE t.tablespace_name = s.tablespace), 0)*t.block_size, 0) as tbs_free from dba_tablespaces t WHERE t.contents = 'TEMPORARY' GROUP BY t.tablespace_name, t.block_size), \
+f AS (SELECT t.tablespace_name tablespace_name, NVL(NVL((SELECT sum(bytes) FROM dba_temp_files tf WHERE tf.tablespace_name = t.tablespace_name), 0) - NVL((SELECT sum(s.blocks) FROM v$tempseg_usage s WHERE t.tablespace_name = s.tablespace), 0)*t.block_size, 0) as tbs_free from dba_tablespaces t WHERE t.contents = 'TEMPORARY' GROUP BY t.tablespace_name, t.block_size), \
 m AS (SELECT d.tablespace_name tablespace_name, SUM(d.bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size FROM dba_temp_files d GROUP BY d.tablespace_name), \
 d AS (SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'TEMPORARY'), \
 df AS (SELECT tablespace_name, count(*) AS df_cnt FROM dba_temp_files GROUP BY tablespace_name) \
@@ -649,11 +652,11 @@ WHERE d.tablespace_name = f.tablespace_name(+) \
 
 #define ORACLE_V12_TEMPORARY_TS_INFO_DBS "\
 WITH \
-d AS (SELECT i.instance_name, p.con_id, decode(p.con_id, 0, d.name, p.name) dbname FROM v$containers p, v$database d, v$instance i), \
+d AS (SELECT i.instance_name, p.con_id, DECODE(p.con_id, 0, d.name, p.name) dbname FROM v$containers p, v$database d, v$instance i), \
 m AS (SELECT con_id, tablespace_name, SUM(bytes) file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) file_max_size, count(*) df_cnt FROM cdb_temp_files GROUP BY con_id, tablespace_name), \
 u AS (SELECT con_id,tablespace tablespace_name,SUM(blocks) blocks FROM v$tempseg_usage group by con_id,tablespace), \
 t AS (SELECT con_id, tablespace_name, block_size, status FROM cdb_tablespaces WHERE contents='TEMPORARY'), \
-a AS (SELECT m.con_id, m.tablespace_name, m.file_size, m.file_max_size, m.df_cnt, nvl(u.blocks,0) blocks_used FROM m,u WHERE m.con_id=u.con_id(+) AND m.tablespace_name=u.tablespace_name(+)) \
+a AS (SELECT m.con_id, m.tablespace_name, m.file_size, m.file_max_size, m.df_cnt, NVL(u.blocks,0) blocks_used FROM m,u WHERE m.con_id=u.con_id(+) AND m.tablespace_name=u.tablespace_name(+)) \
 SELECT d.con_id AS CONID, \
 	d.instance_name AS INSTANCE, \
 	d.dbname AS DBNAME, \
