@@ -45,5 +45,5 @@ jobs:
       run: make dist
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix-5.0.2
-        path: zabbix-5.0.2.tar.gz
+        name: zabbix-5.0.3
+        path: zabbix-5.0.3.tar.gz

@@ -40,9 +40,9 @@ jobs:
     - name: Build dist
       run: make dist
     - name: Extract distr
-      run: tar -zxf zabbix-5.0.2.tar.gz
+      run: tar -zxf zabbix-5.0.3.tar.gz
     - name: Change directory
-      run: cd zabbix-5.0.2/
+      run: cd zabbix-5.0.3/
     - name: Run configure
       run: ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
     - name: Build
