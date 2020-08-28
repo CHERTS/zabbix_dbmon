@@ -353,9 +353,6 @@ zbx_mpoint_t;
 #define ZBX_SYSINFO_TAG_PFREE			"pfree"
 #define ZBX_SYSINFO_TAG_PUSED			"pused"
 
-#if defined(HAVE_DBMON)
-int	zbx_execute_dbmon_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *request, AGENT_RESULT *result);
-#endif
 int	zbx_execute_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUEST *request, AGENT_RESULT *result);
 void	zbx_mpoints_free(zbx_mpoint_t *mpoint);
 

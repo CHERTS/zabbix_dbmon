@@ -1,3 +1,5 @@
+// +build !windows
+
 /*
 ** Zabbix
 ** Copyright (C) 2001-2020 Zabbix SIA
@@ -17,19 +19,32 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package tcpudp
+package log
 
 import (
-	"errors"
-
-	"zabbix.com/pkg/plugin"
+	"fmt"
+	"log/syslog"
 )
 
-func exportSystemTcpListen(port uint16) (result interface{}, err error) {
-	return nil, errors.New("Not supported.")
+var syslogWriter *syslog.Writer
+
+func createSyslog() (err error) {
+	syslogWriter, err = syslog.New(syslog.LOG_WARNING|syslog.LOG_DAEMON, "zabbix_agent2")
+	return
 }
 
-func init() {
-	plugin.RegisterMetrics(&impl, "TCP",
-		"net.tcp.port", "Checks if it is possible to make TCP connection to specified port.")
+func procSysLog(format string, args []interface{}, level int) {
+	switch level {
+	case Info:
+		syslogWriter.Info(fmt.Sprintf(format, args...))
+	case Crit:
+		syslogWriter.Crit(fmt.Sprintf(format, args...))
+	case Err:
+		syslogWriter.Err(fmt.Sprintf(format, args...))
+	case Warning:
+		syslogWriter.Warning(fmt.Sprintf(format, args...))
+	case Debug, Trace:
+		syslogWriter.Debug(fmt.Sprintf(format, args...))
+	}
+	return
 }

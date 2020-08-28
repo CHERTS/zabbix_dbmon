@@ -1,3 +1,4 @@
+<?php
 /*
 ** Zabbix
 ** Copyright (C) 2001-2020 Zabbix SIA
@@ -17,32 +18,46 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package log
 
-import (
-	"fmt"
-	"log/syslog"
-)
+require_once dirname(__FILE__).'/../include/CAPITest.php';
 
-var syslogWriter *syslog.Writer
+class testGraphPrototype extends CAPITest {
 
-func createSyslog() (err error) {
-	syslogWriter, err = syslog.New(syslog.LOG_WARNING|syslog.LOG_DAEMON, "zabbix_agent2")
-	return
-}
-
-func procSysLog(format string, args []interface{}, level int) {
-	switch level {
-	case Info:
-		syslogWriter.Info(fmt.Sprintf(format, args...))
-	case Crit:
-		syslogWriter.Crit(fmt.Sprintf(format, args...))
-	case Err:
-		syslogWriter.Err(fmt.Sprintf(format, args...))
-	case Warning:
-		syslogWriter.Warning(fmt.Sprintf(format, args...))
-	case Debug, Trace:
-		syslogWriter.Debug(fmt.Sprintf(format, args...))
+	public static function graph_prototype_get_data(): array {
+		return [
+			[
+				[
+					'output' => ['graphid'],
+					'hostids' => [131003]
+				],
+				[
+					[
+						'graphid' => '1'
+					]
+				],
+				null
+			],
+			[
+				[
+					'output' => ['graphid'],
+					'hostids' => [131002]
+				],
+				[
+					// Should be no matches.
+				],
+				null
+			]
+		];
 	}
-	return
+
+	/**
+	 * @dataProvider graph_prototype_get_data
+	 */
+	public function testGraphPrototype_Get($api_request, $expected_result, $expected_error) {
+		$result = $this->call('graphprototype.get', $api_request, $expected_error);
+
+		if ($expected_error === null) {
+			$this->assertSame($result['result'], $expected_result);
+		}
+	}
 }
