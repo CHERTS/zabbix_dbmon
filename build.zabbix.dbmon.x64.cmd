@@ -60,24 +60,27 @@ if not exist "%LIBCONIG_PATH%\lib\%VS_ARCH%" (
 if exist "build" (
   cd build\win32\project
   copy ..\include\config.h ..\..\..\include\ >nul 2>&1
+  copy ..\..\..\include\version.h ..\..\..\include\version.h.orig >nul 2>&1
+  del /s /q /f ..\..\..\include\version.h >nul 2>&1
+  copy ..\..\..\include\version.h.win ..\..\..\include\version.h >nul 2>&1
 
   echo ------------ Build Zabbix Agent DBMON %ZBX_ARCH% ----------------------
 
   echo ------------ Build only DBMON code ------------
   rem set DBMON_OPTS="/D HAVE_MYSQL /D HAVE_POSTGRESQL /D HAVE_ORACLE"
-  del /s /q /f ..\..\..\*.o
-  del /s /q /f ..\..\..\bin\*.pdb
-  del /s /q /f ..\..\..\bin\*.exe.pdb
-  del /s /q /f ..\..\..\build\*.pdb
-  del /s /q /f ..\..\..\build\*.exe.pdb
-  del /s /q /f ..\..\..\build\*.exe.idb
-  del /s /q /f ..\..\..\build\win32\include\messages.h
-  del /s /q /f ..\..\..\build\win32\include\messages.rc
-  del /s /q /f ..\..\..\build\win32\include\MSG00001.bin
-  del /s /q /f ..\..\..\build\win32\project\messages.h
-  del /s /q /f ..\..\..\build\win32\project\messages.rc
-  del /s /q /f ..\..\..\build\win32\project\MSG00001.bin
-  del /s /q /f ..\..\..\build\win32\project\*.res
+  del /s /q /f ..\..\..\*.o >nul 2>&1
+  del /s /q /f ..\..\..\bin\*.pdb >nul 2>&1
+  del /s /q /f ..\..\..\bin\*.exe.pdb >nul 2>&1
+  del /s /q /f ..\..\..\build\*.pdb >nul 2>&1
+  del /s /q /f ..\..\..\build\*.exe.pdb >nul 2>&1
+  del /s /q /f ..\..\..\build\*.exe.idb >nul 2>&1
+  del /s /q /f ..\..\..\build\win32\include\messages.h >nul 2>&1
+  del /s /q /f ..\..\..\build\win32\include\messages.rc >nul 2>&1
+  del /s /q /f ..\..\..\build\win32\include\MSG00001.bin >nul 2>&1
+  del /s /q /f ..\..\..\build\win32\project\messages.h >nul 2>&1
+  del /s /q /f ..\..\..\build\win32\project\messages.rc >nul 2>&1
+  del /s /q /f ..\..\..\build\win32\project\MSG00001.bin >nul 2>&1
+  del /s /q /f ..\..\..\build\win32\project\*.res >nul 2>&1
   cl.exe ..\..\..\src\libs\zbxdbmon\dbmon.c /Fo"..\..\..\src\libs\zbxdbmon\dbmon.o"  /I ..\..\..\src\zabbix_agent /I .\ /I ..\include /I ..\..\..\include /I "%PCRE_PATH%\include" /I "%OPENSSL_PATH%\include" /I "%PTHREADS4W_PATH%\include" /I "%LIBCONIG_PATH%\include" /I "%MYSQL_PATH%\include" /I "%ORACLE_PATH%\include" /I "%PGSQL_PATH%\include" /D WITH_AGENT_METRICS /D WITH_COMMON_METRICS  /D WITH_SPECIFIC_METRICS /D WITH_HOSTNAME_METRIC /D WITH_SIMPLE_METRICS  /Zi /D DEFAULT_CONFIG_FILE="\"C:\\zabbix_agentd.conf\""  /Fdzabbix_agentd.exe.pdb /D _WIN32_WINNT=0x0502 /nologo /O2 /GF /FD /EHsc /MT /Gy /W3 /c /D _WINDOWS /D _CONSOLE /D UNICODE  /D _UNICODE /D HAVE_WINLDAP_H /D HAVE_ASSERT_H /D ZABBIX_SERVICE /D "_VC80_UPGRADE=0x0600" /D HAVE_IPV6 /TC /DPCRE_STATIC /DHAVE_OPENSSL /DHAVE_OPENSSL_WITH_PSK /D HAVE_DBMON /D HAVE_MYSQL /D HAVE_ORACLE /D HAVE_POSTGRESQL
   cl.exe ..\..\..\src\libs\zbxdbmon\dbmon_mysql.c /Fo"..\..\..\src\libs\zbxdbmon\dbmon_mysql.o"  /I ..\..\..\src\zabbix_agent /I .\ /I ..\include /I ..\..\..\include /I "%PCRE_PATH%\include" /I "%OPENSSL_PATH%\include" /I "%PTHREADS4W_PATH%\include" /I "%LIBCONIG_PATH%\include" /I "%MYSQL_PATH%\include" /D WITH_AGENT_METRICS /D WITH_COMMON_METRICS  /D WITH_SPECIFIC_METRICS /D WITH_HOSTNAME_METRIC /D WITH_SIMPLE_METRICS  /Zi /D DEFAULT_CONFIG_FILE="\"C:\\zabbix_agentd.conf\""  /Fdzabbix_agentd.exe.pdb /D _WIN32_WINNT=0x0502 /nologo /O2 /GF /FD /EHsc /MT /Gy /W3 /c /D _WINDOWS /D _CONSOLE /D UNICODE  /D _UNICODE /D HAVE_WINLDAP_H /D HAVE_ASSERT_H /D ZABBIX_SERVICE /D "_VC80_UPGRADE=0x0600" /D HAVE_IPV6 /TC /DPCRE_STATIC /DHAVE_OPENSSL /DHAVE_OPENSSL_WITH_PSK /D HAVE_DBMON /D HAVE_MYSQL
   cl.exe ..\..\..\src\libs\zbxdbmon\dbmon_pgsql.c /Fo"..\..\..\src\libs\zbxdbmon\dbmon_pgsql.o"  /I ..\..\..\src\zabbix_agent /I .\ /I ..\include /I ..\..\..\include /I "%PCRE_PATH%\include" /I "%OPENSSL_PATH%\include" /I "%PTHREADS4W_PATH%\include" /I "%LIBCONIG_PATH%\include" /I "%PGSQL_PATH%\include" /D WITH_AGENT_METRICS /D WITH_COMMON_METRICS  /D WITH_SPECIFIC_METRICS /D WITH_HOSTNAME_METRIC /D WITH_SIMPLE_METRICS  /Zi /D DEFAULT_CONFIG_FILE="\"C:\\zabbix_agentd.conf\""  /Fdzabbix_agentd.exe.pdb /D _WIN32_WINNT=0x0502 /nologo /O2 /GF /FD /EHsc /MT /Gy /W3 /c /D _WINDOWS /D _CONSOLE /D UNICODE  /D _UNICODE /D HAVE_WINLDAP_H /D HAVE_ASSERT_H /D ZABBIX_SERVICE /D "_VC80_UPGRADE=0x0600" /D HAVE_IPV6 /TC /DPCRE_STATIC /DHAVE_OPENSSL /DHAVE_OPENSSL_WITH_PSK /D HAVE_DBMON /D HAVE_POSTGRESQL
@@ -124,6 +127,10 @@ if exist "build" (
   ) else (
     echo "ERROR! %ZBX_GET_BIN% not found."
   )
+
+  del /s /q /f ..\..\..\include\version.h >nul 2>&1
+  copy ..\..\..\include\version.h.orig ..\..\..\include\version.h >nul 2>&1
+  del /s /q /f ..\..\..\include\version.h.orig >nul 2>&1
 )
 
 echo Done, press Enter to exit.
