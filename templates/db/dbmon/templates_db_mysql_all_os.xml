@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-08-18T05:04:34Z</date>
+    <date>2020-09-07T07:31:45Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2968,6 +2968,40 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/binary-log.html</descript
                     </triggers>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Binlog group commit sync delay</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_group_commit_sync_delay]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Controls how many microseconds the binary log commit waits before synchronizing the binary log file to disk. By default binlog_group_commit_sync_delay is set to 0, meaning that there is no delay. Setting binlog_group_commit_sync_delay to a microsecond delay enables more transactions to be synchronized together to disk at once, reducing the overall time to commit a group of transactions because the larger groups require fewer time units per group.&#13;
+&#13;
+When sync_binlog=0 or sync_binlog=1 is set, the delay specified by binlog_group_commit_sync_delay is applied for every binary log commit group before synchronization (or in the case of sync_binlog=0, before proceeding). When sync_binlog is set to a value n greater than 1, the delay is applied after every n binary log commit groups.&#13;
+&#13;
+Setting binlog_group_commit_sync_delay can increase the number of parallel committing transactions on any server that has (or might have after a failover) a replica, and therefore can increase parallel execution on the replicas. To benefit from this effect, the replica servers must have slave_parallel_type=LOGICAL_CLOCK set, and the effect is more significant when binlog_transaction_dependency_tracking=COMMIT_ORDER is also set. It is important to take into account both the source's throughput and the replicas' throughput when you are tuning the setting for binlog_group_commit_sync_delay.&#13;
+&#13;
+Setting binlog_group_commit_sync_delay can also reduce the number of fsync() calls to the binary log on any server (source or replica) that has a binary log.&#13;
+&#13;
+Note that setting binlog_group_commit_sync_delay increases the latency of transactions on the server, which might affect client applications. Also, on highly concurrent workloads, it is possible for the delay to increase contention and therefore reduce throughput. Typically, the benefits of setting a delay outweigh the drawbacks, but tuning should always be carried out to determine the optimal setting.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.BINLOG_GROUP_COMMIT_SYNC_DELAY</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Binary log row image</name>
                     <type>DEPENDENT</type>
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_row_image]</key>
@@ -3007,6 +3041,66 @@ NOBLOB: Log all columns (same as full), except for BLOB and TEXT columns that ar
     break;
   default:
     return 0;
+    break;
+}</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Binlog transaction dependency tracking</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_transaction_dependency_tracking]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The source of dependency information that the source uses to determine which transactions can be executed in parallel by the replica's multithreaded applier. This variable can take one of the three values described in the following list:&#13;
+&#13;
+- COMMIT_ORDER: Dependency information is generated from the source's commit timestamps. This is the default. This mode is also used for any transactions without write sets, even if this variable's is WRITESET or WRITESET_SESSION; this is also the case for transactions updating tables without primary keys and transactions updating tables having foreign key constraints.&#13;
+&#13;
+- WRITESET: Dependency information is generated from the source's write set, and any transactions which write different tuples can be parallelized.&#13;
+&#13;
+- WRITESET_SESSION: Dependency information is generated from the source's write set, but no two updates from the same session can be reordered.&#13;
+&#13;
+WRITESET and WRITESET_SESSION modes do not deliver any transaction dependencies that are newer than those that would have been returned in COMMIT_ORDER mode.&#13;
+&#13;
+The value of this variable cannot be set to anything other than COMMIT_ORDER if transaction_write_set_extraction is OFF. You should also note that the value of transaction_write_set_extraction cannot be changed if the current value of binlog_transaction_dependency_tracking is WRITESET or WRITESET_SESSION.&#13;
+&#13;
+The number of row hashes to be kept and checked for the latest transaction to have changed a given row is determined by the value of binlog_transaction_dependency_history_size.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MySQL (binlog_transaction_dependency_tracking)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.BINLOG_TRANSACTION_DEPENDENCY_TRACKING</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;COMMIT_ORDER&quot;:
+    return 0;
+    break;
+  case &quot;WRITESET&quot;:
+    return 1;
+    break;
+  case &quot;WRITESET_SESSION&quot;:
+    return 2;
+    break;
+  default:
+    return 3;
     break;
 }</params>
                         </step>
@@ -4702,6 +4796,54 @@ See more info: https://mariadb.com/kb/en/thread-pool-system-status-variables/#th
                         <step>
                             <type>JSONPATH</type>
                             <params>$.THREAD_STACK</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Transaction write set extraction</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},transaction_write_set_extraction]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Defines the algorithm used to generate a hash identifying the writes associated with a transaction. If you are using Group Replication, the hash value is used for distributed conflict detection and handling. On 64-bit systems running Group Replication, we recommend setting this to XXHASH64 in order to avoid unnecessary hash collisions which result in certification failures and the roll back of user transactions. See Section 17.7.1, “Group Replication Requirements”.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS MySQL (transaction_write_set_extraction)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.TRANSACTION_WRITE_SET_EXTRACTION</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;OFF&quot;:
+    return 0;
+    break;
+  case &quot;MURMUR32&quot;:
+    return 1;
+    break;
+  case &quot;XXHASH64&quot;:
+    return 2;
+    break;
+  default:
+    return 3;
+    break;
+}</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -6904,6 +7046,27 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
             </mappings>
         </value_map>
         <value_map>
+            <name>DBS MySQL (binlog_transaction_dependency_tracking)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>COMMIT_ORDER</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>WRITESET</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>WRITESET_SESSION</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>UNKNOWN</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
             <name>DBS MySQL (enforce_gtid_consistency)</name>
             <mappings>
                 <mapping>
@@ -7124,6 +7287,27 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
                 <mapping>
                     <value>4</value>
                     <newvalue>loaded-dynamically</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS MySQL (transaction_write_set_extraction)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>OFF</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>MURMUR32</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>XXHASH64</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>UNKNOWN</newvalue>
                 </mapping>
             </mappings>
         </value_map>
