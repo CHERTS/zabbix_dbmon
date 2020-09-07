@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-08-18T05:04:47Z</date>
+    <date>2020-09-07T18:25:31Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1371,6 +1371,74 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </master_item>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of prepared transactions</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.prepared.transactions[{$DBS_PGSQL_INSTANCE},count_prepared]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of prepared transactions</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.count_prepared</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.prepared.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Oldest prepared transaction time in sec</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.prepared.transactions[{$DBS_PGSQL_INSTANCE},oldest_prepared]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Oldest prepared transaction time in second.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.oldest_prepared</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.prepared.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_PGSQL_MAX_PREPARED_TRANSACTION_TIME_WARN}</expression>
+                            <name>Prepared transaction is too old</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_MAX_PREPARED_TRANSACTION_TIME_WARN}s, alert started: {ITEM.VALUE1}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Возрастом самой старой подготовленной транзакции слишком велик.&#13;
+Слишком долго &quot;висящая&quot; подготовленная транзакция может не давать работать процессу вакууму.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Active</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active]</key>
@@ -1748,6 +1816,21 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get prepared transactions</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.prepared.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>5m</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect metrics by prepared transactions.</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get server info</name>
@@ -3017,10 +3100,11 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                     </item_prototypes>
                     <graph_prototypes>
                         <graph_prototype>
-                            <name>Database '{#DBNAME}': Block hit/read</name>
+                            <name>[PgSQL] Database '{#DBNAME}': Block hit/read</name>
                             <ymin_type_1>FIXED</ymin_type_1>
                             <graph_items>
                                 <graph_item>
+                                    <sortorder>1</sortorder>
                                     <color>66BB6A</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3028,7 +3112,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>1</sortorder>
+                                    <sortorder>2</sortorder>
                                     <color>42A5F5</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3038,9 +3122,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
-                            <name>Database '{#DBNAME}': Block read/write rate</name>
+                            <name>[PgSQL] Database '{#DBNAME}': Block read/write rate</name>
                             <graph_items>
                                 <graph_item>
+                                    <sortorder>1</sortorder>
                                     <color>1A7C11</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3048,7 +3133,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>1</sortorder>
+                                    <sortorder>2</sortorder>
                                     <color>F63100</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3058,9 +3143,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
-                            <name>Database '{#DBNAME}': Events</name>
+                            <name>[PgSQL] Database '{#DBNAME}': Events</name>
                             <graph_items>
                                 <graph_item>
+                                    <sortorder>1</sortorder>
                                     <drawtype>GRADIENT_LINE</drawtype>
                                     <color>1A7C11</color>
                                     <item>
@@ -3069,7 +3155,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>1</sortorder>
+                                    <sortorder>2</sortorder>
                                     <color>F63100</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3077,7 +3163,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>2</sortorder>
+                                    <sortorder>3</sortorder>
                                     <color>2774A4</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3085,7 +3171,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>3</sortorder>
+                                    <sortorder>4</sortorder>
                                     <color>A54F10</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3095,9 +3181,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
-                            <name>Database '{#DBNAME}': Locks</name>
+                            <name>[PgSQL] Database '{#DBNAME}': Locks</name>
                             <graph_items>
                                 <graph_item>
+                                    <sortorder>1</sortorder>
                                     <color>F230E0</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3105,7 +3192,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>1</sortorder>
+                                    <sortorder>2</sortorder>
                                     <color>F63100</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3113,7 +3200,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>2</sortorder>
+                                    <sortorder>3</sortorder>
                                     <color>2774A4</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3121,7 +3208,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>3</sortorder>
+                                    <sortorder>4</sortorder>
                                     <color>A54F10</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3129,7 +3216,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>4</sortorder>
+                                    <sortorder>5</sortorder>
                                     <color>FC6EA3</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3137,7 +3224,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>5</sortorder>
+                                    <sortorder>6</sortorder>
                                     <color>6C59DC</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3145,7 +3232,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>6</sortorder>
+                                    <sortorder>7</sortorder>
                                     <color>AC8C14</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3153,7 +3240,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>7</sortorder>
+                                    <sortorder>8</sortorder>
                                     <color>611F27</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3161,7 +3248,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>8</sortorder>
+                                    <sortorder>9</sortorder>
                                     <drawtype>GRADIENT_LINE</drawtype>
                                     <color>1A7C11</color>
                                     <item>
@@ -3172,10 +3259,11 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
-                            <name>Database '{#DBNAME}': Size</name>
+                            <name>[PgSQL] Database '{#DBNAME}': Size</name>
                             <ymin_type_1>FIXED</ymin_type_1>
                             <graph_items>
                                 <graph_item>
+                                    <sortorder>1</sortorder>
                                     <color>66BB6A</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3185,9 +3273,10 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
-                            <name>Database '{#DBNAME}': Temp files</name>
+                            <name>[PgSQL] Database '{#DBNAME}': Temp files</name>
                             <graph_items>
                                 <graph_item>
+                                    <sortorder>1</sortorder>
                                     <drawtype>GRADIENT_LINE</drawtype>
                                     <color>66BB6A</color>
                                     <item>
@@ -3196,7 +3285,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>1</sortorder>
+                                    <sortorder>2</sortorder>
                                     <color>42A5F5</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3206,10 +3295,11 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                             </graph_items>
                         </graph_prototype>
                         <graph_prototype>
-                            <name>Database '{#DBNAME}': Tuples</name>
+                            <name>[PgSQL] Database '{#DBNAME}': Tuples</name>
                             <ymin_type_1>FIXED</ymin_type_1>
                             <graph_items>
                                 <graph_item>
+                                    <sortorder>1</sortorder>
                                     <color>1A7C11</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3217,7 +3307,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>1</sortorder>
+                                    <sortorder>2</sortorder>
                                     <color>F63100</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3225,7 +3315,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>2</sortorder>
+                                    <sortorder>3</sortorder>
                                     <color>2774A4</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3233,7 +3323,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>3</sortorder>
+                                    <sortorder>4</sortorder>
                                     <color>A54F10</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3241,7 +3331,7 @@ See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STAN
                                     </item>
                                 </graph_item>
                                 <graph_item>
-                                    <sortorder>4</sortorder>
+                                    <sortorder>5</sortorder>
                                     <color>FC6EA3</color>
                                     <item>
                                         <host>DBS_Template DB PostgreSQL</host>
@@ -3336,6 +3426,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_PGSQL_LLD_FILTER_DB_NOT_MATCHES}</macro>
                     <value>CHANGE_IF_NEEDED</value>
                     <description>Filter to exclude discovered databases</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_MAX_PREPARED_TRANSACTION_TIME_WARN}</macro>
+                    <value>18000</value>
+                    <description>second</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_PING_NODATA_CRIT}</macro>
@@ -3475,6 +3570,27 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <item>
                         <host>DBS_Template DB PostgreSQL</host>
                         <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_req]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[PgSQL] Prepared transaction</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.instance.prepared.transactions[{$DBS_PGSQL_INSTANCE},count_prepared]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.instance.prepared.transactions[{$DBS_PGSQL_INSTANCE},oldest_prepared]</key>
                     </item>
                 </graph_item>
             </graph_items>

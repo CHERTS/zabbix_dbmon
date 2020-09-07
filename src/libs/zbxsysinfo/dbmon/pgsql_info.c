@@ -269,27 +269,35 @@ FROM( \
 	) ready \
 ) T;"
 
+#define PGSQL_PREPARED_COUNT_DBS "\
+SELECT row_to_json(T) \
+FROM( \
+	SELECT COUNT(*) as count_prepared, coalesce(ROUND(MAX(EXTRACT(EPOCH FROM(now() - prepared)))), 0)::bigint AS oldest_prepared \
+	FROM pg_catalog.pg_prepared_xacts \
+) T;"
+
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
-	{"pgsql.ping",				CF_HAVEPARAMS,		PGSQL_PING,			NULL},
-	{"pgsql.version",			CF_HAVEPARAMS,		PGSQL_VERSION,		NULL},
-	{"pgsql.version.full",		CF_HAVEPARAMS,		PGSQL_VERSION,		NULL},
-	{"pgsql.server.info",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.db.discovery",		CF_HAVEPARAMS,		PGSQL_DB_DISCOVERY,	NULL},
-	{"pgsql.db.info",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.db.locks",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.db.stat.sum",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.db.stat",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.connections",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.transactions",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.wal.stat",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.oldest.xid",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.cache.hit",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.bgwriter",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.autovacuum.count",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.archive.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.archive.size",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.ping",					CF_HAVEPARAMS,		PGSQL_PING,			NULL},
+	{"pgsql.version",				CF_HAVEPARAMS,		PGSQL_VERSION,		NULL},
+	{"pgsql.version.full",			CF_HAVEPARAMS,		PGSQL_VERSION,		NULL},
+	{"pgsql.server.info",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.discovery",			CF_HAVEPARAMS,		PGSQL_DB_DISCOVERY,	NULL},
+	{"pgsql.db.info",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.locks",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.stat.sum",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.stat",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.connections",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.transactions",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.wal.stat",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.oldest.xid",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.cache.hit",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.bgwriter",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.autovacuum.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.archive.count",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.archive.size",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.prepared.transactions",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -853,6 +861,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.archive.size"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_ARCHIVE_SIZE_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.prepared.transactions"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_PREPARED_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else
 	{
