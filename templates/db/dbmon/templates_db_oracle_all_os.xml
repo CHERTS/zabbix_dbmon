@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-08-27T12:32:36Z</date>
+    <date>2020-09-08T09:30:32Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -146,7 +146,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last archive log backup</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.backup.archivelog[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>30m</delay>
+                    <delay>10m</delay>
                     <history>30d</history>
                     <units>s</units>
                     <description>Last archive log backup</description>
@@ -379,7 +379,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last incremental database backup</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>30m</delay>
+                    <delay>20m</delay>
                     <history>30d</history>
                     <units>s</units>
                     <description>Last incremental database backup</description>
@@ -393,7 +393,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Total incremental database backup</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>30m</delay>
+                    <delay>20m</delay>
                     <history>30d</history>
                     <description>Total files number of incremental backup</description>
                     <applications>
@@ -5149,7 +5149,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_free].last()}&gt;={$DBS_ORACLE_FRA_FREE_CRIT} or {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;0</recovery_expression>
             <name>FRA usage is to high</name>
-            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_FREE_CRIT}, alert started: {ITEM.VALUE1}</opdata>
+            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: less than {$DBS_ORACLE_FRA_FREE_CRIT}, alert started: {ITEM.VALUE1}</opdata>
             <priority>HIGH</priority>
             <description>Область Fast Recovery Area (FRA) заполнена до критического уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
@@ -5175,7 +5175,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_free].last()}&gt;={$DBS_ORACLE_FRA_FREE_WARN} or {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;0</recovery_expression>
             <name>FRA usage is to high</name>
-            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_FREE_WARN}, alert started: {ITEM.VALUE1}</opdata>
+            <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: less than {$DBS_ORACLE_FRA_FREE_WARN}, alert started: {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>
             <description>Область Fast Recovery Area (FRA) заполнена до угрожающего уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
@@ -5202,11 +5202,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0 and {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}=1</expression>
+            <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_free].last()}&gt;=0 and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0 and {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}=1</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT} or {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;1</recovery_expression>
             <name>FRA usage is to high</name>
-            <opdata>used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_CRIT}%, alert started: {ITEM.VALUE1}%</opdata>
+            <opdata>free: {ITEM.LASTVALUE2}, maxsize: {ITEM.LASTVALUE3}, threshold: more than {$DBS_ORACLE_FRA_USED_PRC_CRIT}% used, alert started: {ITEM.VALUE2}</opdata>
             <priority>HIGH</priority>
             <description>Область Fast Recovery Area (FRA) заполнена до критического уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
@@ -5228,17 +5228,17 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_WARN} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0 and {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}=1</expression>
+            <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_WARN} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_free].last()}&gt;=0 and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0 and {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}=1</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
             <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_WARN} or {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;1</recovery_expression>
             <name>FRA usage is to high</name>
-            <opdata>used: {ITEM.LASTVALUE1}%, maxsize: {ITEM.LASTVALUE2}, threshold: {$DBS_ORACLE_FRA_USED_PRC_WARN}%, alert started: {ITEM.VALUE1}%</opdata>
+            <opdata>free: {ITEM.LASTVALUE2}, maxsize: {ITEM.LASTVALUE3}, threshold: more than {$DBS_ORACLE_FRA_USED_PRC_WARN}% used, alert started: {ITEM.VALUE2}</opdata>
             <priority>WARNING</priority>
             <description>Область Fast Recovery Area (FRA) заполнена до угрожающего уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
                 <dependency>
                     <name>FRA usage is to high</name>
-                    <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0 and {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}=1</expression>
+                    <expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&gt;{$DBS_ORACLE_FRA_USED_PRC_CRIT} and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_free].last()}&gt;=0 and {DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_limit].last()}&gt;0 and {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}=1</expression>
                     <recovery_expression>{DBS_Template DB Oracle:oracle.instance[{$DBS_ORACLE_INSTANCE},fra_used_pct].last()}&lt;={$DBS_ORACLE_FRA_USED_PRC_CRIT} or {$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}&lt;&gt;1</recovery_expression>
                 </dependency>
                 <dependency>
