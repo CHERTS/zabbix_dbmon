@@ -225,7 +225,6 @@ ORA_DB_RESULT zbx_db_select_oracle(const struct zbx_db_connection *conn, const c
 {
 	char			*sql = NULL;
 	ORA_DB_RESULT	result = NULL;
-	double			sec = 0;
 	sword			err = OCI_SUCCESS;
 	ub4				prefetch_rows = 200, counter;
 
