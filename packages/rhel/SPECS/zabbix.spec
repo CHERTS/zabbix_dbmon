@@ -1,5 +1,5 @@
 Name:		zabbix
-Version:	5.0.2
+Version:	5.0.3
 Release:	%{?alphatag:0.}1%{?alphatag}%{?dist}
 Summary:	The Enterprise-class open source monitoring solution
 Group:		Applications/Internet
@@ -15,10 +15,14 @@ Source5:        zabbix-agent-dbmon.sysconfig
 Buildroot:	%{_tmppath}/zabbix-%{version}-%{release}-root-%(%{__id_u} -n)
 
 # FIXME: Building debuginfo is broken on RHEL-8. Disabled for now.
-%if 0%{?rhel} == 8
+%if 0%{?rhel} >= 6
 %define debug_package %{nil}
 %endif
 
+%if 0%{?rhel} == 6
+BuildRequires:  mysql-devel >= 5.1
+BuildRequires:  postgresql-devel >= 8.4
+%endif
 %if 0%{?rhel} >= 7
 BuildRequires:	mysql-devel >= 5.5
 BuildRequires:	postgresql-devel >= 9.2
@@ -117,6 +121,7 @@ mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/lib/zabbix
 
 # install zabbix_agentd_dbmon
 install -m 0755 -p src/zabbix_agent/zabbix_agentd_dbmon $RPM_BUILD_ROOT%{_sbindir}/
+#rm -f $RPM_BUILD_ROOT%{_sbindir}/zabbix_agentd
 
 # install configuration files
 mkdir $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d
@@ -146,7 +151,7 @@ install -Dm 0755 -p %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/init.d/zabbix-agent
 %endif
 
 %if 0%{?rhel} <= 6
-install -Dm 0644 -p %{SOURCE5} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/zabbix-agent
+install -Dm 0644 -p %{SOURCE5} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/zabbix-agent-dbmon
 %endif
 
 # install systemd-tmpfiles conf
