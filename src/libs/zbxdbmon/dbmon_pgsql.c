@@ -89,7 +89,7 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 {
 	PGresult *res;
 	int nfields, ntuples, i, j, h_res, f_res, ret = ZBX_DB_OK;
-	struct zbx_db_data *data, *cur_row = NULL;
+	struct zbx_db_data *db_data, *cur_row = NULL;
 	struct zbx_db_fields *db_fields, *cur_field = NULL;
 	char *error = NULL;
 
@@ -137,39 +137,39 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 
 						if (NULL == val)
 						{
-							data = zbx_db_new_data_null();
+							db_data = zbx_db_new_data_null();
 						}
 						else
 						{
 							switch (zbx_db_get_type_from_oid(conn, PQftype(res, j)))
 							{
 								case ZBX_COL_TYPE_INT:
-									data = zbx_db_new_data_int(strtoll(val, NULL, 10));
+									db_data = zbx_db_new_data_int(strtoll(val, NULL, 10));
 									break;
 								case ZBX_COL_TYPE_DOUBLE:
-									data = zbx_db_new_data_double(strtod(val, NULL));
+									db_data = zbx_db_new_data_double(strtod(val, NULL));
 									break;
 								case ZBX_COL_TYPE_BLOB:
-									data = zbx_db_new_data_blob(val, PQgetlength(res, i, j));
+									db_data = zbx_db_new_data_blob(val, PQgetlength(res, i, j));
 									break;
 								case ZBX_COL_TYPE_BOOL:
 									if (0 == zbx_db_strcasecmp(val, "t"))
 									{
-										data = zbx_db_new_data_int(1);
+										db_data = zbx_db_new_data_int(1);
 									}
 									else if (0 == zbx_db_strcasecmp(val, "f"))
 									{
-										data = zbx_db_new_data_int(0);
+										db_data = zbx_db_new_data_int(0);
 									}
 									else
 									{
-										data = zbx_db_new_data_null();
+										db_data = zbx_db_new_data_null();
 									}
 									break;
 								case ZBX_COL_TYPE_DATE:
 								case ZBX_COL_TYPE_TEXT:
 								default:
-									data = zbx_db_new_data_text(val, PQgetlength(res, i, j));
+									db_data = zbx_db_new_data_text(val, PQgetlength(res, i, j));
 									break;
 							}
 						}
@@ -191,8 +191,8 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 
 						zabbix_log(LOG_LEVEL_TRACE, "In %s(): OID=%d, PQgetlength=%d, PQgetvalue=%s", __func__, zbx_db_get_type_from_oid(conn, PQftype(res, j)), PQgetlength(res, i, j), val);
 
-						h_res = zbx_db_row_add_data(&cur_row, data, j);
-						zbx_db_clean_data_full(data);
+						h_res = zbx_db_row_add_data(&cur_row, db_data, j);
+						zbx_db_clean_data_full(db_data);
 
 						if (ZBX_DB_OK != h_res)
 						{

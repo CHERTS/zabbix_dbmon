@@ -191,7 +191,7 @@ int zbx_db_execute_query_mysql(const struct zbx_db_connection *conn, struct zbx_
 	unsigned int			num_fields, col, row;
 	MYSQL_ROW				m_row;
 	MYSQL_FIELD				*fields;
-	struct zbx_db_data		*data, *cur_row = NULL;
+	struct zbx_db_data		*db_data, *cur_row = NULL;
 	struct zbx_db_fields	*db_fields, *cur_field = NULL;
 	unsigned long			*lengths;
 	int						res;
@@ -228,7 +228,6 @@ int zbx_db_execute_query_mysql(const struct zbx_db_connection *conn, struct zbx_
 		m_result->data = NULL;
 
 		// Get fields name
-		cur_field = NULL;
 		for (col = 0; col < num_fields; col++)
 		{
 			db_fields = zbx_db_fields_value(fields[col].name, fields[col].name_length);
@@ -264,9 +263,9 @@ int zbx_db_execute_query_mysql(const struct zbx_db_connection *conn, struct zbx_
 
 			for (col = 0; col < num_fields; col++)
 			{
-				data = zbx_db_get_mysql_value(m_row[col], lengths[col], fields[col].type);
-				res = zbx_db_row_add_data(&cur_row, data, col);
-				zbx_db_clean_data_full(data);
+				db_data = zbx_db_get_mysql_value(m_row[col], lengths[col], fields[col].type);
+				res = zbx_db_row_add_data(&cur_row, db_data, col);
+				zbx_db_clean_data_full(db_data);
 
 				if (ZBX_DB_OK != res)
 				{

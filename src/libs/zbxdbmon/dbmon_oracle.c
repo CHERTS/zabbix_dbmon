@@ -510,7 +510,7 @@ char **zbx_db_fetch_oracle(const struct zbx_db_connection *conn, ORA_DB_RESULT r
  * Return ZBX_DB_OK on success
  */
 int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx_db_result *o_result, const char *fmt, va_list args) {
-	struct zbx_db_data		*data, *cur_row = NULL;
+	struct zbx_db_data		*db_data, *cur_row = NULL;
 	struct zbx_db_fields	*db_fields, *cur_field = NULL;
 	ORA_DB_RESULT			result = NULL;
 	char					**row;
@@ -558,9 +558,9 @@ int zbx_db_execute_query_oracle(const struct zbx_db_connection *conn, struct zbx
 					}
 				}
 
-				data = zbx_db_new_data_text(row[i], result->values_alloc[i]);
-				res = zbx_db_row_add_data(&cur_row, data, i);
-				zbx_db_clean_data_full(data);
+				db_data = zbx_db_new_data_text(row[i], result->values_alloc[i]);
+				res = zbx_db_row_add_data(&cur_row, db_data, i);
+				zbx_db_clean_data_full(db_data);
 
 				if (ZBX_DB_OK != res)
 				{
