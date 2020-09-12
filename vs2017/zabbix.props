@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="UserMacros">
-    <CERT_THUMBPRINT>d8f24d6742e114f9800a419d066433e9636137ff</CERT_THUMBPRINT>
+    <CERT_THUMBPRINT>feb73ceedc91104ba207ebb4eb09a98413f4451f</CERT_THUMBPRINT>
     <CERT_TIMESTAMP_SERVER>http://time.certum.pl</CERT_TIMESTAMP_SERVER>
     <MYSQL_VENDOR>mariadb</MYSQL_VENDOR>
     <ORACLE_VER>18</ORACLE_VER>
