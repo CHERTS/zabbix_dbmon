@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-09-08T09:29:48Z</date>
+    <date>2020-09-15T18:03:06Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3897,7 +3897,7 @@ log_error_verbosity was added in MySQL 5.7.2. It is preferred over, and should b
 See the description of log_warnings for information about how that variable relates to log_error_verbosity. In particular, assigning a value to log_warnings assigns a value to log_error_verbosity and vice versa.</description>
                     <applications>
                         <application>
-                            <name>MySQL: Query cache</name>
+                            <name>MySQL: Variables</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -3927,7 +3927,7 @@ See the description of log_warnings for information about how that variable rela
 See detail info in https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html#sysvar_log_warnings</description>
                     <applications>
                         <application>
-                            <name>MySQL: Query cache</name>
+                            <name>MySQL: Variables</name>
                         </application>
                     </applications>
                     <preprocessing>
@@ -5340,6 +5340,22 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                     <params>1h</params>
                                 </step>
                             </preprocessing>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;{$DBS_MYSQL_ERR_LOG_SIZE_WARN}</expression>
+                                    <name>Logfile size is to high</name>
+                                    <opdata>current size: {ITEM.LASTVALUE},  threshold: {$DBS_MYSQL_ERR_LOG_SIZE_WARN},alert started: {ITEM.VALUE}</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>Размер лог-файла '{#LOG_ERROR}' превышает {$DBS_MYSQL_ERR_LOG_SIZE_WARN}.&#13;
+Проверьте почему растет лог-файл, доведите информацию до эксперта.</description>
+                                    <tags>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_MYSQL_INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
                 </discovery_rule>
@@ -6425,6 +6441,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_MYSQL_ERRORLOG_REGEXP}</macro>
                     <value>PANIC|FATAL|ERROR|[Ee]rror</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_ERR_LOG_SIZE_WARN}</macro>
+                    <value>100M</value>
+                    <description>Max error.log size</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_MYSQL_HOST}</macro>
