@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-09-08T09:30:17Z</date>
+    <date>2020-09-15T18:02:59Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1967,6 +1967,62 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <master_item>
                                 <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;={$DBS_PGSQL_XID_WARN:&quot;{#DBNAME}&quot;}</expression>
+                                    <name>Age of oldest xid is too high</name>
+                                    <opdata>current age: {ITEM.LASTVALUE}, max: 4294967295, threshold: {$DBS_PGSQL_XID_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE}</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>Возраст самой старой транзакции в базе '{#DBNAME}' приближается к 2^31 (пол-круга, половина от всех допустимых значений).&#13;
+Срочно доведите информацию до эксперта.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Age of oldest xid is too very high</name>
+                                            <expression>{DBS_Template DB PostgreSQL:pgsql.db.info[{#DBNAME},age].last()}&gt;={$DBS_PGSQL_XID_CRIT:&quot;{#DBNAME}&quot;}</expression>
+                                        </dependency>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_PGSQL_INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last()}&gt;={$DBS_PGSQL_XID_CRIT:&quot;{#DBNAME}&quot;}</expression>
+                                    <name>Age of oldest xid is too very high</name>
+                                    <opdata>current age: {ITEM.LASTVALUE}, max: 4294967295, threshold: {$DBS_PGSQL_XID_CRIT:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE}</opdata>
+                                    <priority>HIGH</priority>
+                                    <description>Возраст самой старой транзакции в базе '{#DBNAME}' приближается к 2^31 (пол-круга, половина от всех допустимых значений).&#13;
+Срочно доведите информацию до эксперта.</description>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Database</tag>
+                                            <value>{#DBNAME}</value>
+                                        </tag>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_PGSQL_INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[PgSQL] Database '{#DBNAME}': Connection limit</name>
@@ -3443,10 +3499,12 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_PGSQL_XID_CRIT}</macro>
                     <value>2146483648</value>
+                    <description>2^31-1000000</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_XID_WARN}</macro>
                     <value>2137483648</value>
+                    <description>2^31-10000000</description>
                 </macro>
             </macros>
         </template>
