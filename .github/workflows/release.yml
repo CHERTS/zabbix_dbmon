@@ -1,11 +1,7 @@
 name: Release
 
 on:
-#  schedule:
-#    - cron: "0 18 * * 1-5"
 #  push:
-#    branches:
-#      - master
 #    tags:
 #      - 'v*'
   workflow_dispatch:
@@ -13,7 +9,7 @@ on:
       reason:
         description: 'Launch reason'
         required: true
-        default: 'Update all binary'
+        default: 'Create new release'
 
 jobs:
   github-job-release:
@@ -43,7 +39,25 @@ jobs:
       run: make css
     - name: Build dist
       run: make dist
-    - uses: actions/upload-artifact@v2
+    - name: Get current Zabbix version
+      run: echo "::set-env name=ZABBIX_VERSION::$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')"
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: zabbix-5.0.3
-        path: zabbix-5.0.3.tar.gz
+        tag_name: ${{ github.event.release.tag_name }}
+        release_name: Zabbix v${{ env.ZABBIX_VERSION }} (unofficial) now released
+        draft: false
+        prerelease: false
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
+        asset_name: zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
+        asset_content_type: application/gzip
