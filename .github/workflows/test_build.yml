@@ -1,24 +1,30 @@
 name: TestBuildOnLinux
 
 on:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - ".github/**"
-      - "bin/**"
-      - "build/**"
-      - "conf/**"
-      - "create/**"
-      - "database/**"
-      - "man/**"
-      - "misc/**"
-      - "packages/**"
-      - "sass/**"
-      - "templates/**"
-      - "tests/**"
-      - "ui/**"
-      - "vs2017/**"
+#  push:
+#    branches:
+#      - master
+#    paths-ignore:
+#      - ".github/**"
+#      - "bin/**"
+#      - "build/**"
+#      - "conf/**"
+#      - "create/**"
+#      - "database/**"
+#      - "man/**"
+#      - "misc/**"
+#      - "packages/**"
+#      - "sass/**"
+#      - "templates/**"
+#      - "tests/**"
+#      - "ui/**"
+#      - "vs2017/**"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Launch reason'
+        required: true
+        default: 'Run test build'
 
 jobs:
   github-job:
