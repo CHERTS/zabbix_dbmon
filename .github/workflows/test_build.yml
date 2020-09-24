@@ -52,6 +52,8 @@ jobs:
       run: make dist
     - name: Get current Zabbix version
       run: echo "::set-env name=ZABBIX_VERSION::$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')"
+    - name: Get short SHA
+      run: echo ::set-env name=GITHUB_SHA_SHORT::$(echo $GITHUB_SHA | cut -c 1-8)
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Change directory
@@ -66,8 +68,8 @@ jobs:
         key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
         known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload binary from dev server
-      run: scp src/zabbix_agent/zabbix_agentd ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:github/zabbix_agentd_dbmon_v${{ env.ZABBIX_VERSION }}_ubuntu1804_mysql_pgsql
+      run: scp src/zabbix_agent/zabbix_agentd ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:ubuntu_1804/zabbix_agentd_dbmon_v${{ env.ZABBIX_VERSION }}_${{ env.GITHUB_SHA_SHORT }}_mysql_pgsql
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix_agentd v${{ env.ZABBIX_VERSION }} (ubuntu-18.04 mysql pgsql)
+        name: zabbix_agentd v${{ env.ZABBIX_VERSION }} (${{ env.GITHUB_SHA_SHORT }} ubuntu-18.04 mysql pgsql)
         path: src/zabbix_agent/zabbix_agentd
