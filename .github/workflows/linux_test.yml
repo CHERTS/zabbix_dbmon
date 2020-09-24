@@ -1,19 +1,23 @@
-name: LinuxTest
+name: TestBuildOnLinux
 
 on:
-#  schedule:
-#    - cron: "0 18 * * 1-5"
-#  push:
-#    branches:
-#      - master
-#    tags:
-#      - 'v*'
-  workflow_dispatch:
-    inputs:
-      reason:
-        description: 'Launch reason'
-        required: true
-        default: 'Update all binary'
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "bin/**"
+      - "build/**"
+      - "conf/**"
+      - "create/**"
+      - "database/**"
+      - "man/**"
+      - "misc/**"
+      - "packages/**"
+      - "sass/**"
+      - "templates/**"
+      - "tests/**"
+      - "ui/**"
+      - "vs2017/**"
 
 jobs:
   github-job:
@@ -51,5 +55,5 @@ jobs:
       run: make
     - uses: actions/upload-artifact@v2
       with:
-        name: zabbix_agentd ubuntu-18.04 mysql pgsql
+        name: zabbix_agentd v${{ env.ZABBIX_VERSION }} (ubuntu-18.04 mysql pgsql)
         path: src/zabbix_agent/zabbix_agentd
