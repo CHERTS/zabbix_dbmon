@@ -45,8 +45,8 @@ SELECT \
     pg_catalog.pg_get_userbyid(d.datdba) AS OWNER, \
     t.spcname AS TABLESPACE, \
     pg_catalog.shobj_description(d.oid, 'pg_database') AS DESCRIPTION, \
-	age(d.datfrozenxid) AS AGE, \
-	d.datconnlimit AS CONNLIM \
+    age(d.datfrozenxid) AS AGE, \
+    d.datconnlimit AS CONNLIM \
 FROM pg_catalog.pg_database d \
     JOIN pg_catalog.pg_tablespace t on d.dattablespace = t.oid \
 WHERE \
