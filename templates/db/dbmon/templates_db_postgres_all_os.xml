@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-09-26T09:15:39Z</date>
+    <date>2020-09-30T10:44:48Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -735,7 +735,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <trigger>
                             <expression>{min(10m)}&gt;{$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}</expression>
                             <name>Too many activity idle in transaction</name>
-                            <opdata>current: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
+                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}, alert started: {ITEM.VALUE}</opdata>
                             <priority>WARNING</priority>
                             <description>Очень много процессов в состоянии idle in transaction.&#13;
 Приложение начало транзакцию, ничего не делает, но и транзакцию не завершает.&#13;
@@ -1467,12 +1467,14 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </triggers>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Active</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max active transaction time in sec</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Current max active transaction time in second.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1518,12 +1520,14 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Idle</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max idle transaction time in sec</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Current max idle transaction time in second.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1536,7 +1540,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1544,12 +1548,14 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Prepared</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max prepared transaction time in sec</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},prepared]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Current max prepared transaction time in second.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1562,7 +1568,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1570,12 +1576,14 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Waiting</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max waiting transaction time in sec</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},waiting]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Current max waiting transaction time in second.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
