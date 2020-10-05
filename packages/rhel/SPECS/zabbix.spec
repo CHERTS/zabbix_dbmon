@@ -1,16 +1,16 @@
 Name:		zabbix
-Version:	5.0.3
+Version:	5.0.4
 Release:	%{?alphatag:0.}1%{?alphatag}%{?dist}
 Summary:	The Enterprise-class open source monitoring solution
 Group:		Applications/Internet
 License:	GPLv2+
 URL:		http://www.zabbix.com/
 Source0:	%{name}-%{version}%{?alphatag}.tar.gz
-Source1:        zabbix-logrotate.in
+Source1:    zabbix-logrotate.in
 Source2:	zabbix-tmpfiles.conf
-Source3:        zabbix-agent-dbmon.service
-Source4:        zabbix-agent-dbmon.init
-Source5:        zabbix-agent-dbmon.sysconfig
+Source3:    zabbix-agent-dbmon.service
+Source4:    zabbix-agent-dbmon.init
+Source5:    zabbix-agent-dbmon.sysconfig
 
 Buildroot:	%{_tmppath}/zabbix-%{version}-%{release}-root-%(%{__id_u} -n)
 
