@@ -71,8 +71,6 @@ jobs:
       run: echo "::set-env name=ZABBIX_VERSION::$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')"
     - name: Get short SHA
       run: echo ::set-env name=GITHUB_SHA_SHORT::$(echo $GITHUB_SHA | cut -c 1-8)
-    - name: Set original zabbix version
-      run: echo ::set-env name=ZABBIX_ORIG_VERSION::$(echo 4.4.10)
     - name: Set short zabbix version
       run: echo ::set-env name=ZABBIX_VERSION_SHORT::$(echo ${{ env.ZABBIX_VERSION }} | awk -F. '{print $1"."$2}')
     - name: Extract distr
@@ -80,9 +78,9 @@ jobs:
     - name: Change directory
       run: cd zabbix-${{ env.ZABBIX_VERSION }}/
     - name: Copy original sources
-      run: cp "packages\$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')\$(lsb_release -c -s).tar.xz" debian.tar.xz
+      run: cp "packages\$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')\$(lsb_release -c -s).tar.gz" debian.tar.gz
     - name: Extract original sources
-      run: tar -xvf debian.tar.xz
+      run: tar -vzxf debian.tar.gz
     - name: Prepare build DEB
       run: dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
     - name: Build DEB
