@@ -1,4 +1,4 @@
-name: CreateUbuntuDEB
+name: CreateUbuntuDEBTest
 
 on:
 #  push:
@@ -48,9 +48,11 @@ jobs:
     - name: Upgrade packages
       run: sudo apt-get upgrade -y
     - name: Install base dependencies
-      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
+      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libsnmp-dev libcurl4-openssl-dev libldap2-dev libiksemel-dev libopenipmi-dev libssh2-1-dev unixodbc-dev openjdk-8-jdk libxml2-dev libpcre3-dev libevent-dev libssl-dev
+    - name: Install build deb dependencies
+      run: sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
     - name: Install database dependencies
-      run: sudo apt-get install -y libmysqlclient-dev libpq-dev
+      run: sudo apt-get install -y libmysqlclient-dev libpq-dev libsqlite3-dev
     - name: Code checkout
       uses: actions/checkout@v2
     - name: Run bootstrap
@@ -72,15 +74,15 @@ jobs:
     - name: Get short SHA
       run: echo ::set-env name=GITHUB_SHA_SHORT::$(echo $GITHUB_SHA | cut -c 1-8)
     - name: Set original zabbix version
-      run: echo ::set-env name=ZABBIX_ORIG_VERSION::$(echo 4.4.10)
+      run: echo ::set-env name=ZABBIX_ORIG_VERSION::$(echo 5.0.4)
     - name: Set short zabbix version
       run: echo ::set-env name=ZABBIX_VERSION_SHORT::$(echo ${{ env.ZABBIX_VERSION }} | awk -F. '{print $1"."$2}')
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Change directory
       run: cd zabbix-${{ env.ZABBIX_VERSION }}/
-    - name: Copy original sources
-      run: cp "packages\$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')\$(lsb_release -c -s).tar.xz" debian.tar.xz
+    - name: Download original sources
+      run: wget "https://repo.zabbix.com/zabbix/${{ env.ZABBIX_VERSION_SHORT }}/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/pool/main/z/zabbix/zabbix_${{ env.ZABBIX_ORIG_VERSION }}-1+$(lsb_release -c -s).debian.tar.xz" -O debian.tar.xz
     - name: Extract original sources
       run: tar -xvf debian.tar.xz
     - name: Prepare build DEB
