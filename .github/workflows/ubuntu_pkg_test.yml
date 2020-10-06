@@ -29,7 +29,7 @@ on:
 jobs:
   github-job:
     name: Ubuntu (Bionic)
-    runs-on: [ubuntu-18.04]
+    runs-on: [self-hosted, linux, ubuntu-bionic]
     steps:
     - name: Installing Golang
       uses: actions/setup-go@v2
