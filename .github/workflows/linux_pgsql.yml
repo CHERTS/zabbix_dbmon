@@ -23,7 +23,8 @@ jobs:
       matrix:
          os: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04]
     steps:
-    - uses: actions/checkout@v2
+    - name: Code checkout
+      uses: actions/checkout@v2
     - name: Install base dependencies
       run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
     - name: Install database dependencies
@@ -60,7 +61,8 @@ jobs:
     name: Oracle Linux 7 (PgSQL)
     runs-on: [self-hosted, linux, ol7]
     steps:
-    - uses: actions/checkout@v2
+    - name: Code checkout
+      uses: actions/checkout@v2
     - name: Run bootstrap
       run: ./bootstrap.sh
     - name: Run configure
@@ -93,7 +95,8 @@ jobs:
     name: Debian 9 (PgSQL)
     runs-on: [self-hosted, linux, debian9]
     steps:
-    - uses: actions/checkout@v2
+    - name: Code checkout
+      uses: actions/checkout@v2
     - name: Run bootstrap
       run: ./bootstrap.sh
     - name: Run configure
@@ -126,7 +129,8 @@ jobs:
     name: Debian 10 (PgSQL)
     runs-on: [self-hosted, linux, debian10]
     steps:
-    - uses: actions/checkout@v2
+    - name: Code checkout
+      uses: actions/checkout@v2
     - name: Run bootstrap
       run: ./bootstrap.sh
     - name: Run configure

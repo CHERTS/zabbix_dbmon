@@ -20,7 +20,8 @@ jobs:
     name: Windows 10 (Oracle, MariaDB, PgSQL)
     runs-on: [self-hosted, windows, windows10]
     steps:
-    - uses: actions/checkout@v2
+    - name: Code checkout
+      uses: actions/checkout@v2
     - name: Run build
       run: ./build.zabbix.dbmon.runner.x64.cmd
     - uses: actions/upload-artifact@v2
