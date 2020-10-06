@@ -28,7 +28,7 @@ on:
 
 jobs:
   github-job:
-    name: Ubuntu (MySQL, PgSQL)
+    name: Ubuntu (Bionic)
     runs-on: [ubuntu-18.04]
     steps:
     - name: Installing Golang
