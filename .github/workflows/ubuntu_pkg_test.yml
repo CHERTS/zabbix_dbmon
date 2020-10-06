@@ -30,21 +30,21 @@ jobs:
     - name: Build dist
       run: make dist
     - name: Get current Zabbix version
-      run: echo "::set-env name=ZABBIX_VERSION::$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')"
+      run: echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
     - name: Get short SHA
-      run: echo ::set-env name=GITHUB_SHA_SHORT::$(echo $GITHUB_SHA | cut -c 1-8)
+      run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-8)" >> $GITHUB_ENV
     - name: Set original zabbix version
-      run: echo ::set-env name=ZABBIX_ORIG_VERSION::$(echo 5.0.4)
+      run: echo "ZABBIX_ORIG_VERSION=5.0.4" >> $GITHUB_ENV
     - name: Set short zabbix version
-      run: echo ::set-env name=ZABBIX_VERSION_SHORT::$(echo ${{ env.ZABBIX_VERSION }} | awk -F. '{print $1"."$2}')
+      run: echo "ZABBIX_VERSION_SHORT=$(echo ${{ env.ZABBIX_VERSION }} | awk -F. '{print $1"."$2}')" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Change directory
       run: cd zabbix-${{ env.ZABBIX_VERSION }}/
-    - name: Download original sources
-      run: wget "https://repo.zabbix.com/zabbix/${{ env.ZABBIX_VERSION_SHORT }}/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/pool/main/z/zabbix/zabbix_${{ env.ZABBIX_ORIG_VERSION }}-1+$(lsb_release -c -s).debian.tar.xz" -O debian.tar.xz
+    - name: Copy original sources
+      run: cp "packages\$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')\$(lsb_release -c -s).tar.gz" debian.tar.gz
     - name: Extract original sources
-      run: tar -xvf debian.tar.xz
+      run: tar -vzxf debian.tar.gz
     - name: Prepare build DEB
       run: dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
     - name: Build DEB
