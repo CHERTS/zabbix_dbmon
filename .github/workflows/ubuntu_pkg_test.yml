@@ -43,6 +43,11 @@ jobs:
       run: dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
     - name: Build DEB
       run: dpkg-buildpackage -b
+    - name: Remove old SSH key
+      run: |
+        if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/id_rsa 2>/dev/null; fi
+        if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/known_hosts 2>/dev/null; fi
+        if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/config 2>/dev/null; fi
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2
       with:
