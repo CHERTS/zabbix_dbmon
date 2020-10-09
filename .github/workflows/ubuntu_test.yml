@@ -18,26 +18,16 @@ jobs:
     steps:
     - name: Show repo
       run: sudo apt-cache policy
-    - name: Show php version
-      run: dpkg -l | grep php
-    - name: Show apache version
-      run: dpkg -l | grep apache
-    - name: Show libssl1 version
-      run: dpkg -l | grep libssl1
-    - name: Show libpcre version
-      run: dpkg -l | grep libpcre
-    - name: Show libssh version
-      run: dpkg -l | grep libssh
-    - name: Show libcurl3 version
-      run: dpkg -l | grep libcurl3
+    - name: Show dpk version
+      run: sudo dpkg -l | grep -E '(php|apache|libssl|libpcre|libssh|libcurl3)'
     - name: Remove sury pkg
       run: |
         sudo apt install ppa-purge
         sudo add-apt-repository --remove ppa:ondrej/php -y
-        sudo apt update
-        sudo apt-get remove php5.6-* php7.0-* php7.1-* php7.2-* php7.3-* php7.4-* php-common --purge -y
+        sudo apt-get update
+        sudo apt-get remove -y php5.6-* php7.0-* php7.1-* php7.2-* php7.3-* php7.4-* php-common --purge
         sudo apt autoremove --assume-yes
-        sudo apt-get remove libssl1.1 --purge -y
+        sudo apt-get remove -y libssl1.1 --purge
         sudo apt-get autoclean
     - name: Install base dependencies
       run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
