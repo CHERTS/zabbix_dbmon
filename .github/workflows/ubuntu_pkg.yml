@@ -46,10 +46,6 @@ jobs:
         go get -u golang.org/x/lint/golint
         go get -u github.com/kisielk/errcheck
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.27.0
-    - name: Update packages
-      run: sudo apt-get update --fix-missing -y
-    - name: Upgrade packages
-      run: sudo apt-get upgrade -y
     - name: Install base dependencies
       run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
     - name: Install build deb dependencies
