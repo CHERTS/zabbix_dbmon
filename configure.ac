@@ -1953,7 +1953,11 @@ AC_SUBST(RANLIB)
 
 SERVER_CONFIG_FILE="${sysconfdir}/zabbix_server.conf"
 PROXY_CONFIG_FILE="${sysconfdir}/zabbix_proxy.conf"
-AGENT_CONFIG_FILE="${sysconfdir}/zabbix_agentd.conf"
+if test "x$dbmon" = "xyes"; then
+	AGENT_CONFIG_FILE="${sysconfdir}/zabbix_agentd_dbmon.conf"
+else
+	AGENT_CONFIG_FILE="${sysconfdir}/zabbix_agentd.conf"
+fi
 AGENT2_CONFIG_FILE="${sysconfdir}/zabbix_agent2.conf"
 
 EXTERNAL_SCRIPTS_PATH="${datadir}/zabbix/externalscripts"
