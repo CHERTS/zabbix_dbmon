@@ -16,10 +16,11 @@ jobs:
       matrix:
          os: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04]
     steps:
+    - name: Show repo
+      run: sudo apt-cache policy
     - name: Remove sury pkg
       run: |
         sudo apt install ppa-purge
-        sudo ppa-purge ppa:ondrej/php
     - name: Install base dependencies
       run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
     - name: Install build deb dependencies
