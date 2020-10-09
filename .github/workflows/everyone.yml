@@ -43,7 +43,7 @@ jobs:
     - name: Build dist
       run: make dist
     - name: Get current Zabbix version
-      run: echo "::set-env name=ZABBIX_VERSION::$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')"
+      run: echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Change directory
@@ -76,7 +76,7 @@ jobs:
     - name: Build dist
       run: make dist
     - name: Get current Zabbix version
-      run: echo "::set-env name=ZABBIX_VERSION::$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')"
+      run: echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Change directory
@@ -109,7 +109,7 @@ jobs:
     - name: Build dist
       run: make dist
     - name: Get current Zabbix version
-      run: echo "::set-env name=ZABBIX_VERSION::$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')"
+      run: echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Change directory
@@ -142,7 +142,7 @@ jobs:
     - name: Build dist
       run: make dist
     - name: Get current Zabbix version
-      run: echo "::set-env name=ZABBIX_VERSION::$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')"
+      run: echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Change directory
@@ -175,7 +175,7 @@ jobs:
     - name: Build dist
       run: make dist
     - name: Get current Zabbix version
-      run: echo "::set-env name=ZABBIX_VERSION::$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')"
+      run: echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Change directory
