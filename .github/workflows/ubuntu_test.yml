@@ -18,15 +18,8 @@ jobs:
     steps:
     - name: Show repo
       run: sudo apt-cache policy
-    - name: Remove sury pkg
-      run: |
-        sudo apt install ppa-purge
-    - name: Install base dependencies
-      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
-    - name: Install build deb dependencies
-      run: sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
-    - name: Install database dependencies
-      run: sudo apt-get install -y libmysqlclient-dev libpq-dev
+    - name: Show php version
+      run: dpkg -l | grep php
     - name: Show libssl1 version
       run: dpkg -l | grep libssl1
     - name: Show libpcre version
@@ -35,3 +28,18 @@ jobs:
       run: dpkg -l | grep libssh
     - name: Show libcurl3 version
       run: dpkg -l | grep libcurl3
+    - name: Remove sury pkg
+      run: |
+        sudo apt install ppa-purge
+        sudo add-apt-repository --remove ppa:ondrej/php -y
+        sudo apt update
+	sudo apt-get remove php-common php7.0-* --purge -y
+        sudo apt autoremove --assume-yes
+	sudo apt-get remove libssl1.1 libapache2-mod-php7.0 --purge -y
+	sudo apt-get autoclean
+    - name: Install base dependencies
+      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
+    - name: Install build deb dependencies
+      run: sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
+    - name: Install database dependencies
+      run: sudo apt-get install -y libmysqlclient-dev libpq-dev
