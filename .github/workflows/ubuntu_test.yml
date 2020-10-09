@@ -16,15 +16,22 @@ jobs:
       matrix:
          os: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04]
     steps:
+    - name: Remove sury pkg
+      run: |
+        sudo apt install ppa-purge
+        sudo ppa-purge ppa:ondrej/php
+      run: sudo apt-get install -y libmysqlclient-dev libpq-dev
     - name: Install base dependencies
       run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
     - name: Install build deb dependencies
       run: sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
     - name: Install database dependencies
       run: sudo apt-get install -y libmysqlclient-dev libpq-dev
-    - name: Show lib version
-      run: |
-        dpkg -l | grep libssl1
-        dpkg -l | grep libpcre
-        dpkg -l | grep libssh
-        dpkg -l | grep libcurl3
+    - name: Show libssl1 version
+      run: dpkg -l | grep libssl1
+    - name: Show libpcre version
+      run: dpkg -l | grep libpcre
+    - name: Show libssh version
+      run: dpkg -l | grep libssh
+    - name: Show libcurl3 version
+      run: dpkg -l | grep libcurl3
