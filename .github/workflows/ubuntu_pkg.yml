@@ -75,7 +75,7 @@ jobs:
     - name: Change directory
       run: cd zabbix-${{ env.ZABBIX_VERSION }}/
     - name: Copy original sources
-      run: cp "packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
+      run: cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
     - name: Extract original sources
       run: tar -zxf ubuntu.tar.gz
     - name: Prepare build DEB
