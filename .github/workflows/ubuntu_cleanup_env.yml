@@ -30,7 +30,8 @@ jobs:
         sudo apt-get remove -y php7.4-*
         sudo apt-get install -y default-jre-headless ca-certificates-java 
         sudo apt-get remove -y php-common
-        #sudo apt-get remove -y libpcre16-3 libpcre2-8-0 libpcre3 libpcre3-dev libpcre32-3 libpcrecpp0v5
+        sudo apt-get remove -y libpcre16-3 libpcre2-8-0 libpcre32-3 libpcrecpp0v5
+        #sudo apt-get remove -y libpcre3 libpcre3-dev
         sudo apt-get remove -y libssl1.1 libssl-dev
         sudo apt autoremove --assume-yes
         sudo apt-get autoclean
@@ -63,7 +64,8 @@ jobs:
         sudo apt-get remove -y php7.4-*
         sudo apt-get install -y default-jre-headless ca-certificates-java 
         sudo apt-get remove -y php-common
-        #sudo apt-get remove -y libpcre16-3 libpcre2-16-0 libpcre2-32-0 libpcre2-8-0 libpcre2-dev libpcre2-posix2 libpcre3 libpcre3-dev libpcre32-3 libpcrecpp0v5
+        sudo apt-get remove -y libpcre16-3 libpcre2-16-0 libpcre2-32-0 libpcre2-8-0 libpcre2-posix2 libpcre32-3 libpcrecpp0v5
+        #sudo apt-get remove -y libpcre2-dev libpcre3 libpcre3-dev 
         sudo apt-get remove -y libssl1.1 libssl-dev
         sudo apt autoremove --assume-yes
         sudo apt-get autoclean
