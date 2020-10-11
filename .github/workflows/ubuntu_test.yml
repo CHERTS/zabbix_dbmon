@@ -31,11 +31,11 @@ jobs:
         sudo apt-get remove -y php7.2-*
         sudo apt-get remove -y php7.3-*
         sudo apt-get remove -y php7.4-*
+        sudo apt-get remove -y php-common --purge
+        sudo apt autoremove --assume-yes
+        sudo apt-get remove -y libssl1.1 --purge
+        sudo apt-get autoclean
 #        sudo dpkg -r --force-depends libssl1.1
-#        sudo apt-get remove -y php5.6-* php7.0-* php7.1-* php7.2-* php7.3-* php7.4-* php-common --purge
-#        sudo apt autoremove --assume-yes
-#        sudo apt-get remove -y libssl1.1 --purge
-#        sudo apt-get autoclean
 #    - name: Install base dependencies
 #      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
 #    - name: Install build deb dependencies
