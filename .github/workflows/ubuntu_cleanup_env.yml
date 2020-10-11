@@ -50,7 +50,7 @@ jobs:
     - name: Show repo
       run: sudo apt-cache policy
     - name: Show dpk version
-      run: sudo dpkg -l | grep -E '(php|apache|libssl|libpcre|libssh|libcurl3)'
+      run: sudo dpkg -l | grep -E '(php|apache|libssl|libpcre|libssh|libcurl3|libicu|libxml)'
     - name: Remove sury pkg
       run: |
         sudo apt install ppa-purge
@@ -65,12 +65,13 @@ jobs:
         sudo apt-get install -y default-jre-headless ca-certificates-java 
         sudo apt-get remove -y php-common
         sudo apt-get remove -y libpcre16-3 libpcre2-16-0 libpcre2-32-0 libpcre2-8-0 libpcre2-posix2 libpcre32-3 libpcrecpp0v5 libpcre2-dev 
+        sudo apt-get remove -y libicu65
         #sudo apt-get remove -y libpcre3 libpcre3-dev libicu65
         sudo apt-get remove -y libssl1.1 libssl-dev
         sudo apt autoremove --assume-yes
         sudo apt-get autoclean
     - name: Show dpk version
-      run: sudo dpkg -l | grep -E '(php|apache|libssl|libpcre|libssh|libcurl3|sury)'
+      run: sudo dpkg -l | grep -E '(php|apache|libssl|libpcre|libssh|libcurl3|libicu|sury)'
     - name: Install base dependencies
       run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
     - name: Install build deb dependencies
