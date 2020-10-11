@@ -9,8 +9,8 @@ on:
         default: 'Create Ubuntu packages'
 
 jobs:
-  github-job:
-    name: Ubuntu
+  github-job1:
+    name: Ubuntu (Xenial, Bionic)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -36,6 +36,19 @@ jobs:
         sudo apt-get remove -y libssl1.1
         sudo apt autoremove --assume-yes
         sudo apt-get autoclean
+    - name: Show dpk version
+      run: sudo dpkg -l | grep -E '(php|apache|libssl|libpcre|libssh|libcurl3)'
+    - name: Install base dependencies
+      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
+    - name: Install build deb dependencies
+      run: sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
+    - name: Install database dependencies
+      run: sudo apt-get install -y libmysqlclient-dev libpq-dev
+  github-job2:
+    name: Ubuntu (Focal)
+    runs-on: [ubuntu-20.04]
+    - name: Show repo
+      run: sudo apt-cache policy
     - name: Show dpk version
       run: sudo dpkg -l | grep -E '(php|apache|libssl|libpcre|libssh|libcurl3)'
     - name: Install base dependencies
