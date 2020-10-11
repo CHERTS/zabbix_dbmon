@@ -47,6 +47,7 @@ jobs:
   github-job-ubuntu-new:
     name: Ubuntu (Focal)
     runs-on: [ubuntu-20.04]
+    steps:
     - name: Show repo
       run: sudo apt-cache policy
     - name: Show dpk version
