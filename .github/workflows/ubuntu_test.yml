@@ -32,9 +32,9 @@ jobs:
         sudo apt-get remove -y php7.3-*
         sudo apt-get remove -y php7.4-*
         sudo apt-get install -y ca-certificates-java 
-        sudo apt-get remove -y php-common --purge
+        sudo apt-get remove -y php-common
+        sudo apt-get remove -y libssl1.1
         sudo apt autoremove --assume-yes
-        sudo apt-get remove -y libssl1.1 --purge
         sudo apt-get autoclean
 #        sudo dpkg -r --force-depends libssl1.1
 #    - name: Install base dependencies
