@@ -14,7 +14,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-         os: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04]
+         os: [ubuntu-16.04, ubuntu-18.04]
     steps:
     - name: Show repo
       run: sudo apt-cache policy
@@ -25,15 +25,20 @@ jobs:
         sudo apt install ppa-purge
         sudo add-apt-repository --remove ppa:ondrej/php -y
         sudo apt-get update
-        sudo dpkg -r --force-depends libssl1.1
         sudo apt-get remove -y php5.6-*
+        sudo apt-get remove -y php7.0-*
+        sudo apt-get remove -y php7.1-*
+        sudo apt-get remove -y php7.2-*
+        sudo apt-get remove -y php7.3-*
+        sudo apt-get remove -y php7.4-*
+#        sudo dpkg -r --force-depends libssl1.1
 #        sudo apt-get remove -y php5.6-* php7.0-* php7.1-* php7.2-* php7.3-* php7.4-* php-common --purge
 #        sudo apt autoremove --assume-yes
 #        sudo apt-get remove -y libssl1.1 --purge
 #        sudo apt-get autoclean
-    - name: Install base dependencies
-      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
-    - name: Install build deb dependencies
-      run: sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
-    - name: Install database dependencies
-      run: sudo apt-get install -y libmysqlclient-dev libpq-dev
+#    - name: Install base dependencies
+#      run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
+#    - name: Install build deb dependencies
+#      run: sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
+#    - name: Install database dependencies
+#      run: sudo apt-get install -y libmysqlclient-dev libpq-dev
