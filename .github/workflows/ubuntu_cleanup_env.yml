@@ -22,16 +22,16 @@ jobs:
         sudo apt install ppa-purge
         sudo add-apt-repository --remove ppa:ondrej/php -y
         sudo apt-get update
-        sudo apt-get remove -y php5.6-*
-        sudo apt-get remove -y php7.0-*
-        sudo apt-get remove -y php7.1-*
-        sudo apt-get remove -y php7.2-*
-        sudo apt-get remove -y php7.3-*
-        sudo apt-get remove -y php7.4-*
+        sudo apt-get remove -y php5.6-* --purge
+        sudo apt-get remove -y php7.0-* --purge
+        sudo apt-get remove -y php7.1-* --purge
+        sudo apt-get remove -y php7.2-* --purge
+        sudo apt-get remove -y php7.3-* --purge
+        sudo apt-get remove -y php7.4-* --purge
         sudo apt-get install -y default-jre-headless ca-certificates-java 
         sudo apt-get remove -y php-common
-        sudo apt-get remove -y libpcre16-3 libpcre2-8-0 libpcre3 libpcre3-dev libpcre32-3 ibpcrecpp0v5
-        sudo apt-get remove -y libssl1.1 libssl-dev
+        sudo apt-get remove -y libpcre16-3 libpcre2-8-0 libpcre3 libpcre3-dev libpcre32-3 libpcrecpp0v5 --purge
+        sudo apt-get remove -y libssl1.1 libssl-dev --purge
         sudo apt autoremove --assume-yes
         sudo apt-get autoclean
     - name: Show dpk version
