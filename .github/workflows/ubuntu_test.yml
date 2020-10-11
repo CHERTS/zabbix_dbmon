@@ -31,7 +31,7 @@ jobs:
         sudo apt-get remove -y php7.2-*
         sudo apt-get remove -y php7.3-*
         sudo apt-get remove -y php7.4-*
-        sudo apt-get install -y ca-certificates-java 
+        sudo apt-get install -y default-jre-headless ca-certificates-java 
         sudo apt-get remove -y php-common
         sudo apt-get remove -y libssl1.1
         sudo apt autoremove --assume-yes
