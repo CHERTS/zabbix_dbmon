@@ -9,7 +9,7 @@ on:
         default: 'Create Ubuntu packages'
 
 jobs:
-  github-job1:
+  github-job-ubuntu-old:
     name: Ubuntu (Xenial, Bionic)
     runs-on: ${{ matrix.os }}
     strategy:
@@ -44,7 +44,7 @@ jobs:
       run: sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
     - name: Install database dependencies
       run: sudo apt-get install -y libmysqlclient-dev libpq-dev
-  github-job2:
+  github-job-ubuntu-new:
     name: Ubuntu (Focal)
     runs-on: [ubuntu-20.04]
     - name: Show repo
