@@ -1021,6 +1021,14 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	{
 		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STATUS_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
+	else if (0 == strcmp(request->key, "pgsql.replication.lag_byte"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_LAG_IN_BYTE_V10_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.replication.lag_sec"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_LAG_IN_SEC_V10_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
 	else
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key"));
