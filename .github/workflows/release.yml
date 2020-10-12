@@ -29,8 +29,10 @@ jobs:
         rm -rf ./bin/ubuntu_only_pgsql 2>/dev/null
         rm -rf ./bin/win32/*.dll 2>/dev/null
         rm -rf ./bin/win32/*.exe 2>/dev/null
+        rm -rf ./bin/win32/*.cmd 2>/dev/null
         rm -rf ./bin/win64/*.dll 2>/dev/null
         rm -rf ./bin/win64/*.exe 2>/dev/null
+        rm -rf ./bin/win64/*.cmd 2>/dev/null
     - name: Run bootstrap
       run: ./bootstrap.sh
     - name: Run configure
