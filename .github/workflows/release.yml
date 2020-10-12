@@ -33,6 +33,7 @@ jobs:
         rm -rf ./bin/win64/*.dll 2>/dev/null
         rm -rf ./bin/win64/*.exe 2>/dev/null
         rm -rf ./bin/win64/*.cmd 2>/dev/null
+        rm -f ./include/version.h.win 2>/dev/null
     - name: Run bootstrap
       run: ./bootstrap.sh
     - name: Run configure
