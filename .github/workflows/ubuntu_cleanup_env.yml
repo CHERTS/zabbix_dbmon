@@ -35,10 +35,9 @@ jobs:
         sudo apt-get remove -y libssl1.1 libssl-dev
         sudo apt autoremove --assume-yes
         sudo apt-get autoclean
+        sudo apt-get update
     - name: Show dpk version
       run: sudo dpkg -l | grep -E '(php|apache|libssl|libpcre|libssh|libcurl3|libicu|sury)'
-    - name: Update packages
-      run: sudo apt-get update
     - name: Install base dependencies
       run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
     - name: Install build deb dependencies
@@ -72,10 +71,10 @@ jobs:
         sudo apt-get remove -y libssl1.1 libssl-dev
         sudo apt autoremove --assume-yes
         sudo apt-get autoclean
+        sudo apt-get update
+        sudo apt-get install -y libicu-dev
     - name: Show dpk version
       run: sudo dpkg -l | grep -E '(php|apache|libssl|libpcre|libssh|libcurl3|libicu|sury)'
-    - name: Update packages
-      run: sudo apt-get update
     - name: Install base dependencies
       run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
     - name: Install build deb dependencies
@@ -100,10 +99,9 @@ jobs:
         sudo apt-get remove -y php-* --purge
         sudo apt autoremove --assume-yes
         sudo apt-get autoclean
+        sudo apt-get update
     - name: Show dpk version
       run: sudo dpkg -l | grep -E '(php|apache|libssl|libpcre|libssh|libcurl3|sury)'
-    - name: Update packages
-      run: sudo apt-get update
     - name: Install base dependencies
       run: sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
     - name: Install build deb dependencies
