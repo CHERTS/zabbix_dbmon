@@ -30,6 +30,8 @@
 
 #define PGSQL_VERSION_DBS "SELECT VERSION() AS VERSION;"
 
+#define PGSQL_VERSION_INT_DBS "SELECT current_setting('server_version_num')::int;"
+
 #define PGSQL_SERVER_INFO_DBS "\
 SELECT  VERSION() AS VERSION, \
 	date_part('epoch', pg_postmaster_start_time())::int AS STARTUPTIME, \
@@ -240,6 +242,8 @@ FROM( \
 	, buffers_backend \
 	, buffers_backend_fsync \
 	, buffers_alloc \
+	, stats_reset \
+	, date_part('epoch', stats_reset)::int AS stats_reset_unix \
 	FROM pg_catalog.pg_stat_bgwriter \
 ) T;"
 
@@ -276,6 +280,68 @@ FROM( \
 	FROM pg_catalog.pg_prepared_xacts \
 ) T;"
 
+#define PGSQL_NOT_DEFAULT_SETTINGS_DBS "\
+SELECT json_build_object( \
+	'extensions', ( \
+		SELECT array_agg(extname) FROM ( \
+			SELECT extname FROM pg_extension ORDER BY extname \
+		) AS e \
+	), \
+	'settings', ( \
+		SELECT json_object(array_agg(name), array_agg(setting)) FROM ( \
+			SELECT name, setting FROM pg_settings WHERE (source NOT IN ('default', 'session') OR name = 'server_version_num') AND name NOT IN ('application_name') ORDER BY name \
+		) AS s \
+	) \
+);"
+
+// Get replication role: 0 - Master, 1 - Standby
+#define PGSQL_REPLICATION_ROLE_DBS "\
+SELECT pg_is_in_recovery()::int AS REPLICATION_ROLE;"
+
+// Get replication standby count
+#define PGSQL_REPLICATION_STANDBY_COUNT_DBS "\
+SELECT count(*) AS REPLICATION_STANDBY_COUNT FROM pg_stat_replication;"
+
+// Get replication status: 0 - Down, 1 - Up, 2 - Master
+#define PGSQL_REPLICATION_STATUS_DBS "\
+SELECT \
+	CASE \
+		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 2 \
+		ELSE (SELECT COUNT(*) AS REPLICATION_RECEIVER_COUNT FROM pg_stat_wal_receiver) \
+	END AS REPLICATION_STATUS;"
+
+// Get lag in second from PostgreSQL < 10.0
+#define PGSQL_REPLICATION_LAG_IN_SEC_V9_DBS "\
+SELECT \
+	CASE \
+		WHEN pg_last_xlog_receive_location() = pg_last_xlog_replay_location() THEN 0 \
+		ELSE COALESCE(EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())::integer, 0) \
+	END AS LAG_IN_SEC;"
+
+// Get lag in second from PostgreSQL >= 10.0
+#define PGSQL_REPLICATION_LAG_IN_SEC_V10_DBS "\
+SELECT \
+	CASE \
+		WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 \
+		ELSE COALESCE(EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())::integer, 0) \
+	END AS LAG_IN_SEC;"
+
+// Get lag in second from PostgreSQL < 10.0
+#define PGSQL_REPLICATION_LAG_IN_BYTE_V9_DBS "\
+SELECT \
+	CASE \
+		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 0 \
+		ELSE (SELECT pg_catalog.pg_xlog_location_diff(received_lsn, pg_last_xlog_replay_location()) FROM pg_stat_wal_receiver) \
+	END AS LAG_IN_BYTE;"
+
+// Get lag in second from PostgreSQL >= 10.0
+#define PGSQL_REPLICATION_LAG_IN_BYTE_V10_DBS "\
+SELECT \
+	CASE \
+		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 0 \
+		ELSE (SELECT pg_catalog.pg_wal_lsn_diff(received_lsn, pg_last_wal_replay_lsn()) FROM pg_stat_wal_receiver) \
+	END AS LAG_IN_BYTE;"
+
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
@@ -298,6 +364,12 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.archive.count",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.archive.size",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.prepared.transactions",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.settings",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.replication.role",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.replication.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.replication.status",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.replication.lag_byte",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.replication.lag_sec",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -394,6 +466,7 @@ static int	pgsql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned 
 		if (0 == ver_mode)
 		{
 			/*
+			version 9.4.2	=> 90412 ?
 			version 9.5.2	=> 90502
 			version 9.6.0	=> 90600
 			version 9.6.16	=> 90616
@@ -760,6 +833,72 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				goto out;
 			}
 		}
+		else if (0 == strcmp(request->key, "pgsql.replication.lag_byte"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version < 90600)
+				{
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PostgreSQL not support streaming replication.", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "PostgreSQL not support streaming replication."));
+					ret = SYSINFO_RET_FAIL;
+					goto out;
+				}
+				else if (version >= 90600 && version < 100000)
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_BYTE_V9_DBS);
+				}
+				else
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_BYTE_V10_DBS);
+				}
+
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
+		else if (0 == strcmp(request->key, "pgsql.replication.lag_sec"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version < 90600)
+				{
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PostgreSQL not support streaming replication.", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "PostgreSQL not support streaming replication."));
+					ret = SYSINFO_RET_FAIL;
+					goto out;
+				}
+				else if (version >= 90600 && version < 100000)
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_SEC_V9_DBS);
+				}
+				else
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_SEC_V10_DBS);
+				}
+
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
 		else
 		{
 			db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", query);
@@ -865,6 +1004,22 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.prepared.transactions"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_PREPARED_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.settings"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_NOT_DEFAULT_SETTINGS_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.replication.role"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_ROLE_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.replication.count"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STANDBY_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.replication.status"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STATUS_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else
 	{
