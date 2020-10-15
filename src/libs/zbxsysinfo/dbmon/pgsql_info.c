@@ -331,7 +331,7 @@ SELECT \
 SELECT \
 	CASE \
 		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 0 \
-		ELSE (SELECT pg_catalog.pg_xlog_location_diff(received_lsn, pg_last_xlog_replay_location()) FROM pg_stat_wal_receiver) \
+		ELSE (SELECT pg_catalog.pg_xlog_location_diff(received_lsn, pg_last_xlog_replay_location())::int FROM pg_stat_wal_receiver) \
 	END AS LAG_IN_BYTE;"
 
 // Get lag in second from PostgreSQL >= 10.0
@@ -339,7 +339,7 @@ SELECT \
 SELECT \
 	CASE \
 		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 0 \
-		ELSE (SELECT pg_catalog.pg_wal_lsn_diff(received_lsn, pg_last_wal_replay_lsn()) FROM pg_stat_wal_receiver) \
+		ELSE (SELECT pg_catalog.pg_wal_lsn_diff(received_lsn, pg_last_wal_replay_lsn())::int FROM pg_stat_wal_receiver) \
 	END AS LAG_IN_BYTE;"
 
 ZBX_METRIC	parameters_dbmon_pgsql[] =
