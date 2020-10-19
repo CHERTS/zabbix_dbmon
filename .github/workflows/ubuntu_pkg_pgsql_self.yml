@@ -9,7 +9,7 @@ on:
         default: 'Create Ubuntu packages'
 
 jobs:
-  ubuntu-xenial:
+  ubuntu-xenial-pg:
     name: Ubuntu (Xenial)
     runs-on: [self-hosted, linux, ubuntu-xenial]
     steps:
@@ -36,7 +36,7 @@ jobs:
     - name: Upload deb from dev server
       run: |
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s)/
-  ubuntu-bionic:
+  ubuntu-bionic-pg:
     name: Ubuntu (Bionic)
     runs-on: [self-hosted, linux, ubuntu-bionic]
     steps:
@@ -63,7 +63,7 @@ jobs:
     - name: Upload deb from dev server
       run: |
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s)/
-  ubuntu-focal:
+  ubuntu-focal-pg:
     name: Ubuntu (Focal)
     runs-on: [self-hosted, linux, ubuntu-focal]
     steps:
