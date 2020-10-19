@@ -41,4 +41,4 @@ jobs:
         key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
         known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
-      run: scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:pkgs/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/pool/main/$(lsb_release -c -s)/
+      run: scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s)/
