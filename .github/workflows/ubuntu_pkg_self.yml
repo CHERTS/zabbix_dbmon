@@ -45,9 +45,9 @@ jobs:
         known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
       run: |
-        scp ../*.deb ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
-        scp ../*.dsc ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
-        scp ../*.changes ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.dsc ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.changes ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
     - name: Remove SSH key
       run: |
         if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/id_rsa 2>/dev/null; fi
@@ -85,13 +85,13 @@ jobs:
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2
       with:
-        key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
+        key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
       run: |
-        scp ../*.deb ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
-        scp ../*.dsc ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
-        scp ../*.changes ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.dsc ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.changes ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
     - name: Remove SSH key
       run: |
         if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/id_rsa 2>/dev/null; fi
@@ -129,13 +129,13 @@ jobs:
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2
       with:
-        key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
+        key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
       run: |
-        scp ../*.deb ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
-        scp ../*.dsc ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
-        scp ../*.changes ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.dsc ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.changes ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
     - name: Remove SSH key
       run: |
         if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/id_rsa 2>/dev/null; fi
