@@ -40,7 +40,7 @@ jobs:
         GO111MODULE: on
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
-        dpkg-buildpackage -b
+        dpkg-buildpackage -uc -us
     - name: Remove old SSH key
       run: |
         if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/id_rsa 2>/dev/null; fi
@@ -52,7 +52,10 @@ jobs:
         key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
         known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
-      run: scp ../*.deb ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+      run: |
+        scp ../*.deb ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.dsc ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.changes ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
     - name: Remove SSH key
       run: |
         if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/id_rsa 2>/dev/null; fi
@@ -89,7 +92,7 @@ jobs:
         GO111MODULE: on
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
-        dpkg-buildpackage -b
+        dpkg-buildpackage -uc -us
     - name: Remove old SSH key
       run: |
         if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/id_rsa 2>/dev/null; fi
@@ -101,7 +104,10 @@ jobs:
         key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
         known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
-      run: scp ../*.deb ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+      run: |
+        scp ../*.deb ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.dsc ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.changes ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
     - name: Remove SSH key
       run: |
         if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/id_rsa 2>/dev/null; fi
@@ -138,7 +144,7 @@ jobs:
         GO111MODULE: on
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
-        dpkg-buildpackage -b
+        dpkg-buildpackage -uc -us
     - name: Remove old SSH key
       run: |
         if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/id_rsa 2>/dev/null; fi
@@ -150,7 +156,10 @@ jobs:
         key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
         known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
-      run: scp ../*.deb ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+      run: |
+        scp ../*.deb ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.dsc ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+        scp ../*.changes ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
     - name: Remove SSH key
       run: |
         if [ -d $HOME/.ssh ]; then rm -f $HOME/.ssh/id_rsa 2>/dev/null; fi
