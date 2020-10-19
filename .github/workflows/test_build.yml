@@ -52,10 +52,3 @@ jobs:
       run: |
         ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
         make
-    - name: Install SSH key
-      uses: shimataro/ssh-key-action@v2
-      with:
-        key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
-    - name: Upload binary from dev server
-      run: scp src/zabbix_agent/zabbix_agentd ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:ubuntu_1804/zabbix_agentd_dbmon_v${{ env.ZABBIX_VERSION }}_${{ env.GITHUB_SHA_SHORT }}_mysql_pgsql
