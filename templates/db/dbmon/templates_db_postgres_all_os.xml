@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-10-07T10:56:11Z</date>
+    <date>2020-10-19T15:29:51Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2837,10 +2837,12 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                                     <name>Too many recovery conflicts over last 5 minutes</name>
                                     <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_CONFLICTS_MAX_WARN:&quot;{#DBNAME}&quot;}, alert started: {ITEM.VALUE1}</opdata>
                                     <priority>AVERAGE</priority>
-                                    <description>The primary and standby servers are in many ways loosely connected.&#13;
-Actions on the primary will have an effect on the standby.&#13;
-As a result, there is potential for negative interactions or conflicts between them.&#13;
-See more info: https://www.postgresql.org/docs/current/hot-standby.html#HOT-STANDBY-CONFLICT</description>
+                                    <description>Количество запросов, отменённых из-за конфликта с восстановлением в базе '{#DBNAME}' больше {$DBS_PGSQL_CONFLICTS_MAX_WARN:&quot;{#DBNAME}&quot;}.&#13;
+Конфликты происходят только на ведомых серверах, для получения более подробной информации смотрите представление pg_stat_database_conflicts.&#13;
+Более подробно в официальной документации: &#13;
+https://www.postgresql.org/docs/current/hot-standby.html#HOT-STANDBY-CONFLICT&#13;
+https://postgrespro.ru/docs/postgresql/current/monitoring-stats#PG-STAT-DATABASE-CONFLICTS-VIEW&#13;
+https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                                     <dependencies>
                                         <dependency>
                                             <name>Instance access failed</name>
@@ -3780,7 +3782,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_WARN} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
             <name>Total number of connections is too high</name>
-            <opdata>current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_WARN}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE2}</opdata>
+            <opdata>current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_WARN}%, alert started: {ITEM.VALUE2}</opdata>
             <priority>WARNING</priority>
             <description>Текущее количество соединений велико.&#13;
 Проанализируйте откуда идут соединения к кластеру.&#13;
@@ -3805,7 +3807,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
             <name>Total number of connections is too very high</name>
-            <opdata>current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_CRIT}%, max: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE2}</opdata>
+            <opdata>current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_CRIT}%, alert started: {ITEM.VALUE2}</opdata>
             <priority>HIGH</priority>
             <description>Текущее количество соединений очень велико.&#13;
 Проанализируйте откуда идут соединения к кластеру.&#13;
