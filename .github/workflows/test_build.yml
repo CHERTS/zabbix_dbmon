@@ -58,4 +58,9 @@ jobs:
       run: |
         ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
         make
-        ./src/zabbix_agent/zabbix_agentd_dbmon -V
+    - name: Show build version
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
+      run: |
+        ldd ./src/zabbix_agent/zabbix_agentd
+        echo ----------------------------------------------
+        ./src/zabbix_agent/zabbix_agentd -V
