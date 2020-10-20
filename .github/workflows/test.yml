@@ -27,10 +27,9 @@ jobs:
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
         echo "ZABBIX_VERSION_SHORT=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \' | awk -F. '{print $1"."$2}')" >> $GITHUB_ENV
     - name: Extract distr
-      run: |
-        tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
-        cd zabbix-${{ env.ZABBIX_VERSION }}
+      run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Prepare build DEB
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
         echo ---------------------------------
         ls -l ../
