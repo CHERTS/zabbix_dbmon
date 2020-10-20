@@ -326,7 +326,7 @@ SELECT \
 		ELSE COALESCE(EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())::integer, 0) \
 	END AS LAG_IN_SEC;"
 
-// Get lag in second from PostgreSQL < 10.0
+// Get lag in byte from PostgreSQL < 10.0
 #define PGSQL_REPLICATION_LAG_IN_BYTE_V9_DBS "\
 SELECT \
 	CASE \
@@ -334,7 +334,7 @@ SELECT \
 		ELSE (SELECT pg_catalog.pg_xlog_location_diff(received_lsn, pg_last_xlog_replay_location())::int FROM pg_stat_wal_receiver) \
 	END AS LAG_IN_BYTE;"
 
-// Get lag in second from PostgreSQL >= 10.0
+// Get lag in byte from PostgreSQL >= 10.0
 #define PGSQL_REPLICATION_LAG_IN_BYTE_V10_DBS "\
 SELECT \
 	CASE \
