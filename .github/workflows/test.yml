@@ -31,11 +31,6 @@ jobs:
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        echo ---------------------------------
-        ls -l ../
-        echo ---------------------------------
-        ls -l
-        echo ---------------------------------
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"

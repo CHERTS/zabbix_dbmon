@@ -22,18 +22,27 @@ jobs:
         ./bootstrap.sh
         ./configure
          make dist
-         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
-    - name: Prepare build DEB
+    - name: Set variables
       run: |
-        cp "packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz && tar -zxf ubuntu.tar.gz
+        echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
+        echo "ZABBIX_VERSION_SHORT=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \' | awk -F. '{print $1"."$2}')" >> $GITHUB_ENV
+    - name: Extract distr
+      run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
+    - name: Prepare build DEB
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
+      run: |
+        cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
+        tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
     - name: Build DEB
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       env:
         GO111MODULE: on
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
         dpkg-buildpackage -b -k${{ secrets.DBMON_GPG_KEYID }}
     - name: Upload deb from dev server
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s)/
   ubuntu-bionic-pg:
@@ -49,18 +58,27 @@ jobs:
         ./bootstrap.sh
         ./configure
          make dist
-         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
-    - name: Prepare build DEB
+    - name: Set variables
       run: |
-        cp "packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz && tar -zxf ubuntu.tar.gz
+        echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
+        echo "ZABBIX_VERSION_SHORT=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \' | awk -F. '{print $1"."$2}')" >> $GITHUB_ENV
+    - name: Extract distr
+      run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
+    - name: Prepare build DEB
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
+      run: |
+        cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
+        tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
     - name: Build DEB
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       env:
         GO111MODULE: on
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
         dpkg-buildpackage -b -k${{ secrets.DBMON_GPG_KEYID }}
     - name: Upload deb from dev server
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s)/
   ubuntu-focal-pg:
@@ -76,17 +94,26 @@ jobs:
         ./bootstrap.sh
         ./configure
          make dist
-         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
-    - name: Prepare build DEB
+    - name: Set variables
       run: |
-        cp "packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz && tar -zxf ubuntu.tar.gz
+        echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
+        echo "ZABBIX_VERSION_SHORT=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \' | awk -F. '{print $1"."$2}')" >> $GITHUB_ENV
+    - name: Extract distr
+      run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
+    - name: Prepare build DEB
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
+      run: |
+        cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
+        tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
     - name: Build DEB
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       env:
         GO111MODULE: on
       run: |
         export PATH=$PATH:$(go env GOPATH)/bin # temporary fix. See https://github.com/actions/setup-go/issues/14
         dpkg-buildpackage -b -k${{ secrets.DBMON_GPG_KEYID }}
     - name: Upload deb from dev server
+      working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s)/
