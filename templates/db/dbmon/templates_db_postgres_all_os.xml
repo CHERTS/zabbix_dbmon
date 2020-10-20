@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-10-19T15:29:51Z</date>
+    <date>2020-10-20T10:51:39Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -209,12 +209,12 @@
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total files</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total number of archived files</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},count_files]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Total number of WAL files.</description>
+                    <description>Total number of archived WAL files.</description>
                     <applications>
                         <application>
                             <name>PgSQL: WAL</name>
@@ -261,13 +261,13 @@
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total size of files</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total size of archived files</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},size_files]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <units>B</units>
-                    <description>Total size of WAL files.</description>
+                    <description>Total size of archived WAL files.</description>
                     <applications>
                         <application>
                             <name>PgSQL: WAL</name>
@@ -1527,31 +1527,6 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Count</name>
-                    <type>DEPENDENT</type>
-                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},count]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <applications>
-                        <application>
-                            <name>PgSQL: WAL</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.count</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>pgsql.wal.stat[{$DBS_PGSQL_CONN_STRING}]</key>
-                    </master_item>
-                </item>
-                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max idle transaction time in sec</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle]</key>
@@ -1633,32 +1608,6 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </preprocessing>
                     <master_item>
                         <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
-                    </master_item>
-                </item>
-                <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Write</name>
-                    <type>DEPENDENT</type>
-                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},write]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <units>B</units>
-                    <applications>
-                        <application>
-                            <name>PgSQL: WAL</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.write</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>pgsql.wal.stat[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -1987,6 +1936,59 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                         </application>
                     </applications>
                 </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total number of WAL files</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.wal[{$DBS_PGSQL_INSTANCE},count]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Total number of WAL files on disk.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: WAL</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.count</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.wal.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total write</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.wal[{$DBS_PGSQL_INSTANCE},write]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Total bytes written to WAL files since instantiation cluster.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: WAL</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.write</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.wal.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
             </items>
             <discovery_rules>
                 <discovery_rule>
@@ -2017,6 +2019,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <key>pgsql.db.info[{#DBNAME},age]</key>
                             <delay>0</delay>
                             <history>30d</history>
+                            <description>All transaction IDs before this one have been replaced with a permanent (&quot;frozen&quot;) transaction ID in this database. This is used to track whether the database needs to be vacuumed in order to prevent transaction ID wraparound or to allow pg_clog to be shrunk. It is the minimum of the per-table pg_class.relfrozenxid values.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2098,6 +2101,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <key>pgsql.db.info[{#DBNAME},datconnlimit]</key>
                             <delay>0</delay>
                             <history>30d</history>
+                            <description>Sets maximum number of concurrent connections that can be made to this database. -1 means no limit.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2185,6 +2189,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>CHAR</value_type>
+                            <description>Database description.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2212,6 +2217,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>CHAR</value_type>
+                            <description>Character encoding for this database.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2239,6 +2245,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>CHAR</value_type>
+                            <description>LC_COLLATE for this database.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2266,6 +2273,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>CHAR</value_type>
+                            <description>LC_CTYPE for this database.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2291,6 +2299,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <key>pgsql.db.info[{#DBNAME},oid]</key>
                             <delay>0</delay>
                             <history>30d</history>
+                            <description>Row identifier (hidden attribute; must be explicitly selected).</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2318,6 +2327,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>CHAR</value_type>
+                            <description>Owner of the database, usually the user who created it.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2345,6 +2355,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>CHAR</value_type>
+                            <description>Tablespace name.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3106,7 +3117,7 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of rows updated by queries in this database</description>
+                            <description>Total number of rows returned by queries in this database.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
