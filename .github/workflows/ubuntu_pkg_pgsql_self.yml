@@ -21,7 +21,10 @@ jobs:
       run: |
         ./bootstrap.sh
         ./configure
-         make dist
+        make dbschema
+        make gettext
+        make css
+        make dist
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
@@ -57,7 +60,10 @@ jobs:
       run: |
         ./bootstrap.sh
         ./configure
-         make dist
+        make dbschema
+        make gettext
+        make css
+        make dist
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
@@ -93,7 +99,10 @@ jobs:
       run: |
         ./bootstrap.sh
         ./configure
-         make dist
+        make dbschema
+        make gettext
+        make css
+        make dist
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
@@ -129,7 +138,10 @@ jobs:
       run: |
         ./bootstrap.sh
         ./configure
-         make dist
+        make dbschema
+        make gettext
+        make css
+        make dist
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
