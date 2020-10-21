@@ -28,12 +28,12 @@ jobs:
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
-        echo "ZABBIX_VERSION_SHORT=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \' | awk -F. '{print $1"."$2}')" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
+        cat include/version.h | grep "define ZABBIX_VERSION_REVISION" | awk -F' ' '{print $4}'
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
@@ -67,12 +67,12 @@ jobs:
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
-        echo "ZABBIX_VERSION_SHORT=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \' | awk -F. '{print $1"."$2}')" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
+        cat include/version.h | grep "define ZABBIX_VERSION_REVISION" | awk -F' ' '{print $4}'
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
@@ -106,12 +106,12 @@ jobs:
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
-        echo "ZABBIX_VERSION_SHORT=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \' | awk -F. '{print $1"."$2}')" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
+        cat include/version.h | grep "define ZABBIX_VERSION_REVISION" | awk -F' ' '{print $4}'
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
@@ -145,12 +145,12 @@ jobs:
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
-        echo "ZABBIX_VERSION_SHORT=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \' | awk -F. '{print $1"."$2}')" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
+        cat include/version.h | grep "define ZABBIX_VERSION_REVISION" | awk -F' ' '{print $4}'
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
