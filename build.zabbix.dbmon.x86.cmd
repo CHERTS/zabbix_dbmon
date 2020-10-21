@@ -105,7 +105,7 @@ if exist "build" (
   rem nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" /f Makefile_agent
 
   if exist "%ZBX_AGENTD_BIN%" (
-    signtool.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_AGENTD_BIN%"
+    signtool_x86.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_AGENTD_BIN%"
   ) else (
     echo "ERROR! %ZBX_AGENTD_BIN% not found."
   )
@@ -114,7 +114,7 @@ if exist "build" (
   nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" /f Makefile_sender
 
   if exist "%ZBX_SENDER_BIN%" (
-    signtool.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_SENDER_BIN%"
+    signtool_x86.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_SENDER_BIN%"
   ) else (
     echo "ERROR! %ZBX_SENDER_BIN% not found."
   )
@@ -123,7 +123,7 @@ if exist "build" (
   nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" /f Makefile_get
 
   if exist "%ZBX_GET_BIN%" (
-    signtool.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_GET_BIN%"
+    signtool_x86.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_GET_BIN%"
   ) else (
     echo "ERROR! %ZBX_GET_BIN% not found."
   )
