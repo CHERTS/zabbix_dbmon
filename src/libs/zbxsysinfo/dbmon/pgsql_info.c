@@ -342,6 +342,12 @@ SELECT \
 		ELSE (SELECT pg_catalog.pg_wal_lsn_diff(received_lsn, pg_last_wal_replay_lsn())::int FROM pg_stat_wal_receiver) \
 	END AS LAG_IN_BYTE;"
 
+#define PGSQL_IS_IN_BACKUP_DBS " \
+SELECT row_to_json(T) \
+FROM(\
+	SELECT pg_is_in_backup()::int as ISINBACKUP, COALESCE(date_part('epoch', pg_backup_start_time())::int, 0) AS BACKUPSTARTTIME \
+) T;"
+
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
@@ -370,6 +376,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.replication.status",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.lag_byte",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.lag_sec",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.backup.exclusive",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{NULL}
 };
 
@@ -1028,6 +1035,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.replication.lag_sec"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_LAG_IN_SEC_V10_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.backup.exclusive"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_IS_IN_BACKUP_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else
 	{
