@@ -653,6 +653,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 	struct zbx_db_result		pgsql_result;
 	unsigned long				version;
 	const char					*pg_db_sum, *pg_wait_event, *pg_wal_dir;
+	unsigned int				pg_replication_role = 0; // 0 - Master, 1 - Standby
 
 	if (1 < request->nparam)
 	{
@@ -842,34 +843,58 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		}
 		else if (0 == strcmp(request->key, "pgsql.replication.lag_byte"))
 		{
-			version = zbx_db_version(pgsql_conn);
-
-			if (0 != version)
+			if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_ROLE_DBS))
 			{
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
-
-				if (version < 90600)
-				{
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PostgreSQL not support streaming replication.", __func__, request->key);
-					SET_MSG_RESULT(result, zbx_strdup(NULL, "PostgreSQL not support streaming replication."));
-					ret = SYSINFO_RET_FAIL;
-					goto out;
-				}
-				else if (version >= 90600 && version < 100000)
-				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_BYTE_V9_DBS);
-				}
-				else
-				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_BYTE_V10_DBS);
-				}
-
+				pg_replication_role = get_int_one_result(request, result, 0, 0, pgsql_result);
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Replication role: %u", __func__, request->key, pg_replication_role);
+				zbx_db_clean_result(&pgsql_result);
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL replication recovery role", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL replication recovery role"));
 				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+
+			// Only standby
+			if (1 == pg_replication_role)
+			{
+				version = zbx_db_version(pgsql_conn);
+
+				if (0 != version)
+				{
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+					if (version < 90600)
+					{
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PostgreSQL not support streaming replication.", __func__, request->key);
+						SET_MSG_RESULT(result, zbx_strdup(NULL, "PostgreSQL not support streaming replication."));
+						ret = SYSINFO_RET_FAIL;
+						goto out;
+					}
+					else if (version >= 90600 && version < 100000)
+					{
+						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_BYTE_V9_DBS);
+					}
+					else
+					{
+						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_BYTE_V10_DBS);
+					}
+
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+					ret = SYSINFO_RET_FAIL;
+					goto out;
+				}
+			}
+			else
+			{
+				SET_UI64_RESULT(result, 0);
+				ret = SYSINFO_RET_OK;
 				goto out;
 			}
 		}
