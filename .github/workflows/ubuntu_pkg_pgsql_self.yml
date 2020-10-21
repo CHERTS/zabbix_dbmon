@@ -15,6 +15,10 @@ jobs:
     steps:
     - name: Code checkout
       uses: actions/checkout@v2
+    - name: Delete old binary
+      run: |
+        rm -rf ./bin/* 2>/dev/null
+        rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
       run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
     - name: Build zabbix dist
@@ -28,12 +32,18 @@ jobs:
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
+        echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        cat include/version.h | grep "define ZABBIX_VERSION_REVISION" | awk -F' ' '{print $4}'
+        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
+        mv include/version.h.new include/version.h
+        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \"\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
+	mv src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java
+        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \"\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
+        mv src/go/pkg/version/version.go.new src/go/pkg/version/version.go
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
@@ -54,6 +64,10 @@ jobs:
     steps:
     - name: Code checkout
       uses: actions/checkout@v2
+    - name: Delete old binary
+      run: |
+        rm -rf ./bin/* 2>/dev/null
+        rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
       run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
     - name: Build zabbix dist
@@ -67,12 +81,18 @@ jobs:
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
+        echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        cat include/version.h | grep "define ZABBIX_VERSION_REVISION" | awk -F' ' '{print $4}'
+        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
+        mv include/version.h.new include/version.h
+        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \"\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
+	mv src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java
+        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \"\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
+        mv src/go/pkg/version/version.go.new src/go/pkg/version/version.go
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
@@ -93,6 +113,10 @@ jobs:
     steps:
     - name: Code checkout
       uses: actions/checkout@v2
+    - name: Delete old binary
+      run: |
+        rm -rf ./bin/* 2>/dev/null
+        rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
       run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
     - name: Build zabbix dist
@@ -106,12 +130,18 @@ jobs:
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
+        echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        cat include/version.h | grep "define ZABBIX_VERSION_REVISION" | awk -F' ' '{print $4}'
+        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
+        mv include/version.h.new include/version.h
+        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \"\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
+	mv src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java
+        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \"\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
+        mv src/go/pkg/version/version.go.new src/go/pkg/version/version.go
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
@@ -132,6 +162,10 @@ jobs:
     steps:
     - name: Code checkout
       uses: actions/checkout@v2
+    - name: Delete old binary
+      run: |
+        rm -rf ./bin/* 2>/dev/null
+        rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
       run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
     - name: Build zabbix dist
@@ -145,12 +179,18 @@ jobs:
     - name: Set variables
       run: |
         echo "ZABBIX_VERSION=$(cat configure | grep PACKAGE_VERSION= | cut -d = -f2 | tr -d \')" >> $GITHUB_ENV
+        echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
     - name: Extract distr
       run: tar -zxf zabbix-${{ env.ZABBIX_VERSION }}.tar.gz
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        cat include/version.h | grep "define ZABBIX_VERSION_REVISION" | awk -F' ' '{print $4}'
+        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
+        mv include/version.h.new include/version.h
+        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \"\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
+	mv src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java
+        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \"\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
+        mv src/go/pkg/version/version.go.new src/go/pkg/version/version.go
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
         dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
