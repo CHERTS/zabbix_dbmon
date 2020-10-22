@@ -39,6 +39,10 @@ jobs:
         sudo apt-get install -y libmysqlclient-dev libpq-dev
     - name: Code checkout
       uses: actions/checkout@v2
+    - name: Delete old binary
+      run: |
+        rm -rf ./bin/* 2>/dev/null
+        rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
       run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
     - name: Build zabbix dist

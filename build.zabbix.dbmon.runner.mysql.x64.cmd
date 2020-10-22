@@ -49,6 +49,9 @@ if not exist "%LIBCONIG_PATH%\lib\%VS_ARCH%" (
 if exist "build" (
   cd build\win32\project
   copy ..\include\config.h ..\..\..\include\ >nul 2>&1
+  copy ..\..\..\include\version.h ..\..\..\include\version.h.orig >nul 2>&1
+  del /s /q /f ..\..\..\include\version.h >nul 2>&1
+  copy ..\..\..\include\version.h.win ..\..\..\include\version.h >nul 2>&1
 
   echo ------------ Build Zabbix Agent DBMON %ZBX_ARCH% ----------------------
 
@@ -86,4 +89,8 @@ if exist "build" (
 
   echo Build Zabbix Get %ZBX_ARCH%...
   nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" /f Makefile_get
+
+  del /s /q /f ..\..\..\include\version.h >nul 2>&1
+  copy ..\..\..\include\version.h.orig ..\..\..\include\version.h >nul 2>&1
+  del /s /q /f ..\..\..\include\version.h.orig >nul 2>&1
 )
