@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-10-20T10:51:39Z</date>
+    <date>2020-10-22T18:25:24Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -22,6 +22,9 @@
                     <name>PgSQL: Autovacuum</name>
                 </application>
                 <application>
+                    <name>PgSQL: Backup</name>
+                </application>
+                <application>
                     <name>PgSQL: Bgwriter</name>
                 </application>
                 <application>
@@ -32,6 +35,9 @@
                 </application>
                 <application>
                     <name>PgSQL: Performance</name>
+                </application>
+                <application>
+                    <name>PgSQL: Replication</name>
                 </application>
                 <application>
                     <name>PgSQL: Statistic</name>
@@ -201,7 +207,7 @@
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -227,7 +233,7 @@
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -253,7 +259,7 @@
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -280,7 +286,7 @@
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -301,9 +307,71 @@
                     <preprocessing>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get exclusive backup stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.backup.exclusive[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect metrics by exclusive backup stat.</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Start time of exclusive backup</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.backup.exclusive[{$DBS_PGSQL_INSTANCE},backup_start_time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>unixtime</units>
+                    <description>Startup time of exclusive backup.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Backup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.backupstarttime</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.backup.exclusive[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Exclusive backup is running</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.backup.exclusive[{$DBS_PGSQL_INSTANCE},is_in_backup]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Exclusive backup is running (0 - Stopped, 1 - Running).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Backup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (Exclusive backup status)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.isinbackup</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.backup.exclusive[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get bgwriter stat</name>
@@ -339,10 +407,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>JSONPATH</type>
                             <params>$.buffers_alloc</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -365,10 +429,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <step>
                             <type>JSONPATH</type>
                             <params>$.buffers_backend</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -393,10 +453,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>JSONPATH</type>
                             <params>$.buffers_backend_fsync</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -419,10 +475,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <step>
                             <type>JSONPATH</type>
                             <params>$.buffers_checkpoint</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -447,10 +499,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>JSONPATH</type>
                             <params>$.buffers_clean</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -473,10 +521,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <step>
                             <type>JSONPATH</type>
                             <params>$.checkpoints_req</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -501,10 +545,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>JSONPATH</type>
                             <params>$.checkpoints_timed</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -528,10 +568,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>JSONPATH</type>
                             <params>$.maxwritten_clean</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -541,6 +577,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Cache hit</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.cache.hit[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>2m</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>percent</units>
@@ -549,12 +586,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <name>PgSQL: Performance</name>
                         </application>
                     </applications>
-                    <preprocessing>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
-                        </step>
-                    </preprocessing>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get connections stat</name>
@@ -648,10 +679,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>JSONPATH</type>
                             <params>$.active</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -673,10 +700,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <step>
                             <type>JSONPATH</type>
                             <params>$.idle_in_transaction</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -700,10 +723,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>JSONPATH</type>
                             <params>$.idle</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -725,10 +744,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <step>
                             <type>JSONPATH</type>
                             <params>$.idle_in_transaction</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -811,10 +826,6 @@ SELECT * FROM pg_stat_activity WHERE state='active';&#13;
                             <type>JSONPATH</type>
                             <params>$.idle_in_transaction_aborted</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -838,10 +849,6 @@ https://www.postgresql.org/docs/current/sql-prepare-transaction.html</descriptio
                             <type>JSONPATH</type>
                             <params>$.prepared</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -863,10 +870,6 @@ https://www.postgresql.org/docs/current/sql-prepare-transaction.html</descriptio
                         <step>
                             <type>JSONPATH</type>
                             <params>$.total</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -891,10 +894,6 @@ https://www.postgresql.org/docs/current/sql-prepare-transaction.html</descriptio
                             <type>JSONPATH</type>
                             <params>$.total_pct</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -917,10 +916,6 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                         <step>
                             <type>JSONPATH</type>
                             <params>$.waiting</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1723,7 +1718,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <preprocessing>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <triggers>
@@ -1850,6 +1845,51 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </applications>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication standby count</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.replication.count[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <description>Replication standby count</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Replication</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication recovery role</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <description>Streaming replication recovery role (0 - Master, 1 - Standby)</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Replication</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (Replication recovery role)</name>
+                    </valuemap>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication status</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.replication.status[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <description>Replication status (0 - Down, 1 - Up, 2 - Master)</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Replication</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (Replication status)</name>
+                    </valuemap>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get server info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.server.info[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1955,7 +1995,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1982,7 +2022,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -3765,7 +3805,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
     </templates>
     <triggers>
         <trigger>
-            <expression>{DBS_Template DB PostgreSQL:pgsql.cache.hit[{$DBS_PGSQL_CONN_STRING}].max(5m)}&lt;{$DBS_PGSQL_CACHE_HITRATIO_MIN_WARN} and {DBS_Template DB PostgreSQL:pgsql.instance[{$DBS_PGSQL_INSTANCE},uptime].last()}&gt;48h</expression>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.cache.hit[{$DBS_PGSQL_CONN_STRING}].max(10m)}&lt;{$DBS_PGSQL_CACHE_HITRATIO_MIN_WARN} and {DBS_Template DB PostgreSQL:pgsql.instance[{$DBS_PGSQL_INSTANCE},uptime].last()}&gt;48h</expression>
             <name>Cache hit ratio too low</name>
             <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_CACHE_HITRATIO_MIN_WARN}, alert started: {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>
@@ -4060,6 +4100,19 @@ return JSON.stringify({&quot;data&quot;: output})</params>
     </graphs>
     <value_maps>
         <value_map>
+            <name>DBS PostgreSQL (Exclusive backup status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>Stopped</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Running</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
             <name>DBS PostgreSQL (Instance ping)</name>
             <mappings>
                 <mapping>
@@ -4069,6 +4122,36 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <mapping>
                     <value>1</value>
                     <newvalue>CONNECTED</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS PostgreSQL (Replication recovery role)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>Master</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Standby</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS PostgreSQL (Replication status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>Down</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Up</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>Master</newvalue>
                 </mapping>
             </mappings>
         </value_map>
