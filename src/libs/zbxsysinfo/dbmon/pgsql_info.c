@@ -294,6 +294,26 @@ SELECT json_build_object( \
 	) \
 );"
 
+#define PGSQL_REPLICATION_STANDBY_DISCOVERY_DBS "\
+SELECT client_addr AS STANDBY FROM pg_stat_replication;"
+
+// Query to track lag in bytes
+// sending_lag could indicate heavy load on primary
+// receiving_lag could indicate network issues or replica under heavy load
+// replaying_lag could indicate replica under heavy load
+#define PGSQL_REPLICATION_STANDBY_INFO_DBS "\
+SELECT \
+  client_addr as ip_address, \
+  usename as user_name, \
+  application_name as app_name, \
+  date_part('epoch', backend_start)::int AS backend_start_unix, \
+  state, sync_state, \
+  (pg_wal_lsn_diff(pg_current_wal_lsn(), sent_lsn)/1024)::int as sending_lag, \
+  (pg_wal_lsn_diff(sent_lsn, flush_lsn)/1024)::int as receiving_lag, \
+  (pg_wal_lsn_diff(flush_lsn, replay_lsn)/1024)::int as replaying_lag, \
+  (pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn)/1024)::int as total_lag \
+FROM pg_stat_replication;"
+
 // Get replication role: 0 - Master, 1 - Standby
 #define PGSQL_REPLICATION_ROLE_DBS "\
 SELECT pg_is_in_recovery()::int AS REPLICATION_ROLE;"
@@ -371,6 +391,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.archive.size",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.prepared.transactions",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.settings",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.replication.info",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.role",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.status",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
@@ -1093,6 +1114,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.settings"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_NOT_DEFAULT_SETTINGS_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.replication.info"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STANDBY_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.role"))
 	{
