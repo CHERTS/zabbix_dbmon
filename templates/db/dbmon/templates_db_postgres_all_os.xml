@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-10-22T18:25:24Z</date>
+    <date>2020-10-28T06:42:08Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -194,7 +194,8 @@
                     <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},archived_count]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Number of WAL files that have been successfully archived.</description>
+                    <description>Number of WAL files that have been successfully archived (relation pg_stat_archiver).&#13;
+Число файлов WAL, которые были успешно архивированы (представление pg_stat_archiver).</description>
                     <applications>
                         <application>
                             <name>PgSQL: WAL</name>
@@ -215,12 +216,12 @@
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total number of archived files</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Number of WAL file that ready to archive</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},count_files]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Total number of archived WAL files.</description>
+                    <description>Number of WAL file that ready to archive.</description>
                     <applications>
                         <application>
                             <name>PgSQL: WAL</name>
@@ -246,7 +247,8 @@
                     <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},failed_count]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Number of failed attempts for archiving WAL files.</description>
+                    <description>Number of failed attempts for archiving WAL files (relation pg_stat_archiver).&#13;
+Число неудачных попыток архивации файлов WAL (представление pg_stat_archiver).</description>
                     <applications>
                         <application>
                             <name>PgSQL: WAL</name>
@@ -267,13 +269,13 @@
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total size of archived files</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Size of WAL files that ready to archive</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},size_files]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <units>B</units>
-                    <description>Total size of archived WAL files.</description>
+                    <description>Size of WAL files that ready to archive.</description>
                     <applications>
                         <application>
                             <name>PgSQL: WAL</name>
@@ -396,7 +398,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of buffers allocated.</description>
+                    <description>Number of buffers allocated.&#13;
+Количество выделенных буферов.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Bgwriter</name>
@@ -419,7 +422,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of buffers written directly by a backend.</description>
+                    <description>Number of buffers written directly by a backend.&#13;
+Количество буферов, записанных самим серверным процессом.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Bgwriter</name>
@@ -442,7 +446,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of times a backend had to execute its own fsync call (normally the background writer handles those even when the backend does its own write).</description>
+                    <description>Number of times a backend had to execute its own fsync call (normally the background writer handles those even when the backend does its own write).&#13;
+Сколько раз серверному процессу пришлось выполнить fsync самостоятельно (обычно фоновый процесс записи сам обрабатывает эти вызовы, даже когда серверный процесс выполняет запись самостоятельно)</description>
                     <applications>
                         <application>
                             <name>PgSQL: Bgwriter</name>
@@ -465,7 +470,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of buffers written during checkpoints.</description>
+                    <description>Number of buffers written during checkpoints.&#13;
+Количество буферов, записанных при выполнении контрольных точек.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Bgwriter</name>
@@ -488,7 +494,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of buffers written by the background writer.</description>
+                    <description>Number of buffers written by the background writer.&#13;
+Количество буферов, записанных фоновым процессом записи.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Bgwriter</name>
@@ -511,7 +518,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of requested checkpoints that have been performed.</description>
+                    <description>Number of requested checkpoints that have been performed.&#13;
+Количество запрошенных контрольных точек, которые уже были выполнены.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Bgwriter</name>
@@ -534,7 +542,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of scheduled checkpoints that have been performed.</description>
+                    <description>Number of scheduled checkpoints that have been performed.&#13;
+Количество запланированных контрольных точек, которые уже были выполнены.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Bgwriter</name>
@@ -551,13 +560,80 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     </master_item>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Sync time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoint_sync_time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Total amount of time that has been spent in the portion of checkpoint processing where files are synchronized to disk, in milliseconds.&#13;
+Общее время, которое было затрачено на этап обработки контрольной точки, в котором файлы синхронизируются с диском, в миллисекундах.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.checkpoint_sync_time</params>
+                        </step>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <params>0.001</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Write time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoint_write_time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Total amount of time that has been spent in the portion of checkpoint processing where files are written to disk, in milliseconds.&#13;
+Общее время, которое было затрачено на этап обработки контрольной точки, в котором файлы записываются на диск, в миллисекундах.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.checkpoint_write_time</params>
+                        </step>
+                        <step>
+                            <type>MULTIPLIER</type>
+                            <params>0.001</params>
+                        </step>
+                        <step>
+                            <type>SIMPLE_CHANGE</type>
+                            <params/>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' bgwriter: Number of bgwriter stopped</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},maxwritten_clean]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of times the background writer stopped a cleaning scan because it had written too many buffers.</description>
+                    <description>Number of times the background writer stopped a cleaning scan because it had written too many buffers.&#13;
+Сколько раз фоновый процесс записи останавливал сброс грязных страниц на диск из-за того, что записал слишком много буферов.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Bgwriter</name>
@@ -567,6 +643,33 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <step>
                             <type>JSONPATH</type>
                             <params>$.maxwritten_clean</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Stats reset time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},stats_reset_unix]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>unixtime</units>
+                    <description>Последнее время сброса этих статистических данных.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Bgwriter</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.stats_reset_unix</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1512,14 +1615,33 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <type>JSONPATH</type>
                             <params>$.active</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_PGSQL_ACTIVE_TRANSACTION_WARN}</expression>
+                            <name>Active transaction is too long</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_ACTIVE_TRANSACTION_WARN}, alert started: {ITEM.VALUE1}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Зафиксирована долго выполняющаяся транзакция (время выполнения более {$DBS_PGSQL_ACTIVE_TRANSACTION_WARN}).&#13;
+Долго выполняющиеся транзакции могут стать причиной повышенной нагрузки на CPU, а так же привести к повышенной генерации журналов WAL, что может привести к деградации производительности.&#13;
+Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max idle transaction time in sec</name>
@@ -1540,14 +1662,33 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <type>JSONPATH</type>
                             <params>$.idle</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_PGSQL_IDLE_TRANSACTION_WARN}</expression>
+                            <name>Idle transaction is too long</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_IDLE_TRANSACTION_WARN}, alert started: {ITEM.VALUE1}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Зафиксирована долго выполняющаяся транзакция в состоянии idle (Приложение начало транзакцию, ничего не делает, но и транзакцию не завершает).&#13;
+Долго висящие транзакции в состоянии idle могут стать причиной блокировки процесса VACUUM, что в последствии приведет к разбуханию таблиц и индексов и деградации производительности.&#13;
+Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max prepared transaction time in sec</name>
@@ -1567,10 +1708,6 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                         <step>
                             <type>JSONPATH</type>
                             <params>$.prepared</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1595,10 +1732,6 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                         <step>
                             <type>JSONPATH</type>
                             <params>$.waiting</params>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -2692,7 +2825,8 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of times disk blocks were found already in the buffer cache, so that a read was not necessary</description>
+                            <description>Total number of times disk blocks were found already in the buffer cache, so that a read was not necessary.&#13;
+Сколько раз дисковые блоки обнаруживались в буферном кеше, так что чтение с диска не потребовалось (в значение входят только случаи обнаружения в буферном кеше PostgreSQL, а не в кеше файловой системы ОС).</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2723,7 +2857,8 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of disk blocks read in this database</description>
+                            <description>Total number of disk blocks read in this database.&#13;
+Количество прочитанных дисковых блоков в этой базе данных.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2755,7 +2890,8 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
                             <units>s</units>
-                            <description>Time spent reading data file blocks by backends, in milliseconds.</description>
+                            <description>Time spent reading data file blocks by backends, in milliseconds.&#13;
+Время, затраченное серверными процессами в этой базе данных, на чтение блоков из файлов данных, в миллисекундах.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2791,7 +2927,8 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
                             <units>s</units>
-                            <description>Time spent writing data file blocks by backends, in milliseconds</description>
+                            <description>Time spent writing data file blocks by backends, in milliseconds.&#13;
+Время, затраченное серверными процессами в этой базе данных, на запись блоков в файлы данных, в миллисекундах.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2826,7 +2963,8 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Number of data page checksum failures detected in this database.</description>
+                            <description>Number of data page checksum failures detected in this database.&#13;
+Количество ошибок контрольных сумм в страницах данных этой базы (или общего объекта) либо NULL, если контрольные суммы не проверяются.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2859,7 +2997,8 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of queries canceled due to conflicts with recovery in this database</description>
+                            <description>Total number of queries canceled due to conflicts with recovery in this database.&#13;
+Количество запросов, отменённых из-за конфликта с восстановлением в этой базе данных. (Конфликты происходят только на ведомых серверах; более подробно смотрите pg_stat_database_conflicts)</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2921,7 +3060,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of detected deadlocks in this database</description>
+                            <description>Total number of detected deadlocks in this database.&#13;
+Количество взаимных блокировок, зафиксированное в этой базе данных.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -2976,7 +3116,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <key>pgsql.db.stat[{#DBNAME},numbackends]</key>
                             <delay>0</delay>
                             <history>30d</history>
-                            <description>Number of backends currently connected to this database.</description>
+                            <description>Number of backends currently connected to this database.&#13;
+Количество серверных процессов, в настоящее время подключённых к этой базе данных. Это единственный столбец в представлении pg_stat_database, значение в котором отражает текущее состояние; все другие столбцы возвращают суммарные значения со времени последнего сброса статистики.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3003,7 +3144,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <delay>0</delay>
                             <history>30d</history>
                             <units>B</units>
-                            <description>Total amount of data written to temporary files by queries in this database</description>
+                            <description>Total amount of data written to temporary files by queries in this database.&#13;
+Общий объём данных, записанных во временные файлы запросами в этой базе данных. Учитываются все временные файлы, вне зависимости от того, по какой причине они созданы и вне зависимости от значения log_temp_files.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3033,7 +3175,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <key>pgsql.db.stat[{#DBNAME},temp_files.rate]</key>
                             <delay>0</delay>
                             <history>30d</history>
-                            <description>Total number of temporary files created by queries in this database</description>
+                            <description>Total number of temporary files created by queries in this database.&#13;
+Количество временных файлов, созданных запросами в этой базе данных. Подсчитываются все временные файлы независимо от причины их создания (например, для сортировки или для хеширования) и независимо от установленного значения log_temp_files</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3064,7 +3207,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of rows deleted by queries in this database</description>
+                            <description>Total number of rows deleted by queries in this database.&#13;
+Количество строк, удалённое запросами в этой базе данных.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3095,7 +3239,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of rows fetched by queries in this database</description>
+                            <description>Total number of rows fetched by queries in this database.&#13;
+Количество строк, извлечённое запросами в этой базе данных.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3126,7 +3271,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of rows inserted by queries in this database</description>
+                            <description>Total number of rows inserted by queries in this database.&#13;
+Количество строк, вставленное запросами в этой базе данных.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3157,7 +3303,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of rows returned by queries in this database.</description>
+                            <description>Total number of rows returned by queries in this database.&#13;
+Количество строк, возвращённое запросами в этой базе данных.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3188,7 +3335,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of rows updated by queries in this database</description>
+                            <description>Total number of rows updated by queries in this database.&#13;
+Количество строк, изменённое запросами в этой базе данных.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3219,7 +3367,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Number of transactions in this database that have been committed</description>
+                            <description>Number of transactions in this database that have been committed.&#13;
+Количество зафиксированных транзакций в этой базе данных.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3250,7 +3399,8 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                             <delay>0</delay>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
-                            <description>Total number of transactions in this database that have been rolled back</description>
+                            <description>Total number of transactions in this database that have been rolled back.&#13;
+Количество транзакций в этой базе данных, для которых был выполнен откат транзакции.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>PgSQL: Database: {#DBNAME}, Info</name>
@@ -3553,6 +3703,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>8m</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_PGSQL_ACTIVE_TRANSACTION_WARN}</macro>
+                    <value>2m</value>
+                    <description>Max active transaction time</description>
+                </macro>
+                <macro>
                     <macro>{$DBS_PGSQL_ACTIVE_WARN}</macro>
                     <value>40</value>
                     <description>Max active connection</description>
@@ -3598,6 +3753,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}</macro>
                     <value>5</value>
                     <description>Max running idle in transaction</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_IDLE_TRANSACTION_WARN}</macro>
+                    <value>6m</value>
+                    <description>Max idle transaction time</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_INSTANCE}</macro>
