@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-10-30T13:34:41Z</date>
+    <date>2020-10-30T13:47:31Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3947,6 +3947,9 @@ Possible values are:&#13;
                                     <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
+                            <valuemap>
+                                <name>DBS PostgreSQL (Replication state)</name>
+                            </valuemap>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
@@ -4730,6 +4733,31 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <mapping>
                     <value>1</value>
                     <newvalue>Standby</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS PostgreSQL (Replication state)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>startup</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>catchup</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>streaming</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>backup</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>stopping</newvalue>
                 </mapping>
             </mappings>
         </value_map>
