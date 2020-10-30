@@ -20,6 +20,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y autoconf automake gcc make wget unzip gettext sass libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev
+	sudo apt-get install -y libsnmp-dev libsqlite3-dev libopenipmi-dev libssh2-1-dev unixodbc-dev libevent-dev
         sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
         sudo apt-get install -y libmysqlclient-dev libpq-dev
     - name: Code checkout
