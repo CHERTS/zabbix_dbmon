@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-10-28T06:42:08Z</date>
+    <date>2020-10-30T13:34:41Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -326,6 +326,54 @@
                             <name>stubs</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Duration of exclusive backup</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.backup.exclusive[{$DBS_PGSQL_INSTANCE},backup_duration]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Duration of exclusive backup.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Backup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.backupduration</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Duration of backup not supported.</error_handler_params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.backup.exclusive[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN}</expression>
+                            <name>Duration of exclusive backup  is too long</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN}, alert started: {ITEM.VALUE1}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Длительность процедуры монопольного резервного копирования слишком высокая.&#13;
+Длительная процедура монопольного резервного копирования приводит к тому, что старые журналы WAL не могут быть уделены и копятся в хранилище.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Start time of exclusive backup</name>
@@ -1989,6 +2037,26 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <name>PgSQL: Replication</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get replication info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Get replication info (client_addr, usename, application_name, lag and etc)</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication recovery role</name>
@@ -3686,6 +3754,368 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         </step>
                     </preprocessing>
                 </discovery_rule>
+                <discovery_rule>
+                    <name>PgSQL replication discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.replication.discovery[{$DBS_PGSQL_INSTANCE}]</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[PgSQL] Replication '{#IPADDRESS}': Application name</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.info[{#IPADDRESS},appname]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Name of the application that is connected to this WAL sender.&#13;
+Имя приложения, которое подключено к этому процессу-передатчику WAL.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.IP_ADDRESS== &quot;{#IPADDRESS}&quot;)].APP_NAME.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication '{#IPADDRESS}': Backend start</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.info[{#IPADDRESS},backend_start_unix]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>unixtime</units>
+                            <description>Time when this process was started, i.e., when the client connected to this WAL sender.&#13;
+Время запуска процесса, т. е. время подключения клиента к этому процессу-передатчику WAL.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.IP_ADDRESS== &quot;{#IPADDRESS}&quot;)].BACKEND_START_UNIX.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication '{#IPADDRESS}': IP address</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.info[{#IPADDRESS},ipaddress]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>IP address of the client connected to this WAL sender. If this field is null, it indicates that the client is connected via a Unix socket on the server machine.&#13;
+IP-адрес клиента, подключённого к этому процессу-передатчику WAL. Значение null в этом поле говорит о том, что клиент подсоединён через сокет Unix на сервере.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.IP_ADDRESS== &quot;{#IPADDRESS}&quot;)].IP_ADDRESS.first()</params>
+                                </step>
+                                <step>
+                                    <type>NOT_MATCHES_REGEX</type>
+                                    <params>null</params>
+                                    <error_handler>CUSTOM_VALUE</error_handler>
+                                    <error_handler_params>unix-socket</error_handler_params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication '{#IPADDRESS}': Receiving lag</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.info[{#IPADDRESS},receiving_lag]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>s</units>
+                            <description>Receiving lag</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.IP_ADDRESS== &quot;{#IPADDRESS}&quot;)].RECEIVING_LAG.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication '{#IPADDRESS}': Replaying lag</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.info[{#IPADDRESS},replaying_lag]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>s</units>
+                            <description>Replaying lag</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.IP_ADDRESS== &quot;{#IPADDRESS}&quot;)].REPLAYING_LAG.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication '{#IPADDRESS}': Sending lag</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.info[{#IPADDRESS},sending_lag]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>s</units>
+                            <description>Sending lag</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.IP_ADDRESS== &quot;{#IPADDRESS}&quot;)].SENDING_LAG.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication '{#IPADDRESS}': State</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.info[{#IPADDRESS},state]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Current WAL sender state.&#13;
+Possible values are:&#13;
+- startup: This WAL sender is starting up;&#13;
+- catchup: This WAL sender's connected standby is catching up with the primary;&#13;
+- streaming: This WAL sender is streaming changes after its connected standby server has caught up with the primary;&#13;
+- backup: This WAL sender is sending a backup;&#13;
+- stopping: This WAL sender is stopping;&#13;
+&#13;
+Текущее состояние процесса-передатчика WAL.&#13;
+Возможные значения:&#13;
+- startup: Передатчик WAL запускается;&#13;
+- catchup: Подключённый к этому передатчику WAL ведомый сервер догоняет ведущий;&#13;
+- streaming: Передатчик WAL транслирует изменения после того, как подключённый к нему ведомый сервер нагнал ведущий;&#13;
+- backup: Передатчик WAL передаёт резервную копию;&#13;
+- stopping: Передатчик WAL останавливается;</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.IP_ADDRESS== &quot;{#IPADDRESS}&quot;)].STATE.first()</params>
+                                </step>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <params>switch (value) {
+  case &quot;startup&quot;:
+    return 0;
+    break;
+  case &quot;catchup&quot;:
+    return 1;
+    break;
+  case &quot;streaming&quot;:
+    return 2;
+    break;
+  case &quot;backup&quot;:
+    return 3;
+    break;
+  case &quot;stopping&quot;:
+    return 3;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication '{#IPADDRESS}': Sync state</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.info[{#IPADDRESS},sync_state]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Synchronous state of this standby server.&#13;
+Possible values are:&#13;
+- async: This standby server is asynchronous.&#13;
+- potential: This standby server is now asynchronous, but can potentially become synchronous if one of current synchronous ones fails.&#13;
+- sync: This standby server is synchronous.&#13;
+- quorum: This standby server is considered as a candidate for quorum standbys.&#13;
+&#13;
+Состояние синхронизации этого ведомого сервера.&#13;
+Возможные значения:&#13;
+- async: Этот ведомый сервер является асинхронным.&#13;
+- potential: Этот ведомый сервер сейчас является асинхронным, но может стать синхронным в случае отказа одного из текущих синхронных серверов.&#13;
+- sync: Этот ведомый сервер является синхронным.&#13;
+- quorum: Этот ведомый сервер считается кандитатом на участие в кворуме.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS PostgreSQL (Replication sync state)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.IP_ADDRESS== &quot;{#IPADDRESS}&quot;)].SYNC_STATE.first()</params>
+                                </step>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <params>switch (value) {
+  case &quot;async&quot;:
+    return 0;
+    break;
+  case &quot;potential&quot;:
+    return 1;
+    break;
+  case &quot;sync&quot;:
+    return 2;
+    break;
+  case &quot;quorum&quot;:
+    return 3;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication '{#IPADDRESS}': Total lag</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.info[{#IPADDRESS},total_lag]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>s</units>
+                            <description>Total lag</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.IP_ADDRESS== &quot;{#IPADDRESS}&quot;)].TOTAL_LAG.first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication '{#IPADDRESS}': Username</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.info[{#IPADDRESS},username]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Name of the user logged into this WAL sender process.&#13;
+Имя пользователя, подключённого к этому процессу-передатчику WAL.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.IP_ADDRESS== &quot;{#IPADDRESS}&quot;)].USER_NAME.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(repl){
+    return {
+        &quot;{#IPADDRESS}&quot;: repl.IP_ADDRESS
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
             </discovery_rules>
             <tags>
                 <tag>
@@ -3773,6 +4203,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_PGSQL_LLD_FILTER_DB_NOT_MATCHES}</macro>
                     <value>CHANGE_IF_NEEDED</value>
                     <description>Filter to exclude discovered databases</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN}</macro>
+                    <value>3h</value>
+                    <description>Max duration time of exclusive backup.</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_MAX_PREPARED_TRANSACTION_TIME_WARN}</macro>
@@ -4312,6 +4747,27 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <mapping>
                     <value>2</value>
                     <newvalue>Master</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS PostgreSQL (Replication sync state)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>async</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>potential</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>sync</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>quorum</newvalue>
                 </mapping>
             </mappings>
         </value_map>
