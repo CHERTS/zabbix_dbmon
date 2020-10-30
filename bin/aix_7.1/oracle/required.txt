@@ -1,5 +1,7 @@
 Download and install from http://www.oss4aix.org/download/RPMS/ latest rpm:
 pcre >= 8.42
+info >= 5.1-2
+readline >= 6.1-2
 bzip2 >= 1.0.6
 zlib >= 1.2.11-1
 libgcc >= 6.3.0-1
