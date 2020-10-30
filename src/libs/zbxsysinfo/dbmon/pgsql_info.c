@@ -365,7 +365,9 @@ SELECT \
 #define PGSQL_IS_IN_BACKUP_DBS " \
 SELECT row_to_json(T) \
 FROM(\
-	SELECT pg_is_in_backup()::int as ISINBACKUP, COALESCE(date_part('epoch', pg_backup_start_time())::int, 0) AS BACKUPSTARTTIME \
+	SELECT pg_is_in_backup()::int as ISINBACKUP, \
+	COALESCE(date_part('epoch', pg_backup_start_time())::int, 0) AS BACKUPSTARTTIME, \
+	COALESCE(date_part('epoch', now() - pg_backup_start_time())::int, 0) AS BACKUPDURATION \
 ) T;"
 
 ZBX_METRIC	parameters_dbmon_pgsql[] =
