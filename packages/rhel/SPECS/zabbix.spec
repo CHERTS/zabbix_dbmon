@@ -1,5 +1,5 @@
 Name:		zabbix
-Version:	5.0.4
+Version:	5.0.5
 Release:	%{?alphatag:0.}1%{?alphatag}%{?dist}
 Summary:	The Enterprise-class open source monitoring solution
 Group:		Applications/Internet
