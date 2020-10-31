@@ -364,26 +364,30 @@ SELECT \
 
 // Get replication slot info from PostgreSQL < 9.6
 #define PGSQL_REPLICATION_SLOTS_INFO_V95_DBS "\
-SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (active)::int, xmin, catalog_xmin, restart_lsn \
-FROM pg_replication_slots \
+SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (active)::int, xmin, catalog_xmin, restart_lsn, \
+	(restart_lsn-redo_location) AS behind \
+FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
-// Get replication slot info from PostgreSQL >= 9.6 and < 10.0
+// Get replication slot info from PostgreSQL = 9.6
 #define PGSQL_REPLICATION_SLOTS_INFO_V96_DBS "\
-SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn \
-FROM pg_replication_slots \
+SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn, \
+	(restart_lsn-redo_location) AS behind \
+FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 10.0 and < 13.0
 #define PGSQL_REPLICATION_SLOTS_INFO_V10_DBS "\
-SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (temporary)::int, (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn \
-FROM pg_replication_slots \
+SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (temporary)::int, (active)::int, xmin, catalog_xmin, restart_lsn, \
+	confirmed_flush_lsn, (restart_lsn-redo_lsn) AS behind \
+FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 13.0
 #define PGSQL_REPLICATION_SLOTS_INFO_V13_DBS "\
-SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (temporary)::int, (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn, wal_status, safe_wal_size  \
-FROM pg_replication_slots \
+SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (temporary)::int, (active)::int, xmin, catalog_xmin, restart_lsn, \
+	confirmed_flush_lsn, wal_status, safe_wal_size, (restart_lsn-redo_lsn) AS behind \
+FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 #define PGSQL_IS_IN_BACKUP_DBS " \
