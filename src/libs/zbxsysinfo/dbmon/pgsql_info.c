@@ -301,7 +301,7 @@ SELECT client_addr AS STANDBY FROM pg_stat_replication;"
 // sending_lag could indicate heavy load on primary
 // receiving_lag could indicate network issues or replica under heavy load
 // replaying_lag could indicate replica under heavy load
-#define PGSQL_REPLICATION_STANDBY_INFO_DBS "\
+#define PGSQL_REPLICATION_STAT_INFO_DBS "\
 SELECT \
   client_addr as ip_address, \
   usename as user_name, \
@@ -322,7 +322,7 @@ SELECT pg_is_in_recovery()::int AS REPLICATION_ROLE;"
 #define PGSQL_REPLICATION_STANDBY_COUNT_DBS "\
 SELECT count(*) AS REPLICATION_STANDBY_COUNT FROM pg_stat_replication;"
 
-// Get replication status: 0 - Down, 1 - Up, 2 - Master
+// Get replication status: 0 - Down, 1 - Up, 2 - Master, 3 - Not supported
 #define PGSQL_REPLICATION_STATUS_DBS "\
 SELECT \
 	CASE \
@@ -548,8 +548,8 @@ static int	pgsql_version(AGENT_REQUEST *request, AGENT_RESULT *result, unsigned 
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
 				ret = SYSINFO_RET_FAIL;
 			}
 		}
@@ -696,7 +696,7 @@ int	PGSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query, zbx_db_result_type result_type)
 {
 	int							ret = SYSINFO_RET_FAIL, db_ret = ZBX_DB_ERROR;
-	char						*pg_conn_string;
+	char						*pg_conn_string, dup_json = "[]";
 	struct zbx_db_connection	*pgsql_conn;
 	struct zbx_db_result		pgsql_result;
 	unsigned long				version;
@@ -917,6 +917,8 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		}
 		else if (0 == strcmp(request->key, "pgsql.replication.info"))
 		{
+			pg_replication_role = 1;
+
 			if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_ROLE_DBS))
 			{
 				pg_replication_role = get_int_one_result(request, result, 0, 0, pgsql_result);
@@ -938,8 +940,8 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This is a replica, getting information is available only on the master", __func__, request->key);
-				SET_STR_RESULT(result, "[]");
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This is a replica, getting information is available only on the master.", __func__, request->key);
+				SET_TEXT_RESULT(result, zbx_strdup(NULL, dup_json));
 				ret = SYSINFO_RET_OK;
 				goto out;
 			}
@@ -954,9 +956,9 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 
 				if (version < 90600)
 				{
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PostgreSQL not support streaming replication.", __func__, request->key);
-					SET_MSG_RESULT(result, zbx_strdup(NULL, "PostgreSQL not support streaming replication."));
-					ret = SYSINFO_RET_FAIL;
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support streaming replication.", __func__, request->key);
+					SET_UI64_RESULT(result, 3); //Not supported
+					ret = SYSINFO_RET_OK;
 					goto out;
 				}
 				else
@@ -966,8 +968,8 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
 				ret = SYSINFO_RET_FAIL;
 				goto out;
 			}
@@ -982,8 +984,8 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL replication recovery role", __func__, request->key);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL replication recovery role"));
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL replication recovery role.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL replication recovery role."));
 				ret = SYSINFO_RET_FAIL;
 				goto out;
 			}
@@ -1015,8 +1017,8 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				}
 				else
 				{
-					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
-					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
 					ret = SYSINFO_RET_FAIL;
 					goto out;
 				}
@@ -1038,9 +1040,9 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 
 				if (version < 90600)
 				{
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PostgreSQL not support streaming replication.", __func__, request->key);
-					SET_MSG_RESULT(result, zbx_strdup(NULL, "PostgreSQL not support streaming replication."));
-					ret = SYSINFO_RET_FAIL;
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support streaming replication.", __func__, request->key);
+					SET_UI64_RESULT(result, 0);
+					ret = SYSINFO_RET_OK;
 					goto out;
 				}
 				else if (version >= 90600 && version < 100000)
@@ -1055,8 +1057,8 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
 				ret = SYSINFO_RET_FAIL;
 				goto out;
 			}
@@ -1071,8 +1073,8 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL replication recovery role", __func__, request->key);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL replication recovery role"));
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL replication recovery role.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL replication recovery role."));
 				ret = SYSINFO_RET_FAIL;
 				goto out;
 			}
@@ -1089,7 +1091,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 					if (version < 90500)
 					{
 						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support replication slots.", __func__, request->key);
-						SET_STR_RESULT(result, "[]");
+						SET_TEXT_RESULT(result, zbx_strdup(NULL, dup_json));
 						ret = SYSINFO_RET_OK;
 						goto out;
 					}
@@ -1112,8 +1114,8 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				}
 				else
 				{
-					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version", __func__, request->key);
-					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version"));
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
 					ret = SYSINFO_RET_FAIL;
 					goto out;
 				}
@@ -1121,7 +1123,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			else
 			{
 				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This is a replica, getting information is available only on the master.", __func__, request->key);
-				SET_STR_RESULT(result, "[]");
+				SET_TEXT_RESULT(result, zbx_strdup(NULL, dup_json));
 				ret = SYSINFO_RET_OK;
 				goto out;
 			}
@@ -1238,7 +1240,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.info"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STANDBY_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STAT_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.role"))
 	{
