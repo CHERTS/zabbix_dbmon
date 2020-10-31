@@ -364,25 +364,25 @@ SELECT \
 
 // Get replication slot info from PostgreSQL < 9.6
 #define PGSQL_REPLICATION_SLOTS_INFO_V95_DBS "\
-SELECT slot_name, COALESCE(plugin, ''), slot_type, COALESCE(database, ''), (active)::int, xmin, catalog_xmin, restart_lsn \
+SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (active)::int, xmin, catalog_xmin, restart_lsn \
 FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 9.6 and < 10.0
 #define PGSQL_REPLICATION_SLOTS_INFO_V96_DBS "\
-SELECT slot_name, COALESCE(plugin, ''), slot_type, COALESCE(database, ''), (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn \
+SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn \
 FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 10.0 and < 13.0
 #define PGSQL_REPLICATION_SLOTS_INFO_V10_DBS "\
-SELECT slot_name, COALESCE(plugin, ''), slot_type, COALESCE(database, ''), (temporary)::int, (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn \
+SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (temporary)::int, (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn \
 FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 13.0
 #define PGSQL_REPLICATION_SLOTS_INFO_V13_DBS "\
-SELECT slot_name, COALESCE(plugin, ''), slot_type, COALESCE(database, ''), (temporary)::int, (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn, wal_status, safe_wal_size  \
+SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (temporary)::int, (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn, wal_status, safe_wal_size  \
 FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
@@ -1266,7 +1266,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.slots"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_SLOTS_INFO_V95_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_SLOTS_INFO_V95_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else if (0 == strcmp(request->key, "pgsql.backup.exclusive"))
 	{
