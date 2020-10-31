@@ -301,7 +301,7 @@ SELECT client_addr AS STANDBY FROM pg_stat_replication;"
 // sending_lag could indicate heavy load on primary
 // receiving_lag could indicate network issues or replica under heavy load
 // replaying_lag could indicate replica under heavy load
-#define PGSQL_REPLICATION_STAT_INFO_DBS "\
+#define PGSQL_REPLICATION_STAT_DBS "\
 SELECT \
   client_addr as ip_address, \
   usename as user_name, \
@@ -418,6 +418,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.prepared.transactions",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.settings",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.info",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.replication.stat",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.role",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.status",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
@@ -696,7 +697,7 @@ int	PGSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query, zbx_db_result_type result_type)
 {
 	int							ret = SYSINFO_RET_FAIL, db_ret = ZBX_DB_ERROR;
-	char						*pg_conn_string, dup_json = "[]";
+	char						*pg_conn_string;
 	struct zbx_db_connection	*pgsql_conn;
 	struct zbx_db_result		pgsql_result;
 	unsigned long				version;
@@ -883,7 +884,8 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			}
 			else
 			{
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "{\"write\":0,\"total_size\":0,\"count\":0}"));
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This is a replica, getting information is available only on the master.", __func__, request->key);
+				SET_TEXT_RESULT(result, zbx_strdup(NULL, "{\"write\":0,\"total_size\":0,\"count\":0}"));
 				ret = SYSINFO_RET_OK;
 				goto out;
 			}
@@ -915,7 +917,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				goto out;
 			}
 		}
-		else if (0 == strcmp(request->key, "pgsql.replication.info"))
+		else if ( (0 == strcmp(request->key, "pgsql.replication.info")) || (0 == strcmp(request->key, "pgsql.replication.stat")) )
 		{
 			pg_replication_role = 1;
 
@@ -941,7 +943,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			else
 			{
 				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This is a replica, getting information is available only on the master.", __func__, request->key);
-				SET_TEXT_RESULT(result, zbx_strdup(NULL, dup_json));
+				SET_TEXT_RESULT(result, zbx_strdup(NULL, "[]"));
 				ret = SYSINFO_RET_OK;
 				goto out;
 			}
@@ -1091,7 +1093,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 					if (version < 90500)
 					{
 						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support replication slots.", __func__, request->key);
-						SET_TEXT_RESULT(result, zbx_strdup(NULL, dup_json));
+						SET_TEXT_RESULT(result, zbx_strdup(NULL, "[]"));
 						ret = SYSINFO_RET_OK;
 						goto out;
 					}
@@ -1123,7 +1125,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			else
 			{
 				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This is a replica, getting information is available only on the master.", __func__, request->key);
-				SET_TEXT_RESULT(result, zbx_strdup(NULL, dup_json));
+				SET_TEXT_RESULT(result, zbx_strdup(NULL, "[]"));
 				ret = SYSINFO_RET_OK;
 				goto out;
 			}
@@ -1238,9 +1240,9 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	{
 		ret = pgsql_make_result(request, result, PGSQL_NOT_DEFAULT_SETTINGS_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
-	else if (0 == strcmp(request->key, "pgsql.replication.info"))
+	else if ((0 == strcmp(request->key, "pgsql.replication.info")) || (0 == strcmp(request->key, "pgsql.replication.stat")))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STAT_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STAT_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.role"))
 	{
