@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-10-30T13:47:31Z</date>
+    <date>2020-11-02T12:24:59Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -757,7 +757,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get database info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <delay>30m</delay>
+                    <delay>10m</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -1846,6 +1846,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
 Необходимо проверить факт перезапуска на сервере заказчика, проверить логи (postgres.log), далее уточнить в чате кто произвел перезапуск.&#13;
 Возможно, что перезапуск произошел в результате краха процесса в автоматическом режиме.&#13;
 Доведите информацию до заказчика и эксперта.</description>
+                            <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
                                 <tag>
@@ -2031,7 +2032,8 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <key>pgsql.replication.count[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>5m</delay>
                     <history>30d</history>
-                    <description>Replication standby count</description>
+                    <description>Replication standby count.&#13;
+Количество подчиненных (standby) серверов.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Replication</name>
@@ -2039,22 +2041,39 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </applications>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get replication info</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get replication stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <history>30d</history>
+                    <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
-                    <description>Get replication info (client_addr, usename, application_name, lag and etc)</description>
+                    <description>Get replication stat (client_addr, usename, application_name, lag and etc)</description>
                     <applications>
                         <application>
                             <name>stubs</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication replay paused</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.replication.replay[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <description>Replay paused (0 - No, 1 - Paused, 2 - Master, 3 - Not supported).&#13;
+Режим восстановления на паузе? (0 - Нет, 1- На паузе, 2 - Главный сервер, 3 - Не поддерживается в этой версии Pg).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Replication</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (Replay paused)</name>
+                    </valuemap>
                     <preprocessing>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
+                            <params>6m</params>
                         </step>
                     </preprocessing>
                 </item>
@@ -2064,7 +2083,8 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <key>pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>5m</delay>
                     <history>30d</history>
-                    <description>Streaming replication recovery role (0 - Master, 1 - Standby)</description>
+                    <description>Streaming replication recovery role (0 - Master, 1 - Standby).&#13;
+Роль сервера в режиме репликации (0 - Главный, 1 - Подчиненный).</description>
                     <applications>
                         <application>
                             <name>PgSQL: Replication</name>
@@ -2073,6 +2093,34 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <valuemap>
                         <name>DBS PostgreSQL (Replication recovery role)</name>
                     </valuemap>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Recovery role has been changed</name>
+                            <opdata>current role: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
+                            <priority>INFO</priority>
+                            <description>Аларм означает, что произошло изменение роли сервера участвующего в потоковой репликации (сервер стал мастером или репликой).&#13;
+Доведите информацию до эксперта.</description>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Replication</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication status</name>
@@ -2080,7 +2128,8 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <key>pgsql.replication.status[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>2m</delay>
                     <history>30d</history>
-                    <description>Replication status (0 - Down, 1 - Up, 2 - Master)</description>
+                    <description>Replication status (0 - Down, 1 - Up, 2 - Master, 3 - Not supported).&#13;
+Статус репликации (0 - Не работает, 1- Работает, 2 - Главный сервер, 3 - Не поддерживается в этой версии Pg).</description>
                     <applications>
                         <application>
                             <name>PgSQL: Replication</name>
@@ -2183,7 +2232,8 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <key>pgsql.wal[{$DBS_PGSQL_INSTANCE},count]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Total number of WAL files on disk.</description>
+                    <description>Total number of WAL files on disk.&#13;
+Общее текущее количество файлов WAL на диске.</description>
                     <applications>
                         <application>
                             <name>PgSQL: WAL</name>
@@ -3750,7 +3800,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>1h</params>
+                            <params>30h</params>
                         </step>
                     </preprocessing>
                 </discovery_rule>
@@ -4113,10 +4163,6 @@ Possible values are:&#13;
     }})
 return JSON.stringify({&quot;data&quot;: output})</params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                 </discovery_rule>
             </discovery_rules>
@@ -4429,6 +4475,84 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=0 and {DBS_Template DB PostgreSQL:pgsql.replication.count[{$DBS_PGSQL_CONN_STRING}].change()}&lt;=-1</expression>
+            <recovery_mode>NONE</recovery_mode>
+            <name>Number of standby servers has been decrease</name>
+            <opdata>current: {ITEM.LASTVALUE2}, role: {ITEM.LASTVALUE1}, alert started: {ITEM.VALUE2}</opdata>
+            <priority>AVERAGE</priority>
+            <description>Аларм означает, что у текущего главного сервера (master) уменьшилось количество подчиненных серверов (standby).&#13;
+Проверьте работоспособность реплики которые выбыли из процесса потоковой репликации, доведите информацию до заказчика и эксперта.</description>
+            <manual_close>YES</manual_close>
+            <dependencies>
+                <dependency>
+                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>Replication</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=0 and {DBS_Template DB PostgreSQL:pgsql.replication.count[{$DBS_PGSQL_CONN_STRING}].change()}&gt;=1</expression>
+            <recovery_mode>NONE</recovery_mode>
+            <name>Number of standby servers has been increase</name>
+            <opdata>current: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE2}</opdata>
+            <priority>INFO</priority>
+            <description>Аларм означает, что у текущего главного сервера (master) увеличилось количество подчиненных серверов (standby).&#13;
+Проверьте какие новые реплики были добавлены, доведите информацию до эксперта.</description>
+            <manual_close>YES</manual_close>
+            <dependencies>
+                <dependency>
+                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>Replication</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=1 and {DBS_Template DB PostgreSQL:pgsql.replication.status[{$DBS_PGSQL_CONN_STRING}].max(5m)}=0</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=0 or {DBS_Template DB PostgreSQL:pgsql.replication.status[{$DBS_PGSQL_CONN_STRING}].last()}&lt;&gt;0</recovery_expression>
+            <name>Streaming replication is broken</name>
+            <opdata>current status: {ITEM.LASTVALUE2}, role: {ITEM.LASTVALUE1}, alert started: {ITEM.VALUE2}</opdata>
+            <priority>AVERAGE</priority>
+            <description>Аларм означает, что у текущего подчиненного сервера (standby) нарушена работа потоковой репликации (репликация остановлена или прекращена в результате ошибки).&#13;
+Проверьте доступность и работоспособность главного сервера (master), далее проверьте работоспособность процесса потоковой репликации у текущего проблемного сервера, доведите информацию до заказчика и эксперта.</description>
+            <dependencies>
+                <dependency>
+                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>Replication</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
             <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_WARN} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
             <name>Total number of connections is too high</name>
             <opdata>current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_WARN}%, alert started: {ITEM.VALUE2}</opdata>
@@ -4471,6 +4595,34 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_PGSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=1 and {DBS_Template DB PostgreSQL:pgsql.replication.replay[{$DBS_PGSQL_CONN_STRING}].last()}=1</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=0 or {DBS_Template DB PostgreSQL:pgsql.replication.replay[{$DBS_PGSQL_CONN_STRING}].last()}&lt;&gt;1</recovery_expression>
+            <name>WAL replay is paused</name>
+            <opdata>replay status: {ITEM.LASTVALUE2}, role: {ITEM.LASTVALUE1}, alert started: {ITEM.VALUE2}</opdata>
+            <priority>WARNING</priority>
+            <description>Аларм означает, что у текущего подчиненного сервера (standby) приостановлено восстановление (была выполнена функция pg_wal_replay_pause()).&#13;
+Когда восстановление приостановлено, запись изменений в базу не производится.&#13;
+Когда потоковая репликация выключена, пауза при восстановлении может длиться сколь угодно долго без каких-либо проблем. Если же потоковая репликация запущена, то новые записи WAL продолжат поступать и рано или поздно заполнят весь диск, в зависимости от длительности паузы, интенсивности записи в WAL и объёма свободного пространства.&#13;
+Запросите у заказчика или эксперта причины приостановки восстановления.</description>
+            <dependencies>
+                <dependency>
+                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>Replication</value>
                 </tag>
             </tags>
         </trigger>
@@ -4724,6 +4876,27 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </mappings>
         </value_map>
         <value_map>
+            <name>DBS PostgreSQL (Replay paused)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>No</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Paused</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>Master</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>Not supported</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
             <name>DBS PostgreSQL (Replication recovery role)</name>
             <mappings>
                 <mapping>
@@ -4775,6 +4948,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <mapping>
                     <value>2</value>
                     <newvalue>Master</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>Not supported</newvalue>
                 </mapping>
             </mappings>
         </value_map>
