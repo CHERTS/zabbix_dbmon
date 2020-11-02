@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-02T12:24:59Z</date>
+    <date>2020-11-02T13:23:19Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2051,6 +2051,36 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <applications>
                         <application>
                             <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication lag in byte on standby server</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.replication.lag_byte[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Replication lag in byte on standby server.&#13;
+Лаг репликации в байтах на подчиненном сервере.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Replication</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication lag in seconds on standby server</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.replication.lag_sec[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Replication lag in seconds on standby server.&#13;
+Лаг репликации в секундах на подчиненном сервере.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Replication</name>
                         </application>
                     </applications>
                 </item>
