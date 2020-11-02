@@ -314,7 +314,7 @@ SELECT \
   (pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn)/1024)::int as total_lag \
 FROM pg_stat_replication;"
 
-// Get replication role: 0 - Master, 1 - Standby
+// Get replication role (0 - Master, 1 - Standby)
 #define PGSQL_REPLICATION_ROLE_DBS "\
 SELECT pg_is_in_recovery()::int AS REPLICATION_ROLE;"
 
@@ -322,13 +322,19 @@ SELECT pg_is_in_recovery()::int AS REPLICATION_ROLE;"
 #define PGSQL_REPLICATION_STANDBY_COUNT_DBS "\
 SELECT count(*) AS REPLICATION_STANDBY_COUNT FROM pg_stat_replication;"
 
-// Get replication status: 0 - Down, 1 - Up, 2 - Master, 3 - Not supported
+// Get replication status (0 - Down, 1 - Up, 2 - Master, 3 - Not supported)
 #define PGSQL_REPLICATION_STATUS_DBS "\
 SELECT \
 	CASE \
 		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 2 \
 		ELSE (SELECT COUNT(*) AS REPLICATION_RECEIVER_COUNT FROM pg_stat_wal_receiver) \
 	END AS REPLICATION_STATUS;"
+
+// Get replication replay paused status from PostgreSQL <= 9.6 (0 - Running, 1 - Paused)
+#define PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V96_DBS "SELECT pg_is_xlog_replay_paused()::int;"
+
+// Get replication replay paused status from PostgreSQL >= 10.0 (0 - Running, 1 - Paused)
+#define PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V10_DBS "SELECT pg_is_wal_replay_paused()::int;"
 
 // Get lag in second from PostgreSQL < 10.0
 #define PGSQL_REPLICATION_LAG_IN_SEC_V9_DBS "\
@@ -390,6 +396,7 @@ SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, 
 FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
+// Get exclusive (non-exclusive) backup status
 #define PGSQL_IS_IN_BACKUP_DBS " \
 SELECT row_to_json(T) \
 FROM(\
@@ -426,6 +433,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.replication.role",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.status",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.replication.replay",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.lag_byte",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.lag_sec",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.slots",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
@@ -980,6 +988,62 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				goto out;
 			}
 		}
+		else if (0 == strcmp(request->key, "pgsql.replication.replay"))
+		{
+			if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_ROLE_DBS))
+			{
+				pg_replication_role = get_int_one_result(request, result, 0, 0, pgsql_result);
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Replication role: %u", __func__, request->key, pg_replication_role);
+				zbx_db_clean_result(&pgsql_result);
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL replication recovery role.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL replication recovery role."));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+
+			// Only standby
+			if (1 == pg_replication_role)
+			{
+				version = zbx_db_version(pgsql_conn);
+
+				if (0 != version)
+				{
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+					if (version < 90600)
+					{
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support streaming replication.", __func__, request->key);
+						SET_UI64_RESULT(result, 2); //Not supported
+						ret = SYSINFO_RET_OK;
+						goto out;
+					}
+					else if (version >= 90600 && version < 100000)
+					{
+						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V96_DBS);
+					}
+					else
+					{
+						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V10_DBS);
+					}
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
+					ret = SYSINFO_RET_FAIL;
+					goto out;
+				}
+			}
+			else
+			{
+				SET_UI64_RESULT(result, 2);
+				ret = SYSINFO_RET_OK; //Not supported
+				goto out;
+			}
+		}
 		else if (0 == strcmp(request->key, "pgsql.replication.lag_byte"))
 		{
 			if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_ROLE_DBS))
@@ -1038,34 +1102,57 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		}
 		else if (0 == strcmp(request->key, "pgsql.replication.lag_sec"))
 		{
-			version = zbx_db_version(pgsql_conn);
-
-			if (0 != version)
+			if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_ROLE_DBS))
 			{
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
-
-				if (version < 90600)
-				{
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support streaming replication.", __func__, request->key);
-					SET_UI64_RESULT(result, 0);
-					ret = SYSINFO_RET_OK;
-					goto out;
-				}
-				else if (version >= 90600 && version < 100000)
-				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_SEC_V9_DBS);
-				}
-				else
-				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_SEC_V10_DBS);
-				}
-
+				pg_replication_role = get_int_one_result(request, result, 0, 0, pgsql_result);
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Replication role: %u", __func__, request->key, pg_replication_role);
+				zbx_db_clean_result(&pgsql_result);
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL replication recovery role.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL replication recovery role."));
 				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+
+			// Only standby
+			if (1 == pg_replication_role)
+			{
+				version = zbx_db_version(pgsql_conn);
+
+				if (0 != version)
+				{
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+					if (version < 90600)
+					{
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support streaming replication.", __func__, request->key);
+						SET_UI64_RESULT(result, 0);
+						ret = SYSINFO_RET_OK;
+						goto out;
+					}
+					else if (version >= 90600 && version < 100000)
+					{
+						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_SEC_V9_DBS);
+					}
+					else
+					{
+						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_LAG_IN_SEC_V10_DBS);
+					}
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
+					ret = SYSINFO_RET_FAIL;
+					goto out;
+				}
+			}
+			else
+			{
+				SET_UI64_RESULT(result, 0);
+				ret = SYSINFO_RET_OK;
 				goto out;
 			}
 		}
@@ -1260,6 +1347,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	{
 		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STATUS_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
+	else if (0 == strcmp(request->key, "pgsql.replication.replay"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V10_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
 	else if (0 == strcmp(request->key, "pgsql.replication.lag_byte"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_LAG_IN_BYTE_V10_DBS, ZBX_DB_RES_TYPE_NOJSON);
@@ -1270,7 +1361,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.slots"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_SLOTS_INFO_V95_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_SLOTS_INFO_V13_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else if (0 == strcmp(request->key, "pgsql.backup.exclusive"))
 	{
