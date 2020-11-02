@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-09-15T18:03:06Z</date>
+    <date>2020-11-02T12:27:51Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2832,6 +2832,7 @@ The cache miss rate can be calculated as Threads_created/Connections.</descripti
 Необходимо проверить факт перезапуска на сервере заказчика, проверить логи (error.log), далее уточнить в чате кто произвел перезапуск.&#13;
 Возможно, что перезапуск произошел в результате краха процесса в автоматическом режиме.&#13;
 Доведите информацию до заказчика и эксперта.</description>
+                            <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <tags>
                                 <tag>
@@ -2991,6 +2992,8 @@ Note that setting binlog_group_commit_sync_delay increases the latency of transa
                         <step>
                             <type>JSONPATH</type>
                             <params>$.BINLOG_GROUP_COMMIT_SYNC_DELAY</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
