@@ -330,10 +330,10 @@ SELECT \
 		ELSE (SELECT COUNT(*) AS REPLICATION_RECEIVER_COUNT FROM pg_stat_wal_receiver) \
 	END AS REPLICATION_STATUS;"
 
-// Get replication replay paused status from PostgreSQL <= 9.6 (0 - Running, 1 - Paused)
+// Get replication replay paused from PostgreSQL <= 9.6 (0 - Running, 1 - Paused, 2 - Master, 3 - Not supported)
 #define PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V96_DBS "SELECT pg_is_xlog_replay_paused()::int;"
 
-// Get replication replay paused status from PostgreSQL >= 10.0 (0 - Running, 1 - Paused)
+// Get replication replay paused from PostgreSQL >= 10.0 (0 - Running, 1 - Paused, 2 - Master, 3 - Not supported)
 #define PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V10_DBS "SELECT pg_is_wal_replay_paused()::int;"
 
 // Get lag in second from PostgreSQL < 10.0
@@ -1016,7 +1016,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 					if (version < 90600)
 					{
 						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support streaming replication.", __func__, request->key);
-						SET_UI64_RESULT(result, 2); //Not supported
+						SET_UI64_RESULT(result, 3); //Not supported
 						ret = SYSINFO_RET_OK;
 						goto out;
 					}
