@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-09-08T09:30:32Z</date>
+    <date>2020-11-05T08:23:00Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -132,7 +132,7 @@
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' archlog dest info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.archlogdest.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>2m</delay>
+                    <delay>{$DBS_ORACLE_ARCHLOGDEST_INTERVAL}</delay>
                     <history>1h</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -146,7 +146,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last archive log backup</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.backup.archivelog[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>10m</delay>
+                    <delay>{$DBS_ORACLE_BACKUP_ARCH_INTERVAL}</delay>
                     <history>30d</history>
                     <units>s</units>
                     <description>Last archive log backup</description>
@@ -225,7 +225,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last control file backup</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.backup.cf[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>2h</delay>
+                    <delay>{$DBS_ORACLE_BACKUP_CF_INTERVAL}</delay>
                     <history>30d</history>
                     <units>s</units>
                     <description>Last control file backup</description>
@@ -302,7 +302,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last full database backup</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.backup.full[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>1h</delay>
+                    <delay>{$DBS_ORACLE_BACKUP_FULL_INTERVAL}</delay>
                     <history>30d</history>
                     <units>s</units>
                     <description>Last full database backup</description>
@@ -379,7 +379,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Last incremental database backup</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>20m</delay>
+                    <delay>{$DBS_ORACLE_BACKUP_INCR_INTERVAL}</delay>
                     <history>30d</history>
                     <units>s</units>
                     <description>Last incremental database backup</description>
@@ -393,7 +393,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}' backup: Total incremental database backup</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>20m</delay>
+                    <delay>{$DBS_ORACLE_BACKUP_INCR_FILES_INTERVAL}</delay>
                     <history>30d</history>
                     <description>Total files number of incremental backup</description>
                     <applications>
@@ -406,7 +406,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Count bad processes</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.bad_processes[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>2m</delay>
+                    <delay>{$DBS_ORACLE_BAD_PROCESSES_INTERVAL}</delay>
                     <history>30d</history>
                     <description>Number of zombie processes.</description>
                     <applications>
@@ -472,7 +472,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Current DB files</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.dbfiles[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>1h</delay>
+                    <delay>{$DBS_ORACLE_DBFILES_INTERVAL}</delay>
                     <history>30d</history>
                     <description>Number of current data files on instance.</description>
                     <applications>
@@ -485,7 +485,7 @@
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' fra info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.fra[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>2m</delay>
+                    <delay>{$DBS_ORACLE_FRA_INTERVAL}</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -499,7 +499,7 @@
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>2m</delay>
+                    <delay>{$DBS_ORACLE_INSTANCE_INTERVAL}</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -513,7 +513,7 @@
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' not default parameters info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.parameters[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>6h</delay>
+                    <delay>{$DBS_ORACLE_PARAMETERS_INTERVAL}</delay>
                     <history>1h</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -527,7 +527,7 @@
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' parameters info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.parameter[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>2m</delay>
+                    <delay>{$DBS_ORACLE_PARAMETER_INTERVAL}</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -541,7 +541,7 @@
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' patch info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.patch_info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>6h</delay>
+                    <delay>{$DBS_ORACLE_PATCH_INFO_INTERVAL}</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -555,6 +555,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Ping</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>{$DBS_ORACLE_PING_INTERVAL}</delay>
                     <history>30d</history>
                     <description>Test connection with an instance of Oracle.</description>
                     <applications>
@@ -639,7 +640,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Size of redo log in last 1 hour</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.redolog_size_per_hour[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>20m</delay>
+                    <delay>{$DBS_ORACLE_REDOLOG_SIZE_INTERVAL}</delay>
                     <history>30d</history>
                     <units>B</units>
                     <description>Size of redo log in last 1 hour</description>
@@ -653,7 +654,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Redo log switch rate</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.redolog_switch_rate[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>4m</delay>
+                    <delay>{$DBS_ORACLE_REDOLOG_SW_RATE_INTERVAL}</delay>
                     <history>30d</history>
                     <description>Redo log switch rate per 1 hour.</description>
                     <applications>
@@ -666,7 +667,7 @@
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' resource info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.resource[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>2m</delay>
+                    <delay>{$DBS_ORACLE_RESOURCE_INTERVAL}</delay>
                     <history>1d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -680,7 +681,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Resumable sessions</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.resumable[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>2m</delay>
+                    <delay>{$DBS_ORACLE_RESUMABLE_INTERVAL}</delay>
                     <history>30d</history>
                     <description>Number of resumable sessions.</description>
                     <applications>
@@ -718,7 +719,7 @@
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Version</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.version[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>2h</delay>
+                    <delay>{$DBS_ORACLE_VERSION_INTERVAL}</delay>
                     <history>30d</history>
                     <trends>0</trends>
                     <value_type>CHAR</value_type>
@@ -1447,7 +1448,7 @@ INSTANCE RECOVERY</description>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' PDB info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>5m</delay>
+                    <delay>{$DBS_ORACLE_PDB_INTERVAL}</delay>
                     <history>1h</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -1461,7 +1462,7 @@ INSTANCE RECOVERY</description>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' permanent tablespace info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
-                    <delay>5m</delay>
+                    <delay>{$DBS_ORACLE_TBS_PERM_INTERVAL}</delay>
                     <history>1h</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -1475,7 +1476,7 @@ INSTANCE RECOVERY</description>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' temporary tablespace info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
-                    <delay>5m</delay>
+                    <delay>{$DBS_ORACLE_TBS_TMP_INTERVAL}</delay>
                     <history>1h</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -1489,7 +1490,7 @@ INSTANCE RECOVERY</description>
                     <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' undo tablespace info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
-                    <delay>5m</delay>
+                    <delay>{$DBS_ORACLE_TBS_UNDO_INTERVAL}</delay>
                     <history>1h</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -4745,8 +4746,36 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>8m</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_ARCHLOGDEST_INTERVAL}</macro>
+                    <value>2m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_AUDITDIR_EXCLUDE}</macro>
                     <value>^(/mydir/exclude1|/mydir/exclude2)$</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_BACKUP_ARCH_INTERVAL}</macro>
+                    <value>10m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_BACKUP_CF_INTERVAL}</macro>
+                    <value>2h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_BACKUP_FULL_INTERVAL}</macro>
+                    <value>1h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_BACKUP_INCR_FILES_INTERVAL}</macro>
+                    <value>20m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_BACKUP_INCR_INTERVAL}</macro>
+                    <value>20m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_BAD_PROCESSES_INTERVAL}</macro>
+                    <value>2m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_CF_BACKUP_CRIT}</macro>
@@ -4768,6 +4797,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_ORACLE_COUNT_BAD_PROCESS_WARN}</macro>
                     <value>7</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_DBFILES_INTERVAL}</macro>
+                    <value>1h</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_DBNAME_EXCLUDE}</macro>
@@ -4827,6 +4860,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>8G</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_FRA_INTERVAL}</macro>
+                    <value>2m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_FRA_USED_PRC_CRIT}</macro>
                     <value>80</value>
                 </macro>
@@ -4856,6 +4893,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <description>Instance name</description>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_INSTANCE_INTERVAL}</macro>
+                    <value>2m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_MODE}</macro>
                     <value>0</value>
                     <description>0 - OCI_DEFAULT, 1 - OCI_SYSDBA, 2 - OCI_SYSOPER, 3 - OCI_SYSASM, 4 - OCI_SYSDGD</description>
@@ -4866,14 +4907,34 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <description>Set 1 to disable alarm &quot;Database 'XXX' is NOARCHIVELOG mode.&quot;</description>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_PARAMETERS_INTERVAL}</macro>
+                    <value>6h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PARAMETER_INTERVAL}</macro>
+                    <value>2m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PATCH_INFO_INTERVAL}</macro>
+                    <value>6h</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_PDBNAME_EXCLUDE}</macro>
                     <value>^(excludepdbname1|excludepdbname2)$</value>
                     <description>List of exclude pluggable database name</description>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_PDB_INTERVAL}</macro>
+                    <value>5m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_PERMANENT_TS_EXCLUDE}</macro>
                     <value>^(excludetsname1|excludetsname2)$</value>
                     <description>List of exclude permanent tablespace name</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_PING_INTERVAL}</macro>
+                    <value>1m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_PING_NODATA_CRIT}</macro>
@@ -4902,17 +4963,33 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>80</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_REDOLOG_SIZE_INTERVAL}</macro>
+                    <value>20m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_REDOLOG_SW_RATE_CRIT}</macro>
                     <value>12</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_REDOLOG_SW_RATE_INTERVAL}</macro>
+                    <value>4m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_REDOLOG_SW_RATE_WARN}</macro>
                     <value>8</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_RESOURCE_INTERVAL}</macro>
+                    <value>2m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_RESUMABLE_COUNT_CRIT}</macro>
                     <value>1</value>
                     <description>Max number of resumable sessions</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_RESUMABLE_INTERVAL}</macro>
+                    <value>2m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_SERVICE_EXCLUDE}</macro>
@@ -4937,6 +5014,18 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_ORACLE_TBS_NODATA_WARN}</macro>
                     <value>2h</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TBS_PERM_INTERVAL}</macro>
+                    <value>5m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TBS_TMP_INTERVAL}</macro>
+                    <value>5m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_TBS_UNDO_INTERVAL}</macro>
+                    <value>5m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_TEMP_TBS_FREESPACE_MB_CRIT}</macro>
@@ -4977,6 +5066,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_ORACLE_USE_CALC_FREE_FRA_IN_PRC}</macro>
                     <value>1</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_VERSION_INTERVAL}</macro>
+                    <value>2h</value>
                 </macro>
             </macros>
             <screens>
