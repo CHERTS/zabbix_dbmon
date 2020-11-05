@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-02T13:23:19Z</date>
+    <date>2020-11-03T08:57:15Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3852,7 +3852,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
 Имя приложения, которое подключено к этому процессу-передатчику WAL.</description>
                             <application_prototypes>
                                 <application_prototype>
-                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                    <name>PgSQL: Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
                             <preprocessing>
@@ -3880,7 +3880,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
 Время запуска процесса, т. е. время подключения клиента к этому процессу-передатчику WAL.</description>
                             <application_prototypes>
                                 <application_prototype>
-                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                    <name>PgSQL: Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
                             <preprocessing>
@@ -3909,7 +3909,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
 IP-адрес клиента, подключённого к этому процессу-передатчику WAL. Значение null в этом поле говорит о том, что клиент подсоединён через сокет Unix на сервере.</description>
                             <application_prototypes>
                                 <application_prototype>
-                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                    <name>PgSQL: Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
                             <preprocessing>
@@ -3942,7 +3942,7 @@ IP-адрес клиента, подключённого к этому проц�
                             <description>Receiving lag</description>
                             <application_prototypes>
                                 <application_prototype>
-                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                    <name>PgSQL: Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
                             <preprocessing>
@@ -3965,7 +3965,7 @@ IP-адрес клиента, подключённого к этому проц�
                             <description>Replaying lag</description>
                             <application_prototypes>
                                 <application_prototype>
-                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                    <name>PgSQL: Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
                             <preprocessing>
@@ -3988,7 +3988,7 @@ IP-адрес клиента, подключённого к этому проц�
                             <description>Sending lag</description>
                             <application_prototypes>
                                 <application_prototype>
-                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                    <name>PgSQL: Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
                             <preprocessing>
@@ -4024,7 +4024,7 @@ Possible values are:&#13;
 - stopping: Передатчик WAL останавливается;</description>
                             <application_prototypes>
                                 <application_prototype>
-                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                    <name>PgSQL: Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
                             <valuemap>
@@ -4088,7 +4088,7 @@ Possible values are:&#13;
 - quorum: Этот ведомый сервер считается кандитатом на участие в кворуме.</description>
                             <application_prototypes>
                                 <application_prototype>
-                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                    <name>PgSQL: Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
                             <valuemap>
@@ -4138,7 +4138,7 @@ Possible values are:&#13;
                             <description>Total lag</description>
                             <application_prototypes>
                                 <application_prototype>
-                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                    <name>PgSQL: Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
                             <preprocessing>
@@ -4163,7 +4163,7 @@ Possible values are:&#13;
 Имя пользователя, подключённого к этому процессу-передатчику WAL.</description>
                             <application_prototypes>
                                 <application_prototype>
-                                    <name>[PgSQL] Replication '{#IPADDRESS}', Info</name>
+                                    <name>PgSQL: Replication '{#IPADDRESS}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
                             <preprocessing>
