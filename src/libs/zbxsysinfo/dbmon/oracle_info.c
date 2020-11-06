@@ -562,17 +562,18 @@ WHERE bt.status != 'INACTIVE' \
 #define ORACLE_ARLDEST_INFO_DBS "\
 SELECT i.INSTANCE_NAME AS INSTANCE, \
 	db.name AS DBNAME, \
-	d.dest_name AS ARLDEST, \
-	DECODE(d.status, 'VALID', 1, 'INACTIVE', 2, 'DEFERRED', 3, 'ERROR', 4, 'DISABLED', 5, 'BAD PARAM', 6, 'ALTERNATE', 7, 'FULL', 8, 0) AS LOG_STATUS, \
-	DECODE(d.target, 'PRIMARY', 1, 'STANDBY', 2, 'LOCAL', 3, 'REMOTE', 4, 0) AS LOG_TARGET, \
-	DECODE(d.archiver, 'ARCH', 1, 'FOREGROUND', 2, 'LGWR', 3, 'RFS', 4, 0) AS LOG_ARCHIVER, \
-	NVL(d.log_sequence, 0) AS LOG_SEQUENCE, \
-	replace(d.error, '\"', '|') AS LOG_ERROR \
-FROM gv$archive_dest d, gv$database db, gv$instance i \
-WHERE d.status != 'INACTIVE' \
-	AND d.inst_id = i.inst_id \
+	bt.dest_name AS ARLDEST, \
+	DECODE(bt.status, 'VALID', 1, 'INACTIVE', 2, 'DEFERRED', 3, 'ERROR', 4, 'DISABLED', 5, 'BAD PARAM', 6, 'ALTERNATE', 7, 'FULL', 8, 0) AS LOG_STATUS, \
+	DECODE(bt.target, 'PRIMARY', 1, 'STANDBY', 2, 'LOCAL', 3, 'REMOTE', 4, 0) AS LOG_TARGET, \
+	DECODE(bt.archiver, 'ARCH', 1, 'FOREGROUND', 2, 'LGWR', 3, 'RFS', 4, 0) AS LOG_ARCHIVER, \
+	NVL(bt.log_sequence, 0) AS LOG_SEQUENCE, \
+	REPLACE(bt.error, '\"', '|') AS LOG_ERROR \
+FROM gv$instance i \
+	JOIN gv$database db ON (db.inst_id = i.inst_id) \
+	JOIN gv$archive_dest bt ON (bt.inst_id = i.inst_id) \
+WHERE bt.status != 'INACTIVE' \
 	AND db.log_mode = 'ARCHIVELOG' \
-	AND i.instance_name= '%s'"
+	AND i.instance_name = '%s'"
 
 #define ORACLE_INSTANCE_PARAMETERS_INFO_DBS "\
 SELECT i.instance_name AS INSTANCE, \
@@ -616,7 +617,8 @@ SELECT i.instance_name AS INSTANCE, \
 FROM i, f, m, d, df \
 WHERE d.tablespace_name = f.tablespace_name(+) \
 	AND d.tablespace_name = m.tablespace_name(+) \
-	AND d.tablespace_name = df.tablespace_name(+)"
+	AND d.tablespace_name = df.tablespace_name(+) \
+	AND i.instance_name= '%s'"
 
 #define ORACLE_V12_PERMANENT_TS_INFO_DBS "\
 WITH \
@@ -634,7 +636,8 @@ SELECT ts.con_id AS CONID, d.instance_name AS INSTANCE, d.dbname AS DBNAME, ts.t
 	FROM spc s, tbs ts, d \
 	WHERE d.con_id = s.con_id \
 	AND s.con_id = ts.con_id \
-	AND s.tablespace_name = ts.tablespace_name"
+	AND s.tablespace_name = ts.tablespace_name \
+	AND d.instance_name= '%s'"
 
 #define ORACLE_V11_TEMPORARY_TS_INFO_DBS "\
 WITH \
@@ -654,7 +657,8 @@ SELECT i.instance_name AS INSTANCE, \
 FROM i, f, m, d, df \
 WHERE d.tablespace_name = f.tablespace_name(+) \
 	AND d.tablespace_name = m.tablespace_name(+) \
-	AND d.tablespace_name = df.tablespace_name(+)"
+	AND d.tablespace_name = df.tablespace_name(+) \
+	AND i.instance_name= '%s'"
 
 #define ORACLE_V12_TEMPORARY_TS_INFO_DBS "\
 WITH \
@@ -674,7 +678,8 @@ SELECT d.con_id AS CONID, \
 	ROUND(NVL(a.file_max_size, 0)) AS TS_FILE_MAX_SIZE \
 FROM d,t,a WHERE d.con_id=t.con_id \
 	AND t.con_id=a.con_id \
-	AND t.tablespace_name=a.tablespace_name"
+	AND t.tablespace_name=a.tablespace_name \
+	AND d.instance_name= '%s'"
 
 #define ORACLE_V11_UNDO_TS_INFO_DBS "\
 WITH \
@@ -694,7 +699,8 @@ SELECT i.instance_name AS INSTANCE, \
 FROM i, f, m, d, df \
 WHERE d.tablespace_name = f.tablespace_name(+) \
 	AND d.tablespace_name = m.tablespace_name(+) \
-	AND d.tablespace_name = df.tablespace_name(+)"
+	AND d.tablespace_name = df.tablespace_name(+) \
+	AND i.instance_name= '%s'"
 
 #define ORACLE_V12_UNDO_TS_INFO_DBS "\
 WITH \
@@ -714,7 +720,8 @@ SELECT d.con_id AS CONID, \
 FROM d,f,tbs \
 WHERE d.con_id=tbs.con_id \
 	AND f.con_id(+)=tbs.con_id \
-	AND f.tablespace_name(+)=tbs.tablespace_name"
+	AND f.tablespace_name(+)=tbs.tablespace_name \
+	AND d.instance_name= '%s'"
 
 // Oracle v8i/9i/10g/11g (get alert log path)
 #define ORACLE_V11_ALERTLOG_INFO_DBS "\
