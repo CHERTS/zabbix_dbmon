@@ -121,6 +121,7 @@ SELECT i.instance_name AS INSTANCE, \
 	d.platform_name AS PLATFORM_NAME \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
+	AND i.instance_name= '%s' \
 	AND d.name = '%s'"
 
 #define ORACLE_V12_DB_INFO_DBS "\
@@ -143,6 +144,7 @@ SELECT i.instance_name AS INSTANCE, \
 	d.platform_name AS PLATFORM_NAME \
 FROM gv$instance i, gv$database d \
 WHERE i.inst_id = d.inst_id \
+	AND i.instance_name= '%s' \
 	AND d.name = '%s'"
 
 #define ORACLE_V12_PDB_INFO_DBS "\
@@ -482,8 +484,10 @@ FROM(SELECT a.status, a.mrp_cnt, max(a.status) over() mx \
 
 #define ORACLE_STANDBY_RFS_STATUS_DBS "\
 SELECT i.instance_name AS INSTANCE, count(rr.inst_id) RFS_CNT FROM \
-(SELECT ms.inst_id FROM gv$managed_standby ms WHERE ms.PROCESS = 'RFS') rr \
-RIGHT JOIN gv$instance i ON i.INST_ID = rr.inst_id WHERE i.instance_name='%s' GROUP BY i.instance_name"
+	(SELECT ms.inst_id FROM gv$managed_standby ms WHERE ms.PROCESS = 'RFS') rr \
+	RIGHT JOIN gv$instance i ON i.INST_ID = rr.inst_id \
+WHERE i.instance_name='%s' \
+	GROUP BY i.instance_name"
 
 #define ORACLE_STANDBY_LAST_SEQUENCE_STAT_DBS "\
 SELECT distinct ARCH.THREAD# AS THREAD, ARCH.SEQUENCE# AS LAST_SEQUENCE_RECEIVED, APPL.SEQUENCE# AS LAST_SEQUENCE_APPLIED \
@@ -567,7 +571,8 @@ SELECT i.INSTANCE_NAME AS INSTANCE, \
 FROM gv$archive_dest d, gv$database db, gv$instance i \
 WHERE d.status != 'INACTIVE' \
 	AND d.inst_id = i.inst_id \
-	AND db.log_mode = 'ARCHIVELOG'"
+	AND db.log_mode = 'ARCHIVELOG' \
+	AND i.instance_name= '%s'"
 
 #define ORACLE_INSTANCE_PARAMETERS_INFO_DBS "\
 SELECT i.instance_name AS INSTANCE, \
@@ -577,7 +582,8 @@ FROM gv$instance i, gv$parameter p \
 WHERE i.instance_number = p.inst_id \
 	AND p.type IN(3, 6) \
 	AND p.isdefault = 'FALSE' \
-	AND p.name NOT IN ('db_files', 'processes', 'sessions')"
+	AND p.name NOT IN ('db_files', 'processes', 'sessions') \
+	AND i.instance_name= '%s'"
 
 #define ORACLE_V11_INSTANCE_SERVICES_DISCOVERY_DBS "\
 SELECT i.instance_name AS INSTANCE, \
@@ -1843,7 +1849,7 @@ next:
 			goto out;
 		}
 
-		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_dbname))
+		if (ZBX_DB_OK == zbx_db_query_select(oracle_conn, &ora_result, query, oracle_instance, oracle_dbname))
 		{
 			ret = make_result(request, result, ora_result, ZBX_DB_RES_TYPE_ONEROW);
 			zbx_db_clean_result(&ora_result);
