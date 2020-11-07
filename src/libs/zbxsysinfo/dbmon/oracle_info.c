@@ -761,6 +761,16 @@ WHERE i.instance_number = p.inst_id \
 	AND p.name = 'audit_file_dest' \
 	AND i.instance_name= '%s'"
 
+#define ORACLE_ASM_INSTANCE_INFO_DBS "\
+SELECT host_name AS HOSTNAME, \
+	version AS VERSION, \
+	TO_CHAR(round(((sysdate - startup_time) * 60 * 60 * 24), 0)) AS UPTIME, \
+	DECODE(status, 'STARTED', 1, 'MOUNTED', 2, 'OPEN', 3, 'OPEN MIGRATE', 4, 0) AS STATUS, \
+	DECODE(parallel, 'YES', 1, 'NO', 2, 0) PARALLEL, \
+	DECODE(archiver, 'STOPPED', 1, 'STARTED', 2, 'FAILED', 3, 0) ARCHIVER \
+FROM v$instance \
+WHERE instance_name = '%s'"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -801,6 +811,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.tablespace.info",					CF_HAVEPARAMS,		ORACLE_TS_INFO,					NULL},
 	{"oracle.alertlog.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.auditfiledest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.asm.instance.info",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{NULL}
 };
 
@@ -1395,6 +1406,10 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp(request->key, "oracle.instance.parameters"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_PARAMETERS_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ACTIVE);
+	}
+	else if (0 == strcmp(request->key, "oracle.asm.instance.info"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_ASM_INSTANCE_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
 	}
 	else
 	{
