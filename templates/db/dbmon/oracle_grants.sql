@@ -41,4 +41,10 @@ GRANT SELECT ON V_$CONTAINERS TO zabbixmon;
 
 --GRANT SELECT ANY TABLE TO zabbixmon;
 --GRANT SYSOPER TO zabbixmon;
+
+If monitoring Oracle Standby:
 GRANT SYSDBA TO zabbixmon;
+
+If monitoring Oracle ASM:
+CREATE USER zabbixmon IDENTIFIED BY "XXXXXXX";
+GRANT SYSASM TO zabbixmon;

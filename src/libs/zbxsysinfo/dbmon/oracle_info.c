@@ -771,6 +771,34 @@ SELECT host_name AS HOSTNAME, \
 FROM v$instance \
 WHERE instance_name = '%s'"
 
+#define ORACLE_ASM_DISK_GROUP_INFO_DBS "\
+SELECT name AS DG_NAME, \
+	nvl(total_mb*1024*1024,0) AS DG_TOTAL, \
+	(nvl(total_mb,0)-nvl(free_mb,0))*1024*1024 AS DG_USED, \
+	offline_disks AS OFFLINE_DISK, \
+	decode(type,'EXTERN',1,'NORMAL',2,'HIGH',3,0) AS DG_TYPE, \
+	decode(state,'CONNECTED',1,'BROKEN',2,'UNKNOWN',3,'DISMOUNTED',4,'MOUNTED',5,'QUIESCING',6,0) AS DG_STATE \
+FROM v$asm_diskgroup"
+
+#define ORACLE_ASM_TOTAL_DISK_DBS "\
+SELECT nvl(count(*),0) AS TOTAL_DISKS \
+FROM v$asm_diskgroup dg, v$asm_disk d \
+WHERE dg.group_number=d.group_number"
+
+#define ORACLE_ASM_DISK_INFO_DBS "\
+SELECT dg.name AS DG_NAME, \
+	decode(d.name,'',dg.name,d.name) AS DISK_NAME, \
+	d.path AS DISK_FILE_PATH, \
+	d.failgroup AS DISK_FILE_FAIL_GROUP, \
+	nvl(d.total_mb,0)*1024*1024 AS DISK_TOTAL, \
+	(nvl(d.total_mb,0)-nvl(d.free_mb,0))*1024*1024 AS DISK_USED, \
+	CASE WHEN d.total_mb = 0 THEN 100 ELSE round((d.free_mb/d.total_mb)*100,2) END AS DISK_FREE_PCT, \
+	decode(d.state,'UNKNOWN',1,'NORMAL',2,'ADDING',3,'DROPPING',4,'HUNG',5,'FORCING',6,0) AS DISK_STATE, \
+	decode(d.mode_status,'ONLINE',1,'OFFLINE',2,0) DISK_MODE_STATUS  \
+FROM v$asm_diskgroup dg, v$asm_disk d \
+WHERE dg.group_number=d.group_number \
+ORDER BY dg.name"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -811,7 +839,11 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.tablespace.info",					CF_HAVEPARAMS,		ORACLE_TS_INFO,					NULL},
 	{"oracle.alertlog.discovery",				CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
 	{"oracle.auditfiledest.discovery",			CF_HAVEPARAMS,		ORACLE_DISCOVERY,				NULL},
+	{"oracle.asm.instance.ping",				CF_HAVEPARAMS,		ORACLE_INSTANCE_PING,			NULL},
 	{"oracle.asm.instance.info",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.asm.diskgroup.info",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.asm.disk.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.asm.disk.total",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{NULL}
 };
 
@@ -1410,6 +1442,18 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp(request->key, "oracle.asm.instance.info"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_ASM_INSTANCE_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
+	}
+	else if (0 == strcmp(request->key, "oracle.asm.diskgroup.info"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_ASM_DISK_GROUP_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
+	}
+	else if (0 == strcmp(request->key, "oracle.asm.disk.info"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_ASM_DISK_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
+	}
+	else if (0 == strcmp(request->key, "oracle.asm.disk.total"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_ASM_TOTAL_DISK_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
 	}
 	else
 	{

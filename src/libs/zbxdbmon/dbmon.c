@@ -1108,12 +1108,15 @@ unsigned int zbx_db_get_oracle_mode(int ora_mode)
  *                                                                            *
  * Author: Mikhail Grigorev                                                   *
  *                                                                            *
- * Comments: in instance name allowed characters: '0-9a-zA-Z'                 *
+ * Comments: in instance name allowed characters: '0-9a-zA-Z+'                *
  *                                                                            *
  ******************************************************************************/
 int	is_instance_char(unsigned char c)
 {
 	if (0 != isalnum(c))
+		return SUCCEED;
+
+	if (c == '+')
 		return SUCCEED;
 
 	return FAIL;
