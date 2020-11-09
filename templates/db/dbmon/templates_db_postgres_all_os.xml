@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-03T08:57:15Z</date>
+    <date>2020-11-09T04:22:50Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -351,29 +351,6 @@
                     <master_item>
                         <key>pgsql.backup.exclusive[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
-                    <triggers>
-                        <trigger>
-                            <expression>{last()}&gt;{$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN}</expression>
-                            <name>Duration of exclusive backup  is too long</name>
-                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN}, alert started: {ITEM.VALUE1}</opdata>
-                            <priority>WARNING</priority>
-                            <description>Длительность процедуры монопольного резервного копирования слишком высокая.&#13;
-Длительная процедура монопольного резервного копирования приводит к тому, что старые журналы WAL не могут быть уделены и копятся в хранилище.&#13;
-Доведите информацию до эксперта.</description>
-                            <dependencies>
-                                <dependency>
-                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
-                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
-                                </dependency>
-                            </dependencies>
-                            <tags>
-                                <tag>
-                                    <tag>Instance</tag>
-                                    <value>{$DBS_PGSQL_INSTANCE}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
-                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Start time of exclusive backup</name>
@@ -4285,7 +4262,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN}</macro>
-                    <value>3h</value>
+                    <value>6h</value>
                     <description>Max duration time of exclusive backup.</description>
                 </macro>
                 <macro>
@@ -4505,6 +4482,29 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.backup.exclusive[{$DBS_PGSQL_INSTANCE},backup_duration].last()}&gt;{$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN} and {DBS_Template DB PostgreSQL:pgsql.backup.exclusive[{$DBS_PGSQL_INSTANCE},is_in_backup].last()}=1</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.backup.exclusive[{$DBS_PGSQL_INSTANCE},is_in_backup].last()}=0</recovery_expression>
+            <name>Duration of exclusive backup  is too long</name>
+            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN}, alert started: {ITEM.VALUE1}</opdata>
+            <priority>WARNING</priority>
+            <description>Длительность процедуры монопольного резервного копирования слишком высокая.&#13;
+Длительная процедура монопольного резервного копирования приводит к тому, что старые журналы WAL не могут быть удалены и копятся в хранилище.&#13;
+Доведите информацию до эксперта.</description>
+            <dependencies>
+                <dependency>
+                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>Instance</tag>
+                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
             <expression>{DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=0 and {DBS_Template DB PostgreSQL:pgsql.replication.count[{$DBS_PGSQL_CONN_STRING}].change()}&lt;=-1</expression>
             <recovery_mode>NONE</recovery_mode>
             <name>Number of standby servers has been decrease</name>
@@ -4534,7 +4534,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <expression>{DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=0 and {DBS_Template DB PostgreSQL:pgsql.replication.count[{$DBS_PGSQL_CONN_STRING}].change()}&gt;=1</expression>
             <recovery_mode>NONE</recovery_mode>
             <name>Number of standby servers has been increase</name>
-            <opdata>current: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE2}</opdata>
+            <opdata>current: {ITEM.LASTVALUE2}, role: {ITEM.LASTVALUE1}, alert started: {ITEM.VALUE2}</opdata>
             <priority>INFO</priority>
             <description>Аларм означает, что у текущего главного сервера (master) увеличилось количество подчиненных серверов (standby).&#13;
 Проверьте какие новые реплики были добавлены, доведите информацию до эксперта.</description>
@@ -4585,7 +4585,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_WARN} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
             <name>Total number of connections is too high</name>
-            <opdata>current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_WARN}%, alert started: {ITEM.VALUE2}</opdata>
+            <opdata>current: {ITEM.LASTVALUE1},{ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_WARN}%, alert started: {ITEM.VALUE1},{ITEM.VALUE2}</opdata>
             <priority>WARNING</priority>
             <description>Текущее количество соединений велико.&#13;
 Проанализируйте откуда идут соединения к кластеру.&#13;
