@@ -34,7 +34,7 @@ extern char	*CONFIG_MYSQL_USER;
 extern char	*CONFIG_MYSQL_PASSWORD;
 extern int CONFIG_MYSQL_TIMEOUT;
 
-int init_config_done = 1;
+int mysql_init_config_done = 1;
 
 #define MYSQL_DEFAULT_USER		"root"
 #define MYSQL_DEFAULT_PASSWORD	"password"
@@ -637,9 +637,9 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 		goto end;
 	}
 
-	if (init_config_done != 0)
+	if (mysql_init_config_done != 0)
 	{
-		init_config_done = init_dbmon_config();
+		mysql_init_config_done = init_dbmon_config();
 	}
 
 	// Get the user SQL query parameter
@@ -676,7 +676,7 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	dbmon_param_free(params);
 out:
 	uninit_dbmon_config();
-	init_config_done = 1;
+	mysql_init_config_done = 1;
 end:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 

@@ -24,9 +24,13 @@
 #include "zbxdbmon.h"
 #include "pgsql_info.h"
 #include "dbmon_common.h"
+#include "dbmon_config.h"
+#include "dbmon_params.h"
 
 #if defined(HAVE_DBMON)
 #if defined(HAVE_POSTGRESQL)
+
+int pgsql_init_config_done = 1;
 
 #define PGSQL_VERSION_DBS "SELECT VERSION() AS VERSION;"
 
@@ -438,6 +442,11 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.replication.lag_sec",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.slots",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.backup.exclusive",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.query.nojson",			CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
+	{"pgsql.query.onerow",			CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
+	{"pgsql.query.twocoll",			CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
+	{"pgsql.query.multirow",		CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
+	{"pgsql.query.discovery",		CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
 	{NULL}
 };
 
@@ -715,14 +724,21 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 	unsigned long				version;
 	const char					*pg_db_sum, *pg_wait_event, *pg_wal_dir;
 	unsigned int				pg_replication_role = 0; // 0 - Master, 1 - Standby
+	int							min_nparams = 1, max_nparams = 1;
 
-	if (1 < request->nparam)
+	if (0 == strcmp(request->key, "pgsql.query.nojson") || 0 == strcmp(request->key, "pgsql.query.onerow") || 0 == strcmp(request->key, "pgsql.query.twocoll") || 0 == strcmp(request->key, "pgsql.query.multirow") || 0 == strcmp(request->key, "pgsql.query.discovery"))
+	{
+		max_nparams = 2;
+		min_nparams = 2;
+	}
+
+	if (max_nparams < request->nparam)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (1 > request->nparam)
+	if (min_nparams > request->nparam)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too few parameters."));
 		return SYSINFO_RET_FAIL;
@@ -1381,6 +1397,119 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 int	PGSQL_GET_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	return zbx_execute_dbmon_threaded_metric(pgsql_get_result, request, result);
+}
+
+/*
+ * Custom key
+ * pgsql.query.nojson[]
+ * pgsql.query.onerow[]
+ * pgsql.query.twocoll[]
+ * pgsql.query.multirow[]
+ * pgsql.query.discovery[]
+ *
+ * Returns the value of the specified SQL query.
+ *
+ * Parameters:
+ *   0:  pgsql connections string
+ *   1:  scalar SQL query to execute
+ *   n:  query parameters
+ *
+ * Returns: string
+ *
+ */
+int	PGSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int					ret = SYSINFO_RET_FAIL;
+	const char			*query_key = NULL, *query = NULL;
+	zbx_db_result_type	query_result_type = ZBX_DB_RES_TYPE_NOJSON;
+	int					i = 0;
+	DBMONparams			params = NULL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
+
+	if (2 < request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (2 > request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too few parameters."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (0 == strcmp(request->key, "pgsql.query.nojson"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_NOJSON;
+	}
+	else if (0 == strcmp(request->key, "pgsql.query.onerow"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_ONEROW;
+	}
+	else if (0 == strcmp(request->key, "pgsql.query.twocoll"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_TWOCOLL;
+	}
+	else if (0 == strcmp(request->key, "pgsql.query.multirow"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_MULTIROW;
+	}
+	else if (0 == strcmp(request->key, "pgsql.query.discovery"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_DISCOVERY;
+	}
+	else
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key"));
+		ret = SYSINFO_RET_FAIL;
+		goto end;
+	}
+
+	if (pgsql_init_config_done != 0)
+	{
+		pgsql_init_config_done = init_dbmon_config();
+	}
+
+	// Get the user SQL query parameter
+	query_key = get_rparam(request, 1);
+
+	if (strisnull(query_key))
+	{
+		dbmon_log_result(result, LOG_LEVEL_ERR, "No query or query-key specified");
+		goto out;
+	}
+
+	// Check if query comes from configs
+	query = get_query_by_name(query_key);
+
+	if (NULL == query)
+	{
+		dbmon_log_result(result, LOG_LEVEL_DEBUG, "No query found for '%s'", query_key);
+		goto out;
+		//query = query_key;
+	}
+
+	// parse user params
+	dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query", request->nparam - 3);
+
+	for (i = 2; i < request->nparam; i++)
+	{
+		params = dbmon_param_append(params, get_rparam(request, i));
+	}
+
+	dbmon_log_result(result, LOG_LEVEL_TRACE, "Execute query: %s", query);
+
+	ret = pgsql_make_result(request, result, query, query_result_type);
+
+	dbmon_param_free(params);
+out:
+	uninit_dbmon_config();
+	pgsql_init_config_done = 1;
+end:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
+
+	return ret;
 }
 #endif
 #endif
