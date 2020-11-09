@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-05T08:23:00Z</date>
+    <date>2020-11-09T04:22:56Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3187,6 +3187,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <dependency>
                                             <name>Tablespace '{#TSNAME}' is not available</name>
                                             <expression>{DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -3345,6 +3346,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <trigger_prototypes>
                                 <trigger_prototype>
                                     <expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                     <name>Tablespace '{#TSNAME}' is not available</name>
                                     <priority>HIGH</priority>
                                     <description>Данные о табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} (минут).&#13;
@@ -3395,6 +3398,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <dependency>
                                             <name>Tablespace '{#TSNAME}' is not available</name>
                                             <expression>{DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -3454,6 +3458,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <dependency>
                                     <name>Tablespace '{#TSNAME}' is not available</name>
                                     <expression>{DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -3499,6 +3504,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <dependency>
                                     <name>Tablespace '{#TSNAME}' is not available</name>
                                     <expression>{DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle:oracle.tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -3981,6 +3987,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <dependency>
                                             <name>Temporary tablespace '{#TSNAME}' is not available</name>
                                             <expression>{DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -4114,6 +4121,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <trigger_prototypes>
                                 <trigger_prototype>
                                     <expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                     <name>Temporary tablespace '{#TSNAME}' is not available</name>
                                     <priority>HIGH</priority>
                                     <description>Данные о временном табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} (минут).&#13;
@@ -4164,6 +4173,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <dependency>
                                             <name>Temporary tablespace '{#TSNAME}' is not available</name>
                                             <expression>{DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -4224,6 +4234,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <dependency>
                                     <name>Temporary tablespace '{#TSNAME}' is not available</name>
                                     <expression>{DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -4271,6 +4282,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <dependency>
                                     <name>Temporary tablespace '{#TSNAME}' is not available</name>
                                     <expression>{DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle:oracle.temporary_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_TEMP_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -4364,6 +4376,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <dependency>
                                             <name>Undo tablespace '{#TSNAME}' is not available</name>
                                             <expression>{DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -4489,6 +4502,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <trigger_prototypes>
                                 <trigger_prototype>
                                     <expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                                    <recovery_expression>{nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                     <name>Undo tablespace '{#TSNAME}' is not available</name>
                                     <priority>HIGH</priority>
                                     <description>Данные о undo табличном пространстве '{#TSNAME}' не поступают более {$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;} (минут).&#13;
@@ -4539,6 +4554,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         <dependency>
                                             <name>Undo tablespace '{#TSNAME}' is not available</name>
                                             <expression>{DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -4605,6 +4621,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <dependency>
                                     <name>Undo tablespace '{#TSNAME}' is not available</name>
                                     <expression>{DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -4650,6 +4667,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <dependency>
                                     <name>Undo tablespace '{#TSNAME}' is not available</name>
                                     <expression>{DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=1 and {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle:oracle.undo_tablespace[{#INSTANCE},{#DBNAME},{#TSNAME},status].nodata({$DBS_ORACLE_TBS_NODATA_WARN:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;})}=0 or {$DBS_ORACLE_DISABLE_NO_UNDO_TBS_ALARM:&quot;{#INSTANCE}:{#DBNAME}:{#TSNAME}&quot;}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -5354,7 +5372,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(100m)}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
+            <recovery_expression>({DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0) or {DBS_Template DB Oracle:oracle.backup.full[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT}</recovery_expression>
             <name>No incremental database backups</name>
             <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_INCR_BACKUP_CRIT}</opdata>
             <priority>HIGH</priority>
@@ -5398,7 +5416,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <dependency>
                     <name>No incremental database backups</name>
                     <expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(100m)}&gt;{$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;0</expression>
-                    <recovery_expression>{DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0</recovery_expression>
+                    <recovery_expression>({DBS_Template DB Oracle:oracle.backup.incr[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT} and {DBS_Template DB Oracle:oracle.backup.incr_file_num[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&gt;=0) or {DBS_Template DB Oracle:oracle.backup.full[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].last()}&lt;={$DBS_ORACLE_INCR_BACKUP_CRIT}</recovery_expression>
                 </dependency>
             </dependencies>
             <tags>
