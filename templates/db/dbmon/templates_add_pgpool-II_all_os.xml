@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-10T11:08:03Z</date>
+    <date>2020-11-10T11:16:25Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -70,7 +70,7 @@ Version: 1.0</description>
                             <manual_close>YES</manual_close>
                             <dependencies>
                                 <dependency>
-                                    <name>Main processe of PGpool-II is down</name>
+                                    <name>Main process of PGpool-II is down</name>
                                     <expression>{DBS_Template App PGpool-II:proc.num[{$DBS_PGPOOL_SERVICE_NAME},{$DBS_PGPOOL_SERVICE_USER},,&quot;{$DBS_PGPOOL_SERVICE_CMD_REGEXP}&quot;].max(5m)}=0</expression>
                                 </dependency>
                             </dependencies>
@@ -363,7 +363,7 @@ Version: 1.0</description>
 Срочно доведите информацию до заказчика и эксперта.</description>
                             <dependencies>
                                 <dependency>
-                                    <name>Main processe of PGpool-II is down</name>
+                                    <name>Main process of PGpool-II is down</name>
                                     <expression>{DBS_Template App PGpool-II:proc.num[{$DBS_PGPOOL_SERVICE_NAME},{$DBS_PGPOOL_SERVICE_USER},,&quot;{$DBS_PGPOOL_SERVICE_CMD_REGEXP}&quot;].max(5m)}=0</expression>
                                 </dependency>
                             </dependencies>
@@ -420,7 +420,7 @@ Version: 1.0</description>
                     <triggers>
                         <trigger>
                             <expression>{max(5m)}=0</expression>
-                            <name>Main processe of PGpool-II is down</name>
+                            <name>Main process of PGpool-II is down</name>
                             <opdata>current: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
                             <priority>DISASTER</priority>
                             <description>Основной процесс PGpool-II остановлен или аварийно завершил работу.&#13;
