@@ -30,7 +30,7 @@
 #if defined(HAVE_DBMON)
 #if defined(HAVE_POSTGRESQL)
 
-int pgsql_init_config_done = 1;
+extern int init_dbmon_config_done;
 
 #define PGSQL_VERSION_DBS "SELECT VERSION() AS VERSION;"
 
@@ -1463,12 +1463,7 @@ int	PGSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key"));
 		ret = SYSINFO_RET_FAIL;
-		goto end;
-	}
-
-	if (pgsql_init_config_done != 0)
-	{
-		pgsql_init_config_done = init_dbmon_config();
+		goto out;
 	}
 
 	// Get the user SQL query parameter
@@ -1477,6 +1472,13 @@ int	PGSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	if (strisnull(query_key))
 	{
 		dbmon_log_result(result, LOG_LEVEL_ERR, "No query or query-key specified");
+		goto out;
+	}
+
+	if (0 != init_dbmon_config_done)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error init dbmon sql config file."));
+		ret = SYSINFO_RET_FAIL;
 		goto out;
 	}
 
@@ -1504,9 +1506,6 @@ int	PGSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	dbmon_param_free(params);
 out:
-	uninit_dbmon_config();
-	pgsql_init_config_done = 1;
-end:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 
 	return ret;

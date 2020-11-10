@@ -209,7 +209,7 @@ int init_dbmon_config()
 {
 	const char *cfgfile = get_dbmon_configfile();
 
-	zabbix_log(LOG_LEVEL_INFORMATION, "In %s: using dbmon configuration file: %s", __func__, cfgfile);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s: using dbmon configuration file: %s", __func__, cfgfile);
 
 	if (EXIT_SUCCESS != (read_dbmon_config(cfgfile)))
 		return EXIT_FAILURE;

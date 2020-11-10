@@ -90,6 +90,8 @@ char	*CONFIG_TLS_CIPHER_CMD13	= NULL;	/* not used in agent, defined for linking 
 char	*CONFIG_TLS_CIPHER_CMD		= NULL;	/* not used in agent, defined for linking with tls.c */
 
 #if defined(HAVE_DBMON)
+#include "../libs/zbxsysinfo/dbmon/dbmon_config.h"
+int		init_dbmon_config_done	= 1;
 int		CONFIG_DB_TIMEOUT		= 60;
 #if defined(HAVE_MYSQL)
 char	*CONFIG_MYSQL_USER		= NULL;
@@ -1103,6 +1105,11 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 		exit(EXIT_FAILURE);
 	}
 #endif
+
+#if defined(HAVE_DBMON)
+	init_dbmon_config_done = init_dbmon_config();
+#endif
+
 	if (0 != CONFIG_PASSIVE_FORKS)
 	{
 		if (FAIL == zbx_tcp_listen(&listen_sock, CONFIG_LISTEN_IP, (unsigned short)CONFIG_LISTEN_PORT))
@@ -1263,6 +1270,10 @@ void	zbx_free_service_resources(int ret)
 #endif
 #ifndef _WINDOWS
 	zbx_unload_modules();
+#endif
+#if defined(HAVE_DBMON)
+	if (0 == init_dbmon_config_done)
+		uninit_dbmon_config();
 #endif
 	zabbix_log(LOG_LEVEL_INFORMATION, "Zabbix Agent stopped. Zabbix %s (revision %s).",
 			ZABBIX_VERSION, ZABBIX_REVISION);
