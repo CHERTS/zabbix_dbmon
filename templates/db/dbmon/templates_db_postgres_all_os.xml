@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-09T04:22:50Z</date>
+    <date>2020-11-10T11:10:18Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -11,7 +11,13 @@
         <template>
             <template>DBS_Template DB PostgreSQL</template>
             <name>DB PostgreSQL (Active, DBMON, for all OS)</name>
-            <description>Template for monitoring PostgreSQL DB for all OS (active agent)</description>
+            <description>Template for monitoring PostgreSQL DB for all OS (active agent).&#13;
+&#13;
+This template was developed by Mikhail Grigorev for the Distributed Service company.&#13;
+&#13;
+Support e-mail: m.grigoriev@db-service.ru&#13;
+&#13;
+Version: 1.0</description>
             <groups>
                 <group>
                     <name>DBS.Templates/Modules</name>
