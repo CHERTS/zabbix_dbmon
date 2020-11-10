@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-10T11:24:40Z</date>
+    <date>2020-11-10T13:06:08Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -354,6 +354,20 @@ Version: 1.0</description>
                         </step>
                     </preprocessing>
                     <triggers>
+                        <trigger>
+                            <expression>{nodata({$DBS_PGPOOL_PING_NODATA_WARN})}=1</expression>
+                            <name>PGpool-II test connection data not received for more than {$DBS_PGPOOL_PING_NODATA_WARN} (minutes)</name>
+                            <priority>AVERAGE</priority>
+                            <description>Данные о доступности PGpool-II не поступали более {$DBS_PGPOOL_PING_NODATA_WARN} (минут).&#13;
+Необходимо проверить работу PGpool-II, далее проверить работу и настройки zabbix-agent-dbmon.&#13;
+Сообщить о проблеме эксперту в соответствующий чат.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Main process of PGpool-II is down</name>
+                                    <expression>{DBS_Template App PGpool-II:proc.num[{$DBS_PGPOOL_SERVICE_NAME},{$DBS_PGPOOL_SERVICE_USER},,&quot;{$DBS_PGPOOL_SERVICE_CMD_REGEXP}&quot;].max(5m)}=0</expression>
+                                </dependency>
+                            </dependencies>
+                        </trigger>
                         <trigger>
                             <expression>{max(5m)}=0</expression>
                             <name>PGpool-II test connection failed</name>
@@ -761,6 +775,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_PGPOOL_LOG_REGEXP}</macro>
                     <value>PANIC|FATAL|ERROR|[Ee]rror:</value>
                     <description>RegExp for errors</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGPOOL_PING_NODATA_WARN}</macro>
+                    <value>10m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGPOOL_SERVICE_CMD_REGEXP}</macro>
