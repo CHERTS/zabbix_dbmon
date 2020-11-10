@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-10T11:16:25Z</date>
+    <date>2020-11-10T11:24:40Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -732,6 +732,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </discovery_rule>
             </discovery_rules>
             <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>PostgreSQL</value>
+                </tag>
                 <tag>
                     <tag>Service</tag>
                     <value>PGpool-II</value>
