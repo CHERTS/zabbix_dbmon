@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-10T13:06:08Z</date>
+    <date>2020-11-10T14:50:12Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -57,6 +57,15 @@ Version: 1.0</description>
                             <priority>HIGH</priority>
                             <description>PGpool-II перестал принимать новые соединения.&#13;
 Срочно доведите информацию до заказчика и эксперта.</description>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                        <trigger>
+                            <expression>{iregexp(&quot;unable to connect to backend&quot;)}=1</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>{{ITEM.VALUE}.iregsub(&quot;.*unable to connect to backend&quot;, &quot;PGpool-II is unable to connect to backend&quot;)}</name>
+                            <priority>WARNING</priority>
+                            <description>PGpool-II не может подключиться к одному или нескольким бэкенд-серверам PostgreSQL.&#13;
+Доведите информацию до заказчика и эксперта.</description>
                             <manual_close>YES</manual_close>
                         </trigger>
                         <trigger>
@@ -317,26 +326,11 @@ Version: 1.0</description>
                     </master_item>
                 </item>
                 <item>
-                    <name>[PGpool] Get pool_nodes</name>
-                    <type>ZABBIX_ACTIVE</type>
-                    <key>pgsql.query.multirow[{$DBS_PGPOOL_CONN_STRING},pgpool_show_nodes]</key>
-                    <delay>2m</delay>
-                    <history>30d</history>
-                    <trends>0</trends>
-                    <value_type>TEXT</value_type>
-                    <description>Get pool_nodes</description>
-                    <applications>
-                        <application>
-                            <name>stubs</name>
-                        </application>
-                    </applications>
-                </item>
-                <item>
                     <name>[PGpool] Ping status</name>
                     <type>ZABBIX_ACTIVE</type>
-                    <key>pgsql.query.nojson[{$DBS_PGPOOL_CONN_STRING},pgpool_ping]</key>
+                    <key>pgsql.ping[{$DBS_PGPOOL_CONN_STRING}]</key>
                     <history>30d</history>
-                    <description>Get connection status</description>
+                    <description>Get test connection status (1 - CONNECTED, 0 - ERROR).</description>
                     <applications>
                         <application>
                             <name>PGpool-II: Status</name>
@@ -373,7 +367,15 @@ Version: 1.0</description>
                             <name>PGpool-II test connection failed</name>
                             <opdata>current: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
                             <priority>HIGH</priority>
-                            <description>Тестовое подключение к PGpool завершилось ошибкой.&#13;
+                            <description>Тестовое подключение к PGpool-II завершилось ошибкой.&#13;
+&#13;
+Возможные причины:&#13;
+- Неправильно указан логин или пароль для подключения в файле pool_passwd;&#13;
+- Неправильно настроен файл pool_hba.conf&#13;
+- Все бэкенд-сервера недоступны;&#13;
+- Сетевые проблемы;&#13;
+- Иные причины;&#13;
+&#13;
 Срочно доведите информацию до заказчика и эксперта.</description>
                             <dependencies>
                                 <dependency>
@@ -383,6 +385,21 @@ Version: 1.0</description>
                             </dependencies>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[PGpool] Get pool_nodes</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.query.multirow[{$DBS_PGPOOL_CONN_STRING},pgpool_show_nodes]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Get pool_nodes</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[PGpool] Version</name>
