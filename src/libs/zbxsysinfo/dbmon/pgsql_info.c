@@ -301,11 +301,30 @@ SELECT json_build_object( \
 #define PGSQL_REPLICATION_STANDBY_DISCOVERY_DBS "\
 SELECT client_addr AS STANDBY FROM pg_stat_replication;"
 
-// Query to track lag in bytes
+// Query to track lag in bytes from PostgreSQL < 10.0
 // sending_lag could indicate heavy load on primary
 // receiving_lag could indicate network issues or replica under heavy load
 // replaying_lag could indicate replica under heavy load
-#define PGSQL_REPLICATION_STAT_DBS "\
+#define PGSQL_REPLICATION_STAT_V96_DBS "\
+SELECT \
+  client_addr as ip_address, \
+  usename as user_name, \
+  application_name as app_name, \
+  date_part('epoch', backend_start)::int AS backend_start_unix, \
+  state, sync_state, \
+  (pg_xlog_location_diff(pg_current_xlog_location(), sent_location)/1024)::int as sending_lag, \
+  (pg_xlog_location_diff(sent_location, flush_location)/1024)::int as receiving_lag, \
+  (pg_xlog_location_diff(flush_location, replay_location)/1024)::int as replaying_lag, \
+  (pg_xlog_location_diff(sent_location, write_location)/1024)::int as write_lag, \
+  (pg_xlog_location_diff(write_location, flush_location)/1024)::int as flush_lag, \
+  (pg_xlog_location_diff(pg_current_xlog_location(), replay_location)/1024)::int as total_lag \
+FROM pg_stat_replication;"
+
+// Query to track lag in bytes from PostgreSQL >= 10.0
+// sending_lag could indicate heavy load on primary
+// receiving_lag could indicate network issues or replica under heavy load
+// replaying_lag could indicate replica under heavy load
+#define PGSQL_REPLICATION_STAT_V10_DBS "\
 SELECT \
   client_addr as ip_address, \
   usename as user_name, \
@@ -326,8 +345,16 @@ SELECT pg_is_in_recovery()::int AS REPLICATION_ROLE;"
 #define PGSQL_REPLICATION_STANDBY_COUNT_DBS "\
 SELECT count(*) AS REPLICATION_STANDBY_COUNT FROM pg_stat_replication;"
 
-// Get replication status (0 - Down, 1 - Up, 2 - Master, 3 - Not supported)
-#define PGSQL_REPLICATION_STATUS_DBS "\
+// Get replication status from PostgreSQL < 9.6 (0 - Down, 1 - Up, 2 - Master, 3 - Not supported)
+#define PGSQL_REPLICATION_STATUS_V95_DBS "\
+SELECT \
+	CASE \
+		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 2 \
+		ELSE 3 \
+	END AS REPLICATION_STATUS;"
+
+// Get replication status from PostgreSQL >= 9.6 (0 - Down, 1 - Up, 2 - Master, 3 - Not supported)
+#define PGSQL_REPLICATION_STATUS_V96_DBS "\
 SELECT \
 	CASE \
 		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 2 \
@@ -375,8 +402,8 @@ SELECT \
 // Get replication slot info from PostgreSQL < 9.6
 #define PGSQL_REPLICATION_SLOTS_INFO_V95_DBS "\
 SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (active)::int, xmin, catalog_xmin, restart_lsn, \
-	round((restart_lsn-redo_location), 0)::int AS behind \
-FROM pg_control_checkpoint(), pg_replication_slots \
+	0 AS behind \
+FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL = 9.6
@@ -966,7 +993,36 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			// Only master
 			if (0 == pg_replication_role)
 			{
-				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", query);
+				version = zbx_db_version(pgsql_conn);
+
+				if (0 != version)
+				{
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+					if (version < 90400)
+					{
+						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support streaming replication.", __func__, request->key);
+						SET_TEXT_RESULT(result, zbx_strdup(NULL, "[]")); //Not supported
+						ret = SYSINFO_RET_OK;
+						goto out;
+					}
+					else if (version >= 90400 && version < 100000)
+					{
+						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STAT_V96_DBS);
+					}
+					else
+					{
+						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STAT_V10_DBS);
+					}
+				}
+				else
+				{
+					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
+					ret = SYSINFO_RET_FAIL;
+					goto out;
+				}
+
 			}
 			else
 			{
@@ -984,16 +1040,20 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 			{
 				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
 
-				if (version < 90600)
+				if (version < 90400)
 				{
 					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support streaming replication.", __func__, request->key);
 					SET_UI64_RESULT(result, 3); //Not supported
 					ret = SYSINFO_RET_OK;
 					goto out;
 				}
+				else if (version >= 90400 && version < 90600)
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STATUS_V95_DBS);
+				}
 				else
 				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", query);
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STATUS_V96_DBS);
 				}
 			}
 			else
@@ -1197,14 +1257,14 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				{
 					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
 
-					if (version < 90500)
+					if (version < 90400)
 					{
 						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support replication slots.", __func__, request->key);
 						SET_TEXT_RESULT(result, zbx_strdup(NULL, "[]"));
 						ret = SYSINFO_RET_OK;
 						goto out;
 					}
-					else if (version >= 90500 && version < 90600)
+					else if (version >= 90400 && version < 90600)
 					{
 						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V95_DBS);
 					}
@@ -1349,7 +1409,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if ((0 == strcmp(request->key, "pgsql.replication.info")) || (0 == strcmp(request->key, "pgsql.replication.stat")))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STAT_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STAT_V10_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.role"))
 	{
@@ -1361,7 +1421,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.status"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STATUS_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STATUS_V96_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.replay"))
 	{
