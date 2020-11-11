@@ -93,6 +93,7 @@ char	*CONFIG_TLS_CIPHER_CMD		= NULL;	/* not used in agent, defined for linking w
 #include "../libs/zbxsysinfo/dbmon/dbmon_config.h"
 int		init_dbmon_config_done	= 1;
 int		CONFIG_DB_TIMEOUT		= 60;
+char	*CONFIG_SQL_FILE_NAME	= NULL;
 #if defined(HAVE_MYSQL)
 char	*CONFIG_MYSQL_USER		= NULL;
 char	*CONFIG_MYSQL_PASSWORD	= NULL;
@@ -901,28 +902,30 @@ static void	zbx_load_config(int requirement, ZBX_TASK_EX *task)
 		{"DenyKey",			load_key_access_rule,			TYPE_CUSTOM,
 			PARM_OPT,	0,			0},
 #if defined(HAVE_DBMON)
-		{ "DBTimeout",			&CONFIG_DB_TIMEOUT,			TYPE_INT,
+		{ "DBTimeout",			&CONFIG_DB_TIMEOUT,				TYPE_INT,
 			PARM_OPT,	1,			300 },
+		{ "DBSQLFileName",		&CONFIG_SQL_FILE_NAME,			TYPE_STRING,
+			PARM_OPT,	0,			0 },
 #if defined(HAVE_MYSQL)
-		{"MySQLUser",			&CONFIG_MYSQL_USER,	TYPE_STRING,
+		{"MySQLUser",			&CONFIG_MYSQL_USER,			TYPE_STRING,
 			PARM_OPT,   0,          0},
-		{"MySQLPassword",		&CONFIG_MYSQL_PASSWORD,	TYPE_STRING,
+		{"MySQLPassword",		&CONFIG_MYSQL_PASSWORD,		TYPE_STRING,
 			PARM_OPT,   0,          0},
-		{ "MySQLTimeout",		&CONFIG_MYSQL_TIMEOUT,	TYPE_INT,
+		{ "MySQLTimeout",		&CONFIG_MYSQL_TIMEOUT,		TYPE_INT,
 			PARM_OPT,	1,			360 },
 #endif
 #if defined(HAVE_ORACLE)
-		{ "OracleUser",				&CONFIG_ORACLE_USER,	TYPE_STRING,
+		{ "OracleUser",				&CONFIG_ORACLE_USER,				TYPE_STRING,
 			PARM_OPT,   0,          0 },
-		{ "OraclePassword",			&CONFIG_ORACLE_PASSWORD,	TYPE_STRING,
+		{ "OraclePassword",			&CONFIG_ORACLE_PASSWORD,			TYPE_STRING,
 			PARM_OPT,   0,          0 },
-		{ "OracleInstance",			&CONFIG_ORACLE_INSTANCE,	TYPE_STRING,
+		{ "OracleInstance",			&CONFIG_ORACLE_INSTANCE,			TYPE_STRING,
 			PARM_OPT,   0,          0 },
-		{ "OraclePrimaryUser",		&CONFIG_ORACLE_PRIMARY_USER,	TYPE_STRING,
+		{ "OraclePrimaryUser",		&CONFIG_ORACLE_PRIMARY_USER,		TYPE_STRING,
 			PARM_OPT,   0,          0 },
 		{ "OraclePrimaryPassword",	&CONFIG_ORACLE_PRIMARY_PASSWORD,	TYPE_STRING,
 			PARM_OPT,   0,          0 },
-		{ "OracleUseLocalEnv",		&CONFIG_ORACLE_USE_LOCAL_ENV,	TYPE_INT,
+		{ "OracleUseLocalEnv",		&CONFIG_ORACLE_USE_LOCAL_ENV,		TYPE_INT,
 			PARM_OPT,	0,			1 },
 #endif
 #endif
@@ -1107,7 +1110,7 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 #endif
 
 #if defined(HAVE_DBMON)
-	init_dbmon_config_done = init_dbmon_config();
+	init_dbmon_config_done = init_dbmon_config(CONFIG_SQL_FILE_NAME);
 #endif
 
 	if (0 != CONFIG_PASSIVE_FORKS)

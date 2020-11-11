@@ -29,7 +29,7 @@
 #if !defined(_WINDOWS) && !defined(__MINGW32__)
 #define DEFAULT_DBMON_CONFIG_FILE    "/etc/zabbix/zabbix_agentd_dbmon_sql.conf"
 #else
-#define DEFAULT_DBMON_CONFIG_FILE    "C:\\DBS_Zabbix\\zabbix_agentd_dbmon_sql.conf"
+#define DEFAULT_DBMON_CONFIG_FILE    "C:\\DBS_Zabbix_DBMON\\zabbix_agentd_dbmon_sql.conf"
 #endif
 
 // Default memory usage
@@ -49,23 +49,22 @@ int query_count = 0;
  *
  * Returns: pointer to const char
  */
-static inline const char *get_dbmon_configfile()
+static inline const char *get_dbmon_configfile(const char *conf_path)
 {
 	char *path = NULL;
 
-	path = getenv("DBMONCONFIGFILE");
-
-	if (NULL == path || '\0' == *path)
+	if (NULL == conf_path || '\0' == *conf_path)
 	{
 		path = DEFAULT_DBMON_CONFIG_FILE;
+		return path;
 	}
-	else if (strlen(path) > MAX_GLOBBING_PATH_LENGTH)
+	else if (strlen(conf_path) > MAX_GLOBBING_PATH_LENGTH)
 	{
-		zabbix_log(LOG_LEVEL_ERR, "In %s: environment DBMONCONFIGFILE exceeds maximum length of %i", __func__, MAX_GLOBBING_PATH_LENGTH);
+		zabbix_log(LOG_LEVEL_ERR, "In %s: The path specified in the DBSQLFileName parameter exceeds the maximum length %i", __func__, MAX_GLOBBING_PATH_LENGTH);
 		return NULL;
 	}
     
-	return path;
+	return conf_path;
 }
 
 static inline int add_named_query(const char *name, const char *query)
@@ -205,9 +204,9 @@ out:
 	return res;
 }
 
-int init_dbmon_config()
+int init_dbmon_config(const char *path)
 {
-	const char *cfgfile = get_dbmon_configfile();
+	const char *cfgfile = get_dbmon_configfile(path);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s: using dbmon configuration file: %s", __func__, cfgfile);
 
