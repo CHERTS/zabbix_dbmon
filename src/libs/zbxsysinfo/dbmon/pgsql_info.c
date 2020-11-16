@@ -199,7 +199,8 @@ T;"
 SELECT row_to_json(T) \
 FROM( \
 	SELECT \
-	coalesce(extract(epoch FROM max(CASE WHEN state = 'idle in transaction' THEN age(now(), xact_start) END)), 0) AS idle, \
+	coalesce(extract(epoch FROM max(CASE WHEN state = 'idle' THEN age(now(), xact_start) END)), 0) AS idle, \
+	coalesce(extract(epoch FROM max(CASE WHEN state = 'idle in transaction' THEN age(now(), xact_start) END)), 0) AS idle_in_transaction, \
 	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' THEN age(now(), xact_start) END)), 0) AS active, \
 	coalesce(extract(epoch FROM max(CASE WHEN %s THEN age(now(), xact_start) END)), 0) AS waiting, \
 	(SELECT coalesce(extract(epoch FROM max(age(now(), prepared))), 0) \
