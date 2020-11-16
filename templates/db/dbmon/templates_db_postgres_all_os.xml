@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-10T11:10:18Z</date>
+    <date>2020-11-16T08:54:48Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1565,7 +1565,11 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <key>pgsql.instance.prepared.transactions[{$DBS_PGSQL_INSTANCE},count_prepared]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Number of prepared transactions</description>
+                    <description>Number of prepared transactions.&#13;
+See pg_prepared_xacts for details.&#13;
+&#13;
+Общее количество транзакции, подготовленных для двухфазной фиксации.&#13;
+Смотрите представления pg_prepared_xacts для детализации.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1588,7 +1592,11 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <delay>0</delay>
                     <history>30d</history>
                     <units>s</units>
-                    <description>Oldest prepared transaction time in second.</description>
+                    <description>Oldest prepared transaction time in second.&#13;
+See pg_prepared_xacts for details.&#13;
+&#13;
+Возраст самой долгой транзакции, подготовленной для двухфазной фиксации (в секундах).&#13;
+Смотрите представления pg_prepared_xacts для детализации.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1605,12 +1613,12 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </master_item>
                     <triggers>
                         <trigger>
-                            <expression>{last()}&gt;{$DBS_PGSQL_MAX_PREPARED_TRANSACTION_TIME_WARN}</expression>
+                            <expression>{last()}&gt;{$DBS_PGSQL_MAX_PREPARED_TIME_WARN}</expression>
                             <name>Prepared transaction is too old</name>
-                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_MAX_PREPARED_TRANSACTION_TIME_WARN}s, alert started: {ITEM.VALUE1}</opdata>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_MAX_PREPARED_TIME_WARN}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>WARNING</priority>
                             <description>Возрастом самой старой подготовленной транзакции слишком велик.&#13;
-Слишком долго &quot;висящая&quot; подготовленная транзакция может не давать работать процессу вакууму.&#13;
+Слишком долго &quot;висящая&quot; подготовленная транзакция может не давать работать процессу vacuum.&#13;
 Доведите информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
@@ -1628,14 +1636,18 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </triggers>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max active transaction time in sec</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max transaction time in 'active' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>s</units>
-                    <description>Current max active transaction time in second.</description>
+                    <description>Current max transaction time in 'active' state (second).&#13;
+See pg_stat_activity for details.&#13;
+&#13;
+Текущее максимальное время ожидания транзакции в состоянии 'active' (в секундах).&#13;
+Смотрите представления pg_stat_activity для детализации.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1652,11 +1664,11 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </master_item>
                     <triggers>
                         <trigger>
-                            <expression>{min(5m)}&gt;{$DBS_PGSQL_ACTIVE_TRANSACTION_WARN}</expression>
-                            <name>Active transaction is too long</name>
-                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_ACTIVE_TRANSACTION_WARN}, alert started: {ITEM.VALUE1}</opdata>
+                            <expression>{min(5m)}&gt;{$DBS_PGSQL_MAX_ACTIVE_TIME_WARN}</expression>
+                            <name>Transaction in 'active' state is too long</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_MAX_ACTIVE_TIME_WARN}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>WARNING</priority>
-                            <description>Зафиксирована долго выполняющаяся транзакция (время выполнения более {$DBS_PGSQL_ACTIVE_TRANSACTION_WARN}).&#13;
+                            <description>Зафиксирована долго выполняющаяся транзакция в состоянии 'active'.&#13;
 Долго выполняющиеся транзакции могут стать причиной повышенной нагрузки на CPU, а так же привести к повышенной генерации журналов WAL, что может привести к деградации производительности.&#13;
 Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
                             <dependencies>
@@ -1675,14 +1687,18 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </triggers>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max idle transaction time in sec</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max transaction time in 'idle' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>s</units>
-                    <description>Current max idle transaction time in second.</description>
+                    <description>Current max transaction time in 'idle' state (second).&#13;
+See pg_stat_activity for details.&#13;
+&#13;
+Текущее максимальное время ожидания транзакции в состоянии 'idle' (в секундах).&#13;
+Смотрите представления pg_stat_activity для детализации.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1699,12 +1715,68 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </master_item>
                     <triggers>
                         <trigger>
-                            <expression>{min(5m)}&gt;{$DBS_PGSQL_IDLE_TRANSACTION_WARN}</expression>
-                            <name>Idle transaction is too long</name>
-                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_IDLE_TRANSACTION_WARN}, alert started: {ITEM.VALUE1}</opdata>
+                            <expression>{min(5m)}&gt;{$DBS_PGSQL_MAX_IDLE_TIME_WARN}</expression>
+                            <name>Transaction in 'idle' state is too long</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_MAX_IDLE_TIME_WARN}, alert started: {ITEM.VALUE1}</opdata>
                             <priority>WARNING</priority>
-                            <description>Зафиксирована долго выполняющаяся транзакция в состоянии idle (Приложение начало транзакцию, ничего не делает, но и транзакцию не завершает).&#13;
-Долго висящие транзакции в состоянии idle могут стать причиной блокировки процесса VACUUM, что в последствии приведет к разбуханию таблиц и индексов и деградации производительности.&#13;
+                            <description>Зафиксирована долго выполняющаяся транзакция в состоянии 'idle'.&#13;
+Сообщите данные эксперту для анализа.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max transaction time in 'idle in transaction' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle_in_transaction]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Current max transaction time in 'idle in transaction' state (second).&#13;
+See pg_stat_activity for details.&#13;
+&#13;
+Текущее максимальное время ожидания транзакции в состоянии 'idle in transaction' (в секундах).&#13;
+Смотрите представления pg_stat_activity для детализации.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.idle_in_transaction</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_PGSQL_MAX_IDLE_IN_TRANSACTION_TIME_WARN}</expression>
+                            <name>Transaction in 'idle in transaction' state is too long</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_MAX_IDLE_IN_TRANSACTION_TIME_WARN}, alert started: {ITEM.VALUE1}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Зафиксирована долго выполняющаяся транзакция в состоянии 'idle in transaction'.&#13;
+Приложение начало транзакцию, ничего не делает, но и транзакцию не завершает.&#13;
+Долго висящие транзакции в состоянии 'idle in transaction' могут стать причиной блокировки процесса VACUUM, что в последствии приведет к разбуханию таблиц и индексов и деградации производительности.&#13;
 Сообщите заказчику о проблеме, а так же передайте данные эксперту для анализа.</description>
                             <dependencies>
                                 <dependency>
@@ -1722,14 +1794,18 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     </triggers>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max prepared transaction time in sec</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max transaction time in 'prepared' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},prepared]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>s</units>
-                    <description>Current max prepared transaction time in second.</description>
+                    <description>Current max prepared transaction time in second.&#13;
+See pg_prepared_xacts for details.&#13;
+&#13;
+Текущее максимальное время ожидания транзакции подготовленной для двухфазной фиксации.&#13;
+Смотрите представления pg_prepared_xacts для детализации.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1753,7 +1829,11 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>s</units>
-                    <description>Current max waiting transaction time in second.</description>
+                    <description>Current max waiting transaction time in second.&#13;
+See pg_stat_activity for details.&#13;
+&#13;
+Текущее максимальное время ожидания транзакции у которой в колонке wait_event (Имя ожидаемого события, если обслуживающий процесс находится в состоянии ожидания) отличное от NULL значение.&#13;
+Смотрите представления pg_stat_activity для детализации.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Transactions</name>
@@ -1951,7 +2031,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <priority>WARNING</priority>
                             <description>Данные о доступности экземпляра БД PostgreSQL не поступали более {$DBS_PGSQL_PING_NODATA_WARN} (минут).&#13;
 Необходимо проверить работу экземпляра БД, далее проверить работу и настройки zabbix-agent-dbmon.&#13;
-Сообщить о проблеме эксперту в  соответствующий чат.</description>
+Сообщить о проблеме эксперту в соответствующий чат.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Database test connection data not received for more than {$DBS_PGSQL_PING_NODATA_CRIT} (minutes)</name>
@@ -2013,7 +2093,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication standby count</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.replication.count[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <delay>5m</delay>
+                    <delay>2m</delay>
                     <history>30d</history>
                     <description>Replication standby count.&#13;
 Количество подчиненных (standby) серверов.</description>
@@ -2094,7 +2174,7 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication recovery role</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <delay>5m</delay>
+                    <delay>2m</delay>
                     <history>30d</history>
                     <description>Streaming replication recovery role (0 - Master, 1 - Standby).&#13;
 Роль сервера в режиме репликации (0 - Главный, 1 - Подчиненный).</description>
@@ -4195,14 +4275,9 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>8m</value>
                 </macro>
                 <macro>
-                    <macro>{$DBS_PGSQL_ACTIVE_TRANSACTION_WARN}</macro>
-                    <value>2m</value>
-                    <description>Max active transaction time</description>
-                </macro>
-                <macro>
                     <macro>{$DBS_PGSQL_ACTIVE_WARN}</macro>
                     <value>40</value>
-                    <description>Max active connection</description>
+                    <description>Max running transaction in 'active' state</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_CACHE_HITRATIO_MIN_WARN}</macro>
@@ -4244,12 +4319,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}</macro>
                     <value>5</value>
-                    <description>Max running idle in transaction</description>
-                </macro>
-                <macro>
-                    <macro>{$DBS_PGSQL_IDLE_TRANSACTION_WARN}</macro>
-                    <value>6m</value>
-                    <description>Max idle transaction time</description>
+                    <description>Max running transaction in 'idle in transaction' state</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_INSTANCE}</macro>
@@ -4267,9 +4337,29 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <description>Filter to exclude discovered databases</description>
                 </macro>
                 <macro>
+                    <macro>{$DBS_PGSQL_MAX_ACTIVE_TIME_WARN}</macro>
+                    <value>2m</value>
+                    <description>Max transaction time in 'active' state</description>
+                </macro>
+                <macro>
                     <macro>{$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN}</macro>
                     <value>6h</value>
                     <description>Max duration time of exclusive backup.</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_MAX_IDLE_IN_TRANSACTION_TIME_WARN}</macro>
+                    <value>6m</value>
+                    <description>Max transaction time in 'idle in transaction' state</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_MAX_IDLE_TIME_WARN}</macro>
+                    <value>10m</value>
+                    <description>Max transaction time in 'idle' state</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_MAX_PREPARED_TIME_WARN}</macro>
+                    <value>5h</value>
+                    <description>Max transaction time in 'prapared' state</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_MAX_PREPARED_TRANSACTION_TIME_WARN}</macro>
@@ -4758,7 +4848,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <color>F63100</color>
                     <item>
                         <host>DBS_Template DB PostgreSQL</host>
-                        <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle]</key>
+                        <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle_in_transaction]</key>
                     </item>
                 </graph_item>
                 <graph_item>
