@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-10T14:50:12Z</date>
+    <date>2020-11-18T05:13:15Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -72,6 +72,7 @@ Version: 1.0</description>
                             <expression>{iregexp(&quot;unable to read data from frontend&quot;)}=1</expression>
                             <recovery_mode>NONE</recovery_mode>
                             <name>{{ITEM.VALUE}.iregsub(&quot;.*unable to read data from frontend&quot;, &quot;Unable to read data from frontend&quot;)}</name>
+                            <status>DISABLED</status>
                             <priority>INFO</priority>
                             <description>В одной из сессий PGpool-II не смог прочитать данные от фронтенда.&#13;
 Если данная ошибка повторяется очень часто, то необходимо проанализировать лог-файлы и выяснить причину появления данных сообщений.&#13;
@@ -390,7 +391,6 @@ Version: 1.0</description>
                     <name>[PGpool] Get pool_nodes</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.query.multirow[{$DBS_PGPOOL_CONN_STRING},pgpool_show_nodes]</key>
-                    <delay>2m</delay>
                     <history>30d</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -421,6 +421,25 @@ Version: 1.0</description>
                             <params>1h</params>
                         </step>
                     </preprocessing>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1 and {strlen()}&gt;0</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Version of PGpool-II has been changed</name>
+                            <opdata>current: {ITEM.VALUE}</opdata>
+                            <priority>INFO</priority>
+                            <description>Версия PGpool-II была изменена.&#13;
+Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Main process of PGpool-II is down</name>
+                                    <expression>{DBS_Template App PGpool-II:proc.num[{$DBS_PGPOOL_SERVICE_NAME},{$DBS_PGPOOL_SERVICE_USER},,&quot;{$DBS_PGPOOL_SERVICE_CMD_REGEXP}&quot;].max(5m)}=0</expression>
+                                </dependency>
+                            </dependencies>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PGpool] Get pool_cache</name>
@@ -707,6 +726,31 @@ Version: 1.0</description>
                             <master_item>
                                 <key>pgsql.query.multirow[{$DBS_PGPOOL_CONN_STRING},pgpool_show_nodes]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>PGpool-II backend '{#HOSTNAME}' role has been changed</name>
+                                    <opdata>current: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
+                                    <priority>INFO</priority>
+                                    <description>Бэкенд '{#HOSTNAME}' изменил свою роль.&#13;
+Проверьте причину изменения роли.&#13;
+Доведите информацию до эксперта.</description>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Main process of PGpool-II is down</name>
+                                            <expression>{DBS_Template App PGpool-II:proc.num[{$DBS_PGPOOL_SERVICE_NAME},{$DBS_PGPOOL_SERVICE_USER},,&quot;{$DBS_PGPOOL_SERVICE_CMD_REGEXP}&quot;].max(5m)}=0</expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Backend</tag>
+                                            <value>{#HOSTNAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[PGpool] Node '{#HOSTNAME}': Status</name>
@@ -745,6 +789,32 @@ Version: 1.0</description>
                             <master_item>
                                 <key>pgsql.query.multirow[{$DBS_PGPOOL_CONN_STRING},pgpool_show_nodes]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>PGpool-II backend '{#HOSTNAME}' status has been changed</name>
+                                    <opdata>current: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>Бэкенд '{#HOSTNAME}' изменил свой статус.&#13;
+Проверьте причину смены статуса.&#13;
+Если статус изменился на 0 (Down), то это может негативно повлиять на работу приложения.&#13;
+Доведите информацию до эксперта.</description>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Main process of PGpool-II is down</name>
+                                            <expression>{DBS_Template App PGpool-II:proc.num[{$DBS_PGPOOL_SERVICE_NAME},{$DBS_PGPOOL_SERVICE_USER},,&quot;{$DBS_PGPOOL_SERVICE_CMD_REGEXP}&quot;].max(5m)}=0</expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Backend</tag>
+                                            <value>{#HOSTNAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
                     <master_item>
