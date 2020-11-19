@@ -789,11 +789,11 @@ WHERE dg.group_number=d.group_number"
 SELECT dg.name AS DG_NAME, \
 	decode(d.name,'',dg.name,d.name) AS DISK_NAME, \
 	d.path AS DISK_FILE_PATH, \
-	d.failgroup AS DISK_FILE_FAIL_GROUP, \
+	d.failgroup AS DISK_FAIL_GROUP, \
 	nvl(d.total_mb,0)*1024*1024 AS DISK_TOTAL, \
 	(nvl(d.total_mb,0)-nvl(d.free_mb,0))*1024*1024 AS DISK_USED, \
 	CASE WHEN d.total_mb = 0 THEN 100 ELSE round((d.free_mb/d.total_mb)*100,2) END AS DISK_FREE_PCT, \
-	decode(d.state,'UNKNOWN',1,'NORMAL',2,'ADDING',3,'DROPPING',4,'HUNG',5,'FORCING',6,0) AS DISK_STATE, \
+	decode(d.state,'UNKNOWN',1,'NORMAL',2,'ADDING',3,'DROPPING',4,'HUNG',5,'FORCING',6,'DROPPED',7,0) AS DISK_STATE, \
 	decode(d.mode_status,'ONLINE',1,'OFFLINE',2,0) DISK_MODE_STATUS  \
 FROM v$asm_diskgroup dg, v$asm_disk d \
 WHERE dg.group_number=d.group_number \
