@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-10T11:10:00Z</date>
+    <date>2020-11-19T12:04:01Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1197,7 +1197,7 @@ INSTANCE RECOVERY</description>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>10m</params>
+                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1811,8 +1811,16 @@ Reread of blocknum=XXXXX, file=/path/YYYYY.dbf. found valid data</description>
                             </dependencies>
                             <tags>
                                 <tag>
+                                    <tag>Archlogdest</tag>
+                                    <value>{#ARLDEST}</value>
+                                </tag>
+                                <tag>
                                     <tag>Instance</tag>
                                     <value>{#INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Archlog</value>
                                 </tag>
                             </tags>
                         </trigger_prototype>
@@ -5445,6 +5453,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <priority>HIGH</priority>
             <description>Генерация redo log черезвычайно высокая, возможно в базу интенсивно пишутся данные.&#13;
 Доведите информацию до эксперта.</description>
+            <manual_close>YES</manual_close>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -5468,6 +5477,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <priority>WARNING</priority>
             <description>Генерация redo log слишком высокая, возможно в базу интенсивно пишутся данные.&#13;
 Доведите информацию до эксперта.</description>
+            <manual_close>YES</manual_close>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
