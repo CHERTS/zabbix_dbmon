@@ -780,6 +780,15 @@ SELECT name AS DG_NAME, \
 	decode(state,'CONNECTED',1,'BROKEN',2,'UNKNOWN',3,'DISMOUNTED',4,'MOUNTED',5,'QUIESCING',6,0) AS DG_STATE \
 FROM v$asm_diskgroup"
 
+#define ORACLE_ASM_TOTAL_DISK_IN_DISKGROUP_DBS "\
+SELECT dg.name AS DG_NAME, nvl(count(*),0) AS TOTAL_DISK \
+FROM v$asm_diskgroup dg, v$asm_disk d \
+WHERE dg.group_number=d.group_number GROUP BY dg.name"
+
+#define ORACLE_ASM_TOTAL_DISKGROUP_DBS "\
+SELECT nvl(count(*),0) AS TOTAL_DISKGROUP \
+FROM v$asm_diskgroup"
+
 #define ORACLE_ASM_TOTAL_DISK_DBS "\
 SELECT nvl(count(*),0) AS TOTAL_DISKS \
 FROM v$asm_diskgroup dg, v$asm_disk d \
@@ -842,6 +851,8 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.asm.instance.ping",				CF_HAVEPARAMS,		ORACLE_INSTANCE_PING,			NULL},
 	{"oracle.asm.instance.info",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.asm.diskgroup.info",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.asm.diskgroup.disk_total",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.asm.diskgroup.total",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.asm.disk.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.asm.disk.total",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{NULL}
@@ -1446,6 +1457,14 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp(request->key, "oracle.asm.diskgroup.info"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_ASM_DISK_GROUP_INFO_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
+	}
+	else if (0 == strcmp(request->key, "oracle.asm.diskgroup.disk_total"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_ASM_TOTAL_DISK_IN_DISKGROUP_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
+	}
+	else if (0 == strcmp(request->key, "oracle.asm.diskgroup.total"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_ASM_TOTAL_DISKGROUP_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
 	}
 	else if (0 == strcmp(request->key, "oracle.asm.disk.info"))
 	{
