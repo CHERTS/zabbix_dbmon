@@ -249,6 +249,8 @@ FROM( \
 	, buffers_alloc \
 	, stats_reset \
 	, date_part('epoch', stats_reset)::int AS stats_reset_unix \
+	, round(extract('epoch' from now() - stats_reset)/60)::numeric min_since_stats_reset \
+	, (1024.0 * 1024 / (current_setting('block_size')::numeric)) pages_per_mb \
 	FROM pg_catalog.pg_stat_bgwriter \
 ) T;"
 
