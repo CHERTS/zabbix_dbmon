@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-16T08:54:48Z</date>
+    <date>2020-11-20T11:31:28Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -32,6 +32,9 @@ Version: 1.0</description>
                 </application>
                 <application>
                     <name>PgSQL: Bgwriter</name>
+                </application>
+                <application>
+                    <name>PgSQL: Checkpoint</name>
                 </application>
                 <application>
                     <name>PgSQL: Connections</name>
@@ -722,6 +725,27 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     </applications>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Forced checkpoint ratio, %</name>
+                    <type>CALCULATED</type>
+                    <key>pgsql.checkpoint[{$DBS_PGSQL_INSTANCE},forced_checkpoint_ratio]</key>
+                    <delay>5m</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>percent</units>
+                    <params>100*(last(&quot;pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_req]&quot;)/(last(&quot;pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_timed]&quot;)+last(&quot;pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_req]&quot;)))</params>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Checkpoint</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>30m</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get connections stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -817,6 +841,39 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <master_item>
                         <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_PGSQL_ACTIVE_WARN}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(10m)}&lt;={$DBS_PGSQL_ACTIVE_WARN}</recovery_expression>
+                            <name>Too many connection in 'active' state</name>
+                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_ACTIVE_WARN}, alert started: {ITEM.VALUE}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Очень много соединений в состоянии 'active'.&#13;
+Возможна деградация производительности.&#13;
+Используйте типовой запрос:&#13;
+SELECT * FROM pg_stat_activity WHERE state='active';&#13;
+для получения списка активных соединений.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Fastpath function call</name>
@@ -884,35 +941,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
                     <triggers>
-                        <trigger>
-                            <expression>{min(5m)}&gt;{$DBS_PGSQL_ACTIVE_WARN}</expression>
-                            <name>Too many connection in 'active' state</name>
-                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_ACTIVE_WARN}, alert started: {ITEM.VALUE}</opdata>
-                            <priority>WARNING</priority>
-                            <description>Очень много соединений в состоянии 'active'.&#13;
-Возможна деградация производительности.&#13;
-Используйте типовой запрос:&#13;
-SELECT * FROM pg_stat_activity WHERE state='active';&#13;
-для получения списка активных соединений.&#13;
-Доведите информацию до эксперта.</description>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                                <dependency>
-                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
-                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
-                                </dependency>
-                            </dependencies>
-                            <tags>
-                                <tag>
-                                    <tag>Instance</tag>
-                                    <value>{$DBS_PGSQL_INSTANCE}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
                         <trigger>
                             <expression>{min(10m)}&gt;{$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}</expression>
                             <name>Too many connection in 'idle in transaction' state</name>
@@ -4608,6 +4636,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <priority>AVERAGE</priority>
             <description>Аларм означает, что у текущего главного сервера (master) уменьшилось количество подчиненных серверов (standby).&#13;
 Проверьте работоспособность реплики которые выбыли из процесса потоковой репликации, доведите информацию до заказчика и эксперта.</description>
+            <type>MULTIPLE</type>
             <manual_close>YES</manual_close>
             <dependencies>
                 <dependency>
@@ -4634,6 +4663,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <priority>INFO</priority>
             <description>Аларм означает, что у текущего главного сервера (master) увеличилось количество подчиненных серверов (standby).&#13;
 Проверьте какие новые реплики были добавлены, доведите информацию до эксперта.</description>
+            <type>MULTIPLE</type>
             <manual_close>YES</manual_close>
             <dependencies>
                 <dependency>
