@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-18T05:13:15Z</date>
+    <date>2020-11-20T11:31:20Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -736,6 +736,7 @@ Version: 1.0</description>
                                     <description>Бэкенд '{#HOSTNAME}' изменил свою роль.&#13;
 Проверьте причину изменения роли.&#13;
 Доведите информацию до эксперта.</description>
+                                    <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
                                         <dependency>
@@ -800,6 +801,7 @@ Version: 1.0</description>
 Проверьте причину смены статуса.&#13;
 Если статус изменился на 0 (Down), то это может негативно повлиять на работу приложения.&#13;
 Доведите информацию до эксперта.</description>
+                                    <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
                                         <dependency>
