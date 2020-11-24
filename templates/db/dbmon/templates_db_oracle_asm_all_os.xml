@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-19T12:04:06Z</date>
+    <date>2020-11-24T11:57:33Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -58,9 +58,20 @@ Version: 1.0</description>
                             <name>Oracle: ASM instance info</name>
                         </application>
                     </applications>
-                    <valuemap>
-                        <name>DBS Oracle (Ping)</name>
-                    </valuemap>
+                </item>
+                <item>
+                    <name>[Oracle] Get ASM instance '{$DBS_ORACLE_ASM_INSTANCE}' diskgroup total disk info</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.asm.diskgroup.disk_total[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[Oracle] Get ASM instance '{$DBS_ORACLE_ASM_INSTANCE}' diskgroup info</name>
@@ -75,6 +86,25 @@ Version: 1.0</description>
                             <name>stubs</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_ASM_INSTANCE}': Total disk groups</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.asm.diskgroup.total[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <description>Total number of disk groups.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: ASM instance info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[Oracle] Get ASM instance '{$DBS_ORACLE_ASM_INSTANCE}' info</name>
@@ -342,6 +372,34 @@ Version: 1.0</description>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
+                            <name>[Oracle] ASM disk '{#DISK_NAME}': Failure group name</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.asm.disk[{#DG_NAME},{#DISK_NAME},disk_fail_group_name]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Name of the failure group containing the disk.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: ASM instance, DiskGroup: {#DG_NAME}, Disk: {#DISK_NAME}</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DG_NAME==&quot;{#DG_NAME}&quot; &amp;&amp; @.DISK_NAME== &quot;{#DISK_NAME}&quot;)].DISK_FAIL_GROUP.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.asm.disk.info[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
                             <name>[Oracle] ASM disk '{#DISK_NAME}': Free size</name>
                             <type>CALCULATED</type>
                             <key>oracle.asm.disk[{#DG_NAME},{#DISK_NAME},disk_free]</key>
@@ -373,7 +431,7 @@ Version: 1.0</description>
                             <history>30d</history>
                             <value_type>FLOAT</value_type>
                             <units>percent</units>
-                            <description>Free capacity of the disk in percent.</description>
+                            <description>Free capacity of the disk '{#DISK_NAME}' in percent.</description>
                             <application_prototypes>
                                 <application_prototype>
                                     <name>Oracle: ASM instance, DiskGroup: {#DG_NAME}, Disk: {#DISK_NAME}</name>
@@ -579,34 +637,6 @@ Version: 1.0</description>
                                 <key>oracle.asm.disk.info[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
                             </master_item>
                         </item_prototype>
-                        <item_prototype>
-                            <name>[Oracle] ASM disk '{#DISK_NAME}': Failure group name</name>
-                            <type>DEPENDENT</type>
-                            <key>oracle.asm.disk[{#DG_NAME},{#DISK_NAME},fail_group_name]</key>
-                            <delay>0</delay>
-                            <history>30d</history>
-                            <trends>0</trends>
-                            <value_type>CHAR</value_type>
-                            <description>Name of the failure group containing the disk.</description>
-                            <application_prototypes>
-                                <application_prototype>
-                                    <name>Oracle: ASM instance, DiskGroup: {#DG_NAME}, Disk: {#DISK_NAME}</name>
-                                </application_prototype>
-                            </application_prototypes>
-                            <preprocessing>
-                                <step>
-                                    <type>JSONPATH</type>
-                                    <params>$[?(@.DG_NAME==&quot;{#DG_NAME}&quot; &amp;&amp; @.DISK_NAME== &quot;{#DISK_NAME}&quot;)].DISK_FAIL_GROUP.first()</params>
-                                </step>
-                                <step>
-                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                                    <params>1h</params>
-                                </step>
-                            </preprocessing>
-                            <master_item>
-                                <key>oracle.asm.disk.info[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
-                            </master_item>
-                        </item_prototype>
                     </item_prototypes>
                     <master_item>
                         <key>oracle.asm.disk.info[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
@@ -630,12 +660,38 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <delay>0</delay>
                     <item_prototypes>
                         <item_prototype>
+                            <name>[Oracle] ASM diskgroup '{#DG_NAME}': Total disks</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.asm.diskgroup[{#DG_NAME},dg_disk_total]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Total number of disks in disk group '{#DG_NAME}'.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: ASM instance, DiskGroup: {#DG_NAME}</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DG_NAME==&quot;{#DG_NAME}&quot;)].TOTAL_DISK.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.asm.diskgroup.disk_total[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
                             <name>[Oracle] ASM diskgroup '{#DG_NAME}': Free size</name>
                             <type>CALCULATED</type>
-                            <key>oracle.asm.diskgroup[{#DG_NAME},free]</key>
+                            <key>oracle.asm.diskgroup[{#DG_NAME},dg_free]</key>
                             <history>30d</history>
                             <units>B</units>
-                            <params>last(&quot;oracle.asm.diskgroup[{#DG_NAME},total]&quot;)-last(&quot;oracle.asm.diskgroup[{#DG_NAME},used]&quot;)</params>
+                            <params>last(&quot;oracle.asm.diskgroup[{#DG_NAME},dg_total]&quot;)-last(&quot;oracle.asm.diskgroup[{#DG_NAME},dg_used]&quot;)</params>
                             <description>Unused capacity of the disk group.</description>
                             <application_prototypes>
                                 <application_prototype>
@@ -650,9 +706,37 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </preprocessing>
                         </item_prototype>
                         <item_prototype>
+                            <name>[Oracle] ASM diskgroup '{#DG_NAME}': Free size, %</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.asm.diskgroup[{#DG_NAME},dg_free_pct]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <value_type>FLOAT</value_type>
+                            <units>percent</units>
+                            <description>Free capacity of the disk group '{#DG_NAME}' in percent.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>Oracle: ASM instance, DiskGroup: {#DG_NAME}</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.DG_NAME==&quot;{#DG_NAME}&quot;)].DG_FREE_PCT.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>10m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.asm.diskgroup.info[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
                             <name>[Oracle] ASM diskgroup '{#DG_NAME}': Name</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.asm.diskgroup[{#DG_NAME},name]</key>
+                            <key>oracle.asm.diskgroup[{#DG_NAME},dg_name]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <trends>0</trends>
@@ -680,7 +764,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[Oracle] ASM diskgroup '{#DG_NAME}': Offline disks</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.asm.diskgroup[{#DG_NAME},offline_disk]</key>
+                            <key>oracle.asm.diskgroup[{#DG_NAME},dg_offline_disk]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <description>Number of disks in the disk group that are currently offline.</description>
@@ -706,7 +790,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[Oracle] ASM diskgroup '{#DG_NAME}': State</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.asm.diskgroup[{#DG_NAME},state]</key>
+                            <key>oracle.asm.diskgroup[{#DG_NAME},dg_state]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <description>State of the disk group relative to the instance:&#13;
@@ -740,7 +824,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[Oracle] ASM diskgroup '{#DG_NAME}': Total size</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.asm.diskgroup[{#DG_NAME},total]</key>
+                            <key>oracle.asm.diskgroup[{#DG_NAME},dg_total]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <units>B</units>
@@ -767,7 +851,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[Oracle] ASM diskgroup '{#DG_NAME}': Type</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.asm.diskgroup[{#DG_NAME},type]</key>
+                            <key>oracle.asm.diskgroup[{#DG_NAME},dg_type]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <description>Redundancy type for the disk group:&#13;
@@ -799,7 +883,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[Oracle] ASM diskgroup '{#DG_NAME}': Used size</name>
                             <type>DEPENDENT</type>
-                            <key>oracle.asm.diskgroup[{#DG_NAME},used]</key>
+                            <key>oracle.asm.diskgroup[{#DG_NAME},dg_used]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <units>B</units>
@@ -853,6 +937,22 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_ORACLE_ASM_CONN_STRING}</macro>
                     <value>127.0.0.1:1521/+ASM</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_ASM_DG_FREESPACE_PCT_CRIT}</macro>
+                    <value>5</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_ASM_DG_FREESPACE_PCT_WARN}</macro>
+                    <value>10</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_ASM_DISK_FREESPACE_PCT_CRIT}</macro>
+                    <value>5</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_ASM_DISK_FREESPACE_PCT_WARN}</macro>
+                    <value>10</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_ASM_INSTANCE}</macro>
