@@ -775,6 +775,7 @@ WHERE instance_name = '%s'"
 SELECT name AS DG_NAME, \
 	nvl(total_mb*1024*1024,0) AS DG_TOTAL, \
 	(nvl(total_mb,0)-nvl(free_mb,0))*1024*1024 AS DG_USED, \
+	CASE WHEN total_mb = 0 THEN 100 ELSE round((free_mb/total_mb)*100,2) END AS DG_FREE_PCT, \
 	offline_disks AS OFFLINE_DISK, \
 	decode(type,'EXTERN',1,'NORMAL',2,'HIGH',3,0) AS DG_TYPE, \
 	decode(state,'CONNECTED',1,'BROKEN',2,'UNKNOWN',3,'DISMOUNTED',4,'MOUNTED',5,'QUIESCING',6,0) AS DG_STATE \
