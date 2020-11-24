@@ -172,6 +172,8 @@ static int read_dbmon_config(const char *cfgfile)
 
 	config_init(&cfg);
 
+	zabbix_log(LOG_LEVEL_INFORMATION, "using sql configuration file: %s", cfgfile);
+
 	if (CONFIG_TRUE != (config_read_file(&cfg, cfgfile)))
 	{
 		zabbix_log(LOG_LEVEL_ERR, "In %s: %s in %s:%i",	__func__, config_error_text(&cfg), cfgfile, config_error_line(&cfg));
