@@ -1110,6 +1110,7 @@ int	MAIN_ZABBIX_ENTRY(int flags)
 #endif
 
 #if defined(HAVE_DBMON)
+	zabbix_log(LOG_LEVEL_INFORMATION, "using sql configuration file: %s", CONFIG_SQL_FILE_NAME);
 	init_dbmon_config_done = init_dbmon_config(CONFIG_SQL_FILE_NAME);
 #endif
 
