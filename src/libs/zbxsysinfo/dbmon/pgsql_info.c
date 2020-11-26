@@ -203,6 +203,7 @@ FROM( \
 	coalesce(extract(epoch FROM max(CASE WHEN state = 'idle in transaction' THEN age(now(), xact_start) END)), 0) AS idle_in_transaction, \
 	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' THEN age(now(), xact_start) END)), 0) AS active, \
 	coalesce(extract(epoch FROM max(CASE WHEN %s THEN age(now(), xact_start) END)), 0) AS waiting, \
+	coalesce(extract(epoch FROM max(CASE WHEN query ~ 'autovacuum' THEN age(now(), xact_start) END)), 0) AS autovacuum, \
 	(SELECT coalesce(extract(epoch FROM max(age(now(), prepared))), 0) \
 		FROM pg_prepared_xacts) AS prepared \
 	FROM pg_stat_activity) T;"
@@ -210,16 +211,24 @@ FROM( \
 #define PGSQL_WAL_STAT_DBS "\
 SELECT row_to_json(T) \
 FROM( \
-	SELECT pg_wal_lsn_diff(pg_current_wal_lsn(), '0/00000000') AS WRITE, \
-	count(*) * 16 * 1024 * 1024 AS TOTAL_SIZE, \
-	count(*) \
+	SELECT \
+		CASE \
+			WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN pg_wal_lsn_diff(pg_current_wal_lsn(), '0/00000000') \
+			ELSE 0 \
+			END AS WRITE, \
+		count(*) * 16 * 1024 * 1024 AS TOTAL_SIZE,  \
+		count(*)  \
 	FROM pg_ls_waldir() AS COUNT \
 ) T;"
 
 #define PGSQL_XLOG_STAT_DBS "\
 SELECT row_to_json(T) \
 FROM( \
-	SELECT pg_xlog_location_diff(pg_current_xlog_location(), '0/00000000') AS WRITE, \
+	SELECT \
+		CASE \
+			WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN pg_xlog_location_diff(pg_current_xlog_location(), '0/00000000') \
+			ELSE 0 \
+			END AS WRITE, \
 	count(*) * 16 * 1024 * 1024 AS TOTAL_SIZE, \
 	count(*) \
 	FROM pg_ls_dir('pg_xlog') AS t(fname) WHERE fname <> 'archive_status' \
