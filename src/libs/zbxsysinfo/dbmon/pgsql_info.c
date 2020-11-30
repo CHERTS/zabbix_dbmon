@@ -216,7 +216,7 @@ FROM( \
 			WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN pg_wal_lsn_diff(pg_current_wal_lsn(), '0/00000000') \
 			ELSE 0 \
 			END AS WRITE, \
-		count(*) * 16 * 1024 * 1024 AS TOTAL_SIZE,  \
+		count(*) * 16 * 1024 * 1024 AS TOTAL_SIZE, \
 		count(*)  \
 	FROM pg_ls_waldir() AS COUNT \
 ) T;"
@@ -258,13 +258,25 @@ FROM( \
 	, buffers_alloc \
 	, stats_reset \
 	, date_part('epoch', stats_reset)::int AS stats_reset_unix \
-	, round(extract('epoch' from now() - stats_reset)/60)::numeric min_since_stats_reset \
-	, (1024.0 * 1024 / (current_setting('block_size')::numeric)) pages_per_mb \
 	FROM pg_catalog.pg_stat_bgwriter \
 ) T;"
 
+#define PGSQL_CHECKPOINT_STAT_DBS "\
+SELECT row_to_json(T) \
+FROM( \
+SELECT \
+	round((100.0 * checkpoints_req) / (checkpoints_timed + checkpoints_req), 2) AS checkpoints_req_pct, \
+	round(sec_since_reset / (checkpoints_timed + checkpoints_req)) * 60 AS second_between_checkpoints, \
+	buffers_checkpoint * block_size / (checkpoints_timed + checkpoints_req) AS avg_checkpoint_write, \
+	block_size * (buffers_checkpoint + buffers_clean + buffers_backend) AS total_written, \
+	round((100 * buffers_checkpoint / (buffers_checkpoint + buffers_clean + buffers_backend)), 2) AS checkpoint_write_pct, \
+	round((100 * buffers_backend / (buffers_checkpoint + buffers_clean + buffers_backend)), 2) AS backend_write_pct \
+FROM pg_catalog.pg_stat_bgwriter, \
+	(SELECT cast(current_setting('block_size') AS integer) AS block_size, round(extract('epoch' from now() - stats_reset))::numeric sec_since_reset FROM pg_catalog.pg_stat_bgwriter) bs \
+) T;"
+
 #define PGSQL_AUTOVACUUM_COUNT_DBS "\
-SELECT count(*) \
+SELECT count(*) AS autovacuum_cnt \
 FROM pg_catalog.pg_stat_activity \
 WHERE query like '%%autovacuum%%' \
 	AND state <> 'idle' \
@@ -466,6 +478,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.oldest.xid",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.cache.hit",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.bgwriter",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.checkpoint",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.autovacuum.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.archive.count",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.archive.size",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
@@ -1398,6 +1411,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.bgwriter"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_BGWRITER_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.checkpoint"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_CHECKPOINT_STAT_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "pgsql.autovacuum.count"))
 	{
