@@ -266,7 +266,7 @@ SELECT row_to_json(T) \
 FROM( \
 SELECT \
 	round((100.0 * checkpoints_req) / (checkpoints_timed + checkpoints_req), 2) AS checkpoints_req_pct, \
-	round(sec_since_reset / (checkpoints_timed + checkpoints_req)) * 60 AS second_between_checkpoints, \
+	round(sec_since_reset / (checkpoints_timed + checkpoints_req)) AS second_between_checkpoints, \
 	buffers_checkpoint * block_size / (checkpoints_timed + checkpoints_req) AS avg_checkpoint_write, \
 	block_size * (buffers_checkpoint + buffers_clean + buffers_backend) AS total_written, \
 	round((100 * buffers_checkpoint / (buffers_checkpoint + buffers_clean + buffers_backend)), 2) AS checkpoint_write_pct, \
