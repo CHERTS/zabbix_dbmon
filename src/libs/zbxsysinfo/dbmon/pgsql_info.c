@@ -425,29 +425,68 @@ SELECT \
 
 // Get replication slot info from PostgreSQL < 9.6
 #define PGSQL_REPLICATION_SLOTS_INFO_V95_DBS "\
-SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (active)::int, xmin, catalog_xmin, restart_lsn, \
-	0 AS behind \
+SELECT slot_name, \
+	COALESCE(plugin, '') AS plugin, \
+	slot_type, \
+	COALESCE(database, '') AS database, \
+	(active)::int, \
+	xmin, \
+	catalog_xmin, \
+	restart_lsn, \
+	0 AS behind, \
+	pg_xlog_location_diff(pg_current_xlog_location(), restart_lsn) AS replication_slot_lag \
 FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL = 9.6
 #define PGSQL_REPLICATION_SLOTS_INFO_V96_DBS "\
-SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (active)::int, xmin, catalog_xmin, restart_lsn, confirmed_flush_lsn, \
-	round((restart_lsn-redo_location), 0)::int AS behind \
+SELECT slot_name, \
+	COALESCE(plugin, '') AS plugin, \
+	slot_type, \
+	COALESCE(database, '') AS database, \
+	(active)::int, \
+	xmin, \
+	catalog_xmin, \
+	restart_lsn, \
+	confirmed_flush_lsn, \
+	round((restart_lsn-redo_location), 0)::int AS behind, \
+	pg_xlog_location_diff(pg_current_xlog_location(), restart_lsn) AS replication_slot_lag \
 FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 10.0 and < 13.0
 #define PGSQL_REPLICATION_SLOTS_INFO_V10_DBS "\
-SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (temporary)::int, (active)::int, xmin, catalog_xmin, restart_lsn, \
-	confirmed_flush_lsn, round((restart_lsn-redo_lsn),0)::int AS behind \
+SELECT slot_name, \
+	COALESCE(plugin, '') AS plugin, \
+	slot_type, \
+	COALESCE(database, '') AS database, \
+	(temporary)::int, \
+	(active)::int, \
+	xmin, \
+	catalog_xmin, \
+	restart_lsn, \
+	confirmed_flush_lsn, \
+	round((restart_lsn-redo_lsn),0)::int AS behind, \
+	pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) AS replication_slot_lag \
 FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 13.0
 #define PGSQL_REPLICATION_SLOTS_INFO_V13_DBS "\
-SELECT slot_name, COALESCE(plugin, '') AS plugin, slot_type, COALESCE(database, '') AS database, (temporary)::int, (active)::int, xmin, catalog_xmin, restart_lsn, \
-	confirmed_flush_lsn, wal_status, safe_wal_size, round((restart_lsn-redo_lsn), 0)::int AS behind \
+SELECT slot_name, \
+	COALESCE(plugin, '') AS plugin, \
+	slot_type, \
+	COALESCE(database, '') AS database, \
+	(temporary)::int, \
+	(active)::int, \
+	xmin, \
+	catalog_xmin, \
+	restart_lsn, \
+	confirmed_flush_lsn, \
+	wal_status, \
+	safe_wal_size, \
+	round((restart_lsn-redo_lsn), 0)::int AS behind, \
+	pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) AS replication_slot_lag \
 FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
