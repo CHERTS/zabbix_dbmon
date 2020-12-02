@@ -57,7 +57,9 @@ jobs:
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
     - name: Cleaning up workspace path
       run: |
-        rm -rf "$GITHUB_WORKSPACE"
+        rm -rf "$GITHUB_WORKSPACE/zabbix-${{ env.ZABBIX_VERSION }}" 2>/dev/null
+        rm -f "$GITHUB_WORKSPACE/*.deb" 2>/dev/null
+        rm -f "$GITHUB_WORKSPACE/*.ddeb" 2>/dev/null
   ubuntu-xenial:
     name: Ubuntu (Xenial)
     runs-on: [self-hosted, linux, ubuntu-xenial]
@@ -106,7 +108,9 @@ jobs:
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
     - name: Cleaning up workspace path
       run: |
-        rm -rf "$GITHUB_WORKSPACE"
+        rm -rf "$GITHUB_WORKSPACE/zabbix-${{ env.ZABBIX_VERSION }}" 2>/dev/null
+        rm -f "$GITHUB_WORKSPACE/*.deb" 2>/dev/null
+        rm -f "$GITHUB_WORKSPACE/*.ddeb" 2>/dev/null
   ubuntu-bionic:
     name: Ubuntu (Bionic)
     runs-on: [self-hosted, linux, ubuntu-bionic]
@@ -155,7 +159,9 @@ jobs:
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
     - name: Cleaning up workspace path
       run: |
-        rm -rf "$GITHUB_WORKSPACE"
+        rm -rf "$GITHUB_WORKSPACE/zabbix-${{ env.ZABBIX_VERSION }}" 2>/dev/null
+        rm -f "$GITHUB_WORKSPACE/*.deb" 2>/dev/null
+        rm -f "$GITHUB_WORKSPACE/*.ddeb" 2>/dev/null
   ubuntu-focal:
     name: Ubuntu (Focal)
     runs-on: [self-hosted, linux, ubuntu-focal]
@@ -204,4 +210,6 @@ jobs:
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
     - name: Cleaning up workspace path
       run: |
-        rm -rf "$GITHUB_WORKSPACE"
+        rm -rf "$GITHUB_WORKSPACE/zabbix-${{ env.ZABBIX_VERSION }}" 2>/dev/null
+        rm -f "$GITHUB_WORKSPACE/*.deb" 2>/dev/null
+        rm -f "$GITHUB_WORKSPACE/*.ddeb" 2>/dev/null
