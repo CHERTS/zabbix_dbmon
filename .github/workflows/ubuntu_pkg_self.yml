@@ -55,6 +55,9 @@ jobs:
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+    - name: Cleaning up workspace path
+      run: |
+        rm -rf "${{ github.workspace }}"
   ubuntu-xenial:
     name: Ubuntu (Xenial)
     runs-on: [self-hosted, linux, ubuntu-xenial]
@@ -101,6 +104,9 @@ jobs:
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+    - name: Cleaning up workspace path
+      run: |
+        rm -rf "${{ github.workspace }}"
   ubuntu-bionic:
     name: Ubuntu (Bionic)
     runs-on: [self-hosted, linux, ubuntu-bionic]
@@ -147,6 +153,9 @@ jobs:
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+    - name: Cleaning up workspace path
+      run: |
+        rm -rf "${{ github.workspace }}"
   ubuntu-focal:
     name: Ubuntu (Focal)
     runs-on: [self-hosted, linux, ubuntu-focal]
@@ -193,3 +202,6 @@ jobs:
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
         scp ../*.deb ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')/$(lsb_release -c -s)/
+    - name: Cleaning up workspace path
+      run: |
+        rm -rf "${{ github.workspace }}"
