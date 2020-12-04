@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-24T11:57:51Z</date>
+    <date>2020-12-04T05:18:39Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -308,7 +308,8 @@ Version: 1.0</description>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' autovacuum: Count of autovacuum workers</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.autovacuum.count[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <history>3d</history>
+                    <delay>2m</delay>
+                    <history>30d</history>
                     <description>Count number of autovacuum workers.</description>
                     <applications>
                         <application>
@@ -321,6 +322,34 @@ Version: 1.0</description>
                             <params>10m</params>
                         </step>
                     </preprocessing>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' autovacuum: Current max autovacuum time in sec</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.autovacuum[{$DBS_PGSQL_INSTANCE},max_time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Current max autovacuum time in second.&#13;
+See pg_stat_activity for details.&#13;
+&#13;
+Текущее максимальное время длительности процесса autovacuum.&#13;
+Смотрите представления pg_stat_activity для детализации.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Autovacuum</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.autovacuum</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get exclusive backup stat</name>
@@ -552,8 +581,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of requested checkpoints that have been performed.&#13;
-Количество запрошенных контрольных точек, которые уже были выполнены.</description>
+                    <description>Number of requested (max_wal_size) checkpoints that have been performed.&#13;
+Количество запрошенных контрольных точек по требованию (max_wal_size), которые уже были выполнены.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Bgwriter</name>
@@ -576,8 +605,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of scheduled checkpoints that have been performed.&#13;
-Количество запланированных контрольных точек, которые уже были выполнены.</description>
+                    <description>Number of scheduled (checkpoint_timeout) checkpoints that have been performed.&#13;
+Количество запланированных по расписанию (checkpoint_timeout) контрольных точек, которые уже были выполнены.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Bgwriter</name>
@@ -596,7 +625,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Sync time</name>
                     <type>DEPENDENT</type>
-                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoint_sync_time]</key>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoint_sync_time_in_sec]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
@@ -629,7 +658,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Write time</name>
                     <type>DEPENDENT</type>
-                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoint_write_time]</key>
+                    <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoint_write_time_in_sec]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
@@ -725,14 +754,30 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     </applications>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Forced checkpoint ratio, %</name>
-                    <type>CALCULATED</type>
-                    <key>pgsql.checkpoint[{$DBS_PGSQL_INSTANCE},forced_checkpoint_ratio]</key>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get checkpoint stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.checkpoint[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>5m</delay>
+                    <history>0</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Calculate checkpoint stat via pg_stat_bgwriter.</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Checkpoint size</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.checkpoint[{$DBS_PGSQL_INSTANCE},avg_checkpoint_write]</key>
+                    <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <units>percent</units>
-                    <params>100*(last(&quot;pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_req]&quot;)/(last(&quot;pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_timed]&quot;)+last(&quot;pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_req]&quot;)))</params>
+                    <units>B</units>
+                    <description>Checkpoint size (bytes).&#13;
+Сколько данных записывает средняя контрольная точка (байт).</description>
                     <applications>
                         <application>
                             <name>PgSQL: Checkpoint</name>
@@ -740,10 +785,131 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     </applications>
                     <preprocessing>
                         <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30m</params>
+                            <type>JSONPATH</type>
+                            <params>$.avg_checkpoint_write</params>
                         </step>
                     </preprocessing>
+                    <master_item>
+                        <key>pgsql.checkpoint[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Backend write, %</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.checkpoint[{$DBS_PGSQL_INSTANCE},backend_write_pct]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>percent</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Checkpoint</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.backend_write_pct</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.checkpoint[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Forced checkpoint ratio, %</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.checkpoint[{$DBS_PGSQL_INSTANCE},checkpoints_req_pct]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>percent</units>
+                    <description>Какой процент времени запрашиваются контрольные точки на основе активности, а не времени прохождения.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Checkpoint</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.checkpoints_req_pct</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.checkpoint[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Checkpoint write, %</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.checkpoint[{$DBS_PGSQL_INSTANCE},checkpoint_write_pct]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>percent</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Checkpoint</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.checkpoint_write_pct</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.checkpoint[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Time between checkpoints</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.checkpoint[{$DBS_PGSQL_INSTANCE},second_between_checkpoints]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Time between checkpoints.&#13;
+Сколько прошло времени между контрольными точками.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Checkpoint</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.second_between_checkpoints</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.checkpoint[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' checkpoint: Total write</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.checkpoint[{$DBS_PGSQL_INSTANCE},total_written]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Total write (bytes).&#13;
+Всего записано (байт).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Checkpoint</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_written</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.checkpoint[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get connections stat</name>
@@ -2130,6 +2296,90 @@ See pg_stat_activity for details.&#13;
                             <name>PgSQL: Replication</name>
                         </application>
                     </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Number of standby servers has been changed</name>
+                            <opdata>current: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
+                            <status>DISABLED</status>
+                            <priority>WARNING</priority>
+                            <description>Аларм означает, что у текущего главного сервера (master) изменилось количество подчиненных серверов (standby).&#13;
+Проверьте какие новые реплики были добавлены или удалены, доведите информацию до эксперта.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Replication</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{change()}&lt;0</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Number of standby servers has been decrease</name>
+                            <opdata>current: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
+                            <priority>AVERAGE</priority>
+                            <description>Аларм означает, что у текущего главного сервера (master) уменьшилось количество подчиненных серверов (standby).&#13;
+Проверьте работоспособность реплики которые выбыли из процесса потоковой репликации, доведите информацию до заказчика и эксперта.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Replication</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{change()}&gt;0</expression>
+                            <recovery_mode>NONE</recovery_mode>
+                            <name>Number of standby servers has been increase</name>
+                            <opdata>current: {ITEM.LASTVALUE}, alert started: {ITEM.VALUE}</opdata>
+                            <priority>INFO</priority>
+                            <description>Аларм означает, что у текущего главного сервера (master) увеличилось количество подчиненных серверов (standby).&#13;
+Проверьте какие новые реплики были добавлены, доведите информацию до эксперта.</description>
+                            <type>MULTIPLE</type>
+                            <manual_close>YES</manual_close>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                                <tag>
+                                    <tag>Subsystem</tag>
+                                    <value>Replication</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get replication stat</name>
@@ -2242,6 +2492,21 @@ See pg_stat_activity for details.&#13;
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get replication slots stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.replication.slots[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>2m</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Get replication slots stat</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Replication status</name>
@@ -4289,6 +4554,128 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         </step>
                     </preprocessing>
                 </discovery_rule>
+                <discovery_rule>
+                    <name>PgSQL replication slots discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.replication.slots.discovery[{$DBS_PGSQL_INSTANCE}]</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[PgSQL] Replication slot '{#SLOT_NAME}': Active</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.slot.info[{#SLOT_NAME},active]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>True, если слот активно используется в данный момент.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Replication slot '{#SLOT_NAME}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS PostgreSQL (Replication slot active)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.SLOT_NAME== &quot;{#SLOT_NAME}&quot;)].ACTIVE.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>10m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.slots[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication slot '{#SLOT_NAME}': Name</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.slot.info[{#SLOT_NAME},slot_name]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <description>Name of replication slot.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Replication slot '{#SLOT_NAME}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.SLOT_NAME== &quot;{#SLOT_NAME}&quot;)].SLOT_NAME.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.slots[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication slot '{#SLOT_NAME}': Type</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.slot.info[{#SLOT_NAME},slot_type]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Type of replication slot.&#13;
+Тип слота - physical (физический) или logical (логический).</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Replication slot '{#SLOT_NAME}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS PostgreSQL (Replication slot type)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.SLOT_NAME== &quot;{#SLOT_NAME}&quot;)].SLOT_TYPE.first()</params>
+                                </step>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <params>switch (value) {
+  case &quot;physical&quot;:
+    return 0;
+    break;
+  case &quot;logical&quot;:
+    return 1;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>10m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.slots[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>pgsql.replication.slots[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(slots){
+    return {
+        &quot;{#SLOT_NAME}&quot;: slots.SLOT_NAME
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
             </discovery_rules>
             <tags>
                 <tag>
@@ -4420,20 +4807,20 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <screen>
                     <name>PgSQL performance</name>
                     <hsize>2</hsize>
-                    <vsize>5</vsize>
+                    <vsize>6</vsize>
                     <screen_items>
                         <screen_item>
                             <resourcetype>0</resourcetype>
                             <style>0</style>
                             <resource>
-                                <name>[PgSQL] Connections</name>
+                                <name>[PgSQL] Active Connection + Max transaction time</name>
                                 <host>DBS_Template DB PostgreSQL</host>
                             </resource>
-                            <width>700</width>
-                            <height>100</height>
+                            <width>1200</width>
+                            <height>200</height>
                             <x>0</x>
                             <y>0</y>
-                            <colspan>1</colspan>
+                            <colspan>2</colspan>
                             <rowspan>1</rowspan>
                             <elements>0</elements>
                             <valign>0</valign>
@@ -4448,14 +4835,36 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <resourcetype>0</resourcetype>
                             <style>0</style>
                             <resource>
-                                <name>[PgSQL] Prepared transaction</name>
+                                <name>[PgSQL] Connections</name>
                                 <host>DBS_Template DB PostgreSQL</host>
                             </resource>
-                            <width>700</width>
-                            <height>100</height>
-                            <x>1</x>
-                            <y>0</y>
-                            <colspan>1</colspan>
+                            <width>1200</width>
+                            <height>200</height>
+                            <x>0</x>
+                            <y>1</y>
+                            <colspan>2</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[PgSQL] Max transaction time</name>
+                                <host>DBS_Template DB PostgreSQL</host>
+                            </resource>
+                            <width>1200</width>
+                            <height>200</height>
+                            <x>0</x>
+                            <y>2</y>
+                            <colspan>2</colspan>
                             <rowspan>1</rowspan>
                             <elements>0</elements>
                             <valign>0</valign>
@@ -4476,7 +4885,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <width>700</width>
                             <height>100</height>
                             <x>0</x>
-                            <y>1</y>
+                            <y>3</y>
                             <colspan>1</colspan>
                             <rowspan>1</rowspan>
                             <elements>0</elements>
@@ -4498,7 +4907,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <width>700</width>
                             <height>100</height>
                             <x>1</x>
-                            <y>1</y>
+                            <y>3</y>
                             <colspan>1</colspan>
                             <rowspan>1</rowspan>
                             <elements>0</elements>
@@ -4514,14 +4923,58 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <resourcetype>0</resourcetype>
                             <style>0</style>
                             <resource>
-                                <name>[PgSQL] Max transaction time</name>
+                                <name>[PgSQL] Prepared transaction</name>
                                 <host>DBS_Template DB PostgreSQL</host>
                             </resource>
-                            <width>900</width>
+                            <width>700</width>
                             <height>100</height>
                             <x>0</x>
-                            <y>2</y>
-                            <colspan>2</colspan>
+                            <y>4</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[PgSQL] Archiver statuses</name>
+                                <host>DBS_Template DB PostgreSQL</host>
+                            </resource>
+                            <width>700</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>4</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[PgSQL] Checkpoints issued</name>
+                                <host>DBS_Template DB PostgreSQL</host>
+                            </resource>
+                            <width>700</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>5</y>
+                            <colspan>1</colspan>
                             <rowspan>1</rowspan>
                             <elements>0</elements>
                             <valign>0</valign>
@@ -4539,33 +4992,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <name>[PgSQL] Checkpoints buffers</name>
                                 <host>DBS_Template DB PostgreSQL</host>
                             </resource>
-                            <width>900</width>
+                            <width>700</width>
                             <height>100</height>
-                            <x>0</x>
-                            <y>3</y>
-                            <colspan>2</colspan>
-                            <rowspan>1</rowspan>
-                            <elements>0</elements>
-                            <valign>0</valign>
-                            <halign>0</halign>
-                            <dynamic>0</dynamic>
-                            <sort_triggers>0</sort_triggers>
-                            <url/>
-                            <application/>
-                            <max_columns>3</max_columns>
-                        </screen_item>
-                        <screen_item>
-                            <resourcetype>0</resourcetype>
-                            <style>0</style>
-                            <resource>
-                                <name>[PgSQL] Number of checkpoints</name>
-                                <host>DBS_Template DB PostgreSQL</host>
-                            </resource>
-                            <width>900</width>
-                            <height>100</height>
-                            <x>0</x>
-                            <y>4</y>
-                            <colspan>2</colspan>
+                            <x>1</x>
+                            <y>5</y>
+                            <colspan>1</colspan>
                             <rowspan>1</rowspan>
                             <elements>0</elements>
                             <valign>0</valign>
@@ -4628,58 +5059,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_PGSQL_INSTANCE}</value>
-                </tag>
-            </tags>
-        </trigger>
-        <trigger>
-            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.count[{$DBS_PGSQL_CONN_STRING}].change()}&lt;0 and {DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=0</expression>
-            <recovery_mode>NONE</recovery_mode>
-            <name>Number of standby servers has been decrease</name>
-            <opdata>current: {ITEM.LASTVALUE1}, role: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1}</opdata>
-            <priority>AVERAGE</priority>
-            <description>Аларм означает, что у текущего главного сервера (master) уменьшилось количество подчиненных серверов (standby).&#13;
-Проверьте работоспособность реплики которые выбыли из процесса потоковой репликации, доведите информацию до заказчика и эксперта.</description>
-            <manual_close>YES</manual_close>
-            <dependencies>
-                <dependency>
-                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
-                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
-                </dependency>
-            </dependencies>
-            <tags>
-                <tag>
-                    <tag>Instance</tag>
-                    <value>{$DBS_PGSQL_INSTANCE}</value>
-                </tag>
-                <tag>
-                    <tag>Subsystem</tag>
-                    <value>Replication</value>
-                </tag>
-            </tags>
-        </trigger>
-        <trigger>
-            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.count[{$DBS_PGSQL_CONN_STRING}].change()}&gt;0 and {DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=0</expression>
-            <recovery_mode>NONE</recovery_mode>
-            <name>Number of standby servers has been increase</name>
-            <opdata>current: {ITEM.LASTVALUE1}, role: {ITEM.LASTVALUE2}, alert started: {ITEM.VALUE1}</opdata>
-            <priority>INFO</priority>
-            <description>Аларм означает, что у текущего главного сервера (master) увеличилось количество подчиненных серверов (standby).&#13;
-Проверьте какие новые реплики были добавлены, доведите информацию до эксперта.</description>
-            <manual_close>YES</manual_close>
-            <dependencies>
-                <dependency>
-                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
-                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
-                </dependency>
-            </dependencies>
-            <tags>
-                <tag>
-                    <tag>Instance</tag>
-                    <value>{$DBS_PGSQL_INSTANCE}</value>
-                </tag>
-                <tag>
-                    <tag>Subsystem</tag>
-                    <value>Replication</value>
                 </tag>
             </tags>
         </trigger>
@@ -4786,29 +5165,99 @@ return JSON.stringify({&quot;data&quot;: output})</params>
     </triggers>
     <graphs>
         <graph>
+            <name>[PgSQL] Active Connection + Max transaction time</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>GRADIENT_LINE</drawtype>
+                    <color>E53935</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},active]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <drawtype>GRADIENT_LINE</drawtype>
+                    <color>1976D2</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[PgSQL] Archiver statuses</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>FILLED_REGION</drawtype>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},failed_count]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <drawtype>FILLED_REGION</drawtype>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},archived_count]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
             <name>[PgSQL] Checkpoints buffers</name>
             <graph_items>
                 <graph_item>
-                    <color>1A7C11</color>
+                    <sortorder>1</sortorder>
+                    <color>F63100</color>
                     <item>
                         <host>DBS_Template DB PostgreSQL</host>
                         <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_backend]</key>
                     </item>
                 </graph_item>
                 <graph_item>
-                    <sortorder>1</sortorder>
-                    <color>F63100</color>
+                    <sortorder>2</sortorder>
+                    <color>43A047</color>
                     <item>
                         <host>DBS_Template DB PostgreSQL</host>
                         <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_clean]</key>
                     </item>
                 </graph_item>
                 <graph_item>
-                    <sortorder>2</sortorder>
+                    <sortorder>3</sortorder>
                     <color>2774A4</color>
                     <item>
                         <host>DBS_Template DB PostgreSQL</host>
                         <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},buffers_checkpoint]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[PgSQL] Checkpoints issued</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <drawtype>GRADIENT_LINE</drawtype>
+                    <color>42A5F5</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_timed]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <drawtype>GRADIENT_LINE</drawtype>
+                    <color>D32F2F</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_req]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -4896,26 +5345,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <item>
                         <host>DBS_Template DB PostgreSQL</host>
                         <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},waiting]</key>
-                    </item>
-                </graph_item>
-            </graph_items>
-        </graph>
-        <graph>
-            <name>[PgSQL] Number of checkpoints</name>
-            <graph_items>
-                <graph_item>
-                    <color>1A7C11</color>
-                    <item>
-                        <host>DBS_Template DB PostgreSQL</host>
-                        <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_timed]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>1</sortorder>
-                    <color>F63100</color>
-                    <item>
-                        <host>DBS_Template DB PostgreSQL</host>
-                        <key>pgsql.bgwriter[{$DBS_PGSQL_INSTANCE},checkpoints_req]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5063,6 +5492,32 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <mapping>
                     <value>1</value>
                     <newvalue>Standby</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS PostgreSQL (Replication slot active)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>False</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>True</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS PostgreSQL (Replication slot type)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>physical</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>logical</newvalue>
                 </mapping>
             </mappings>
         </value_map>
