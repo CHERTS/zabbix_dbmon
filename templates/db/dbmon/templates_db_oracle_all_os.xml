@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-19T12:04:01Z</date>
+    <date>2020-12-04T05:19:24Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -5276,7 +5276,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>FRA usage is to high</name>
             <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: less than {$DBS_ORACLE_FRA_FREE_CRIT}, alert started: {ITEM.VALUE1}</opdata>
             <priority>HIGH</priority>
-            <description>Область Fast Recovery Area (FRA) заполнена до критического уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
+            <description>Область Fast Recovery Area (FRA) заполнена до критического уровня.&#13;
+Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -5302,7 +5303,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>FRA usage is to high</name>
             <opdata>free: {ITEM.LASTVALUE1}, maxsize: {ITEM.LASTVALUE2}, threshold: less than {$DBS_ORACLE_FRA_FREE_WARN}, alert started: {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>
-            <description>Область Fast Recovery Area (FRA) заполнена до угрожающего уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
+            <description>Область Fast Recovery Area (FRA) заполнена до угрожающего уровня.&#13;
+Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
                 <dependency>
                     <name>FRA usage is to high</name>
@@ -5333,7 +5335,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>FRA usage is to high</name>
             <opdata>free: {ITEM.LASTVALUE2}, maxsize: {ITEM.LASTVALUE3}, threshold: more than {$DBS_ORACLE_FRA_USED_PRC_CRIT}% used, alert started: {ITEM.VALUE2}</opdata>
             <priority>HIGH</priority>
-            <description>Область Fast Recovery Area (FRA) заполнена до критического уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
+            <description>Область Fast Recovery Area (FRA) заполнена до критического уровня.&#13;
+Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
                 <dependency>
                     <name>Instance access failed</name>
@@ -5359,7 +5362,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <name>FRA usage is to high</name>
             <opdata>free: {ITEM.LASTVALUE2}, maxsize: {ITEM.LASTVALUE3}, threshold: more than {$DBS_ORACLE_FRA_USED_PRC_WARN}% used, alert started: {ITEM.VALUE2}</opdata>
             <priority>WARNING</priority>
-            <description>Область Fast Recovery Area (FRA) заполнена до угрожающего уровня. Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
+            <description>Область Fast Recovery Area (FRA) заполнена до угрожающего уровня.&#13;
+Необходимо выяснить чем она заполняется и принять меры по устранению проблемы.</description>
             <dependencies>
                 <dependency>
                     <name>FRA usage is to high</name>
