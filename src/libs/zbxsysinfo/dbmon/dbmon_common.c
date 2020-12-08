@@ -249,6 +249,7 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 	if (0 == db_result.nb_rows && ZBX_DB_RES_TYPE_DISCOVERY != mode)
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "The request returned a null result."));
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): The request returned a null result.", __func__, request->key);
 		goto out;
 	}
 
@@ -262,6 +263,7 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 		if (1 < db_result.nb_rows)
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "The query returned more than one row of the result."));
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): The query returned more than one row of the result.", __func__, request->key);
 		}
 		else
 		{
@@ -274,10 +276,12 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 		if (2 < db_result.nb_columns)
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "The query returned more than two columns of the result."));
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): The query returned more than two columns of the result.", __func__, request->key);
 		}
 		else if (2 > db_result.nb_columns)
 		{
 			SET_MSG_RESULT(result, zbx_strdup(NULL, "The query returned less than two columns of the result."));
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): The query returned less than two columns of the result.", __func__, request->key);
 		}
 		else
 		{
@@ -320,7 +324,7 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 							if (SUCCEED != is_macro_char((unsigned char)*c))
 							{
 								zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Cannot convert column number %u, column name %s to macro", __func__, request->key, col, (((struct zbx_db_type_text *)db_result.fields[0][col].t_data)->value));
-								SET_STR_RESULT(result, zbx_strdup(NULL, "Cannot convert column to macro"));
+								SET_STR_RESULT(result, zbx_strdup(NULL, "Cannot convert column to macro."));
 								goto out;
 							}
 						}
@@ -333,33 +337,33 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 
 					switch (db_result.data[row][col].type)
 					{
-					case ZBX_COL_TYPE_INT:
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(INT): %lld", __func__, request->key, row, col, ((struct zbx_db_type_int *)db_result.data[row][col].t_data)->value);
-						value_str = zbx_dsprintf(NULL, "%lld", (((struct zbx_db_type_int *)db_result.data[row][col].t_data)->value));
-						zbx_json_addstring(&json, buffer, zbx_strdup(NULL, value_str), ZBX_JSON_TYPE_STRING);
-						break;
-					case ZBX_COL_TYPE_DOUBLE:
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(DOUBLE): " ZBX_FS_DBL, __func__, request->key, row, col, ((struct zbx_db_type_double *)db_result.data[row][col].t_data)->value);
-						value_str = zbx_dsprintf(NULL, ZBX_FS_DBL, (((struct zbx_db_type_double *)db_result.data[row][col].t_data)->value));
-						zbx_json_addstring(&json, buffer, zbx_strdup(NULL, value_str), ZBX_JSON_TYPE_STRING);
-						break;
-					case ZBX_COL_TYPE_TEXT:
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(TEXT): %s", __func__, request->key, row, col, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value);
-						zbx_json_addstring(&json, buffer, zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value)), ZBX_JSON_TYPE_STRING);
-						break;
-					case ZBX_COL_TYPE_DATE:
-						strftime(date_buf, sizeof(date_buf), "%Y-%m-%d %H:%M:%S", &((struct zbx_db_type_datetime *)db_result.data[row][col].t_data)->value);
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(DATE): %s", __func__, request->key, row, col, date_buf);
-						zbx_json_addstring(&json, buffer, zbx_strdup(NULL, date_buf), ZBX_JSON_TYPE_STRING);
-						break;
-					case ZBX_COL_TYPE_BLOB:
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(BLOB): [BLOB]", __func__, request->key, row, col);
-						zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "[BLOB]"), ZBX_JSON_TYPE_STRING);
-						break;
-					case ZBX_COL_TYPE_NULL:
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(NULL): NULL", __func__, request->key, row, col);
-						zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "NULL"), ZBX_JSON_TYPE_STRING);
-						break;
+						case ZBX_COL_TYPE_INT:
+							zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(INT): %lld", __func__, request->key, row, col, ((struct zbx_db_type_int *)db_result.data[row][col].t_data)->value);
+							value_str = zbx_dsprintf(NULL, "%lld", (((struct zbx_db_type_int *)db_result.data[row][col].t_data)->value));
+							zbx_json_addstring(&json, buffer, zbx_strdup(NULL, value_str), ZBX_JSON_TYPE_STRING);
+							break;
+						case ZBX_COL_TYPE_DOUBLE:
+							zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(DOUBLE): " ZBX_FS_DBL, __func__, request->key, row, col, ((struct zbx_db_type_double *)db_result.data[row][col].t_data)->value);
+							value_str = zbx_dsprintf(NULL, ZBX_FS_DBL, (((struct zbx_db_type_double *)db_result.data[row][col].t_data)->value));
+							zbx_json_addstring(&json, buffer, zbx_strdup(NULL, value_str), ZBX_JSON_TYPE_STRING);
+							break;
+						case ZBX_COL_TYPE_TEXT:
+							zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(TEXT): %s", __func__, request->key, row, col, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value);
+							zbx_json_addstring(&json, buffer, zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value)), ZBX_JSON_TYPE_STRING);
+							break;
+						case ZBX_COL_TYPE_DATE:
+							strftime(date_buf, sizeof(date_buf), "%Y-%m-%d %H:%M:%S", &((struct zbx_db_type_datetime *)db_result.data[row][col].t_data)->value);
+							zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(DATE): %s", __func__, request->key, row, col, date_buf);
+							zbx_json_addstring(&json, buffer, zbx_strdup(NULL, date_buf), ZBX_JSON_TYPE_STRING);
+							break;
+						case ZBX_COL_TYPE_BLOB:
+							zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(BLOB): [BLOB]", __func__, request->key, row, col);
+							zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "[BLOB]"), ZBX_JSON_TYPE_STRING);
+							break;
+						case ZBX_COL_TYPE_NULL:
+							zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(NULL): NULL", __func__, request->key, row, col);
+							zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "NULL"), ZBX_JSON_TYPE_STRING);
+							break;
 					}
 				}
 
@@ -376,6 +380,7 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 	else
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown result mode."));
+		zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Unknown result mode.", __func__, request->key);
 	}
 
 out:

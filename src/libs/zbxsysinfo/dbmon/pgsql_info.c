@@ -1346,15 +1346,15 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		}
 		else
 		{
-			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
-			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query"));
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query.", __func__, request->key);
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Error executing query."));
 			ret = SYSINFO_RET_FAIL;
 		}
 	}
 	else
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database", __func__, request->key);
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database"));
+		zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error connecting to database.", __func__, request->key);
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error connecting to database."));
 		ret = SYSINFO_RET_FAIL;
 	}
 out:
@@ -1562,7 +1562,7 @@ int	PGSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	}
 	else
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key"));
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key."));
 		ret = SYSINFO_RET_FAIL;
 		goto out;
 	}
@@ -1572,7 +1572,7 @@ int	PGSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (strisnull(query_key))
 	{
-		dbmon_log_result(result, LOG_LEVEL_ERR, "No query or query-key specified");
+		dbmon_log_result(result, LOG_LEVEL_ERR, "No query or query-key specified.");
 		goto out;
 	}
 
@@ -1588,13 +1588,13 @@ int	PGSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 
 	if (NULL == query)
 	{
-		dbmon_log_result(result, LOG_LEVEL_DEBUG, "No query found for '%s'", query_key);
+		dbmon_log_result(result, LOG_LEVEL_DEBUG, "No query found for '%s'.", query_key);
 		goto out;
 		//query = query_key;
 	}
 
 	// parse user params
-	dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query", request->nparam - 3);
+	dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query.", request->nparam - 3);
 
 	for (i = 2; i < request->nparam; i++)
 	{
