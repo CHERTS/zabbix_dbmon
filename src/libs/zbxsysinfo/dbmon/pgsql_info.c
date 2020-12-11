@@ -322,6 +322,17 @@ SELECT json_build_object( \
 	) \
 );"
 
+#define PGSQL_BUFFER_CACHE_DBS " \
+SELECT row_to_json(T) \
+FROM( \
+	SELECT current_setting('block_size')::int*count(*) AS total, \
+		current_setting('block_size')::int*sum(CASE WHEN isdirty THEN 1 ELSE 0 END) AS dirty, \
+		current_setting('block_size')::int*sum(CASE WHEN isdirty THEN 0 ELSE 1 END) AS clear, \
+		current_setting('block_size')::int*sum(CASE WHEN reldatabase IS NOT NULL THEN 1 ELSE 0 END) AS used, \
+		current_setting('block_size')::int*sum(CASE WHEN usagecount >= 3 THEN 1 ELSE 0 END) AS popular \
+	FROM pg_buffercache \
+) AS T;"
+
 #define PGSQL_REPLICATION_STANDBY_DISCOVERY_DBS "\
 SELECT client_addr AS STANDBY FROM pg_stat_replication;"
 
@@ -493,7 +504,7 @@ ORDER BY slot_name ASC;"
 // Get exclusive (non-exclusive) backup status
 #define PGSQL_IS_IN_BACKUP_DBS " \
 SELECT row_to_json(T) \
-FROM(\
+FROM( \
 	SELECT pg_is_in_backup()::int as ISINBACKUP, \
 	COALESCE(date_part('epoch', pg_backup_start_time())::int, 0) AS BACKUPSTARTTIME, \
 	COALESCE(date_part('epoch', now() - pg_backup_start_time())::int, 0) AS BACKUPDURATION \
@@ -522,6 +533,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.archive.count",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.archive.size",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.prepared.transactions",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.buffercache",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.settings",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.info",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.stat",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
@@ -1009,6 +1021,34 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				goto out;
 			}
 		}
+		else if (0 == strcmp(request->key, "pgsql.buffercache"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version < 90400)
+				{
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support pg_buffercache.", __func__, request->key);
+					SET_TEXT_RESULT(result, zbx_strdup(NULL, "[]")); //Not supported
+					ret = SYSINFO_RET_OK;
+					goto out;
+				}
+				else
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_BUFFER_CACHE_DBS);
+				}
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
 		else if ( (0 == strcmp(request->key, "pgsql.replication.info")) || (0 == strcmp(request->key, "pgsql.replication.stat")) )
 		{
 			pg_replication_role = 1;
@@ -1059,7 +1099,6 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 					ret = SYSINFO_RET_FAIL;
 					goto out;
 				}
-
 			}
 			else
 			{
@@ -1447,6 +1486,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.settings"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_NOT_DEFAULT_SETTINGS_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.buffercache"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_BUFFER_CACHE_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if ((0 == strcmp(request->key, "pgsql.replication.info")) || (0 == strcmp(request->key, "pgsql.replication.stat")))
 	{
