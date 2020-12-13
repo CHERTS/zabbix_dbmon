@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-12-04T05:18:39Z</date>
+    <date>2020-12-13T12:06:08Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -32,6 +32,9 @@ Version: 1.0</description>
                 </application>
                 <application>
                     <name>PgSQL: Bgwriter</name>
+                </application>
+                <application>
+                    <name>PgSQL: Buffercache</name>
                 </application>
                 <application>
                     <name>PgSQL: Checkpoint</name>
@@ -737,6 +740,126 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     </preprocessing>
                     <master_item>
                         <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get buffercache stat</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.buffercache[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>5m</delay>
+                    <history>0</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect metrics by pg_buffercache values in a single call.</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' buffercache: Clear</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.buffercache[{$DBS_PGSQL_INSTANCE},clear]</key>
+                    <delay>0</delay>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Buffercache</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.clear</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.buffercache[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' buffercache: Dirty</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.buffercache[{$DBS_PGSQL_INSTANCE},dirty]</key>
+                    <delay>0</delay>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Buffercache</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.dirty</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.buffercache[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' buffercache: Popular</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.buffercache[{$DBS_PGSQL_INSTANCE},popular]</key>
+                    <delay>0</delay>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Buffercache</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.popular</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.buffercache[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' buffercache: Total</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.buffercache[{$DBS_PGSQL_INSTANCE},total]</key>
+                    <delay>0</delay>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Buffercache</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.buffercache[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' buffercache: Used</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.buffercache[{$DBS_PGSQL_INSTANCE},used]</key>
+                    <delay>0</delay>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Buffercache</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.used</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.buffercache[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
                 </item>
                 <item>
@@ -2542,7 +2665,7 @@ See pg_stat_activity for details.&#13;
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get transactions stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect metrics by transaction execution time</description>
@@ -2602,7 +2725,7 @@ See pg_stat_activity for details.&#13;
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.wal.stat[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>5m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect metrics by WAL stat</description>
@@ -2629,6 +2752,33 @@ See pg_stat_activity for details.&#13;
                         <step>
                             <type>JSONPATH</type>
                             <params>$.count</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>10m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.wal.stat[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Total size of WAL files</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.wal[{$DBS_PGSQL_INSTANCE},total_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Total size WAL files in pg_wal directory.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: WAL</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_size</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -4807,7 +4957,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <screen>
                     <name>PgSQL performance</name>
                     <hsize>2</hsize>
-                    <vsize>6</vsize>
+                    <vsize>8</vsize>
                     <screen_items>
                         <screen_item>
                             <resourcetype>0</resourcetype>
@@ -4882,33 +5032,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                 <name>[PgSQL] Waiting connections</name>
                                 <host>DBS_Template DB PostgreSQL</host>
                             </resource>
-                            <width>700</width>
-                            <height>100</height>
+                            <width>1200</width>
+                            <height>200</height>
                             <x>0</x>
                             <y>3</y>
-                            <colspan>1</colspan>
-                            <rowspan>1</rowspan>
-                            <elements>0</elements>
-                            <valign>0</valign>
-                            <halign>0</halign>
-                            <dynamic>0</dynamic>
-                            <sort_triggers>0</sort_triggers>
-                            <url/>
-                            <application/>
-                            <max_columns>3</max_columns>
-                        </screen_item>
-                        <screen_item>
-                            <resourcetype>0</resourcetype>
-                            <style>0</style>
-                            <resource>
-                                <name>[PgSQL] Rows statistic</name>
-                                <host>DBS_Template DB PostgreSQL</host>
-                            </resource>
-                            <width>700</width>
-                            <height>100</height>
-                            <x>1</x>
-                            <y>3</y>
-                            <colspan>1</colspan>
+                            <colspan>2</colspan>
                             <rowspan>1</rowspan>
                             <elements>0</elements>
                             <valign>0</valign>
@@ -4945,7 +5073,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <resourcetype>0</resourcetype>
                             <style>0</style>
                             <resource>
-                                <name>[PgSQL] Archiver statuses</name>
+                                <name>[PgSQL] Rows statistic</name>
                                 <host>DBS_Template DB PostgreSQL</host>
                             </resource>
                             <width>700</width>
@@ -4997,6 +5125,72 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <x>1</x>
                             <y>5</y>
                             <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[PgSQL] WAL size</name>
+                                <host>DBS_Template DB PostgreSQL</host>
+                            </resource>
+                            <width>700</width>
+                            <height>100</height>
+                            <x>0</x>
+                            <y>6</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[PgSQL] Archiver statuses</name>
+                                <host>DBS_Template DB PostgreSQL</host>
+                            </resource>
+                            <width>700</width>
+                            <height>100</height>
+                            <x>1</x>
+                            <y>6</y>
+                            <colspan>1</colspan>
+                            <rowspan>1</rowspan>
+                            <elements>0</elements>
+                            <valign>0</valign>
+                            <halign>0</halign>
+                            <dynamic>0</dynamic>
+                            <sort_triggers>0</sort_triggers>
+                            <url/>
+                            <application/>
+                            <max_columns>3</max_columns>
+                        </screen_item>
+                        <screen_item>
+                            <resourcetype>0</resourcetype>
+                            <style>0</style>
+                            <resource>
+                                <name>[PgSQL] Buffer cache</name>
+                                <host>DBS_Template DB PostgreSQL</host>
+                            </resource>
+                            <width>1200</width>
+                            <height>200</height>
+                            <x>0</x>
+                            <y>7</y>
+                            <colspan>2</colspan>
                             <rowspan>1</rowspan>
                             <elements>0</elements>
                             <valign>0</valign>
@@ -5206,6 +5400,51 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <item>
                         <host>DBS_Template DB PostgreSQL</host>
                         <key>pgsql.archive[{$DBS_PGSQL_INSTANCE},archived_count]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[PgSQL] Buffer cache</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>1A7C11</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.buffercache[{$DBS_PGSQL_INSTANCE},clear]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.buffercache[{$DBS_PGSQL_INSTANCE},dirty]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>3</sortorder>
+                    <color>2774A4</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.buffercache[{$DBS_PGSQL_INSTANCE},popular]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>4</sortorder>
+                    <color>A54F10</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.buffercache[{$DBS_PGSQL_INSTANCE},total]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>5</sortorder>
+                    <color>FC6EA3</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.buffercache[{$DBS_PGSQL_INSTANCE},used]</key>
                     </item>
                 </graph_item>
             </graph_items>
@@ -5429,6 +5668,29 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <item>
                         <host>DBS_Template DB PostgreSQL</host>
                         <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},waiting]</key>
+                    </item>
+                </graph_item>
+            </graph_items>
+        </graph>
+        <graph>
+            <name>[PgSQL] WAL size</name>
+            <graph_items>
+                <graph_item>
+                    <sortorder>1</sortorder>
+                    <color>1A7C11</color>
+                    <yaxisside>RIGHT</yaxisside>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.wal[{$DBS_PGSQL_INSTANCE},count]</key>
+                    </item>
+                </graph_item>
+                <graph_item>
+                    <sortorder>2</sortorder>
+                    <drawtype>GRADIENT_LINE</drawtype>
+                    <color>F63100</color>
+                    <item>
+                        <host>DBS_Template DB PostgreSQL</host>
+                        <key>pgsql.wal[{$DBS_PGSQL_INSTANCE},total_size]</key>
                     </item>
                 </graph_item>
             </graph_items>
