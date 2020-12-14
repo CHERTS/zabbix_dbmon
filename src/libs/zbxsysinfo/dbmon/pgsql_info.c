@@ -182,17 +182,17 @@ FROM( \
 SELECT row_to_json(T) \
 FROM( \
 	SELECT \
-	sum(CASE WHEN state = 'active' THEN 1 ELSE 0 END) AS active, \
-	sum(CASE WHEN state = 'idle' THEN 1 ELSE 0 END) AS idle, \
-	sum(CASE WHEN state = 'idle in transaction' THEN 1 ELSE 0 END) AS idle_in_transaction, \
-	sum(CASE WHEN state = 'idle in transaction (aborted)' THEN 1 ELSE 0 END) AS idle_in_transaction_aborted, \
-	sum(CASE WHEN state = 'fastpath function call' THEN 1 ELSE 0 END) AS fastpath_function_call, \
-	sum(CASE WHEN state = 'disabled' THEN 1 ELSE 0 END) AS disabled, \
+	coalesce(sum(CASE WHEN state = 'active' THEN 1 ELSE 0 END),0) AS active, \
+	coalesce(sum(CASE WHEN state = 'idle' THEN 1 ELSE 0 END),0) AS idle, \
+	coalesce(sum(CASE WHEN state = 'idle in transaction' THEN 1 ELSE 0 END),0) AS idle_in_transaction, \
+	coalesce(sum(CASE WHEN state = 'idle in transaction (aborted)' THEN 1 ELSE 0 END),0) AS idle_in_transaction_aborted, \
+	coalesce(sum(CASE WHEN state = 'fastpath function call' THEN 1 ELSE 0 END),0) AS fastpath_function_call, \
+	coalesce(sum(CASE WHEN state = 'disabled' THEN 1 ELSE 0 END),0) AS disabled, \
 	count(*) AS total, \
 	count(*) * 100 / (SELECT current_setting('max_connections')::int) AS total_pct, \
-	sum(%s) AS waiting, \
+	coalesce(sum(%s),0) AS waiting, \
 	(SELECT count(*) FROM pg_prepared_xacts) AS prepared \
-	FROM pg_stat_activity WHERE datid is not NULL) \
+	FROM pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() AND datid is not NULL) \
 T;"
 
 #define PGSQL_TRANSACTIONS_INFO_DBS "\
