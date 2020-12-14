@@ -204,15 +204,15 @@ FROM( \
 	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' THEN age(now(), xact_start) END)), 0) AS active, \
 	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' AND query ~ '(select|SELECT)' THEN age(now(), xact_start) END)), 0) AS active_select, \
 	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' AND query ~ '(update|UPDATE)' THEN age(now(), xact_start) END)), 0) AS active_update, \
-	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' AND query ~ '(insert|INSERT)' THEN age(now(), xact_start) END)), 0) AS active_insert, \
+	ABS(coalesce(extract(epoch FROM max(CASE WHEN state = 'active' AND query ~ '(insert|INSERT)' THEN age(now(), xact_start) END)), 0)) AS active_insert, \
 	coalesce(extract(epoch FROM max(CASE WHEN %s THEN age(now(), xact_start) END)), 0) AS waiting, \
 	coalesce(extract(epoch FROM max(CASE WHEN query ~ 'autovacuum' THEN age(now(), xact_start) END)), 0) AS autovacuum, \
 	(SELECT coalesce(extract(epoch FROM max(age(now(), prepared))), 0) FROM pg_prepared_xacts) AS prepared, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' GROUP BY state ORDER BY count(*) DESC), 0) as total_active, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(select|SELECT)' GROUP BY state ORDER BY count(*) DESC), 0) as active_select, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(update|UPDATE)' GROUP BY state ORDER BY count(*) DESC), 0) as active_update, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(insert|INSERT)' GROUP BY state ORDER BY count(*) DESC), 0) as active_insert, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ 'autovacuum' GROUP BY state ORDER BY count(*) DESC), 0) as active_autovacuum \
+	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active, \
+	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(select|SELECT)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as active_select, \
+	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(update|UPDATE)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as active_update, \
+	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(insert|INSERT)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as active_insert, \
+	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ 'autovacuum' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as active_autovacuum \
 	FROM pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() \
 ) T;"
 
