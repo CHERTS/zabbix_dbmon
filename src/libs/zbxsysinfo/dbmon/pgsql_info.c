@@ -208,11 +208,11 @@ FROM( \
 	coalesce(extract(epoch FROM max(CASE WHEN %s THEN age(now(), xact_start) END)), 0) AS waiting, \
 	coalesce(extract(epoch FROM max(CASE WHEN query ~ 'autovacuum' THEN age(now(), xact_start) END)), 0) AS autovacuum, \
 	(SELECT coalesce(extract(epoch FROM max(age(now(), prepared))), 0) FROM pg_prepared_xacts) AS prepared, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(select|SELECT)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as active_select, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(update|UPDATE)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as active_update, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(insert|INSERT)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as active_insert, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ 'autovacuum' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as active_autovacuum \
+	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active_cnt, \
+	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(select|SELECT)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active_select_cnt, \
+	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(update|UPDATE)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active_update_cnt, \
+	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(insert|INSERT)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active_insert_cnt, \
+	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ 'autovacuum' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active_autovacuum_cnt \
 	FROM pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() \
 ) T;"
 
