@@ -199,21 +199,24 @@ T;"
 SELECT row_to_json(T) \
 FROM( \
 	SELECT \
-	coalesce(extract(epoch FROM max(CASE WHEN state = 'idle' THEN age(now(), xact_start) END)), 0) AS idle, \
-	coalesce(extract(epoch FROM max(CASE WHEN state = 'idle in transaction' THEN age(now(), xact_start) END)), 0) AS idle_in_transaction, \
-	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' THEN age(now(), xact_start) END)), 0) AS active, \
-	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' AND query ~ '(select|SELECT)' THEN age(now(), xact_start) END)), 0) AS active_select, \
-	coalesce(extract(epoch FROM max(CASE WHEN state = 'active' AND query ~ '(update|UPDATE)' THEN age(now(), xact_start) END)), 0) AS active_update, \
+	ABS(coalesce(extract(epoch FROM max(CASE WHEN state = 'idle' THEN age(now(), xact_start) END)), 0)) AS idle, \
+	ABS(coalesce(extract(epoch FROM max(CASE WHEN state = 'idle in transaction' THEN age(now(), xact_start) END)), 0)) AS idle_in_transaction, \
+	ABS(coalesce(extract(epoch FROM max(CASE WHEN state = 'active' THEN age(now(), xact_start) END)), 0)) AS active, \
+	ABS(coalesce(extract(epoch FROM max(CASE WHEN state = 'active' AND query ~ '(select|SELECT)' THEN age(now(), xact_start) END)), 0)) AS active_select, \
+	ABS(coalesce(extract(epoch FROM max(CASE WHEN state = 'active' AND query ~ '(update|UPDATE)' THEN age(now(), xact_start) END)), 0)) AS active_update, \
 	ABS(coalesce(extract(epoch FROM max(CASE WHEN state = 'active' AND query ~ '(insert|INSERT)' THEN age(now(), xact_start) END)), 0)) AS active_insert, \
-	coalesce(extract(epoch FROM max(CASE WHEN %s THEN age(now(), xact_start) END)), 0) AS waiting, \
-	coalesce(extract(epoch FROM max(CASE WHEN query ~ 'autovacuum' THEN age(now(), xact_start) END)), 0) AS autovacuum, \
-	(SELECT coalesce(extract(epoch FROM max(age(now(), prepared))), 0) FROM pg_prepared_xacts) AS prepared, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active_cnt, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(select|SELECT)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active_select_cnt, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(update|UPDATE)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active_update_cnt, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ '(insert|INSERT)' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active_insert_cnt, \
-	coalesce((SELECT count(*) FROM pg_stat_activity WHERE state='active' AND query ~ 'autovacuum' AND pid <> pg_catalog.pg_backend_pid() GROUP BY state ORDER BY count(*) DESC), 0) as total_active_autovacuum_cnt \
-	FROM pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() \
+	ABS(coalesce(extract(epoch FROM max(CASE WHEN %s THEN age(now(), xact_start) END)), 0)) AS waiting, \
+	ABS(coalesce(extract(epoch FROM max(CASE WHEN query ~ 'autovacuum' THEN age(now(), xact_start) END)), 0)) AS autovacuum, \
+	(SELECT ABS(coalesce(extract(epoch FROM max(age(now(), prepared))), 0)) FROM pg_prepared_xacts) AS prepared, \
+	coalesce(sum(CASE WHEN state = 'idle' THEN 1 ELSE 0 END),0) AS total_idle_cnt, \
+	coalesce(sum(CASE WHEN state = 'idle in transaction' THEN 1 ELSE 0 END),0) AS total_idle_in_transaction_cnt, \
+	coalesce(sum(CASE WHEN state = 'active' THEN 1 ELSE 0 END),0) AS total_active_cnt, \
+	coalesce(sum(CASE WHEN state = 'active' AND query ~ '(select|SELECT)' THEN 1 ELSE 0 END),0) AS total_active_select_cnt, \
+	coalesce(sum(CASE WHEN state = 'active' AND query ~ '(update|UPDATE)' THEN 1 ELSE 0 END),0) AS total_active_update_cnt, \
+	coalesce(sum(CASE WHEN state = 'active' AND query ~ '(insert|INSERT)' THEN 1 ELSE 0 END),0) AS total_active_insert_cnt, \
+	coalesce(sum(CASE WHEN state = 'active' AND query ~ 'autovacuum' THEN 1 ELSE 0 END),0) AS total_active_autovacuum_cnt, \
+	(SELECT count(*) FROM pg_prepared_xacts) as total_prepared_cnt \
+	FROM pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() AND datid IS NOT NULL \
 ) T;"
 
 #define PGSQL_WAL_STAT_DBS "\
