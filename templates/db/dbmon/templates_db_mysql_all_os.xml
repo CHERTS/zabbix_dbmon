@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-10T11:09:38Z</date>
+    <date>2020-12-21T05:34:10Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -6661,7 +6661,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         <trigger>
             <expression>{DBS_Template DB MySQL:mysql.perf[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization].max(5m)}&lt;{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN} and {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&gt;24h</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&lt;24h</recovery_expression>
+            <recovery_expression>{DBS_Template DB MySQL:mysql.perf[{$DBS_MYSQL_INSTANCE},buffer_pool_utilization].max(5m)}&gt;{$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN} or {DBS_Template DB MySQL:mysql.status[{$DBS_MYSQL_INSTANCE},uptime].last()}&lt;24h</recovery_expression>
             <name>Buffer pool utilization is too low</name>
             <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_MYSQL_BUFFER_UTIL_MIN_PRC_WARN}%, alert started: {ITEM.VALUE1}</opdata>
             <priority>WARNING</priority>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-11-24T11:57:33Z</date>
+    <date>2020-12-21T05:35:16Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -684,6 +684,33 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <master_item>
                                 <key>oracle.asm.diskgroup.disk_total[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Number of disks in ASM disk group '{#DG_NAME}' has been changed</name>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
+                                    <priority>INFO</priority>
+                                    <description>Количество дисков в дисковой группе '{#DG_NAME}' изменилось.&#13;
+Проверьте что произошло (добавление или удаление) диска.&#13;
+Доведите информацию до эксперта.</description>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB Oracle ASM:oracle.instance.ping[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle ASM:oracle.instance.ping[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}].max(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Diskgroup</tag>
+                                            <value>{#DG_NAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] ASM diskgroup '{#DG_NAME}': Free size</name>
@@ -786,6 +813,33 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <master_item>
                                 <key>oracle.asm.diskgroup.info[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Number of offline disks in ASM disk group '{#DG_NAME}' has been changed</name>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
+                                    <priority>INFO</priority>
+                                    <description>Количество оффлайн дисков в дисковой группе '{#DG_NAME}' изменилось.&#13;
+Проверьте что произошло (переключение диска в online или offline).&#13;
+Доведите информацию до эксперта.</description>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB Oracle ASM:oracle.instance.ping[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle ASM:oracle.instance.ping[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}].max(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Diskgroup</tag>
+                                            <value>{#DG_NAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] ASM diskgroup '{#DG_NAME}': State</name>
@@ -820,6 +874,32 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <master_item>
                                 <key>oracle.asm.diskgroup.info[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>ASM disk group '{#DG_NAME}' state has been changed</name>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
+                                    <priority>WARNING</priority>
+                                    <description>Состояние дисковой группе '{#DG_NAME}' изменилось.&#13;
+Доведите информацию до эксперта.</description>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>Instance access failed</name>
+                                            <expression>{DBS_Template DB Oracle ASM:oracle.instance.ping[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}].max(#2)}=0</expression>
+                                            <recovery_expression>{DBS_Template DB Oracle ASM:oracle.instance.ping[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}].max(#2)}=1</recovery_expression>
+                                        </dependency>
+                                    </dependencies>
+                                    <tags>
+                                        <tag>
+                                            <tag>Diskgroup</tag>
+                                            <value>{#DG_NAME}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>[Oracle] ASM diskgroup '{#DG_NAME}': Total size</name>
@@ -908,6 +988,59 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_free_pct].last()}&lt;={$DBS_ORACLE_ASM_DG_FREESPACE_PCT_CRIT:&quot;{#DG_NAME}&quot;} and {DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_free].last()}&gt;=0 and {DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_total].last()}&gt;0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_free_pct].last()}&gt;{$DBS_ORACLE_ASM_DG_FREESPACE_PCT_CRIT:&quot;{#DG_NAME}&quot;}</recovery_expression>
+                            <name>Free space in ASM disk group '{#DG_NAME}'</name>
+                            <opdata>free: {ITEM.LASTVALUE2}, {ITEM.LASTVALUE1}, total: {ITEM.LASTVALUE3}, threshold: {$DBS_ORACLE_ASM_DG_FREESPACE_PCT_CRIT:&quot;{#DG_NAME}&quot;}%, alert started: {ITEM.VALUE2}, {ITEM.VALUE1}</opdata>
+                            <priority>HIGH</priority>
+                            <description>Свободное место в дисковой группе '{#DG_NAME}' менее {$DBS_ORACLE_ASM_DG_FREESPACE_PCT_CRIT:&quot;{#DG_NAME}&quot;}%&#13;
+Срочно доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB Oracle ASM:oracle.instance.ping[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle ASM:oracle.instance.ping[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}].max(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Diskgroup</tag>
+                                    <value>{#DG_NAME}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                        <trigger_prototype>
+                            <expression>{DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_free_pct].last()}&lt;={$DBS_ORACLE_ASM_DG_FREESPACE_PCT_WARN:&quot;{#DG_NAME}&quot;} and {DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_free].last()}&gt;=0 and {DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_total].last()}&gt;0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_free_pct].last()}&gt;{$DBS_ORACLE_ASM_DG_FREESPACE_PCT_WARN:&quot;{#DG_NAME}&quot;}</recovery_expression>
+                            <name>Free space in ASM disk group '{#DG_NAME}'</name>
+                            <opdata>free: {ITEM.LASTVALUE2}, {ITEM.LASTVALUE1}, total: {ITEM.LASTVALUE3}, threshold: {$DBS_ORACLE_ASM_DG_FREESPACE_PCT_WARN:&quot;{#DG_NAME}&quot;}%, alert started: {ITEM.VALUE2}, {ITEM.VALUE1}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Свободное место в дисковой группе '{#DG_NAME}' менее {$DBS_ORACLE_ASM_DG_FREESPACE_PCT_WARN:&quot;{#DG_NAME}&quot;}%&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Free space in ASM disk group '{#DG_NAME}'</name>
+                                    <expression>{DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_free_pct].last()}&lt;={$DBS_ORACLE_ASM_DG_FREESPACE_PCT_CRIT:&quot;{#DG_NAME}&quot;} and {DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_free].last()}&gt;=0 and {DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_total].last()}&gt;0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle ASM:oracle.asm.diskgroup[{#DG_NAME},dg_free_pct].last()}&gt;{$DBS_ORACLE_ASM_DG_FREESPACE_PCT_CRIT:&quot;{#DG_NAME}&quot;}</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB Oracle ASM:oracle.instance.ping[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle ASM:oracle.instance.ping[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}].max(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Diskgroup</tag>
+                                    <value>{#DG_NAME}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                    </trigger_prototypes>
                     <master_item>
                         <key>oracle.asm.diskgroup.info[{$DBS_ORACLE_ASM_CONN_STRING},{$DBS_ORACLE_ASM_INSTANCE},{$DBS_ORACLE_ASM_MODE}]</key>
                     </master_item>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-12-13T12:06:08Z</date>
+    <date>2020-12-21T05:34:16Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -175,7 +175,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.archive.count[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>5m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect metrics by pg_stat_archiver</description>
@@ -190,7 +190,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.archive.size[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>5m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect metrics by archive size status</description>
@@ -273,12 +273,39 @@ Version: 1.0</description>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>10m</params>
+                            <params>2m</params>
                         </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.archive.count[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{diff()}=1</expression>
+                            <name>Failed attempts for archiving too high</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, alert started: {ITEM.VALUE1}</opdata>
+                            <priority>HIGH</priority>
+                            <description>Сбой при архивации журналов WAL.&#13;
+Срочно доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Size of WAL files that ready to archive</name>
@@ -358,7 +385,7 @@ See pg_stat_activity for details.&#13;
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get exclusive backup stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.backup.exclusive[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect metrics by exclusive backup stat.</description>
@@ -446,7 +473,7 @@ See pg_stat_activity for details.&#13;
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.bgwriter[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>5m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect pg_stat_bgwriter.&#13;
@@ -746,7 +773,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get buffercache stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.buffercache[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <delay>5m</delay>
+                    <delay>30m</delay>
                     <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
@@ -1038,7 +1065,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get connections stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect all metrics from pg_stat_activity&#13;
@@ -1054,7 +1081,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.db.info[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>10m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Get all database info</description>
@@ -1068,7 +1095,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get database locks</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.db.locks[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect all metrics from pg_locks per database&#13;
@@ -1083,7 +1110,7 @@ See more info: https://www.postgresql.org/docs/current/explicit-locking.html#LOC
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get database stat sum</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect pg_stat_database.&#13;
@@ -1098,7 +1125,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get database stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect all metrics from pg_stat_database per database&#13;
@@ -2004,6 +2031,90 @@ See pg_stat_activity for details.&#13;
                     </triggers>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max insert transaction time in 'active' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active_insert]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Current max insert transaction time in 'active' state (second).&#13;
+See pg_stat_activity for details.&#13;
+&#13;
+Текущее максимальное время ожидания insert транзакции в состоянии 'active' (в секундах).&#13;
+Смотрите представления pg_stat_activity для детализации.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.active_insert</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max select transaction time in 'active' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active_select]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Current max select transaction time in 'active' state (second).&#13;
+See pg_stat_activity for details.&#13;
+&#13;
+Текущее максимальное время ожидания select транзакции в состоянии 'active' (в секундах).&#13;
+Смотрите представления pg_stat_activity для детализации.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.active_select</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max update transaction time in 'active' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active_update]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Current max update transaction time in 'active' state (second).&#13;
+See pg_stat_activity for details.&#13;
+&#13;
+Текущее максимальное время ожидания update транзакции в состоянии 'active' (в секундах).&#13;
+Смотрите представления pg_stat_activity для детализации.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.active_update</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max transaction time in 'idle' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle]</key>
@@ -2132,6 +2243,94 @@ See pg_prepared_xacts for details.&#13;
                         <step>
                             <type>JSONPATH</type>
                             <params>$.prepared</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Number of transaction in 'active' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_active_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Общее количество транзакций в состоянии 'active'.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_active_cnt</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Number of insert transaction in 'active' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_active_insert_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Количество insert транзакций в состоянии 'active'.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_active_insert_cnt</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Number of select transaction in 'active' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_active_select_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Количество select транзакций в состоянии 'active'.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_active_select_cnt</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Number of update transaction in 'active' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_active_update_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Количество update транзакций в состоянии 'active'.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_active_update_cnt</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -2396,7 +2595,7 @@ See pg_stat_activity for details.&#13;
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.prepared.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>5m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Collect metrics by prepared transactions.</description>
@@ -2508,7 +2707,7 @@ See pg_stat_activity for details.&#13;
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get replication stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.replication.info[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Get replication stat (client_addr, usename, application_name, lag and etc)</description>
@@ -2621,7 +2820,7 @@ See pg_stat_activity for details.&#13;
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.replication.slots[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>2m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <description>Get replication slots stat</description>
@@ -2652,7 +2851,7 @@ See pg_stat_activity for details.&#13;
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get server info</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.server.info[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -4885,6 +5084,14 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>0</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_PGSQL_FAIL_WAL_ARCHIVING_CRIT}</macro>
+                    <value>50</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_FAIL_WAL_ARCHIVING_WARN}</macro>
+                    <value>20</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}</macro>
                     <value>5</value>
                     <description>Max running transaction in 'idle in transaction' state</description>
@@ -5262,7 +5469,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.replication.role[{$DBS_PGSQL_CONN_STRING}].last()}=0 or {DBS_Template DB PostgreSQL:pgsql.replication.status[{$DBS_PGSQL_CONN_STRING}].last()}&lt;&gt;0</recovery_expression>
             <name>Streaming replication is broken</name>
             <opdata>current status: {ITEM.LASTVALUE2}, role: {ITEM.LASTVALUE1}, alert started: {ITEM.VALUE2}</opdata>
-            <priority>AVERAGE</priority>
+            <priority>HIGH</priority>
             <description>Аларм означает, что у текущего подчиненного сервера (standby) нарушена работа потоковой репликации (репликация остановлена или прекращена в результате ошибки).&#13;
 Проверьте доступность и работоспособность главного сервера (master), далее проверьте работоспособность процесса потоковой репликации у текущего проблемного сервера, доведите информацию до заказчика и эксперта.</description>
             <dependencies>
