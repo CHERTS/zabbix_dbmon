@@ -24,9 +24,13 @@
 #include "zbxdbmon.h"
 #include "oracle_info.h"
 #include "dbmon_common.h"
+#include "dbmon_config.h"
+#include "dbmon_params.h"
 
 #if defined(HAVE_DBMON)
 #if defined(HAVE_ORACLE)
+
+extern int init_dbmon_config_done;
 
 extern char	*CONFIG_ORACLE_USER;
 extern char	*CONFIG_ORACLE_PASSWORD;
@@ -856,6 +860,11 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.asm.diskgroup.total",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.asm.disk.info",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.asm.disk.total",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.query.nojson",						CF_HAVEPARAMS,		ORACLE_QUERY,		NULL},
+	{"oracle.query.onerow",						CF_HAVEPARAMS,		ORACLE_QUERY,		NULL},
+	{"oracle.query.twocoll",					CF_HAVEPARAMS,		ORACLE_QUERY,		NULL},
+	{"oracle.query.multirow",					CF_HAVEPARAMS,		ORACLE_QUERY,		NULL},
+	{"oracle.query.discovery",					CF_HAVEPARAMS,		ORACLE_QUERY,		NULL},
 	{NULL}
 };
 
@@ -2384,6 +2393,121 @@ static int	oracle_ts_info(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE t
 int	ORACLE_TS_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
 {
 	return zbx_execute_dbmon_threaded_metric(oracle_ts_info, request, result);
+}
+
+/*
+ * Custom key
+ * oracle.query.nojson[]
+ * oracle.query.onerow[]
+ * oracle.query.twocoll[]
+ * oracle.query.multirow[]
+ * oracle.query.discovery[]
+ *
+ * Returns the value of the specified SQL query.
+ *
+ * Parameters:
+ *   0:  oracle connections string
+ *   1:  oracle instance name string
+ *   2:  oracle connection mode string
+ *   3:  oracle database name string
+ *   4:  scalar SQL query to execute
+ *   n:  query parameters
+ *
+ * Returns: string
+ *
+ */
+int	ORACLE_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
+{
+	int					ret = SYSINFO_RET_FAIL;
+	const char			*query_key = NULL, *query = NULL;
+	zbx_db_result_type	query_result_type = ZBX_DB_RES_TYPE_NOJSON;
+	int					i = 0;
+	DBMONparams			params = NULL;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
+
+	if (5 < request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (5 > request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too few parameters."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (0 == strcmp(request->key, "oracle.query.nojson"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_NOJSON;
+	}
+	else if (0 == strcmp(request->key, "oracle.query.onerow"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_ONEROW;
+	}
+	else if (0 == strcmp(request->key, "oracle.query.twocoll"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_TWOCOLL;
+	}
+	else if (0 == strcmp(request->key, "oracle.query.multirow"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_MULTIROW;
+	}
+	else if (0 == strcmp(request->key, "oracle.query.discovery"))
+	{
+		query_result_type = ZBX_DB_RES_TYPE_DISCOVERY;
+	}
+	else
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Unknown request key."));
+		ret = SYSINFO_RET_FAIL;
+		goto out;
+	}
+
+	// Get the user SQL query parameter
+	query_key = get_rparam(request, 4);
+
+	if (strisnull(query_key))
+	{
+		dbmon_log_result(result, LOG_LEVEL_ERR, "No query or query-key specified.");
+		goto out;
+	}
+
+	if (0 != init_dbmon_config_done)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Error init dbmon sql config file."));
+		ret = SYSINFO_RET_FAIL;
+		goto out;
+	}
+
+	// Check if query comes from configs
+	query = get_query_by_name(query_key);
+
+	if (NULL == query)
+	{
+		dbmon_log_result(result, LOG_LEVEL_DEBUG, "No query found for '%s'.", query_key);
+		goto out;
+		//query = query_key;
+	}
+
+	// parse user params
+	dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query.", request->nparam - 5);
+
+	for (i = 5; i < request->nparam; i++)
+	{
+		params = dbmon_param_append(params, get_rparam(request, i));
+	}
+
+	dbmon_log_result(result, LOG_LEVEL_TRACE, "Execute query: %s", query);
+
+	ret = oracle_make_result(request, result, query, query_result_type, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
+
+	dbmon_param_free(params);
+out:
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
+
+	return ret;
 }
 #endif
 #endif

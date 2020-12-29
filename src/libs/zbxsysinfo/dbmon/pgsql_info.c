@@ -1648,7 +1648,7 @@ int	PGSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	}
 
 	// parse user params
-	dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query.", request->nparam - 3);
+	dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query.", request->nparam - 2);
 
 	for (i = 2; i < request->nparam; i++)
 	{
