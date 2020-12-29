@@ -38,13 +38,6 @@ ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
 -rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd
 ~~~~
 
-### 4. После успешной сборки на шаге 3 можно использовать бинарные файлы zabbix, проверим факт наличия файла агента:
-
-~~~~
-ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
--rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd
-~~~~
-
 ### 5. Скопировать бинарники агента в /sbin
 
 ~~~~
