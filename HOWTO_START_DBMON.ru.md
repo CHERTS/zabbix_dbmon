@@ -1,8 +1,4 @@
-# Как собрать zabbix-agent с поддержкой мониторинга СУБД из данного репозитария и начать нативный мониторинг СУБД с помощью zabbix-agent
-
-[Сборка zabbix-agent под разные ОС Linux с поддержкой MySQL и PostgreSQL](BUILD_DBMON.ru.md)
-
-[Сборка zabbix-agent под Oracle Linux (RedHat) с поддержкой СУБД Oracle](BUILD_DBMON_ORACLE.ru.md)
+# Инструкция по быстрому старту нативного мониторинга СУБД с помощью zabbix-agent-dbmon
 
 После сборки и установки агента Вам необходимо сделать:
 

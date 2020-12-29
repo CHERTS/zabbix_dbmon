@@ -1,4 +1,4 @@
-# Как собрать Zabbix-agent с поддержкой мониторинга СУБД из данного репозитария
+# Как собрать zabbix-agent-dbmon с поддержкой мониторинга MySQL (MariaDB) + PostgreSQL
 
 [In English / По-английски](BUILD.md)
 

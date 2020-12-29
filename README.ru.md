@@ -5,5 +5,10 @@
 
 [In English / По-английски](README.md)
 
-[Инструкция по быстрому старту нативного мониторинга СУБД с помощью zabbix-agent](HOWTO_START_DBMON.ru.md)
+[Новая установка из пакетов для RedHat/CentOS/OracleLinux](RHELINSTALL.ru.md)
 
+[Новая установка из пакетов для Ubuntu](UBUNTUINSTALL.ru.md)
+
+[Сборка zabbix-agent-dbmon из исходников под разные ОС Linux с поддержкой MySQL и PostgreSQL](BUILD_DBMON.ru.md)
+
+[Сборка zabbix-agent-dbmon из исходников под Oracle Linux (RedHat) с поддержкой СУБД Oracle](BUILD_DBMON_ORACLE.ru.md)

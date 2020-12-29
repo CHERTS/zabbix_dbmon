@@ -1,11 +1,11 @@
-# Как собрать Zabbix-agent с поддержкой мониторинга MySQL (MariaDB) + PostgreSQL + Oracle 18c из данного репозитария
+# Как собрать zabbix-agent-dbmon с поддержкой мониторинга Oracle 18c
 
-[Сборка на Oracle Linux 7 с поддержкой MySQL (MariaDB) + PostgreSQL + Oracle 18c](#oracle-linux-7)
+[Сборка на Oracle Linux 7 с поддержкой Oracle 18c](#oracle-linux-7)
 
-[Сборка на Red Hat Enterprise Linux 8 с поддержкой MySQL (MariaDB) + PostgreSQL + Oracle 18c](#red-hat-enterprise-linux-8)
+[Сборка на Red Hat Enterprise Linux 8 с поддержкой Oracle 18c](#red-hat-enterprise-linux-8)
 
 # Oracle Linux 7
-## Сборка на Oracle Linux 7 с поддержкой MySQL (MariaDB) + PostgreSQL + Oracle 18c
+## Сборка на Oracle Linux 7 с поддержкой Oracle 18c
 
 ### 1. Для подготовки к сборки на Oracle Linux 7 нужно установить дополнительные пакеты:
 
@@ -14,8 +14,6 @@ yum group install "Development Tools"
 yum-config-manager --enable ol7_optional_latest
 yum-config-manager --enable ol7_developer
 yum install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre-devel libssh2-devel libconfig-devel
-yum install -y MariaDB-client MariaDB-devel MariaDB-shared
-yum install -y postgresql-devel postgresql-libs
 ~~~~
 
 ### 2. Скачать и распаковать свежую версию исходного кода:
@@ -29,7 +27,7 @@ cd zabbix-5.0.5
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL + PostgreSQL + Oracle 18c:
 
 ~~~~
-./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --enable-dbmon-oracle --with-oracle --with-oracle-lib=/u01/app/oracle/18c/dbhome_1/lib --with-oracle-include=/u01/app/oracle/18c/dbhome_1/rdbms/public --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-oracle --with-oracle --with-oracle-lib=/u01/app/oracle/18c/dbhome_1/lib --with-oracle-include=/u01/app/oracle/18c/dbhome_1/rdbms/public --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
 make
 ~~~~
 
@@ -54,7 +52,6 @@ cp src/zabbix_agent/zabbix_agentd /sbin
 ~~~~
 dnf group install "Development Tools"
 dnf install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre-devel libconfig-devel
-dnf install -y mariadb-devel postgresql-devel
 ~~~~
 
 ### 2. Скачать и распаковать свежую версию исходного кода:
@@ -68,7 +65,7 @@ cd zabbix-5.0.5
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL + PostgreSQL + Oracle 18c:
 
 ~~~~
-./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --enable-dbmon-oracle --with-oracle --with-oracle-lib=/u01/app/oracle/18c/dbhome_1/lib --with-oracle-include=/u01/app/oracle/18c/dbhome_1/rdbms/public --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-oracle --with-oracle --with-oracle-lib=/u01/app/oracle/18c/dbhome_1/lib --with-oracle-include=/u01/app/oracle/18c/dbhome_1/rdbms/public --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
 make
 ~~~~
 
@@ -96,3 +93,5 @@ LD_LIBRARY_PATH=/u01/app/oracle/18c/dbhome_1/lib
 systemctl stop zabbix-agent
 cp src/zabbix_agent/zabbix_agentd /sbin
 ~~~~
+
+Далее прочитайте [Инструкция по быстрому старту нативного мониторинга СУБД с помощью zabbix-agent](HOWTO_START_DBMON.ru.md)
