@@ -24,7 +24,7 @@ tar -zxf zabbix-5.0.5.tar.gz
 cd zabbix-5.0.5
 ~~~~
 
-### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL + PostgreSQL + Oracle 18c:
+### 3. Сборка zabbix-agent с поддержкой Oracle 18c:
 
 ~~~~
 ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-oracle --with-oracle --with-oracle-lib=/u01/app/oracle/18c/dbhome_1/lib --with-oracle-include=/u01/app/oracle/18c/dbhome_1/rdbms/public --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
@@ -38,11 +38,29 @@ ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
 -rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd
 ~~~~
 
-### 5. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
+### 4. После успешной сборки на шаге 3 можно использовать бинарные файлы zabbix, проверим факт наличия файла агента:
+
 ~~~~
-systemctl stop zabbix-agent
-cp src/zabbix_agent/zabbix_agentd /sbin
+ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
+-rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd
 ~~~~
+
+### 5. Скопировать бинарники агента в /sbin
+
+~~~~
+cp src/zabbix_agent/zabbix_agentd /sbin/zabbix_agentd_dbmon
+~~~~
+
+### 6. Скопировать файл конфигурации и создать вспомогательные каталоги
+
+~~~~
+mkdir -p /etc/zabbix/zabbix_agentd_dbmon.d
+cp conf/zabbix_agentd_dbmon.conf /etc/zabbix
+cp conf/zabbix_agentd_dbmon/userparameter_dbmon.conf /etc/zabbix/zabbix_agentd_dbmon.d
+cp conf/zabbix_agentd_dbmon/dbmon.sh /etc/zabbix/zabbix_agentd_dbmon.d
+~~~~
+
+Далее прочитайте [Инструкция по быстрому старту нативного мониторинга СУБД с помощью zabbix-agent](HOWTO_START_DBMON.ru.md)
 
 # Red Hat Enterprise Linux 8
 ## Сборка на Red Hat Enterprise Linux 8 с поддержкой MySQL (MariaDB) + PostgreSQL + Oracle 18c
@@ -62,7 +80,7 @@ tar -zxf zabbix-5.0.5.tar.gz
 cd zabbix-5.0.5
 ~~~~
 
-### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL + PostgreSQL + Oracle 18c:
+### 3. Сборка zabbix-agent с поддержкой Oracle 18c:
 
 ~~~~
 ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-oracle --with-oracle --with-oracle-lib=/u01/app/oracle/18c/dbhome_1/lib --with-oracle-include=/u01/app/oracle/18c/dbhome_1/rdbms/public --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
@@ -76,22 +94,19 @@ ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
 -rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd
 ~~~~
 
-### 5. Создание файла с переменными среды:
-
-Создайте файл /etc/sysconfig/zabbix-agent-dbmon со следующим содержимым:
+### 5. Скопировать бинарники агента в /sbin
 
 ~~~~
-ORACLE_HOME=/u01/app/oracle/18c/dbhome_1
-ORACLE_SID=orcl
-ORACLE_BASE=/u01/orabase
-PATH=/u01/app/oracle/18c/dbhome_1/bin:/sbin:/bin:/usr/sbin:/usr/bin
-LD_LIBRARY_PATH=/u01/app/oracle/18c/dbhome_1/lib
+cp src/zabbix_agent/zabbix_agentd /sbin/zabbix_agentd_dbmon
 ~~~~
 
-### 6. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
+### 6. Скопировать файл конфигурации и создать вспомогательные каталоги
+
 ~~~~
-systemctl stop zabbix-agent
-cp src/zabbix_agent/zabbix_agentd /sbin
+mkdir -p /etc/zabbix/zabbix_agentd_dbmon.d
+cp conf/zabbix_agentd_dbmon.conf /etc/zabbix
+cp conf/zabbix_agentd_dbmon/userparameter_dbmon.conf /etc/zabbix/zabbix_agentd_dbmon.d
+cp conf/zabbix_agentd_dbmon/dbmon.sh /etc/zabbix/zabbix_agentd_dbmon.d
 ~~~~
 
 Далее прочитайте [Инструкция по быстрому старту нативного мониторинга СУБД с помощью zabbix-agent](HOWTO_START_DBMON.ru.md)
