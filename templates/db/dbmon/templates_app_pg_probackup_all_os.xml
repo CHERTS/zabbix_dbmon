@@ -1,0 +1,1428 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2021-01-13T19:28:47Z</date>
+    <groups>
+        <group>
+            <name>DBS.Templates/Modules</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>DBS_Template DB PgSQL pg_probackup</template>
+            <name>DB PgSQL Backup (Active, DBMON, pg_probackup, for all OS)</name>
+            <groups>
+                <group>
+                    <name>DBS.Templates/Modules</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>PgSQL: PgProBackup</name>
+                </application>
+                <application>
+                    <name>stubs</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Backup mode</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},backup-mode]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Режим резервного копирования, может быть следующим:&#13;
+FULL - создаётся полная резервная копия, содержащая все файлы данных кластера, необходимые для его восстановления.&#13;
+DELTA - считываются все файлы данных в каталоге данных и создаётся инкрементальная копия для страниц, изменённых со времени предыдущего копирования.&#13;
+PAGE - создаётся инкрементальная резервная копия с файлами WAL, записанными после предыдущей полной или инкрементальной копии. Из файлов данных при этом считываются только изменённые страницы.&#13;
+PTRACK - создаётся инкрементальная резервная копия со страницами, изменения в которых отслеживались на лету.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (PgProBackup Mode)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;backup-mode&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;FULL&quot;:
+    return 0;
+    break;
+  case &quot;PAGE&quot;:
+    return 1;
+    break;
+  case &quot;DELTA&quot;:
+    return 2;
+    break;
+  case &quot;PTRACK&quot;:
+    return 3;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Checksum version</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},checksum-version]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Признак включения параметра data_checksums в исходном кластере PostgreSQL.&#13;
+Возможные значения: 1, 0.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;checksum-version&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Compress alg</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},compress-alg]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Алгоритм сжатия, используемый при получении резервной копии.&#13;
+Возможные значения: zlib, pglz и none (сжатие не производилось).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (PgProBackup CompressAlg)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;compress-alg&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;none&quot;:
+    return 0;
+    break;
+  case &quot;zlib&quot;:
+    return 1;
+    break;
+  case &quot;pglz&quot;:
+    return 2;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Compress level</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},compress-level]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Уровень сжатия, применяемый в процессе резервного копирования.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;compress-level&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Data bytes</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},data-bytes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;data-bytes&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Duration</name>
+                    <type>CALCULATED</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},duration]</key>
+                    <delay>30m</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <params>last(&quot;pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},end-time]&quot;)-last(&quot;pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},start-time]&quot;)</params>
+                    <description>Длительность полного бэкапа.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: End time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},end-time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>unixtime</units>
+                    <description>Время окончания резервного копирования.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;end-time&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>Date.prototype.setTimezoneOffset = function(minutes) { 
+	var _minutes;
+	if (this.timezoneOffset == _minutes) {
+		_minutes = this.getTimezoneOffset();
+	} else {
+		_minutes = this.timezoneOffset;
+	}
+	if (arguments.length) {
+		this.timezoneOffset = minutes;
+	} else {
+		this.timezoneOffset = minutes = this.getTimezoneOffset();
+	}
+	return this.setTime(this.getTime() + (_minutes - minutes) * 6e4);
+};
+
+function getTimeStamp(input) {
+	var no_tz_parts = input.trim().substring(0, 19);
+	var tz_delim = input.trim().substring(19,20);
+	var tz_min = input.trim().substring(20)*60;
+	var parts = no_tz_parts.trim().split(' ');
+	var date = parts[0].split('-');
+	var time = (parts[1] ? parts[1] : '00:00:00').split(':');
+	// NOTE:: Month: 0 = January - 11 = December.
+	var d = new Date(date[0],date[1]-1,date[2],time[0],time[1],time[2]);
+	// NOTE:: Uncomment line if use TZ
+	//d.setTimezoneOffset(tz_delim+tz_min);
+	return d.getTime() / 1000;
+}
+
+return getTimeStamp(value);</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: From replica</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},from-replica]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Признак того, что копия была сделана с ведомого сервера.&#13;
+Возможные значения: 1, 0.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (PgProBackup FromReplica)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;from-replica&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;false&quot;:
+    return 0;
+    break;
+  case &quot;true&quot;:
+    return 1;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Id</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},id]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Идентификатор резервной копии.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;id&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Pgdata bytes</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},pgdata-bytes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Размер файлов данных Postgres Pro на момент копирования. Эффективность инкрементального метода копирования можно оценить, сопоставив объём pgdata-bytes (байтов в PGDATA) с uncompressed-bytes (байтов несжатых данных).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;pgdata-bytes&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Program version</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},program-version]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Полная версия программы pg_probackup, которая создала эту копию.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;program-version&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Recovery time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},recovery-time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>unixtime</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;recovery-time&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>Date.prototype.setTimezoneOffset = function(minutes) { 
+	var _minutes;
+	if (this.timezoneOffset == _minutes) {
+		_minutes = this.getTimezoneOffset();
+	} else {
+		_minutes = this.timezoneOffset;
+	}
+	if (arguments.length) {
+		this.timezoneOffset = minutes;
+	} else {
+		this.timezoneOffset = minutes = this.getTimezoneOffset();
+	}
+	return this.setTime(this.getTime() + (_minutes - minutes) * 6e4);
+};
+
+function getTimeStamp(input) {
+	var no_tz_parts = input.trim().substring(0, 19);
+	var tz_delim = input.trim().substring(19,20);
+	var tz_min = input.trim().substring(20)*60;
+	var parts = no_tz_parts.trim().split(' ');
+	var date = parts[0].split('-');
+	var time = (parts[1] ? parts[1] : '00:00:00').split(':');
+	// NOTE:: Month: 0 = January - 11 = December.
+	var d = new Date(date[0],date[1]-1,date[2],time[0],time[1],time[2]);
+	// NOTE:: Uncomment line if use TZ
+	//d.setTimezoneOffset(tz_delim+tz_min);
+	return d.getTime() / 1000;
+}
+
+return getTimeStamp(value);</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Recovery XID</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},recovery-xid]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Идентификатор транзакции, соответствующей моменту окончания резервного копирования.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;recovery-xid&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Server version</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},server-version]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;server-version&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Start time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},start-time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>unixtime</units>
+                    <description>Время начала резервного копирования.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;start-time&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>Date.prototype.setTimezoneOffset = function(minutes) { 
+	var _minutes;
+	if (this.timezoneOffset == _minutes) {
+		_minutes = this.getTimezoneOffset();
+	} else {
+		_minutes = this.timezoneOffset;
+	}
+	if (arguments.length) {
+		this.timezoneOffset = minutes;
+	} else {
+		this.timezoneOffset = minutes = this.getTimezoneOffset();
+	}
+	return this.setTime(this.getTime() + (_minutes - minutes) * 6e4);
+};
+
+function getTimeStamp(input) {
+	var no_tz_parts = input.trim().substring(0, 19);
+	var tz_delim = input.trim().substring(19,20);
+	var tz_min = input.trim().substring(20)*60;
+	var parts = no_tz_parts.trim().split(' ');
+	var date = parts[0].split('-');
+	var time = (parts[1] ? parts[1] : '00:00:00').split(':');
+	// NOTE:: Month: 0 = January - 11 = December.
+	var d = new Date(date[0],date[1]-1,date[2],time[0],time[1],time[2]);
+	// NOTE:: Uncomment line if use TZ
+	//d.setTimezoneOffset(tz_delim+tz_min);
+	return d.getTime() / 1000;
+}
+
+return getTimeStamp(value);</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Status</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},status]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Статус резервного копирования, может быть:&#13;
+OK - успешное окончание создания резервной копии;&#13;
+ERR - ошибка при создании резервной копии, смотрите лог файл;</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (PgProBackup Status)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;status&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;OK&quot;:
+    return 0;
+    break;
+  default:
+    return 1;
+    break;
+}</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Uncompressed bytes</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},uncompressed-bytes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Размер файлов данных до добавления заголовков страниц и сжатия. В случае использования сжатия оценить его эффективность можно, сопоставив объём uncompressed-bytes (байтов несжатых данных) с data-bytes (байтов данных).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;uncompressed-bytes&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: WAL bytes</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},wal-bytes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;wal-bytes&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: WAL</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},wal]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Режим архивирования WAL, может быть следующим: STREAM и ARCHIVE.&#13;
+Копии, созданные в режиме STREAM содержат внутри себя все необходимые для восстановления до консистентного состояния WAL файлы.&#13;
+Режим ARCHIVE подразумевает, что мы настроили архивирование WAL, и тогда необходимые WAL файлы будут лежать по известному pg_probackup пути.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (PgProBackup WAL mode)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;wal&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;STREAM&quot;:
+    return 0;
+    break;
+  case &quot;ARCHIVE&quot;:
+    return 1;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Backup mode</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},backup-mode]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Режим резервного копирования, может быть следующим:&#13;
+FULL - создаётся полная резервная копия, содержащая все файлы данных кластера, необходимые для его восстановления.&#13;
+DELTA - считываются все файлы данных в каталоге данных и создаётся инкрементальная копия для страниц, изменённых со времени предыдущего копирования.&#13;
+PAGE - создаётся инкрементальная резервная копия с файлами WAL, записанными после предыдущей полной или инкрементальной копии. Из файлов данных при этом считываются только изменённые страницы.&#13;
+PTRACK - создаётся инкрементальная резервная копия со страницами, изменения в которых отслеживались на лету.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (PgProBackup Mode)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;backup-mode&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;FULL&quot;:
+    return 0;
+    break;
+  case &quot;PAGE&quot;:
+    return 1;
+    break;
+  case &quot;DELTA&quot;:
+    return 2;
+    break;
+  case &quot;PTRACK&quot;:
+    return 3;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Checksum version</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},checksum-version]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Признак включения параметра data_checksums в исходном кластере PostgreSQL.&#13;
+Возможные значения: 1, 0.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;checksum-version&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Compress alg</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},compress-alg]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Алгоритм сжатия, используемый при получении резервной копии.&#13;
+Возможные значения: zlib, pglz и none (сжатие не производилось).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (PgProBackup CompressAlg)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;compress-alg&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;none&quot;:
+    return 0;
+    break;
+  case &quot;zlib&quot;:
+    return 1;
+    break;
+  case &quot;pglz&quot;:
+    return 2;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Compress level</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},compress-level]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Уровень сжатия, применяемый в процессе резервного копирования.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;compress-level&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Data bytes</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},data-bytes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;data-bytes&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Duration</name>
+                    <type>CALCULATED</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},duration]</key>
+                    <delay>30m</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <params>last(&quot;pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},end-time]&quot;)-last(&quot;pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},start-time]&quot;)</params>
+                    <description>Длительность инкрементального бэкапа.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: End time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},end-time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>unixtime</units>
+                    <description>Время окончания резервного копирования.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;end-time&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>Date.prototype.setTimezoneOffset = function(minutes) { 
+	var _minutes;
+	if (this.timezoneOffset == _minutes) {
+		_minutes = this.getTimezoneOffset();
+	} else {
+		_minutes = this.timezoneOffset;
+	}
+	if (arguments.length) {
+		this.timezoneOffset = minutes;
+	} else {
+		this.timezoneOffset = minutes = this.getTimezoneOffset();
+	}
+	return this.setTime(this.getTime() + (_minutes - minutes) * 6e4);
+};
+
+function getTimeStamp(input) {
+	var no_tz_parts = input.trim().substring(0, 19);
+	var tz_delim = input.trim().substring(19,20);
+	var tz_min = input.trim().substring(20)*60;
+	var parts = no_tz_parts.trim().split(' ');
+	var date = parts[0].split('-');
+	var time = (parts[1] ? parts[1] : '00:00:00').split(':');
+	// NOTE:: Month: 0 = January - 11 = December.
+	var d = new Date(date[0],date[1]-1,date[2],time[0],time[1],time[2]);
+	// NOTE:: Uncomment line if use TZ
+	//d.setTimezoneOffset(tz_delim+tz_min);
+	return d.getTime() / 1000;
+}
+
+return getTimeStamp(value);</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: From replica</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},from-replica]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Признак того, что копия была сделана с ведомого сервера.&#13;
+Возможные значения: 1, 0.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (PgProBackup FromReplica)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;from-replica&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;false&quot;:
+    return 0;
+    break;
+  case &quot;true&quot;:
+    return 1;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Id</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},id]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Идентификатор резервной копии.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;id&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Parent backup id</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},parent-backup-id]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Идентификатор родительской копии. Определён только для инкрементальных копий.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;parent-backup-id&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Pgdata bytes</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},pgdata-bytes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Размер файлов данных Postgres Pro на момент копирования. Эффективность инкрементального метода копирования можно оценить, сопоставив объём pgdata-bytes (байтов в PGDATA) с uncompressed-bytes (байтов несжатых данных).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;pgdata-bytes&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Program version</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},program-version]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Полная версия программы pg_probackup, которая создала эту копию.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;program-version&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Recovery time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},recovery-time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>unixtime</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;recovery-time&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>Date.prototype.setTimezoneOffset = function(minutes) { 
+	var _minutes;
+	if (this.timezoneOffset == _minutes) {
+		_minutes = this.getTimezoneOffset();
+	} else {
+		_minutes = this.timezoneOffset;
+	}
+	if (arguments.length) {
+		this.timezoneOffset = minutes;
+	} else {
+		this.timezoneOffset = minutes = this.getTimezoneOffset();
+	}
+	return this.setTime(this.getTime() + (_minutes - minutes) * 6e4);
+};
+
+function getTimeStamp(input) {
+	var no_tz_parts = input.trim().substring(0, 19);
+	var tz_delim = input.trim().substring(19,20);
+	var tz_min = input.trim().substring(20)*60;
+	var parts = no_tz_parts.trim().split(' ');
+	var date = parts[0].split('-');
+	var time = (parts[1] ? parts[1] : '00:00:00').split(':');
+	// NOTE:: Month: 0 = January - 11 = December.
+	var d = new Date(date[0],date[1]-1,date[2],time[0],time[1],time[2]);
+	// NOTE:: Uncomment line if use TZ
+	//d.setTimezoneOffset(tz_delim+tz_min);
+	return d.getTime() / 1000;
+}
+
+return getTimeStamp(value);</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Recovery XID</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},recovery-xid]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Идентификатор транзакции, соответствующей моменту окончания резервного копирования.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;recovery-xid&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Server version</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},server-version]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;server-version&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Start time</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},start-time]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>unixtime</units>
+                    <description>Время начала резервного копирования.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;start-time&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>Date.prototype.setTimezoneOffset = function(minutes) { 
+	var _minutes;
+	if (this.timezoneOffset == _minutes) {
+		_minutes = this.getTimezoneOffset();
+	} else {
+		_minutes = this.timezoneOffset;
+	}
+	if (arguments.length) {
+		this.timezoneOffset = minutes;
+	} else {
+		this.timezoneOffset = minutes = this.getTimezoneOffset();
+	}
+	return this.setTime(this.getTime() + (_minutes - minutes) * 6e4);
+};
+
+function getTimeStamp(input) {
+	var no_tz_parts = input.trim().substring(0, 19);
+	var tz_delim = input.trim().substring(19,20);
+	var tz_min = input.trim().substring(20)*60;
+	var parts = no_tz_parts.trim().split(' ');
+	var date = parts[0].split('-');
+	var time = (parts[1] ? parts[1] : '00:00:00').split(':');
+	// NOTE:: Month: 0 = January - 11 = December.
+	var d = new Date(date[0],date[1]-1,date[2],time[0],time[1],time[2]);
+	// NOTE:: Uncomment line if use TZ
+	//d.setTimezoneOffset(tz_delim+tz_min);
+	return d.getTime() / 1000;
+}
+
+return getTimeStamp(value);</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Status</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},status]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Статус резервного копирования, может быть:&#13;
+OK - успешное окончание создания резервной копии;&#13;
+ERR - ошибка при создании резервной копии, смотрите лог файл;</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (PgProBackup Status)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;status&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;OK&quot;:
+    return 0;
+    break;
+  default:
+    return 1;
+    break;
+}</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Uncompressed bytes</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},uncompressed-bytes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Размер файлов данных до добавления заголовков страниц и сжатия. В случае использования сжатия оценить его эффективность можно, сопоставив объём uncompressed-bytes (байтов несжатых данных) с data-bytes (байтов данных).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;uncompressed-bytes&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: WAL bytes</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},wal-bytes]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;wal-bytes&quot;]</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: WAL</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},wal]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Режим архивирования WAL, может быть следующим: STREAM и ARCHIVE.&#13;
+Копии, созданные в режиме STREAM содержат внутри себя все необходимые для восстановления до консистентного состояния WAL файлы.&#13;
+Режим ARCHIVE подразумевает, что мы настроили архивирование WAL, и тогда необходимые WAL файлы будут лежать по известному pg_probackup пути.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>DBS PostgreSQL (PgProBackup WAL mode)</name>
+                    </valuemap>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;wal&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>switch (value) {
+  case &quot;STREAM&quot;:
+    return 0;
+    break;
+  case &quot;ARCHIVE&quot;:
+    return 1;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' backup: Get full backup raw data</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    <delay>30m</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' backup: Get incremental backup raw data</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    <delay>30m</delay>
+                    <history>1d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+            </items>
+            <macros>
+                <macro>
+                    <macro>{$DBS_PGSQL_FULL_BACKUP_CRIT}</macro>
+                    <value>10d</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}</macro>
+                    <value>/var/lib/zabbix/pg_full_backup_result.data</value>
+                    <description>Full backup info file in json format</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_FULL_BACKUP_WARN}</macro>
+                    <value>8d</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_INCR_BACKUP_CRIT}</macro>
+                    <value>5d</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}</macro>
+                    <value>/var/lib/zabbix/pg_incr_backup_result.data</value>
+                    <description>Incremetnal backup info file in json format</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_INCR_BACKUP_WARN}</macro>
+                    <value>2d</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <value_maps>
+        <value_map>
+            <name>DBS PostgreSQL (PgProBackup CompressAlg)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>none</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>zlib</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>pglz</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS PostgreSQL (PgProBackup FromReplica)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>false</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>true</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS PostgreSQL (PgProBackup Mode)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>FULL</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>PAGE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>DELTA</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>PTRACK</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS PostgreSQL (PgProBackup Status)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>OK</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>ERR</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>DBS PostgreSQL (PgProBackup WAL mode)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>STREAM</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>ARCHIVE</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
+</zabbix_export>
