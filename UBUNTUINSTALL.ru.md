@@ -1,6 +1,6 @@
 # Новая устанока из пакетов для Ubuntu
 
-[In English / По-английски](UBUNTUUPDATE.md)
+[In English / По-английски](UBUNTUINSTALL.md)
 
 ## Новая установка из пакетов для Ubuntu 16.04/18.04/20.04
 
