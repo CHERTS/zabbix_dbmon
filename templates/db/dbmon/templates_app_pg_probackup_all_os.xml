@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-01-13T19:28:47Z</date>
+    <date>2021-01-26T17:28:38Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -169,6 +169,7 @@ PTRACK - создаётся инкрементальная резервная к
                     <delay>0</delay>
                     <history>30d</history>
                     <units>B</units>
+                    <description>Объём файлов данных в этой копии. Это значение не включает в себя объём файлов WAL. Для копий, сделанных в режиме STREAM, общий размер можно рассчитать, сложив значения Data и WAL.</description>
                     <applications>
                         <application>
                             <name>PgSQL: PgProBackup</name>
@@ -320,13 +321,107 @@ return getTimeStamp(value);</params>
                     </master_item>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Last backup</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},last_backup]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Время прошедшее с момента окончания резервного копирования.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;end-time&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>Date.prototype.setTimezoneOffset = function(minutes) { 
+	var _minutes;
+	if (this.timezoneOffset == _minutes) {
+		_minutes = this.getTimezoneOffset();
+	} else {
+		_minutes = this.timezoneOffset;
+	}
+	if (arguments.length) {
+		this.timezoneOffset = minutes;
+	} else {
+		this.timezoneOffset = minutes = this.getTimezoneOffset();
+	}
+	return this.setTime(this.getTime() + (_minutes - minutes) * 6e4);
+};
+
+function getTimeStamp(input) {
+	var no_tz_parts = input.trim().substring(0, 19);
+	var tz_delim = input.trim().substring(19,20);
+	var tz_min = input.trim().substring(20)*60;
+	var parts = no_tz_parts.trim().split(' ');
+	var date = parts[0].split('-');
+	var time = (parts[1] ? parts[1] : '00:00:00').split(':');
+	// NOTE:: Month: 0 = January - 11 = December.
+	var d = new Date(date[0],date[1]-1,date[2],time[0],time[1],time[2]);
+	// NOTE:: Uncomment line if use TZ
+	//d.setTimezoneOffset(tz_delim+tz_min);
+	return d.getTime() / 1000;
+}
+
+return (Math.floor(Date.now()/1000)-Number(getTimeStamp(value)));</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_PGSQL_FULL_BACKUP_CRIT}</expression>
+                            <name>No full database backups</name>
+                            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_FULL_BACKUP_CRIT}</opdata>
+                            <priority>HIGH</priority>
+                            <description>Давно не выполнялся полный бэкап кластера.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Доведите информацию до эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>BackupMode</tag>
+                                    <value>Full</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_PGSQL_FULL_BACKUP_WARN}</expression>
+                            <name>No full database backups</name>
+                            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_FULL_BACKUP_WARN}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Давно не выполнялся полный бэкап кластера.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>No full database backups</name>
+                                    <expression>{DBS_Template DB PgSQL pg_probackup:pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},last_backup].last()}&gt;{$DBS_PGSQL_FULL_BACKUP_CRIT}</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>BackupMode</tag>
+                                    <value>Full</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' full backup: Pgdata bytes</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},pgdata-bytes]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <units>B</units>
-                    <description>Размер файлов данных Postgres Pro на момент копирования. Эффективность инкрементального метода копирования можно оценить, сопоставив объём pgdata-bytes (байтов в PGDATA) с uncompressed-bytes (байтов несжатых данных).</description>
+                    <description>Размер файлов данных PostgreSQL на момент копирования. Эффективность инкрементального метода копирования можно оценить, сопоставив объём pgdata-bytes (байтов в PGDATA) с uncompressed-bytes (байтов несжатых данных).</description>
                     <applications>
                         <application>
                             <name>PgSQL: PgProBackup</name>
@@ -548,8 +643,32 @@ ERR - ошибка при создании резервной копии, смо
   case &quot;OK&quot;:
     return 0;
     break;
-  default:
+  case &quot;DONE&quot;:
     return 1;
+    break;
+  case &quot;RUNNING&quot;:
+    return 2;
+    break;
+  case &quot;MERGING&quot;:
+    return 3;
+    break;
+  case &quot;MERGED&quot;:
+    return 4;
+    break;
+  case &quot;DELETING&quot;:
+    return 5;
+    break;
+  case &quot;CORRUPT&quot;:
+    return 6;
+    break;
+  case &quot;ERROR&quot;:
+    return 7;
+    break;
+  case &quot;ORPHAN&quot;:
+    return 8;
+    break;
+  default:
+    return 0;
     break;
 }</params>
                         </step>
@@ -788,6 +907,7 @@ PTRACK - создаётся инкрементальная резервная к
                     <delay>0</delay>
                     <history>30d</history>
                     <units>B</units>
+                    <description>Объём файлов данных в этой копии. Это значение не включает в себя объём файлов WAL. Для копий, сделанных в режиме STREAM, общий размер можно рассчитать, сложив значения Data и WAL.</description>
                     <applications>
                         <application>
                             <name>PgSQL: PgProBackup</name>
@@ -939,6 +1059,100 @@ return getTimeStamp(value);</params>
                     </master_item>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Last backup</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},last_backup]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <description>Время прошедшее с момента окончания резервного копирования.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: PgProBackup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.[&quot;end-time&quot;]</params>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>Date.prototype.setTimezoneOffset = function(minutes) { 
+	var _minutes;
+	if (this.timezoneOffset == _minutes) {
+		_minutes = this.getTimezoneOffset();
+	} else {
+		_minutes = this.timezoneOffset;
+	}
+	if (arguments.length) {
+		this.timezoneOffset = minutes;
+	} else {
+		this.timezoneOffset = minutes = this.getTimezoneOffset();
+	}
+	return this.setTime(this.getTime() + (_minutes - minutes) * 6e4);
+};
+
+function getTimeStamp(input) {
+	var no_tz_parts = input.trim().substring(0, 19);
+	var tz_delim = input.trim().substring(19,20);
+	var tz_min = input.trim().substring(20)*60;
+	var parts = no_tz_parts.trim().split(' ');
+	var date = parts[0].split('-');
+	var time = (parts[1] ? parts[1] : '00:00:00').split(':');
+	// NOTE:: Month: 0 = January - 11 = December.
+	var d = new Date(date[0],date[1]-1,date[2],time[0],time[1],time[2]);
+	// NOTE:: Uncomment line if use TZ
+	//d.setTimezoneOffset(tz_delim+tz_min);
+	return d.getTime() / 1000;
+}
+
+return (Math.floor(Date.now()/1000)-Number(getTimeStamp(value)));</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_PGSQL_INCR_BACKUP_CRIT}</expression>
+                            <name>No incremental database backups</name>
+                            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_INCR_BACKUP_CRIT}</opdata>
+                            <priority>HIGH</priority>
+                            <description>Давно не выполнялся инкрементальный бэкап кластера.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Доведите информацию до эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>BackupMode</tag>
+                                    <value>Incremental</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_PGSQL_INCR_BACKUP_WARN}</expression>
+                            <name>No incremental database backups</name>
+                            <opdata>last: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_INCR_BACKUP_WARN}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Давно не выполнялся инкрементальный бэкап кластера.&#13;
+Необходимо проверить политику резервного копирования, а так же процедуру запуска резервного копирования.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>No incremental database backups</name>
+                                    <expression>{DBS_Template DB PgSQL pg_probackup:pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},last_backup].last()}&gt;{$DBS_PGSQL_INCR_BACKUP_CRIT}</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>BackupMode</tag>
+                                    <value>Incremental</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' incr backup: Parent backup id</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},parent-backup-id]</key>
@@ -969,7 +1183,7 @@ return getTimeStamp(value);</params>
                     <delay>0</delay>
                     <history>30d</history>
                     <units>B</units>
-                    <description>Размер файлов данных Postgres Pro на момент копирования. Эффективность инкрементального метода копирования можно оценить, сопоставив объём pgdata-bytes (байтов в PGDATA) с uncompressed-bytes (байтов несжатых данных).</description>
+                    <description>Размер файлов данных PostgreSQL на момент копирования. Эффективность инкрементального метода копирования можно оценить, сопоставив объём pgdata-bytes (байтов в PGDATA) с uncompressed-bytes (байтов несжатых данных).</description>
                     <applications>
                         <application>
                             <name>PgSQL: PgProBackup</name>
@@ -1191,8 +1405,32 @@ ERR - ошибка при создании резервной копии, смо
   case &quot;OK&quot;:
     return 0;
     break;
-  default:
+  case &quot;DONE&quot;:
     return 1;
+    break;
+  case &quot;RUNNING&quot;:
+    return 2;
+    break;
+  case &quot;MERGING&quot;:
+    return 3;
+    break;
+  case &quot;MERGED&quot;:
+    return 4;
+    break;
+  case &quot;DELETING&quot;:
+    return 5;
+    break;
+  case &quot;CORRUPT&quot;:
+    return 6;
+    break;
+  case &quot;ERROR&quot;:
+    return 7;
+    break;
+  case &quot;ORPHAN&quot;:
+    return 8;
+    break;
+  default:
+    return 0;
     break;
 }</params>
                         </step>
@@ -1291,8 +1529,8 @@ ERR - ошибка при создании резервной копии, смо
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' backup: Get full backup raw data</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>vfs.file.contents[{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}]</key>
-                    <delay>30m</delay>
-                    <history>1d</history>
+                    <delay>{$DBS_PGSQL_FULL_BACKUP_INTERVAL}</delay>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -1305,8 +1543,8 @@ ERR - ошибка при создании резервной копии, смо
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' backup: Get incremental backup raw data</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>vfs.file.contents[{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}]</key>
-                    <delay>30m</delay>
-                    <history>1d</history>
+                    <delay>{$DBS_PGSQL_INCR_BACKUP_INTERVAL}</delay>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -1316,15 +1554,34 @@ ERR - ошибка при создании резервной копии, смо
                     </applications>
                 </item>
             </items>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>PostgreSQL</value>
+                </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>Backup</value>
+                </tag>
+            </tags>
             <macros>
+                <macro>
+                    <macro>{$DBS_PGSQL_ARCH_BACKUP_FILE_INFO}</macro>
+                    <value>/var/lib/zabbix/pg_arch_backup_INSTANCE.data</value>
+                    <description>Archivel backup info file in json format</description>
+                </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_FULL_BACKUP_CRIT}</macro>
                     <value>10d</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_FULL_BACKUP_FILE_INFO}</macro>
-                    <value>/var/lib/zabbix/pg_full_backup_result.data</value>
+                    <value>/var/lib/zabbix/pg_full_backup_INSTANCE.data</value>
                     <description>Full backup info file in json format</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_FULL_BACKUP_INTERVAL}</macro>
+                    <value>30m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_FULL_BACKUP_WARN}</macro>
@@ -1336,16 +1593,52 @@ ERR - ошибка при создании резервной копии, смо
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_INCR_BACKUP_FILE_INFO}</macro>
-                    <value>/var/lib/zabbix/pg_incr_backup_result.data</value>
+                    <value>/var/lib/zabbix/pg_incr_backup_INSTANCE.data</value>
                     <description>Incremetnal backup info file in json format</description>
                 </macro>
                 <macro>
+                    <macro>{$DBS_PGSQL_INCR_BACKUP_INTERVAL}</macro>
+                    <value>30m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_PGSQL_INCR_BACKUP_WARN}</macro>
-                    <value>2d</value>
+                    <value>2.5d</value>
                 </macro>
             </macros>
         </template>
     </templates>
+    <triggers>
+        <trigger>
+            <expression>{DBS_Template DB PgSQL pg_probackup:pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},status].last()}&lt;&gt;0 and {DBS_Template DB PgSQL pg_probackup:pgsql.pgprobackup.full[{$DBS_PGSQL_INSTANCE},id].strlen()}&gt;0</expression>
+            <name>Last full database backup is corrupt</name>
+            <opdata>status: {ITEM.LASTVALUE1}, id: {ITEM.LASTVALUE2}</opdata>
+            <priority>AVERAGE</priority>
+            <description>Самая последняя полная резервная копия повреждена.&#13;
+Запустите утилиту pg_probackup с опцией show и проверьте состояние резервных копий, так же проверьте лог-файл работы утилиты.&#13;
+Доведите информацию до эксперта.</description>
+            <tags>
+                <tag>
+                    <tag>BackupMode</tag>
+                    <value>Full</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template DB PgSQL pg_probackup:pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},status].last()}&lt;&gt;0 and {DBS_Template DB PgSQL pg_probackup:pgsql.pgprobackup.incr[{$DBS_PGSQL_INSTANCE},id].strlen()}&gt;0</expression>
+            <name>Last incremetnal database backup is corrupt</name>
+            <opdata>status: {ITEM.LASTVALUE1}, id: {ITEM.LASTVALUE2}</opdata>
+            <priority>AVERAGE</priority>
+            <description>Самая последняя инкрементальная резервная копия повреждена.&#13;
+Запустите утилиту pg_probackup с опцией show и проверьте состояние резервных копий, так же проверьте лог-файл работы утилиты.&#13;
+Доведите информацию до эксперта.</description>
+            <tags>
+                <tag>
+                    <tag>BackupMode</tag>
+                    <value>Incremental</value>
+                </tag>
+            </tags>
+        </trigger>
+    </triggers>
     <value_maps>
         <value_map>
             <name>DBS PostgreSQL (PgProBackup CompressAlg)</name>
@@ -1407,7 +1700,35 @@ ERR - ошибка при создании резервной копии, смо
                 </mapping>
                 <mapping>
                     <value>1</value>
-                    <newvalue>ERR</newvalue>
+                    <newvalue>DONE</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>RUNNING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>MERGING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>MERGED</newvalue>
+                </mapping>
+                <mapping>
+                    <value>5</value>
+                    <newvalue>DELETING</newvalue>
+                </mapping>
+                <mapping>
+                    <value>6</value>
+                    <newvalue>CORRUPT</newvalue>
+                </mapping>
+                <mapping>
+                    <value>7</value>
+                    <newvalue>ERROR</newvalue>
+                </mapping>
+                <mapping>
+                    <value>8</value>
+                    <newvalue>ORPHAN</newvalue>
                 </mapping>
             </mappings>
         </value_map>
