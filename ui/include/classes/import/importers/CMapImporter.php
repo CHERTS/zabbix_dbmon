@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -187,7 +187,7 @@ class CMapImporter extends CImporter {
 					'icon_off' => 'iconid_off',
 					'icon_on' => 'iconid_on',
 					'icon_disabled' => 'iconid_disabled',
-					'icon_maintenance' => 'iconid_maintenance',
+					'icon_maintenance' => 'iconid_maintenance'
 				];
 				foreach ($icons as $element => $field) {
 					if (array_key_exists($element, $selement)) {

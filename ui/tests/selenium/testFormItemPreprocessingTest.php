@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ class testFormItemPreprocessingTest extends CWebTest {
 						['type' => 'JSONPath', 'parameter_1' => '{$WORKING_HOURS}'],
 						['type' => 'Custom multiplier', 'parameter_1' => '{$DEFAULT_DELAY}'],
 						['type' => 'JavaScript', 'parameter_1' => '{$LOCALIP}'],
-						['type' => 'Does not match regular expression', 'parameter_1' => '{$_}'],
+						['type' => 'Does not match regular expression', 'parameter_1' => '{$_}']
 					],
 					'macros' => [
 						[
@@ -291,7 +291,7 @@ class testFormItemPreprocessingTest extends CWebTest {
 					'preprocessing' => [
 						['type' => 'Simple change'],
 						['type' => 'Discard unchanged'],
-						['type' => 'In range', 'parameter_1' => '1', 'parameter_2' => ''],
+						['type' => 'In range', 'parameter_1' => '1', 'parameter_2' => '']
 					],
 					'action' => 'Test'
 				]
@@ -302,7 +302,7 @@ class testFormItemPreprocessingTest extends CWebTest {
 					'preprocessing' => [
 						['type' => 'Discard unchanged with heartbeat', 'parameter_1' => '1'],
 						['type' => 'Change per second'],
-						['type' => 'CSV to JSON','parameter_1' => ',', 'parameter_2' => '"', 'parameter_3' => false],
+						['type' => 'CSV to JSON','parameter_1' => ',', 'parameter_2' => '"', 'parameter_3' => false]
 					],
 					'action' => 'Test'
 				]

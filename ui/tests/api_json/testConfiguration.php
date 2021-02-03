@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ class testConfiguration extends CAPITest {
 					'options' => [
 						'hosts' => [
 							'50009'
-						],
+						]
 					]
 				],
 				'expected_error' => 'Invalid parameter "/": the parameter "format" is missing.'
@@ -40,7 +40,7 @@ class testConfiguration extends CAPITest {
 					'options' => [
 						'hosts' => [
 							'50009'
-						],
+						]
 					],
 					'format' => ''
 				],
@@ -51,7 +51,7 @@ class testConfiguration extends CAPITest {
 					'options' => [
 						'hosts' => [
 							'50009'
-						],
+						]
 					],
 					'format' => 'test'
 				],
@@ -62,7 +62,7 @@ class testConfiguration extends CAPITest {
 					'options' => [
 						'groups' => [
 							'50012'
-						],
+						]
 					],
 					'format' => 'test',
 					'hosts' => '50009'
@@ -120,7 +120,7 @@ class testConfiguration extends CAPITest {
 					'options' => [
 							$options => [
 								$options
-							],
+							]
 					],
 					'format' => $parameter
 				],
@@ -151,7 +151,7 @@ class testConfiguration extends CAPITest {
 			],
 			[
 				['valueMaps' =>  ['1']]
-			],
+			]
 		];
 	}
 

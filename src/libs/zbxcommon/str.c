@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 #endif
 
 static const char	copyright_message[] =
-	"Copyright (C) 2020 Zabbix SIA\n"
+	"Copyright (C) 2021 Zabbix SIA\n"
 	"License GPLv2+: GNU GPL version 2 or later <http://gnu.org/licenses/gpl.html>.\n"
 	"This is free software: you are free to change and redistribute it according to\n"
 	"the license. There is NO WARRANTY, to the extent permitted by law.";
@@ -366,9 +366,7 @@ char	*string_replace(const char *str, const char *sub_str1, const char *sub_str2
 	const char *q;
 	const char *r;
 	char *t;
-	long len;
-	long diff;
-	unsigned long count = 0;
+	long len, diff, count = 0;
 
 	assert(str);
 	assert(sub_str1);
@@ -4560,25 +4558,15 @@ int	zbx_expression_next_constant(const char *str, size_t pos, zbx_strloc_t *loc)
 				offset = 1;
 				continue;
 			case '0':
-				ZBX_FALLTHROUGH;
 			case '1':
-				ZBX_FALLTHROUGH;
 			case '2':
-				ZBX_FALLTHROUGH;
 			case '3':
-				ZBX_FALLTHROUGH;
 			case '4':
-				ZBX_FALLTHROUGH;
 			case '5':
-				ZBX_FALLTHROUGH;
 			case '6':
-				ZBX_FALLTHROUGH;
 			case '7':
-				ZBX_FALLTHROUGH;
 			case '8':
-				ZBX_FALLTHROUGH;
 			case '9':
-				ZBX_FALLTHROUGH;
 			case '.':
 				if (SUCCEED != zbx_suffixed_number_parse(s, &len))
 					return FAIL;

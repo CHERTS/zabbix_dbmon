@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -1036,7 +1036,7 @@ class testFormLowLevelDiscoveryOverrides extends CWebTest {
 											[
 												'action' => USER_ACTION_UPDATE,
 												'index' => 0,
-												'delay' => '',
+												'delay' => ''
 											]
 										]
 									]
@@ -1412,7 +1412,7 @@ class testFormLowLevelDiscoveryOverrides extends CWebTest {
 						'Discover' => null,
 						'Severity' => 'Warning',
 						'Tags' => [
-							['tag' => 'tag1', 'value' => 'value1'],
+							['tag' => 'tag1', 'value' => 'value1']
 						]
 					]
 				]

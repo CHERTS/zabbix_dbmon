@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -509,7 +509,9 @@ elseif (hasRequest('action') && getRequest('action') === 'trigger.massupdate'
 			}
 		}
 
-		$result = (bool) API::Trigger()->update($triggers_to_update);
+		if ($triggers_to_update) {
+			$result = (bool) API::Trigger()->update($triggers_to_update);
+		}
 	}
 
 	if ($result) {

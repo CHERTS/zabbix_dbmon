@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -645,7 +645,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				'applications' => $applications,
 				'inventory_link' => getRequest('inventory_link', 0),
 				'description' => getRequest('description', ''),
-				'status' => getRequest('status', ITEM_STATUS_DISABLED),
+				'status' => getRequest('status', ITEM_STATUS_DISABLED)
 			];
 
 			if ($item['type'] == ITEM_TYPE_HTTPAGENT) {

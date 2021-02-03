@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -444,7 +444,7 @@ class testFormItemTest extends CWebTest {
 						'Type' => 'Zabbix agent',
 						'Key' => 'test.item.interface.trailing.spaces'
 					],
-					'interface' => ['address' => '  127.0.0.1   ', 'port' => '   10050    '],
+					'interface' => ['address' => '  127.0.0.1   ', 'port' => '   10050    ']
 				]
 			]
 		];

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -797,7 +797,7 @@ elseif ($valid_input && hasRequest('massupdate') && hasRequest('group_itemid')) 
 					foreach ($application_prototypes as $application_prototype) {
 						if (is_array($application_prototype) && array_key_exists('new', $application_prototype)) {
 							$new_application_prototypes[] = [
-								'name' => $application_prototype['new'],
+								'name' => $application_prototype['new']
 							];
 						}
 						else {

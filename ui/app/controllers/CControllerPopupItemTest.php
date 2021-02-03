@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -190,6 +190,14 @@ abstract class CControllerPopupItemTest extends CController {
 			'support_lld_macros' => true
 		],
 		'password' => [
+			'support_user_macros' => true,
+			'support_lld_macros' => true
+		],
+		'http_username' => [
+			'support_user_macros' => true,
+			'support_lld_macros' => true
+		],
+		'http_password' => [
 			'support_user_macros' => true,
 			'support_lld_macros' => true
 		]

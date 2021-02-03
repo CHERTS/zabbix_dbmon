@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -554,7 +554,7 @@ function convertUnitsS($value, $ignore_millisec = false) {
 		foreach ([
 			'days' => SEC_PER_DAY,
 			'hours' => SEC_PER_HOUR,
-			'minutes' => SEC_PER_MIN,
+			'minutes' => SEC_PER_MIN
 		] as $part => $sec_per_part) {
 			$v = floor($value_abs_int / $sec_per_part);
 			if ($v > 0) {

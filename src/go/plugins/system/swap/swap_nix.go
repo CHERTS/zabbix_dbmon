@@ -2,7 +2,7 @@
 
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,5 +29,5 @@ func getSwap() (uint64, uint64, error) {
 		return 0, 0, err
 	}
 
-	return info.Totalswap, info.Freeswap, nil
+	return uint64(info.Totalswap), uint64(info.Freeswap), nil
 }

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -187,7 +187,7 @@ $triggersForm->addItem([
 			'triggerprototype.massupdateform' => ['name' => _('Mass update')],
 			'triggerprototype.massdelete' => ['name' => _('Delete'),
 				'confirm' => _('Delete selected trigger prototypes?')
-			],
+			]
 		],
 		$this->data['parent_discoveryid']
 	)

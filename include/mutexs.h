@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,7 +44,10 @@ typedef enum
 	ZBX_MUTEX_SQLITE3,
 	ZBX_MUTEX_PROCSTAT,
 	ZBX_MUTEX_PROXY_HISTORY,
+#ifdef HAVE_VMINFO_T_UPDATES
 	ZBX_MUTEX_KSTAT,
+#endif
+	/* NOTE: Do not forget to sync changes here with mutex names in diag_add_locks_info()! */
 	ZBX_MUTEX_COUNT
 }
 zbx_mutex_name_t;

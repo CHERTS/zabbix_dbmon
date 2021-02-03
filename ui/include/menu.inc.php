@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -165,8 +165,7 @@ function getMainMenu(): CMenu {
 						->setAction('proxy.list')
 						->setAliases(['proxy.edit']),
 					(new CMenuItem(_('Authentication')))
-						->setAction('authentication.edit')
-						->setAliases(['authentication.update']),
+						->setAction('authentication.edit'),
 					(new CMenuItem(_('User groups')))
 						->setAction('usergroup.list')
 						->setAliases(['usergroup.edit']),

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2020 Zabbix SIA
+** Copyright (C) 2001-2021 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -286,7 +286,6 @@ static int	tm_execute_data(zbx_uint64_t taskid, int clock, int ttl, int now)
 	switch (data_type = atoi(row[2]))
 	{
 		case ZBX_TM_DATA_TYPE_TEST_ITEM:
-			ZBX_FALLTHROUGH;
 		case ZBX_TM_DATA_TYPE_DIAGINFO:
 			ret = tm_execute_data_json(data_type, row[1], &info);
 			break;
