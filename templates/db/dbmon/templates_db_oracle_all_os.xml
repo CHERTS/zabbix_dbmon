@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-12-21T05:35:23Z</date>
+    <date>2021-02-04T18:02:03Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1925,7 +1925,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     </filter>
                     <item_prototypes>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Current incarnation</name>
+                            <name>[Oracle] Database '{#DBNAME}': Current incarnation</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>oracle.db.incarnation[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             <delay>1h</delay>
@@ -1952,7 +1952,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </applications>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Database size</name>
+                            <name>[Oracle] Database '{#DBNAME}': Database size</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>oracle.db.size[{$DBS_ORACLE_CONN_STRING},{#INSTANCE},{$DBS_ORACLE_MODE},{#DBNAME}]</key>
                             <delay>1h</delay>
@@ -2027,7 +2027,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': CDB</name>
+                            <name>[Oracle] Database '{#DBNAME}': CDB</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},cdb]</key>
                             <delay>0</delay>
@@ -2060,7 +2060,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Controlfile creation date</name>
+                            <name>[Oracle] Database '{#DBNAME}': Controlfile creation date</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},controlfile_created]</key>
                             <delay>0</delay>
@@ -2088,7 +2088,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': DataGuard broker</name>
+                            <name>[Oracle] Database '{#DBNAME}': DataGuard broker</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},dataguard_broker]</key>
                             <delay>0</delay>
@@ -2138,7 +2138,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': DBID</name>
+                            <name>[Oracle] Database '{#DBNAME}': DBID</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},dbid]</key>
                             <delay>0</delay>
@@ -2187,7 +2187,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': DBName</name>
+                            <name>[Oracle] Database '{#DBNAME}': DBName</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},dbname]</key>
                             <delay>0</delay>
@@ -2218,7 +2218,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Flashback mode</name>
+                            <name>[Oracle] Database '{#DBNAME}': Flashback mode</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},flashback_on]</key>
                             <delay>0</delay>
@@ -2269,7 +2269,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Force logging mode</name>
+                            <name>[Oracle] Database '{#DBNAME}': Force logging mode</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},force_logging]</key>
                             <delay>0</delay>
@@ -2319,7 +2319,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Guard status</name>
+                            <name>[Oracle] Database '{#DBNAME}': Guard status</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},guard_status]</key>
                             <delay>0</delay>
@@ -2369,7 +2369,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Hostname</name>
+                            <name>[Oracle] Database '{#DBNAME}': Hostname</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},hostname]</key>
                             <delay>0</delay>
@@ -2397,7 +2397,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Archive log mode</name>
+                            <name>[Oracle] Database '{#DBNAME}': Archive log mode</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},log_mode]</key>
                             <delay>0</delay>
@@ -2477,7 +2477,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Open mode</name>
+                            <name>[Oracle] Database '{#DBNAME}': Open mode</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},open_mode]</key>
                             <delay>0</delay>
@@ -2532,7 +2532,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Platform name</name>
+                            <name>[Oracle] Database '{#DBNAME}': Platform name</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},platform_name]</key>
                             <delay>0</delay>
@@ -2563,7 +2563,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Protection mode</name>
+                            <name>[Oracle] Database '{#DBNAME}': Protection mode</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},protection_mode]</key>
                             <delay>0</delay>
@@ -2618,7 +2618,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Resetlogs time</name>
+                            <name>[Oracle] Database '{#DBNAME}': Resetlogs time</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},resetlogs_time]</key>
                             <delay>0</delay>
@@ -2649,7 +2649,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Database role</name>
+                            <name>[Oracle] Database '{#DBNAME}': Database role</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},role]</key>
                             <delay>0</delay>
@@ -2701,7 +2701,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
-                            <name>[Oracle] DB '{#DBNAME}': Switchover number</name>
+                            <name>[Oracle] Database '{#DBNAME}': Switchover number</name>
                             <type>DEPENDENT</type>
                             <key>oracle.db[{#INSTANCE},{#DBNAME},switchover]</key>
                             <delay>0</delay>

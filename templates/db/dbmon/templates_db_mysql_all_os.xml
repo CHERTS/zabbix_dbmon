@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-12-21T05:34:10Z</date>
+    <date>2021-02-04T18:01:58Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -5139,7 +5139,7 @@ For InnoDB, INDEX_LENGTH is the approximate amount of space allocated for non-cl
                             </master_item>
                         </item_prototype>
                         <item_prototype>
-                            <name>[MySQL] Database '{#DBNAME}': Total size</name>
+                            <name>[MySQL] Database '{#DBNAME}': Database size</name>
                             <type>DEPENDENT</type>
                             <key>mysql.db.info[{#DBNAME},db_size]</key>
                             <delay>0</delay>

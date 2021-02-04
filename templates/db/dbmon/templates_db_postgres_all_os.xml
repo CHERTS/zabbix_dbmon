@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-12-21T05:34:16Z</date>
+    <date>2021-02-04T18:02:10Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2487,10 +2487,11 @@ See pg_stat_activity for details.&#13;
                             <expression>{last()}&gt;18000000</expression>
                             <name>Age of oldest xid is too big</name>
                             <opdata>current: {ITEM.LASTVALUE1}, threshold: 18000000, alert started: {ITEM.VALUE1}</opdata>
-                            <priority>AVERAGE</priority>
+                            <priority>DISASTER</priority>
                             <description>Возраст самого старого XID слишком велик.&#13;
 Возможно близка ситуация зацикливания счетчика транзакций (см. https://postgrespro.ru/docs/postgresql/12/routine-vacuuming#VACUUM-FOR-WRAPAROUND)&#13;
-Срочно доведите информацию до эксперта.</description>
+Срочно найдите долго выполняющуюся транзакцию висящую в состоянии 'idle in transaction' и завершите ее.&#13;
+Доведите информацию до эксперта и заказчика.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
@@ -3154,7 +3155,7 @@ See pg_stat_activity for details.&#13;
                             </master_item>
                         </item_prototype>
                         <item_prototype>
-                            <name>[PgSQL] Database '{#DBNAME}': Size</name>
+                            <name>[PgSQL] Database '{#DBNAME}': Database size</name>
                             <type>DEPENDENT</type>
                             <key>pgsql.db.info[{#DBNAME},dbsize]</key>
                             <delay>0</delay>
