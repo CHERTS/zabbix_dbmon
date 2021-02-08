@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-04T18:02:10Z</date>
+    <date>2021-02-08T14:07:38Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -252,6 +252,30 @@ Version: 1.0</description>
                     <master_item>
                         <key>pgsql.archive.size[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(10m)}&gt;{$DBS_PGSQL_MAX_ARCHIVED_CNT_WARN}</expression>
+                            <name>Number of WAL file that ready to archive is to high</name>
+                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_MAX_ARCHIVED_CNT_WARN}, alert started: {ITEM.VALUE}</opdata>
+                            <priority>AVERAGE</priority>
+                            <description>Количество сегментов WAL в каталоге для архивации превышает {$DBS_PGSQL_MAX_ARCHIVED_CNT_WARN} штуки.&#13;
+Возможно нарушена работа архивации сегментов WAL и они накапливаются в каталоге '&lt;pg_datadir&gt;pg_wal/archive_status'&#13;
+При интенсивной генерации сегментов WAL нарушение архивации может спровоцировать заполнение диска и остановку работы СУБД.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' WAL stat: Failed attempts for archiving</name>
@@ -5116,6 +5140,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_PGSQL_MAX_ACTIVE_TIME_WARN}</macro>
                     <value>2m</value>
                     <description>Max transaction time in 'active' state</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_MAX_ARCHIVED_CNT_WARN}</macro>
+                    <value>2</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN}</macro>
