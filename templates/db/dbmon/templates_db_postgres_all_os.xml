@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-08T14:07:38Z</date>
+    <date>2021-02-17T05:29:39Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2510,7 +2510,7 @@ See pg_stat_activity for details.&#13;
                         <trigger>
                             <expression>{last()}&gt;18000000</expression>
                             <name>Age of oldest xid is too big</name>
-                            <opdata>current: {ITEM.LASTVALUE1}, threshold: 18000000, alert started: {ITEM.VALUE1}</opdata>
+                            <opdata>current: {ITEM.LASTVALUE}, threshold: 18000000, alert started: {ITEM.VALUE}</opdata>
                             <priority>DISASTER</priority>
                             <description>Возраст самого старого XID слишком велик.&#13;
 Возможно близка ситуация зацикливания счетчика транзакций (см. https://postgrespro.ru/docs/postgresql/12/routine-vacuuming#VACUUM-FOR-WRAPAROUND)&#13;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-12-04T05:20:24Z</date>
+    <date>2021-02-17T05:29:33Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -56,7 +56,8 @@ Version: 1.0</description>
                             <name>{{ITEM.VALUE}.iregsub(&quot;.*pgpool is not accepting any new connections&quot;, &quot;PGpool-II is not accepting any new connections&quot;)}</name>
                             <priority>HIGH</priority>
                             <description>PGpool-II перестал принимать новые соединения.&#13;
-Срочно доведите информацию до заказчика и эксперта.</description>
+Срочно доведите информацию до заказчика и эксперта.&#13;
+Аларм закрывается в ручном режиме после решения проблемы.</description>
                             <manual_close>YES</manual_close>
                         </trigger>
                         <trigger>
@@ -65,7 +66,8 @@ Version: 1.0</description>
                             <name>{{ITEM.VALUE}.iregsub(&quot;.*unable to connect to backend&quot;, &quot;PGpool-II is unable to connect to backend&quot;)}</name>
                             <priority>WARNING</priority>
                             <description>PGpool-II не может подключиться к одному или нескольким бэкенд-серверам PostgreSQL.&#13;
-Доведите информацию до заказчика и эксперта.</description>
+Доведите информацию до заказчика и эксперта.&#13;
+Аларм закрывается в ручном режиме после решения проблемы.</description>
                             <manual_close>YES</manual_close>
                         </trigger>
                         <trigger>
@@ -76,7 +78,8 @@ Version: 1.0</description>
                             <priority>INFO</priority>
                             <description>В одной из сессий PGpool-II не смог прочитать данные от фронтенда.&#13;
 Если данная ошибка повторяется очень часто, то необходимо проанализировать лог-файлы и выяснить причину появления данных сообщений.&#13;
-Доведите информацию эксперта, заказчику пока это не интересно.</description>
+Доведите информацию эксперта, заказчику пока это не интересно.&#13;
+Аларм закрывается в ручном режиме после решения проблемы.</description>
                             <manual_close>YES</manual_close>
                             <dependencies>
                                 <dependency>
@@ -429,7 +432,8 @@ Version: 1.0</description>
                             <opdata>current: {ITEM.VALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Версия PGpool-II была изменена.&#13;
-Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.</description>
+Необходимо проверить факт изменения версии, выяснить причину изменения версии (плановый апгрейд и т.п.), передать данные эксперту.&#13;
+Аларм закрывается в ручном режиме после решения проблемы.</description>
                             <type>MULTIPLE</type>
                             <manual_close>YES</manual_close>
                             <dependencies>
@@ -614,6 +618,9 @@ Version: 1.0</description>
                                     <name>PGpool: Node '{#HOSTNAME}', Info</name>
                                 </application_prototype>
                             </application_prototypes>
+                            <valuemap>
+                                <name>DBS PGpool-II (Load balance node)</name>
+                            </valuemap>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
@@ -885,6 +892,19 @@ return JSON.stringify({&quot;data&quot;: output})</params>
         </template>
     </templates>
     <value_maps>
+        <value_map>
+            <name>DBS PGpool-II (Load balance node)</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>false</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>true</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
         <value_map>
             <name>DBS PGpool-II (Node role)</name>
             <mappings>
