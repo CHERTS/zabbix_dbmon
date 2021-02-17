@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-17T05:29:33Z</date>
+    <date>2021-02-17T05:37:26Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -742,7 +742,8 @@ Version: 1.0</description>
                                     <priority>INFO</priority>
                                     <description>Бэкенд '{#HOSTNAME}' изменил свою роль.&#13;
 Проверьте причину изменения роли.&#13;
-Доведите информацию до эксперта.</description>
+Доведите информацию до эксперта.&#13;
+Аларм закрывается в ручном режиме после решения проблемы.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
@@ -807,7 +808,8 @@ Version: 1.0</description>
                                     <description>Бэкенд '{#HOSTNAME}' изменил свой статус.&#13;
 Проверьте причину смены статуса.&#13;
 Если статус изменился на 0 (Down), то это может негативно повлиять на работу приложения.&#13;
-Доведите информацию до эксперта.</description>
+Доведите информацию до эксперта.&#13;
+Аларм закрывается в ручном режиме после решения проблемы.</description>
                                     <type>MULTIPLE</type>
                                     <manual_close>YES</manual_close>
                                     <dependencies>
