@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2021-02-18T04:27:48Z</date>
+    <groups>
+        <group>
+            <name>DBS.Templates</name>
+        </group>
+        <group>
+            <name>DBS.Templates/Modules</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>DBS_Template Askona Paygal Galaxy</template>
+            <name>Oracle (DBMON, Active, ASKONA, Paygal Galaxy)</name>
+            <groups>
+                <group>
+                    <name>DBS.Templates</name>
+                </group>
+                <group>
+                    <name>DBS.Templates/Modules</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Oracle Business Monitoring</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>PAYGAL in GALAXY</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.query.nojson[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},,{$DBS_ORACLE_QUERY_NAME}]</key>
+                    <delay>{$DBS_ORACLE_CHECK_INTERVAL}</delay>
+                    <history>30d</history>
+                    <description>Актуальность работы сервиса PAYGAL в БД Галактика.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle Business Monitoring</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&lt;{$DBS_ORACLE_QUERY_WARN}</expression>
+                            <name>Актуальность работы сервиса PAYGAL в БД Галактика</name>
+                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_ORACLE_QUERY_WARN}, alert started: {ITEM.VALUE}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Текущее количество подключенных пользователей сервиса PAYGAL в БД Галактика меньше {$DBS_ORACLE_QUERY_WARN}.&#13;
+&#13;
+ВНИМАНИЕ! В чат заказчика о проблеме не пишем, ему приходят письма по email.</description>
+                            <tags>
+                                <tag>
+                                    <tag>Service</tag>
+                                    <value>PAYGAL</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <macros>
+                <macro>
+                    <macro>{$DBS_ORACLE_CHECK_INTERVAL}</macro>
+                    <value>15m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_QUERY_NAME}</macro>
+                    <value>oracle_audit_1</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_QUERY_WARN}</macro>
+                    <value>1</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+</zabbix_export>

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2021-02-18T04:27:24Z</date>
+    <groups>
+        <group>
+            <name>DBS.Templates/Modules</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>DBS_Template DB MySQL Backup Percona</template>
+            <name>DB MySQL Backup (Active, DBMON, Percona, for all OS)</name>
+            <groups>
+                <group>
+                    <name>DBS.Templates/Modules</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>MySQL: Backup</name>
+                </application>
+                <application>
+                    <name>stubs</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' backup: Last full database backup</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.percona.backup[{$DBS_MYSQL_INSTANCE},database_full]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <applications>
+                        <application>
+                            <name>MySQL: Backup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.database_full</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_MYSQL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' backup: Last full database backup (duration)</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.percona.backup[{$DBS_MYSQL_INSTANCE},database_full_duration]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <applications>
+                        <application>
+                            <name>MySQL: Backup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.database_full_duration</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_MYSQL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' backup: Last full database backup (size)</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.percona.backup[{$DBS_MYSQL_INSTANCE},database_full_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>MySQL: Backup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.database_full_size</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_MYSQL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' backup: Last incremental database backup</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.percona.backup[{$DBS_MYSQL_INSTANCE},database_incr]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <applications>
+                        <application>
+                            <name>MySQL: Backup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.database_incr</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_MYSQL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' backup: Last  incremental database backup (duration)</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.percona.backup[{$DBS_MYSQL_INSTANCE},database_incr_duration]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>s</units>
+                    <applications>
+                        <application>
+                            <name>MySQL: Backup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.database_incr_duration</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_MYSQL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' backup: Last incremental database backup (size)</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.percona.backup[{$DBS_MYSQL_INSTANCE},database_incr_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <applications>
+                        <application>
+                            <name>MySQL: Backup</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.database_incr_size</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>vfs.file.contents[{$DBS_MYSQL_BACKUP_FILE_INFO}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' backup: Get raw data</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>vfs.file.contents[{$DBS_MYSQL_BACKUP_FILE_INFO}]</key>
+                    <delay>30m</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+            </items>
+            <tags>
+                <tag>
+                    <tag>DBType</tag>
+                    <value>MySQL</value>
+                </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>Backup</value>
+                </tag>
+            </tags>
+            <macros>
+                <macro>
+                    <macro>{$DBS_MYSQL_BACKUP_FILE_INFO}</macro>
+                    <value>/var/lib/zabbix/mysql_backup.info</value>
+                    <description>Backup info file in json format</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_FULL_BACKUP_CRIT}</macro>
+                    <value>10d</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_FULL_BACKUP_WARN}</macro>
+                    <value>8d</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_INCR_BACKUP_CRIT}</macro>
+                    <value>5d</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_INCR_BACKUP_WARN}</macro>
+                    <value>2d</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_INSTANCE}</macro>
+                    <value>mysql_3306</value>
+                    <description>Unique instance name of MySQL</description>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+</zabbix_export>
