@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-01-26T17:28:38Z</date>
+    <date>2021-02-18T04:27:39Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -11,6 +11,13 @@
         <template>
             <template>DBS_Template DB PgSQL pg_probackup</template>
             <name>DB PgSQL Backup (Active, DBMON, pg_probackup, for all OS)</name>
+            <description>Monitoring backups via pgProBackup.&#13;
+&#13;
+This template was developed by Mikhail Grigorev for the Distributed Service company.&#13;
+&#13;
+Support e-mail: m.grigoriev@db-service.ru&#13;
+&#13;
+Version: 1.0</description>
             <groups>
                 <group>
                     <name>DBS.Templates/Modules</name>
@@ -1568,7 +1575,7 @@ ERR - ошибка при создании резервной копии, смо
                 <macro>
                     <macro>{$DBS_PGSQL_ARCH_BACKUP_FILE_INFO}</macro>
                     <value>/var/lib/zabbix/pg_arch_backup_INSTANCE.data</value>
-                    <description>Archivel backup info file in json format</description>
+                    <description>WAL backup info file in json format</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_FULL_BACKUP_CRIT}</macro>
