@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-18T04:27:52Z</date>
+    <date>2021-02-18T05:30:58Z</date>
     <groups>
         <group>
             <name>DBS.Templates</name>
@@ -57,6 +57,12 @@
                     </triggers>
                 </item>
             </items>
+            <tags>
+                <tag>
+                    <tag>Client</tag>
+                    <value>BT</value>
+                </tag>
+            </tags>
             <macros>
                 <macro>
                     <macro>{$DBS_ORACLE_CHECK_INTERVAL}</macro>
