@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-18T04:27:43Z</date>
+    <date>2021-02-20T20:01:45Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1918,14 +1918,33 @@ https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(2m)}&gt;{$DBS_PGSQL_ROLLBACK_MAX_WARN}</expression>
+                            <name>Number of rollbacked transaction is too high</name>
+                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_ROLLBACK_MAX_WARN}, alert started: {ITEM.VALUE}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Количество откатанных транзакций за последние 2 минуты превышает {$DBS_PGSQL_ROLLBACK_MAX_WARN} штук.&#13;
+Слишком большое количество откатанных транзакций говорит о проблемах в работе СУБД.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of prepared transactions</name>
@@ -5152,7 +5171,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_MAX_IDLE_IN_TRANSACTION_TIME_WARN}</macro>
-                    <value>6m</value>
+                    <value>1h</value>
                     <description>Max transaction time in 'idle in transaction' state</description>
                 </macro>
                 <macro>
@@ -5177,6 +5196,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_PGSQL_PING_NODATA_WARN}</macro>
                     <value>6m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_ROLLBACK_MAX_WARN}</macro>
+                    <value>60</value>
+                    <description>Max rollbacked transaction</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_XID_CRIT}</macro>
