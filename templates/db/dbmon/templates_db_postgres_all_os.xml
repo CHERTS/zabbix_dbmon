@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-23T11:19:08Z</date>
+    <date>2021-02-23T11:26:45Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1723,7 +1723,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of transactions that have been rolled back.</description>
+                    <description>Number of transactions that have been rolled back.&#13;
+Количество транзакций в этой базе данных, для которых был выполнен откат транзакции.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1748,8 +1749,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <name>Number of rollbacked transaction is too high</name>
                             <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_ROLLBACK_MAX_WARN}, alert started: {ITEM.VALUE}</opdata>
                             <priority>WARNING</priority>
-                            <description>Количество откатанных транзакций, а так же возможных ошибок в работе СУБД за последние 2 минуты превышает {$DBS_PGSQL_ROLLBACK_MAX_WARN} штук.&#13;
-Данный показатель показывает не только количество откатанных транзакций, но и говорит о количестве ошибок возникающих в СУБД.&#13;
+                            <description>Количество транзакций, для которых был выполнен откат транзакции, а так же возможных ошибок в работе СУБД за последние 2 минуты превышает {$DBS_PGSQL_ROLLBACK_MAX_WARN} штук.&#13;
+Данный показатель показывает не только количество откатов транзакции, но и говорит о количестве ошибок возникающих в СУБД.&#13;
 Доведите информацию до эксперта.</description>
                             <dependencies>
                                 <dependency>
