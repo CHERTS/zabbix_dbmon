@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-23T11:42:38Z</date>
+    <date>2021-02-23T11:56:49Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1831,10 +1831,10 @@ See pg_prepared_xacts for details.&#13;
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>s</units>
-                    <description>Current max transaction time in 'active' state exclude autovacuum processes (in second).&#13;
+                    <description>Current max transaction time in 'active' state (exclude autovacuum processes) (in second).&#13;
 See pg_stat_activity for details.&#13;
 &#13;
-Текущее максимальное время ожидания транзакции в состоянии 'active' исключая процессы autovacuum (в секундах).&#13;
+Текущее максимальное время ожидания транзакции в состоянии 'active' (исключая процессы autovacuum) (в секундах).&#13;
 Смотрите представления pg_stat_activity для детализации.</description>
                     <applications>
                         <application>
@@ -2246,7 +2246,7 @@ See pg_prepared_xacts for details.&#13;
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_active_autovacuum_cnt]</key>
                     <delay>0</delay>
                     <history>30d</history>
-                    <description>Количество процессов autovacuum в состоянии 'active'.</description>
+                    <description>Количество работающих процессов autovacuum (состояние 'active').</description>
                     <applications>
                         <application>
                             <name>PgSQL: Autovacuum</name>
