@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-23T11:26:45Z</date>
+    <date>2021-02-23T11:42:38Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -1251,7 +1251,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of times disk blocks were found already in the buffer cache.</description>
+                    <description>Number of times disk blocks were found already in the buffer cache.&#13;
+Сколько раз дисковые блоки обнаруживались в буферном кеше, так что чтение с диска не потребовалось (в значение входят только случаи обнаружения в буферном кеше PostgreSQL, а не в кеше файловой системы ОС).</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1266,10 +1267,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1282,7 +1279,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of disk blocks read.</description>
+                    <description>Number of disk blocks read.&#13;
+Количество прочитанных дисковых блоков в этой базе данных.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1297,10 +1295,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1313,7 +1307,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Time spent reading data file blocks by backends, in milliseconds.</description>
+                    <description>Time spent reading data file blocks by backends, in milliseconds.&#13;
+Время, затраченное серверными процессами в этой базе данных, на чтение блоков из файлов данных, в миллисекундах.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1328,10 +1323,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1344,7 +1335,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Time spent writing data file blocks by backends, in milliseconds.</description>
+                    <description>Time spent writing data file blocks by backends, in milliseconds.&#13;
+Время, затраченное серверными процессами в этой базе данных, на запись блоков в файлы данных, в миллисекундах.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1359,10 +1351,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1375,7 +1363,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of data page checksum failures detected (or on a shared object), or NULL if data checksums are not enabled. This metric included in PostgreSQL 12</description>
+                    <description>Number of data page checksum failures detected (or on a shared object), or NULL if data checksums are not enabled (This metric included in PostgreSQL 12).&#13;
+Количество ошибок контрольных сумм в страницах данных этой базы (или общего объекта) либо NULL, если контрольные суммы не проверяются.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1396,14 +1385,33 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <error_handler>CUSTOM_VALUE</error_handler>
                             <error_handler_params>-1</error_handler_params>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{last()}&gt;{$DBS_PGSQL_CHECKSUM_FAILURES_WARN} and {last()}&lt;&gt;-1</expression>
+                            <name>Number of checksum failures is too high</name>
+                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_CHECKSUM_FAILURES_WARN}, alert started: {ITEM.VALUE}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Количество ошибок контрольных сумм в страницах данных этой базы (или общего объекта) более {$DBS_PGSQL_CHECKSUM_FAILURES_WARN} штук.&#13;
+Наличие ошибок в контрольных суммах в страницах данных говорят о возможном повреждении данных в СУБД.&#13;
+Срочно доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' statistic: Conflicts</name>
@@ -1412,7 +1420,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of queries canceled due to conflicts with recovery (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details)</description>
+                    <description>Number of queries canceled due to conflicts with recovery (Conflicts occur only on standby servers; see pg_stat_database_conflicts for details).&#13;
+Количество запросов, отменённых из-за конфликта с восстановлением в этой базе данных. (Конфликты происходят только на ведомых серверах; более подробно смотрите pg_stat_database_conflicts).</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1427,10 +1436,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1443,7 +1448,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of deadlocks detected.</description>
+                    <description>Number of deadlocks detected.&#13;
+Количество взаимных блокировок, зафиксированное в этой базе данных.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1458,10 +1464,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1475,7 +1477,9 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>b</units>
-                    <description>Total amount of data written to temporary files by queries.</description>
+                    <description>Total amount of data written to temporary files by queries.&#13;
+Общий объём данных, записанных во временные файлы запросами в этой базе данных.&#13;
+Учитываются все временные файлы, вне зависимости от того, по какой причине они созданы и вне зависимости от значения log_temp_files.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1490,10 +1494,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1506,7 +1506,9 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of temporary files created by queries.</description>
+                    <description>Number of temporary files created by queries.&#13;
+Количество временных файлов, созданных запросами в этой базе данных.&#13;
+Подсчитываются все временные файлы независимо от причины их создания (например, для сортировки или для хеширования) и независимо от установленного значения log_temp_files</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1521,10 +1523,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1537,7 +1535,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of rows deleted by queries.</description>
+                    <description>Number of rows deleted by queries.&#13;
+Количество строк, удалённое запросами в этой базе данных.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1552,10 +1551,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1568,7 +1563,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of rows fetched by queries.</description>
+                    <description>Number of rows fetched by queries.&#13;
+Количество строк, извлечённое запросами в этой базе данных.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1583,10 +1579,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1599,7 +1591,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of rows inserted by queries.</description>
+                    <description>Number of rows inserted by queries.&#13;
+Количество строк, вставленное запросами в этой базе данных.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1614,10 +1607,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1630,7 +1619,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of rows returned by queries.</description>
+                    <description>Number of rows returned by queries.&#13;
+Количество строк, возвращённое запросами в этой базе данных.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1645,10 +1635,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1661,7 +1647,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of rows updated by queries.</description>
+                    <description>Number of rows updated by queries.&#13;
+Количество строк, изменённое запросами в этой базе данных.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1676,10 +1663,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                             <type>SIMPLE_CHANGE</type>
                             <params/>
                         </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
-                        </step>
                     </preprocessing>
                     <master_item>
                         <key>pgsql.db.stat.sum[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -1692,7 +1675,8 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
-                    <description>Number of transactions that have been committed.</description>
+                    <description>Number of transactions that have been committed.&#13;
+Количество зафиксированных транзакций в этой базе данных.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Statistic</name>
@@ -1706,10 +1690,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                         <step>
                             <type>SIMPLE_CHANGE</type>
                             <params/>
-                        </step>
-                        <step>
-                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>5m</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -5266,6 +5246,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_PGSQL_CACHE_HITRATIO_MIN_WARN}</macro>
                     <value>80</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_CHECKSUM_FAILURES_WARN}</macro>
+                    <value>1</value>
+                    <description>Number of checksum failures</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_CONFLICTS_MAX_WARN}</macro>
