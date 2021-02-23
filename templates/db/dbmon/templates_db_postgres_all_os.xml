@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-20T20:01:45Z</date>
+    <date>2021-02-23T10:18:57Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -364,7 +364,8 @@ Version: 1.0</description>
                     <key>pgsql.autovacuum.count[{$DBS_PGSQL_CONN_STRING}]</key>
                     <delay>2m</delay>
                     <history>30d</history>
-                    <description>Count number of autovacuum workers.</description>
+                    <description>Count number of autovacuum workers.&#13;
+Количество процессов autovacuum в состоянии 'active'.</description>
                     <applications>
                         <application>
                             <name>PgSQL: Autovacuum</name>
@@ -376,34 +377,6 @@ Version: 1.0</description>
                             <params>10m</params>
                         </step>
                     </preprocessing>
-                </item>
-                <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' autovacuum: Current max autovacuum time in sec</name>
-                    <type>DEPENDENT</type>
-                    <key>pgsql.autovacuum[{$DBS_PGSQL_INSTANCE},max_time]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <value_type>FLOAT</value_type>
-                    <units>s</units>
-                    <description>Current max autovacuum time in second.&#13;
-See pg_stat_activity for details.&#13;
-&#13;
-Текущее максимальное время длительности процесса autovacuum.&#13;
-Смотрите представления pg_stat_activity для детализации.</description>
-                    <applications>
-                        <application>
-                            <name>PgSQL: Autovacuum</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.autovacuum</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
-                    </master_item>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get exclusive backup stat</name>
@@ -1181,61 +1154,6 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <master_item>
                         <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
-                    <triggers>
-                        <trigger>
-                            <expression>{min(5m)}&gt;{$DBS_PGSQL_ACTIVE_WARN}</expression>
-                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{min(10m)}&lt;={$DBS_PGSQL_ACTIVE_WARN}</recovery_expression>
-                            <name>Too many connection in 'active' state</name>
-                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_ACTIVE_WARN}, alert started: {ITEM.VALUE}</opdata>
-                            <priority>WARNING</priority>
-                            <description>Очень много соединений в состоянии 'active'.&#13;
-Возможна деградация производительности.&#13;
-Используйте типовой запрос:&#13;
-SELECT * FROM pg_stat_activity WHERE state='active';&#13;
-для получения списка активных соединений.&#13;
-Доведите информацию до эксперта.</description>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                                <dependency>
-                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
-                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
-                                </dependency>
-                            </dependencies>
-                            <tags>
-                                <tag>
-                                    <tag>Instance</tag>
-                                    <value>{$DBS_PGSQL_INSTANCE}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
-                    </triggers>
-                </item>
-                <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Fastpath function call</name>
-                    <type>DEPENDENT</type>
-                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},fastpath_function_call]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <description>Total number of connections in a transaction state, but not executing a query</description>
-                    <applications>
-                        <application>
-                            <name>PgSQL: Connections</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.idle_in_transaction</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
-                    </master_item>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Idle</name>
@@ -1275,81 +1193,6 @@ SELECT * FROM pg_stat_activity WHERE state='active';&#13;
                         <step>
                             <type>JSONPATH</type>
                             <params>$.idle_in_transaction</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
-                    </master_item>
-                    <triggers>
-                        <trigger>
-                            <expression>{min(10m)}&gt;{$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}</expression>
-                            <name>Too many connection in 'idle in transaction' state</name>
-                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}, alert started: {ITEM.VALUE}</opdata>
-                            <priority>WARNING</priority>
-                            <description>Очень много соединений в состоянии 'idle in transaction'.&#13;
-Приложение начало транзакцию, ничего не делает, но и транзакцию не завершает.&#13;
-Доведите информацию до эксперта.</description>
-                            <dependencies>
-                                <dependency>
-                                    <name>Instance access failed</name>
-                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
-                                </dependency>
-                                <dependency>
-                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
-                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
-                                </dependency>
-                            </dependencies>
-                            <tags>
-                                <tag>
-                                    <tag>Instance</tag>
-                                    <value>{$DBS_PGSQL_INSTANCE}</value>
-                                </tag>
-                            </tags>
-                        </trigger>
-                    </triggers>
-                </item>
-                <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Idle in transaction (aborted)</name>
-                    <type>DEPENDENT</type>
-                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},idle_in_transaction_aborted]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <trends>0</trends>
-                    <value_type>TEXT</value_type>
-                    <description>Total number of connections in a transaction state, but not executing a query and one of the statements in the transaction caused an error.</description>
-                    <applications>
-                        <application>
-                            <name>PgSQL: Connections</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.idle_in_transaction_aborted</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
-                    </master_item>
-                </item>
-                <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Prepared</name>
-                    <type>DEPENDENT</type>
-                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},prepared]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <description>Total number of prepared transactions&#13;
-https://www.postgresql.org/docs/current/sql-prepare-transaction.html</description>
-                    <applications>
-                        <application>
-                            <name>PgSQL: Connections</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.prepared</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -1395,29 +1238,6 @@ https://www.postgresql.org/docs/current/sql-prepare-transaction.html</descriptio
                         <step>
                             <type>JSONPATH</type>
                             <params>$.total_pct</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>pgsql.connections[{$DBS_PGSQL_CONN_STRING}]</key>
-                    </master_item>
-                </item>
-                <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' connections: Waiting</name>
-                    <type>DEPENDENT</type>
-                    <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},waiting]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <description>Total number of waiting connections&#13;
-https://www.postgresql.org/docs/current/monitoring-stats.html#WAIT-EVENT-TABLE</description>
-                    <applications>
-                        <application>
-                            <name>PgSQL: Connections</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.waiting</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -2023,17 +1843,17 @@ See pg_prepared_xacts for details.&#13;
                     </triggers>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max transaction time in 'active' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Current max transaction time in 'active' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active]</key>
                     <delay>0</delay>
                     <history>30d</history>
                     <value_type>FLOAT</value_type>
                     <units>s</units>
-                    <description>Current max transaction time in 'active' state (second).&#13;
+                    <description>Current max transaction time in 'active' state exclude autovacuum processes (in second).&#13;
 See pg_stat_activity for details.&#13;
 &#13;
-Текущее максимальное время ожидания транзакции в состоянии 'active' (в секундах).&#13;
+Текущее максимальное время ожидания транзакции в состоянии 'active' исключая процессы autovacuum (в секундах).&#13;
 Смотрите представления pg_stat_activity для детализации.</description>
                     <applications>
                         <application>
@@ -2074,7 +1894,7 @@ See pg_stat_activity for details.&#13;
                     </triggers>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max insert transaction time in 'active' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Current max insert transaction time in 'active' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active_insert]</key>
                     <delay>0</delay>
@@ -2102,7 +1922,7 @@ See pg_stat_activity for details.&#13;
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max select transaction time in 'active' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Current max select transaction time in 'active' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active_select]</key>
                     <delay>0</delay>
@@ -2130,7 +1950,7 @@ See pg_stat_activity for details.&#13;
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max update transaction time in 'active' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Current max update transaction time in 'active' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},active_update]</key>
                     <delay>0</delay>
@@ -2158,7 +1978,109 @@ See pg_stat_activity for details.&#13;
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max transaction time in 'idle' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Current max time of autovacuum</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},autovacuum]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <units>s</units>
+                    <description>Current max time of autovacuum processes (in second).&#13;
+See pg_stat_activity for details.&#13;
+&#13;
+Текущее максимальное время работы процессов autovacuum (в секундах).&#13;
+Смотрите представления pg_stat_activity для детализации.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Autovacuum</name>
+                        </application>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.autovacuum</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_PGSQL_MAX_AUTOVACUUM_TIME_WARN}</expression>
+                            <name>Autovacuum worker is too long</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_PGSQL_MAX_AUTOVACUUM_TIME_WARN}, alert started: {ITEM.VALUE1}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Процесс autovacuum работает слишком долго.&#13;
+Сообщите данные эксперту для анализа.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of transaction in 'disabled' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},disabled_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Общее количество транзакций в состоянии 'disabled'.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.disabled_cnt</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of transaction in 'fastpath function call' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},fastpath_function_call_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Количество транзакций в состоянии 'fastpath function call'.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.fastpath_function_call_cnt</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Current max transaction time in 'idle' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle]</key>
                     <delay>0</delay>
@@ -2213,7 +2135,7 @@ See pg_stat_activity for details.&#13;
                     </triggers>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max transaction time in 'idle in transaction' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' : Current max transaction time in 'idle in transaction' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle_in_transaction]</key>
                     <delay>0</delay>
@@ -2265,7 +2187,52 @@ See pg_stat_activity for details.&#13;
                     </triggers>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max transaction time in 'prepared' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of transaction in 'idle in transaction (aborted)' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},idle_in_transaction_aborted_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Количество транзакций в состоянии 'idle in transaction (aborted)'.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.idle_in_transaction_aborted_cnt</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Maximum of connections</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},max_connections]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Maximum number of connections (max_connections settings).&#13;
+Максимальное количество соединений (настройка max_connections).</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.max_connections</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Current max transaction time in 'prepared' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},prepared]</key>
                     <delay>0</delay>
@@ -2293,7 +2260,32 @@ See pg_prepared_xacts for details.&#13;
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Number of transaction in 'active' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of autovacuum in 'active' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_active_autovacuum_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Количество процессов autovacuum в состоянии 'active'.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Autovacuum</name>
+                        </application>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_active_autovacuum_cnt</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of transaction in 'active' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_active_cnt]</key>
                     <delay>0</delay>
@@ -2313,9 +2305,42 @@ See pg_prepared_xacts for details.&#13;
                     <master_item>
                         <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_PGSQL_ACTIVE_WARN}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(10m)}&lt;={$DBS_PGSQL_ACTIVE_WARN}</recovery_expression>
+                            <name>Too many connection in 'active' state</name>
+                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_ACTIVE_WARN}, alert started: {ITEM.VALUE}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Очень много соединений в состоянии 'active' (воркеры autovacuum не учитываются).&#13;
+Возможна деградация производительности.&#13;
+Используйте типовой запрос:&#13;
+SELECT * FROM pg_stat_activity WHERE state='active';&#13;
+для получения списка активных соединений.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Number of insert transaction in 'active' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of insert transaction in 'active' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_active_insert_cnt]</key>
                     <delay>0</delay>
@@ -2337,7 +2362,7 @@ See pg_prepared_xacts for details.&#13;
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Number of select transaction in 'active' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of select transaction in 'active' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_active_select_cnt]</key>
                     <delay>0</delay>
@@ -2359,7 +2384,7 @@ See pg_prepared_xacts for details.&#13;
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Number of update transaction in 'active' state</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of update transaction in 'active' state</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_active_update_cnt]</key>
                     <delay>0</delay>
@@ -2381,7 +2406,154 @@ See pg_prepared_xacts for details.&#13;
                     </master_item>
                 </item>
                 <item>
-                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}' transactions: Current max waiting transaction time in sec</name>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Total number of connections</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_connection]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Total number of connections.&#13;
+Общее количество соединений.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_connection</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of transaction in 'idle' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_idle_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Общее количество транзакций в состоянии 'idle'.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_idle_cnt</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of transaction in 'idle in transaction' state</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_idle_in_transaction_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Количество транзакций в состоянии 'idle in transaction'.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_idle_in_transaction_cnt</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(5m)}&gt;{$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(10m)}&lt;={$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}</recovery_expression>
+                            <name>Too many connection in 'idle in transaction' state</name>
+                            <opdata>current: {ITEM.LASTVALUE}, threshold: {$DBS_PGSQL_IDLE_IN_TRANSACTION_WARN}, alert started: {ITEM.VALUE}</opdata>
+                            <priority>WARNING</priority>
+                            <description>Очень много соединений в состоянии 'idle in transaction'.&#13;
+Приложение начало транзакцию, ничего не делает, но и транзакцию не завершает.&#13;
+Доведите информацию до эксперта.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB PostgreSQL:pgsql.ping[{$DBS_PGSQL_CONN_STRING}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
+                                    <expression>{DBS_Template DB PostgreSQL:dbmon.agent.ping[{$DBS_PGSQL_INSTANCE}].nodata({$DBS_DBMON_AGENTD_NODATA_WARN})}=1</expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_PGSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Total number of connections, %</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_pct]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>percent</units>
+                    <description>Total number of connections in percentage.&#13;
+Общее количество соединений в процентах от максимального.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_pct</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of prepared transactions</name>
+                    <type>DEPENDENT</type>
+                    <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_prepared_cnt]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>Number of prepared transactions.&#13;
+See pg_prepared_xacts for details.&#13;
+&#13;
+Общее количество транзакции, подготовленных для двухфазной фиксации.&#13;
+Смотрите представления pg_prepared_xacts для детализации.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Transactions</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.total_prepared_cnt</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>pgsql.transactions[{$DBS_PGSQL_CONN_STRING}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Current max waiting transaction time in sec</name>
                     <type>DEPENDENT</type>
                     <key>pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},waiting]</key>
                     <delay>0</delay>
@@ -5165,6 +5337,11 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>2</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_PGSQL_MAX_AUTOVACUUM_TIME_WARN}</macro>
+                    <value>30m</value>
+                    <description>Max time of autovacuum worker</description>
+                </macro>
+                <macro>
                     <macro>{$DBS_PGSQL_MAX_EXCLUSIVE_BACKUP_DURATION_WARN}</macro>
                     <value>6h</value>
                     <description>Max duration time of exclusive backup.</description>
@@ -5274,28 +5451,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <height>200</height>
                             <x>0</x>
                             <y>2</y>
-                            <colspan>2</colspan>
-                            <rowspan>1</rowspan>
-                            <elements>0</elements>
-                            <valign>0</valign>
-                            <halign>0</halign>
-                            <dynamic>0</dynamic>
-                            <sort_triggers>0</sort_triggers>
-                            <url/>
-                            <application/>
-                            <max_columns>3</max_columns>
-                        </screen_item>
-                        <screen_item>
-                            <resourcetype>0</resourcetype>
-                            <style>0</style>
-                            <resource>
-                                <name>[PgSQL] Waiting connections</name>
-                                <host>DBS_Template DB PostgreSQL</host>
-                            </resource>
-                            <width>1200</width>
-                            <height>200</height>
-                            <x>0</x>
-                            <y>3</y>
                             <colspan>2</colspan>
                             <rowspan>1</rowspan>
                             <elements>0</elements>
@@ -5543,7 +5698,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_WARN} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_WARN} and {DBS_Template DB PostgreSQL:pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_connection].last()}&gt;0</expression>
             <name>Total number of connections is too high</name>
             <opdata>current: {ITEM.LASTVALUE1},{ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_WARN}%, alert started: {ITEM.VALUE1},{ITEM.VALUE2}</opdata>
             <priority>WARNING</priority>
@@ -5553,7 +5708,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             <dependencies>
                 <dependency>
                     <name>Total number of connections is too very high</name>
-                    <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
+                    <expression>{DBS_Template DB PostgreSQL:pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB PostgreSQL:pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_connection].last()}&gt;0</expression>
                 </dependency>
                 <dependency>
                     <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
@@ -5568,7 +5723,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB PostgreSQL:pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total].last()}&gt;0</expression>
+            <expression>{DBS_Template DB PostgreSQL:pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_pct].min(5m)}&gt;{$DBS_PGSQL_CONNECTION_PRC_CRIT} and {DBS_Template DB PostgreSQL:pgsql.instance.transactions[{$DBS_PGSQL_INSTANCE},total_connection].last()}&gt;0</expression>
             <name>Total number of connections is too very high</name>
             <opdata>current: {ITEM.LASTVALUE2}, threshold: {$DBS_PGSQL_CONNECTION_PRC_CRIT}%, alert started: {ITEM.VALUE2}</opdata>
             <priority>HIGH</priority>
@@ -5793,22 +5948,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},idle_in_transaction]</key>
                     </item>
                 </graph_item>
-                <graph_item>
-                    <sortorder>4</sortorder>
-                    <color>A54F10</color>
-                    <item>
-                        <host>DBS_Template DB PostgreSQL</host>
-                        <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},prepared]</key>
-                    </item>
-                </graph_item>
-                <graph_item>
-                    <sortorder>5</sortorder>
-                    <color>FC6EA3</color>
-                    <item>
-                        <host>DBS_Template DB PostgreSQL</host>
-                        <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},fastpath_function_call]</key>
-                    </item>
-                </graph_item>
             </graph_items>
         </graph>
         <graph>
@@ -5910,24 +6049,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <item>
                         <host>DBS_Template DB PostgreSQL</host>
                         <key>pgsql.instance.dbstat.sum[{$DBS_PGSQL_INSTANCE},tup_updated]</key>
-                    </item>
-                </graph_item>
-            </graph_items>
-        </graph>
-        <graph>
-            <name>[PgSQL] Waiting connections</name>
-            <ymax_type_1>ITEM</ymax_type_1>
-            <ymax_item_1>
-                <host>DBS_Template DB PostgreSQL</host>
-                <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},total]</key>
-            </ymax_item_1>
-            <graph_items>
-                <graph_item>
-                    <sortorder>1</sortorder>
-                    <color>1A7C11</color>
-                    <item>
-                        <host>DBS_Template DB PostgreSQL</host>
-                        <key>pgsql.instance.connections[{$DBS_PGSQL_INSTANCE},waiting]</key>
                     </item>
                 </graph_item>
             </graph_items>
