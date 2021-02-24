@@ -32,6 +32,8 @@
 
 extern int init_dbmon_config_done;
 
+#define PGSQL_SELECT_OK_DBS "SELECT 1 AS OK;"
+
 #define PGSQL_VERSION_DBS "SELECT VERSION() AS VERSION;"
 
 #define PGSQL_VERSION_INT_DBS "SELECT current_setting('server_version_num')::int;"
@@ -527,6 +529,13 @@ FROM( \
 	COALESCE(date_part('epoch', now() - pg_backup_start_time())::int, 0) AS BACKUPDURATION \
 ) T;"
 
+// Get bloating tables
+#define PGSQL_BLOATING_TABLES_DBS " \
+SELECT count(*) AS bloating_table \
+	FROM pg_catalog.pg_stat_all_tables \
+	WHERE (n_dead_tup/(n_live_tup+n_dead_tup)::float8) > 0.2 \
+		AND (n_live_tup+n_dead_tup) > 50;"
+
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
@@ -539,6 +548,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.db.locks",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.db.stat.sum",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.db.stat",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.db.bloating",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.connections",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.transactions",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.wal.stat",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
@@ -578,6 +588,7 @@ static int	pgsql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeo
 {
 	char						*pg_conn_string;
 	struct zbx_db_connection	*pgsql_conn;
+	struct zbx_db_result		pgsql_result;
 
 	if (1 < request->nparam)
 	{
@@ -609,7 +620,16 @@ static int	pgsql_ping(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE timeo
 
 	if (NULL != pgsql_conn)
 	{
-		SET_UI64_RESULT(result, 1);
+		if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_SELECT_OK_DBS))
+		{
+			SET_UI64_RESULT(result, 1);
+			zbx_db_clean_result(&pgsql_result);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error executing query", __func__, request->key);
+			SET_UI64_RESULT(result, 0);
+		}
 	}
 	else
 	{
@@ -838,7 +858,7 @@ int	PGSQL_DB_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const char *query, zbx_db_result_type result_type)
 {
 	int							ret = SYSINFO_RET_FAIL, db_ret = ZBX_DB_ERROR;
-	char						*pg_conn_string;
+	char						*pg_conn_string, *tmp = NULL, *pg_database, *pg_conn_string_new;
 	struct zbx_db_connection	*pgsql_conn;
 	struct zbx_db_result		pgsql_result;
 	unsigned long				version;
@@ -847,6 +867,12 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 	int							min_nparams = 1, max_nparams = 1;
 
 	if (0 == strcmp(request->key, "pgsql.query.nojson") || 0 == strcmp(request->key, "pgsql.query.onerow") || 0 == strcmp(request->key, "pgsql.query.twocoll") || 0 == strcmp(request->key, "pgsql.query.multirow") || 0 == strcmp(request->key, "pgsql.query.discovery"))
+	{
+		max_nparams = 2;
+		min_nparams = 2;
+	}
+
+	if (0 == strcmp(request->key, "pgsql.db.bloating"))
 	{
 		max_nparams = 2;
 		min_nparams = 2;
@@ -870,6 +896,21 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 	{
 		SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter (pg_conn_string)."));
 		return SYSINFO_RET_FAIL;
+	}
+
+	if (0 == strcmp(request->key, "pgsql.db.bloating"))
+	{
+		pg_database = get_rparam(request, 1);
+
+		if (NULL == pg_database || '\0' == *pg_database)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter (pg_database)."));
+			return SYSINFO_RET_FAIL;
+		}
+
+		pg_conn_string_new = zbx_dsprintf(NULL, "dbname=%s", pg_database);
+		tmp = string_replace(pg_conn_string, "dbname=postgres", pg_conn_string_new);
+		zbx_free(tmp);
 	}
 
 	pgsql_conn = zbx_db_connect_pgsql(pg_conn_string);
@@ -1455,6 +1496,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.db.stat"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_DB_STAT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.db.bloating"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_BLOATING_TABLES_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "pgsql.connections"))
 	{
