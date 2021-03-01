@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-23T11:56:49Z</date>
+    <date>2021-03-01T07:45:46Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
