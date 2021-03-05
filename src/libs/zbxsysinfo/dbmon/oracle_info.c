@@ -813,6 +813,12 @@ FROM v$asm_diskgroup dg, v$asm_disk d \
 WHERE dg.group_number=d.group_number \
 ORDER BY dg.name"
 
+#define ORACLE_BLOCKED_INFO_DBS "\
+SELECT count(*) AS BLOCKED_NUM \
+FROM gv$session a, gv$locked_object b, dba_objects c \
+WHERE b.object_id = c.object_id AND a.sid = b.session_id AND a.event \
+LIKE 'enq:%'"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -828,6 +834,7 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.instance.fra",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.redolog_switch_rate",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.redolog_size_per_hour",	CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.blocked",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.backup.archivelog",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.backup.full",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.backup.incr",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
@@ -1395,6 +1402,10 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp(request->key, "oracle.instance.redolog_size_per_hour"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_INSTANCE_REDOLOG_SIZE_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1, ORA_ACTIVE);
+	}
+	else if (0 == strcmp(request->key, "oracle.instance.blocked"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_BLOCKED_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.backup.archivelog"))
 	{
