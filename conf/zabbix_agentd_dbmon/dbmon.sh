@@ -360,6 +360,7 @@ _oracle_service_discovery() {
 	local SERVICELIST=""
 	local SERVICE_LIST_NUM=0
 	local SERVICE_DISCOVERY_RESULT=""
+	local LSNCTRL_SERVICE_NAME=""
 	local LSNCTRL_SERVICE_LIST=""
 	local ORA_BIN_DIR=""
 	local ORA_HOME=""
@@ -381,7 +382,7 @@ _oracle_service_discovery() {
 			if [ -n "${PS_FIND[$i]}" ]; then
 				local ORA_LSNR_USER=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $1}')
 				local ORA_LSNR_PATH=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $2}')
-				local ORA_LSNR_NAME=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $3}')
+				local ORA_LSNR_NAME=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $3}' | ${TR_BIN} '[:upper:]' '[:lower:]')
 				if [ -f "${ORA_LSNR_PATH}"  ]; then
 					LISTENER_CTRL_BIN="$(${DIRNAME_BIN} "${ORA_LSNR_PATH}")/lsnrctl"
 					ORA_BIN_DIR=$(${DIRNAME_BIN} "${ORA_LSNR_PATH}")
@@ -398,8 +399,9 @@ _oracle_service_discovery() {
 							SERVICE_LIST_NUM=${#LSNCTRL_SERVICE_LIST[*]}
 							_debug_logging "Func: ${FUNCNAME[0]}: Found ${SERVICE_LIST_NUM} service."
 							for ((j=0; j<${#LSNCTRL_SERVICE_LIST[@]}; j++)); do
+								LSNCTRL_SERVICE_NAME=$(${ECHO_BIN} "${LSNCTRL_SERVICE_LIST[$j]}" | ${TR_BIN} '[:upper:]' '[:lower:]')
 								if [ -n "${LSNCTRL_SERVICE_LIST[$j]}" ]; then
-									SERVICELIST="${SERVICELIST},"'{"{#SERVICE_NAME}":"'${LSNCTRL_SERVICE_LIST[$j]}'","{#HOSTNAME}":"'${HOSTNAME}'","{#LSNR_NAME}":"'${ORA_LSNR_NAME}'","{#LSNR_PATH}":"'${LISTENER_CTRL_BIN}'"}'
+									SERVICELIST="${SERVICELIST},"'{"{#SERVICE_NAME}":"'${LSNCTRL_SERVICE_NAME}'","{#HOSTNAME}":"'${HOSTNAME}'","{#LSNR_NAME}":"'${ORA_LSNR_NAME}'","{#LSNR_PATH}":"'${LISTENER_CTRL_BIN}'"}'
 								fi
 							done
 						fi
@@ -448,13 +450,13 @@ _oracle_service_info() {
 		export ORACLE_HOME=${ORA_HOME}
 		if [ -f "${LISTENER_CTRL_BIN}" ]; then
 			local TIME_NOW=$(${DATE_BIN} +%s)
-			_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status \"${LISTENER_NAME}\" | ${GREP_BIN} 'Service \"${SERVICE_NAME}\"'"
-			local SERVICE_STATUS=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"")
+			_debug_logging "Func: ${FUNCNAME[0]}: Run: ${LISTENER_CTRL_BIN} status \"${LISTENER_NAME}\" | ${GREP_BIN} -i 'Service \"${SERVICE_NAME}\"'"
+			local SERVICE_STATUS=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} -i "Service \"${SERVICE_NAME}\"")
 			if [ -n "${SERVICE_STATUS}" ]; then
 				if [[ "${PLATFORM}" = "aix" ]]; then
-					NUM_OF_INST_IN_SERVICE=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"" | ${SED_BIN} -n "s/.*has \([^ ]*\) instance.*/\1/p")
+					NUM_OF_INST_IN_SERVICE=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} -i "Service \"${SERVICE_NAME}\"" | ${SED_BIN} -n "s/.*has \([^ ]*\) instance.*/\1/p")
 				else
-					NUM_OF_INST_IN_SERVICE=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"" | ${SED_BIN} -r "s/.*has ([^ ]+) instance.*/\1/")
+					NUM_OF_INST_IN_SERVICE=$(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} -i "Service \"${SERVICE_NAME}\"" | ${SED_BIN} -r "s/.*has ([^ ]+) instance.*/\1/")
 				fi
 				_debug_logging "Func: ${FUNCNAME[0]}: NUM_OF_INST_IN_SERVICE=${NUM_OF_INST_IN_SERVICE}"
 				if [ -z "${NUM_OF_INST_IN_SERVICE}" ]; then
@@ -466,7 +468,7 @@ _oracle_service_info() {
 				if [[ "${PLATFORM}" = "aix" ]]; then
 					INSTANCE_IN_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${NAWK_BIN} "\$0~s{for(c=NR-b;c<=NR+a;c++)r[c]=1}{q[NR]=\$0}END{for(c=1;c<=NR;c++)if(r[c])print q[c]}" b=0 a=${NUM_OF_INST_IN_SERVICE} s="Service \"${SERVICE_NAME}\"" | ${GREP_BIN} "Instance" | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' | ${SED_BIN} "s/\"//g") )
 				else
-					INSTANCE_IN_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} "Service \"${SERVICE_NAME}\"" -A ${NUM_OF_INST_IN_SERVICE} | ${TAIL_BIN} -n ${NUM_OF_INST_IN_SERVICE} | ${SED_BIN} "s/^[ \t]*//;s/[ ]*$//" | ${SED_BIN} "s/\"//g") )
+					INSTANCE_IN_SERVICE_LIST=( $(${LISTENER_CTRL_BIN} status "${LISTENER_NAME}" | ${GREP_BIN} -i "Service \"${SERVICE_NAME}\"" -A ${NUM_OF_INST_IN_SERVICE} | ${TAIL_BIN} -n ${NUM_OF_INST_IN_SERVICE} | ${SED_BIN} "s/^[ \t]*//;s/[ ]*$//" | ${SED_BIN} "s/\"//g") )
 				fi
 				_debug_logging "Func: ${FUNCNAME[0]}: INSTANCE_IN_SERVICE_LIST=$(declare -p INSTANCE_IN_SERVICE_LIST | ${SED_BIN} -e 's/^declare -a [^=]*=//')"
 				for ((i=0; i<${#INSTANCE_IN_SERVICE_LIST[@]}; i++)); do
@@ -538,7 +540,7 @@ _oracle_listener_discovery() {
 			if [ -n "${PS_FIND[$i]}" ]; then
 				ORA_LSNR_USER=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $1}')
 				ORA_LSNR_PATH=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $2}')
-				ORA_LSNR_NAME=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $3}')
+				ORA_LSNR_NAME=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $3}' | ${TR_BIN} '[:upper:]' '[:lower:]')
 				if [ -f "${ORA_LSNR_PATH}" ]; then
 					ORA_LSNR_BIN_NAME=$(basename "${ORA_LSNR_PATH}")
 					if [[ "${ORA_LSNR_BIN_NAME}" = "tnslsnr" ]]; then
@@ -588,9 +590,9 @@ _oracle_listener_info() {
 			OLD_IFS=$IFS
 			IFS=$'\n'
 			if [[ "${PLATFORM}" = "aix" ]]; then
-				PS_FIND=($(${PS_BIN} -eo user,args | ${GREP_BIN} -v "${SCRIPT_NAME}" 2>/dev/null | ${GREP_BIN} -v "zabbix_get" 2>/dev/null | ${GREP_BIN} [t]nslsnr 2>/dev/null | ${GREP_BIN} "${LISTENER_NAME}" 2>/dev/null | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' 2>/dev/null))
+				PS_FIND=($(${PS_BIN} -eo user,args | ${GREP_BIN} -v "${SCRIPT_NAME}" 2>/dev/null | ${GREP_BIN} -v "zabbix_get" 2>/dev/null | ${GREP_BIN} [t]nslsnr 2>/dev/null | ${GREP_BIN} -i "${LISTENER_NAME}" 2>/dev/null | ${SED_BIN} 's/^[ \t]*//;s/[ ]*$//' 2>/dev/null))
 			else
-				PS_FIND=($(${PS_BIN} -eo user,cmd | ${GREP_BIN} -v "${SCRIPT_NAME}" 2>/dev/null | ${GREP_BIN} -v "zabbix_get" 2>/dev/null | ${GREP_BIN} [t]nslsnr 2>/dev/null | ${GREP_BIN} "${LISTENER_NAME}" 2>/dev/null | ${SED_BIN} 's/^[ \t]*//;s/[ \t]*$//' 2>/dev/null))
+				PS_FIND=($(${PS_BIN} -eo user,cmd | ${GREP_BIN} -v "${SCRIPT_NAME}" 2>/dev/null | ${GREP_BIN} -v "zabbix_get" 2>/dev/null | ${GREP_BIN} [t]nslsnr 2>/dev/null | ${GREP_BIN} -i "${LISTENER_NAME}" 2>/dev/null | ${SED_BIN} 's/^[ \t]*//;s/[ \t]*$//' 2>/dev/null))
 			fi
 			if [ $? -eq 0 ]; then
 				PS_FIND_NUM=${#PS_FIND[*]}
