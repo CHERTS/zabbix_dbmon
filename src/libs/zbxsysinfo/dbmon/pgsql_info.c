@@ -258,8 +258,12 @@ SELECT greatest(max(age(backend_xmin)), max(age(backend_xid))) \
 FROM pg_catalog.pg_stat_activity;"
 
 #define PGSQL_CACHE_HIT_DBS "\
-SELECT round(sum(blks_hit) * 100 / sum(blks_hit + blks_read), 2) \
+SELECT ROUND(SUM(blks_hit) * 100 / SUM(blks_hit + blks_read), 2) \
 FROM pg_catalog.pg_stat_database;"
+
+#define PGSQL_COMMIT_HIT_DBS "\
+SELECT ROUND((100 * SUM(xact_commit) / (SUM(xact_commit + xact_rollback)))::numeric, 2) AS COMMIT_RATIO \
+FROM pg_catalog.pg_stat_database WHERE (xact_commit + xact_rollback) > 0;"
 
 #define PGSQL_BGWRITER_DBS "\
 SELECT row_to_json(T) \
@@ -542,6 +546,21 @@ SELECT coalesce(count(*), 0) AS SUPER_USER_CNT \
 	FROM pg_catalog.pg_user \
 	WHERE usesuper = 't' OR usecreatedb = 't';"
 
+#define PGSQL_STAT_STATEMENTS_DBS " \
+SELECT row_to_json(T) \
+FROM( \
+	SELECT SUM(shared_blks_read+local_blks_read+temp_blks_read)*current_setting('block_size')::int AS READ_BYTES, \
+		SUM(shared_blks_written+local_blks_written+temp_blks_written)*current_setting('block_size')::int AS WRITE_BYTES, \
+		SUM(shared_blks_dirtied+local_blks_dirtied)*current_setting('block_size')::int AS DIRTY_BYTES, \
+		SUM(blk_read_time)/float4(100) AS READ_TIME, \
+		SUM(blk_write_time)/float4(100) AS WRITE_TIME, \
+		ROUND((SUM(total_time-blk_read_time-blk_write_time)/float4(100))::numeric, 2) AS OTHER_TIME, \
+		ROUND((SUM(total_time)/SUM(calls)*float4(100))::numeric, 2) AS AVG_QUERY_TIME, \
+		SUM(calls) AS TOTAL_CALLS, \
+		ROUND((SUM(total_time)/float4(100))::numeric, 2) AS TOTAL_TIME \
+	FROM public.pg_stat_statements \
+) T;"
+
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
 {
@@ -560,6 +579,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.wal.stat",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.oldest.xid",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.cache.hit",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.commit.hit",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.bgwriter",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.checkpoint",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.autovacuum.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
@@ -579,6 +599,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.replication.slots",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.backup.exclusive",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.superuser.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.statements.stat",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.query.nojson",			CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
 	{"pgsql.query.onerow",			CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
 	{"pgsql.query.twocoll",			CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
@@ -1528,6 +1549,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	{
 		ret = pgsql_make_result(request, result, PGSQL_CACHE_HIT_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
+	else if (0 == strcmp(request->key, "pgsql.commit.hit"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_COMMIT_HIT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
 	else if (0 == strcmp(request->key, "pgsql.bgwriter"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_BGWRITER_DBS, ZBX_DB_RES_TYPE_NOJSON);
@@ -1599,6 +1624,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.superuser.count"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_SUPERUSER_CNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.statements.stat"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_STAT_STATEMENTS_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else
 	{
