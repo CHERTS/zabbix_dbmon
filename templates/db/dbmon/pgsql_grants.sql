@@ -54,6 +54,7 @@ postgres=# select * from pg_shdepend where refclassid = 'pg_authid'::regclass an
 
 2) Reassigning Ownership:
 postgres=# REASSIGN OWNED BY zabbixmon TO postgres;
+or
 postgres=# DROP OWNED BY zabbixmon;
 
 3) Executing REVOKE PRIVILEGES:
