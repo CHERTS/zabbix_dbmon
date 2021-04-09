@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-18T04:27:12Z</date>
+    <date>2021-04-09T05:02:10Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -57,7 +57,8 @@ Version: 1.0</description>
                             <priority>HIGH</priority>
                             <description>PGpool-II перестал принимать новые соединения.&#13;
 Срочно доведите информацию до заказчика и эксперта.&#13;
-Аларм закрывается в ручном режиме после решения проблемы.</description>
+Аларм будет находиться на доске даже если проблема уже решена.&#13;
+После решения проблемы закройте аларм руками.</description>
                             <manual_close>YES</manual_close>
                         </trigger>
                         <trigger>
@@ -67,7 +68,8 @@ Version: 1.0</description>
                             <priority>WARNING</priority>
                             <description>PGpool-II не может подключиться к одному или нескольким бэкенд-серверам PostgreSQL.&#13;
 Доведите информацию до заказчика и эксперта.&#13;
-Аларм закрывается в ручном режиме после решения проблемы.</description>
+Аларм будет находиться на доске даже если проблема уже решена.&#13;
+После решения проблемы закройте аларм руками.</description>
                             <manual_close>YES</manual_close>
                         </trigger>
                         <trigger>
