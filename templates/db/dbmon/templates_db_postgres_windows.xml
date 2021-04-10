@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-10-08T09:00:29Z</date>
+    <date>2021-04-10T18:17:49Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -74,6 +74,11 @@
             </tags>
             <macros>
                 <macro>
+                    <macro>{$DBS_PGSQL_ENABLE_SERVICE_ALARM}</macro>
+                    <value>1</value>
+                    <description>Default enable alarm &quot;Service 'postgres' is not running&quot;</description>
+                </macro>
+                <macro>
                     <macro>{$DBS_PGSQL_SERVICE_NAME}</macro>
                     <value>postgresql-12</value>
                 </macro>
@@ -98,9 +103,9 @@
             </tags>
         </trigger>
         <trigger>
-            <expression>{DBS_Template PostgreSQL for Windows:service.info[{$DBS_PGSQL_SERVICE_NAME},state].last()}&lt;&gt;0 and {DBS_Template PostgreSQL for Windows:service.info[{$DBS_PGSQL_SERVICE_NAME},startup].last()}&lt;&gt;3</expression>
+            <expression>{DBS_Template PostgreSQL for Windows:service.info[{$DBS_PGSQL_SERVICE_NAME},state].last()}&lt;&gt;0 and {DBS_Template PostgreSQL for Windows:service.info[{$DBS_PGSQL_SERVICE_NAME},startup].last()}&lt;&gt;3 and {$DBS_PGSQL_ENABLE_SERVICE_ALARM}=1</expression>
             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-            <recovery_expression>{DBS_Template PostgreSQL for Windows:service.info[{$DBS_PGSQL_SERVICE_NAME},state].max(3m)}=0 or {DBS_Template PostgreSQL for Windows:service.info[{$DBS_PGSQL_SERVICE_NAME},startup].last()}=3</recovery_expression>
+            <recovery_expression>{DBS_Template PostgreSQL for Windows:service.info[{$DBS_PGSQL_SERVICE_NAME},state].max(3m)}=0 or {DBS_Template PostgreSQL for Windows:service.info[{$DBS_PGSQL_SERVICE_NAME},startup].last()}=3 or {$DBS_PGSQL_ENABLE_SERVICE_ALARM}=0</recovery_expression>
             <name>Service '{$DBS_PGSQL_SERVICE_NAME}' is not running</name>
             <opdata>current state: {ITEM.LASTVALUE1}, startup type: {ITEM.LASTVALUE2}</opdata>
             <priority>DISASTER</priority>

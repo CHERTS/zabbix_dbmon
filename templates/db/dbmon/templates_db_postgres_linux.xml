@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-10-07T08:20:13Z</date>
+    <date>2021-04-10T18:13:29Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -35,9 +35,9 @@
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{max(2m)}=0</expression>
+                            <expression>{max(2m)}=0 and {$DBS_PGSQL_ENABLE_SERVICE_ALARM}=1</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{min(3m)}&gt;0</recovery_expression>
+                            <recovery_expression>{min(3m)}&gt;0 or {$DBS_PGSQL_ENABLE_SERVICE_ALARM}=0</recovery_expression>
                             <name>Service '{$DBS_PGSQL_SERVICE_NAME}' is not running</name>
                             <priority>DISASTER</priority>
                             <description>Основной процесс '{$DBS_PGSQL_SERVICE_NAME}' экземпляра '{$DBS_PGSQL_INSTANCE}' был остановлен или аварийно завершил работу (crash).&#13;
@@ -60,6 +60,11 @@
                 </tag>
             </tags>
             <macros>
+                <macro>
+                    <macro>{$DBS_PGSQL_ENABLE_SERVICE_ALARM}</macro>
+                    <value>1</value>
+                    <description>Default enable alarm &quot;Service 'postgres' is not running&quot;</description>
+                </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_SERVICE_CMD_REGEXP}</macro>
                     <value>^.*(config_file|--config-file)=.*\.conf.*$</value>
