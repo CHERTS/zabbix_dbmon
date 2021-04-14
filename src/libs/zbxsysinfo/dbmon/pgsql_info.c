@@ -331,19 +331,63 @@ FROM( \
 	FROM pg_catalog.pg_prepared_xacts \
 ) T;"
 
-#define PGSQL_NOT_DEFAULT_SETTINGS_DBS "\
+#define PGSQL_CONFIG_DBS "\
 SELECT json_build_object( \
 	'extensions', ( \
 		SELECT array_agg(extname) FROM ( \
-			SELECT extname FROM pg_extension ORDER BY extname \
+			SELECT extname FROM \
+			pg_extension \
+			ORDER BY extname \
 		) AS e \
 	), \
 	'settings', ( \
 		SELECT json_object(array_agg(name), array_agg(setting)) FROM ( \
-			SELECT name, setting FROM pg_settings WHERE (source NOT IN ('default', 'session') OR name = 'server_version_num') AND name NOT IN ('application_name') ORDER BY name \
+			SELECT name, setting \
+			FROM pg_settings \
+			WHERE name != 'application_name' AND name != 'server_version' AND name != 'server_version_num' \
+			ORDER BY name \
 		) AS s \
 	) \
 );"
+
+#define PGSQL_CONFIG_NOT_DEFAULT_DBS "\
+SELECT json_build_object( \
+	'extensions', ( \
+		SELECT array_agg(extname) FROM ( \
+				SELECT extname \
+				FROM pg_extension \
+				ORDER BY extname \
+		) AS e \
+	), \
+	'settings', ( \
+		SELECT json_object(array_agg(name), array_agg(setting)) FROM ( \
+			SELECT name, setting \
+			FROM pg_settings \
+			WHERE (source NOT IN ('default', 'session') OR name = 'server_version_num') AND name NOT IN ('application_name') \
+			ORDER BY name \
+		) AS s \
+	) \
+);"
+
+#define PGSQL_CONFIG_HASH_DBS " \
+SELECT md5( \
+	json_build_object( \
+		'extensions', ( \
+			SELECT array_agg(extname) FROM ( \
+				SELECT extname \
+				FROM pg_extension \
+				ORDER BY extname \
+			) AS e \
+		), \
+		'settings', ( \
+			SELECT json_object(array_agg(name), array_agg(setting)) FROM ( \
+				SELECT name, setting \
+				FROM pg_settings \
+				WHERE name != 'application_name' AND name != 'server_version' AND name != 'server_version_num' \
+				ORDER BY name \
+			) AS s \
+		) \
+	)::text);"
 
 #define PGSQL_BUFFER_CACHE_DBS " \
 SELECT row_to_json(T) \
@@ -587,7 +631,9 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.archive.size",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.prepared.transactions",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.buffercache",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
-	{"pgsql.settings",				CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.config",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.config.not_default",			CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.config.hash",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.info",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.stat",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.role",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
@@ -1577,9 +1623,17 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	{
 		ret = pgsql_make_result(request, result, PGSQL_PREPARED_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
-	else if (0 == strcmp(request->key, "pgsql.settings"))
+	else if (0 == strcmp(request->key, "pgsql.config"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_NOT_DEFAULT_SETTINGS_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = pgsql_make_result(request, result, PGSQL_CONFIG_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.config.not_default"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_CONFIG_NOT_DEFAULT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.config.hash"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_CONFIG_HASH_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "pgsql.buffercache"))
 	{

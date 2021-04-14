@@ -786,16 +786,16 @@ SELECT name AS DG_NAME, \
 FROM v$asm_diskgroup"
 
 #define ORACLE_ASM_TOTAL_DISK_IN_DISKGROUP_DBS "\
-SELECT dg.name AS DG_NAME, nvl(count(*),0) AS TOTAL_DISK \
+SELECT dg.name AS DG_NAME, NVL(count(*),0) AS TOTAL_DISK \
 FROM v$asm_diskgroup dg, v$asm_disk d \
 WHERE dg.group_number=d.group_number GROUP BY dg.name"
 
 #define ORACLE_ASM_TOTAL_DISKGROUP_DBS "\
-SELECT nvl(count(*),0) AS TOTAL_DISKGROUP \
+SELECT NVL(count(*),0) AS TOTAL_DISKGROUP \
 FROM v$asm_diskgroup"
 
 #define ORACLE_ASM_TOTAL_DISK_DBS "\
-SELECT nvl(count(*),0) AS TOTAL_DISKS \
+SELECT NVL(count(*),0) AS TOTAL_DISKS \
 FROM v$asm_diskgroup dg, v$asm_disk d \
 WHERE dg.group_number=d.group_number"
 
@@ -814,7 +814,7 @@ WHERE dg.group_number=d.group_number \
 ORDER BY dg.name"
 
 #define ORACLE_BLOCKED_INFO_DBS "\
-SELECT count(*) AS BLOCKED_NUM \
+SELECT NVL(count(*), 0) AS BLOCKED_NUM \
 FROM gv$session a, gv$locked_object b, dba_objects c \
 WHERE b.object_id = c.object_id AND a.sid = b.session_id AND a.event \
 LIKE 'enq:%'"
