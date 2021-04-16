@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-04-06T06:38:44Z</date>
+    <date>2021-04-16T05:04:10Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -4735,7 +4735,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         </step>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
-                            <params>30h</params>
+                            <params>30m</params>
                         </step>
                     </preprocessing>
                 </discovery_rule>
