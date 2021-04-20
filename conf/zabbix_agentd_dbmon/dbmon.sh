@@ -541,12 +541,13 @@ _oracle_listener_discovery() {
 				ORA_LSNR_USER=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $1}')
 				ORA_LSNR_PATH=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $2}')
 				ORA_LSNR_NAME=$(${ECHO_BIN} "${PS_FIND[$i]}" | ${AWK_BIN} -F' ' '{print $3}' | ${TR_BIN} '[:upper:]' '[:lower:]')
+				ORA_LSNR_NAME_UPPER=$(${ECHO_BIN} "${ORA_LSNR_NAME}" | ${TR_BIN} '[:lower:]' '[:upper:]')
 				if [ -f "${ORA_LSNR_PATH}" ]; then
 					ORA_LSNR_BIN_NAME=$(basename "${ORA_LSNR_PATH}")
 					if [[ "${ORA_LSNR_BIN_NAME}" = "tnslsnr" ]]; then
 						if [ -n "${ORA_LSNR_NAME}" ]; then
-							_debug_logging "Func: ${FUNCNAME[0]}: LSNR_USER:${ORA_LSNR_USER}|LSNR_NAME:${ORA_LSNR_NAME}|LSNR_PATH:${ORA_LSNR_PATH}"
-							LSNRLIST="${LSNRLIST},"'{"{#HOSTNAME}":"'${HOSTNAME}'","{#LSNR_NAME}":"'${ORA_LSNR_NAME}'","{#LSNR_PATH}":"'${ORA_LSNR_PATH}'","{#LSNR_USER}":"'${ORA_LSNR_USER}'"}'
+							_debug_logging "Func: ${FUNCNAME[0]}: LSNR_USER:${ORA_LSNR_USER}|LSNR_NAME:${ORA_LSNR_NAME}|LSNR_NAME_UPPER:${ORA_LSNR_NAME_UPPER}|LSNR_PATH:${ORA_LSNR_PATH}"
+							LSNRLIST="${LSNRLIST},"'{"{#HOSTNAME}":"'${HOSTNAME}'","{#LSNR_NAME}":"'${ORA_LSNR_NAME}'","{#LSNR_NAME_UPPER}":"'${ORA_LSNR_NAME_UPPER}'","{#LSNR_PATH}":"'${ORA_LSNR_PATH}'","{#LSNR_USER}":"'${ORA_LSNR_USER}'"}'
 						fi
 					fi
 				fi
