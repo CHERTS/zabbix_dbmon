@@ -5,6 +5,10 @@ Released into the Public Domain by Ulrich Drepper <drepper@redhat.com>.  */
 
 #ifdef __linux__
 	#include <endian.h>
+#elif __hpux
+/* Nothing to do in HP-UX */
+#elif _AIX
+/* Nothing to do in AIX */
 #else
 	#if defined(DUK_F_OLD_SOLARIS)
 		#include <sys/isa_defs.h>
@@ -15,7 +19,6 @@ Released into the Public Domain by Ulrich Drepper <drepper@redhat.com>.  */
 #include <errno.h>
 #include <limits.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
