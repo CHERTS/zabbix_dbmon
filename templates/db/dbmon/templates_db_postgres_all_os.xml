@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-04-16T05:04:10Z</date>
+    <date>2021-04-26T17:45:00Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -5208,6 +5208,23 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </master_item>
                         </item_prototype>
                     </item_prototypes>
+                    <trigger_prototypes>
+                        <trigger_prototype>
+                            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},slot_name].strlen()}&gt;0 and {DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},active].min(10m)}=0</expression>
+                            <name>Inactive replication slot</name>
+                            <opdata>active: {ITEM.VALUE}</opdata>
+                            <priority>INFO</priority>
+                            <description>Слот '{#SLOT_NAME}' находиться в состоянии False.&#13;
+Если слот репликации будет слишком долго находиться в состоянии False, то на сервере будет накапливаться журналы WAL, это может привести к переполнению диска и остановке работы СУБД.&#13;
+Доведите информацию до эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>ReplicationSlot</tag>
+                                    <value>{#SLOT_NAME}</value>
+                                </tag>
+                            </tags>
+                        </trigger_prototype>
+                    </trigger_prototypes>
                     <master_item>
                         <key>pgsql.replication.slots[{$DBS_PGSQL_CONN_STRING}]</key>
                     </master_item>
