@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-18T04:27:30Z</date>
+    <date>2021-04-26T18:04:31Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -463,6 +463,72 @@ Version: 1.0</description>
                                     <name>Number of zombie processes is too high</name>
                                     <expression>{DBS_Template DB Oracle:oracle.instance.bad_processes[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(7m)}&gt;{$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</expression>
                                     <recovery_expression>{DBS_Template DB Oracle:oracle.instance.bad_processes[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(5m)}&lt;={$DBS_ORACLE_COUNT_BAD_PROCESS_CRIT}</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Number of blocking</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.blocked[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>2m</delay>
+                    <history>30d</history>
+                    <description>Number of blocking.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{min(10m)}&gt;{$DBS_ORACLE_BLOCKED_CRIT}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_BLOCKED_CRIT}</recovery_expression>
+                            <name>Locking issue has been detected</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_BLOCKED_CRIT}, alert started: {ITEM.VALUE1}</opdata>
+                            <priority>HIGH</priority>
+                            <description>У экземпляра '{$DBS_ORACLE_INSTANCE}' обнаружено более {$DBS_ORACLE_BLOCKED_CRIT} блокировок.&#13;
+Доведите информацию до эксперта и заказчика.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                            </dependencies>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_ORACLE_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                        <trigger>
+                            <expression>{min(10m)}&gt;{$DBS_ORACLE_BLOCKED_WARN}</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_BLOCKED_WARN}</recovery_expression>
+                            <name>Locking issue has been detected</name>
+                            <opdata>current: {ITEM.LASTVALUE1}, threshold: {$DBS_ORACLE_BLOCKED_WARN}, alert started: {ITEM.VALUE1}</opdata>
+                            <priority>WARNING</priority>
+                            <description>У экземпляра '{$DBS_ORACLE_INSTANCE}' обнаружено более {$DBS_ORACLE_BLOCKED_WARN} блокировок.&#13;
+Доведите информацию до эксперта и заказчика.</description>
+                            <dependencies>
+                                <dependency>
+                                    <name>Instance access failed</name>
+                                    <expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance.ping[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(#2)}=1</recovery_expression>
+                                </dependency>
+                                <dependency>
+                                    <name>Locking issue has been detected</name>
+                                    <expression>{DBS_Template DB Oracle:oracle.instance.blocked[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(10m)}&gt;{$DBS_ORACLE_BLOCKED_CRIT}</expression>
+                                    <recovery_expression>{DBS_Template DB Oracle:oracle.instance.blocked[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(5m)}&lt;={$DBS_ORACLE_BLOCKED_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -4810,6 +4876,18 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>2m</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_BLOCKED_CRIT}</macro>
+                    <value>5</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_BLOCKED_INTERVAL}</macro>
+                    <value>1m</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_BLOCKED_WARN}</macro>
+                    <value>2</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_CF_BACKUP_CRIT}</macro>
                     <value>4d</value>
                 </macro>
@@ -5470,6 +5548,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
                 </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>Redolog</value>
+                </tag>
             </tags>
         </trigger>
         <trigger>
@@ -5498,6 +5580,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <tag>
                     <tag>Instance</tag>
                     <value>{$DBS_ORACLE_INSTANCE}</value>
+                </tag>
+                <tag>
+                    <tag>Subsystem</tag>
+                    <value>Redolog</value>
                 </tag>
             </tags>
         </trigger>
