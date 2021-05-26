@@ -511,7 +511,13 @@ SELECT slot_name, \
 	xmin, \
 	catalog_xmin, \
 	restart_lsn, \
-	0 AS behind, \
+	0 AS behind \
+FROM pg_replication_slots \
+ORDER BY slot_name ASC;"
+
+// Get replication slot lag from PostgreSQL <= 9.6
+#define PGSQL_REPLICATION_SLOTS_LAG_V95_DBS "\
+SELECT slot_name, \
 	pg_xlog_location_diff(pg_current_xlog_location(), restart_lsn) AS replication_slot_lag \
 FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
@@ -527,12 +533,12 @@ SELECT slot_name, \
 	catalog_xmin, \
 	restart_lsn, \
 	confirmed_flush_lsn, \
-	round((restart_lsn-redo_location), 0)::int AS behind, \
+	round(abs(redo_location-restart_lsn), 0) AS behind, \
 	pg_xlog_location_diff(pg_current_xlog_location(), restart_lsn) AS replication_slot_lag \
 FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
-// Get replication slot info from PostgreSQL >= 10.0 and < 13.0
+// Get replication slot info from PostgreSQL >= 10.0 and < 14.0
 #define PGSQL_REPLICATION_SLOTS_INFO_V10_DBS "\
 SELECT slot_name, \
 	COALESCE(plugin, '') AS plugin, \
@@ -544,9 +550,15 @@ SELECT slot_name, \
 	catalog_xmin, \
 	restart_lsn, \
 	confirmed_flush_lsn, \
-	round((restart_lsn-redo_lsn),0)::int AS behind, \
-	pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) AS replication_slot_lag \
+	round(abs(redo_lsn-restart_lsn),0) AS behind \
 FROM pg_control_checkpoint(), pg_replication_slots \
+ORDER BY slot_name ASC;"
+
+// Get replication slot info from PostgreSQL >= 10.0 and <= 13.0
+#define PGSQL_REPLICATION_SLOTS_LAG_V10_DBS "\
+SELECT slot_name, \
+	pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) AS replication_slot_lag \
+FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 13.0
@@ -563,7 +575,7 @@ SELECT slot_name, \
 	confirmed_flush_lsn, \
 	wal_status, \
 	safe_wal_size, \
-	round((restart_lsn-redo_lsn), 0)::int AS behind, \
+	round(abs(redo_lsn-restart_lsn),0) AS behind, \
 	pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) AS replication_slot_lag \
 FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
@@ -643,6 +655,7 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.replication.lag_byte",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.lag_sec",	CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.replication.slots",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.replication.slots.lag",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.backup.exclusive",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.superuser.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.statements.stat",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
@@ -1442,66 +1455,77 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		}
 		else if (0 == strcmp(request->key, "pgsql.replication.slots"))
 		{
-			if (ZBX_DB_OK == zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_ROLE_DBS))
-			{
-				pg_replication_role = get_int_one_result(request, result, 0, 0, pgsql_result);
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Replication role: %u", __func__, request->key, pg_replication_role);
-				zbx_db_clean_result(&pgsql_result);
-			}
-			else
-			{
-				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL replication recovery role.", __func__, request->key);
-				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL replication recovery role."));
-				ret = SYSINFO_RET_FAIL;
-				goto out;
-			}
+			version = zbx_db_version(pgsql_conn);
 
-			// Only master
-			if (0 == pg_replication_role)
+			if (0 != version)
 			{
-				version = zbx_db_version(pgsql_conn);
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
 
-				if (0 != version)
+				if (version < 90400)
 				{
-					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
-
-					if (version < 90400)
-					{
-						zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support replication slots.", __func__, request->key);
-						SET_TEXT_RESULT(result, zbx_strdup(NULL, "[]"));
-						ret = SYSINFO_RET_OK;
-						goto out;
-					}
-					else if (version >= 90400 && version < 90600)
-					{
-						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V95_DBS);
-					}
-					else if (version >= 90600 && version < 100000)
-					{
-						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V96_DBS);
-					}
-					else if (version >= 100000 && version < 130000)
-					{
-						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V10_DBS);
-					}
-					else
-					{
-						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V13_DBS);
-					}
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support replication slots.", __func__, request->key);
+					SET_TEXT_RESULT(result, zbx_strdup(NULL, "[]"));
+					ret = SYSINFO_RET_OK;
+					goto out;
+				}
+				else if (version >= 90400 && version < 90600)
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V95_DBS);
+				}
+				else if (version >= 90600 && version < 100000)
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V96_DBS);
+				}
+				else if (version >= 100000 && version < 130000)
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V10_DBS);
 				}
 				else
 				{
-					zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
-					SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
-					ret = SYSINFO_RET_FAIL;
-					goto out;
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V13_DBS);
 				}
 			}
 			else
 			{
-				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This is a replica, getting information is available only on the master.", __func__, request->key);
-				SET_TEXT_RESULT(result, zbx_strdup(NULL, "[]"));
-				ret = SYSINFO_RET_OK;
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
+		else if (0 == strcmp(request->key, "pgsql.replication.slots.lag"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version < 90400)
+				{
+					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): This version of PostgreSQL does not support replication slots.", __func__, request->key);
+					SET_TEXT_RESULT(result, zbx_strdup(NULL, "[]"));
+					ret = SYSINFO_RET_OK;
+					goto out;
+				}
+				else if (version >= 90400 && version <= 90600)
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_LAG_V95_DBS);
+				}
+				else if (version >= 100000 && version <= 130000)
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_LAG_V10_DBS);
+				}
+				else
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_LAG_V10_DBS);
+				}
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
+				ret = SYSINFO_RET_FAIL;
 				goto out;
 			}
 		}
@@ -1670,6 +1694,10 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.replication.slots"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_SLOTS_INFO_V13_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+	}
+	else if (0 == strcmp(request->key, "pgsql.replication.slots.lag"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_SLOTS_LAG_V10_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else if (0 == strcmp(request->key, "pgsql.backup.exclusive"))
 	{
