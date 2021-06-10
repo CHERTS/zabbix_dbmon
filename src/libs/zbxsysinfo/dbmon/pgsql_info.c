@@ -590,8 +590,8 @@ FROM( \
 ) T;"
 
 // Get number of bloating tables
-#define PGSQL_BLOATING_TABLES_DBS " \
-SELECT count(*) AS bloating_table \
+#define PGSQL_BLOATING_TABLES_CNT_DBS " \
+SELECT count(*) AS BLOATING_TABLE_CNT \
 	FROM pg_catalog.pg_stat_all_tables \
 	WHERE (n_dead_tup/(n_live_tup+n_dead_tup)::float8) > 0.2 \
 		AND (n_live_tup+n_dead_tup) > 50;"
@@ -616,6 +616,18 @@ FROM( \
 		ROUND((SUM(total_time)/float4(100))::numeric, 2) AS TOTAL_TIME \
 	FROM public.pg_stat_statements \
 ) T;"
+
+// Get number of invalid index
+#define PGSQL_INVALID_INDEX_CNT_DBS " \
+SELECT count(*) AS INVALID_INDEX_CNT \
+FROM pg_catalog.pg_stat_user_indexes s, pg_index i \
+WHERE i.indexrelid = s.indexrelid AND indisvalid='f';"
+
+// Get number of unused index
+#define PGSQL_UNUSED_INDEX_CNT_DBS " \
+SELECT count(*) AS UNUSED_INDEX_CNT \
+FROM pg_catalog.pg_stat_user_indexes s, pg_index i \
+WHERE i.indexrelid = s.indexrelid AND i.indisunique = 'f' AND s.idx_scan = 0;"
 
 ZBX_METRIC	parameters_dbmon_pgsql[] =
 /*	KEY			FLAG		FUNCTION		TEST PARAMETERS */
@@ -659,6 +671,8 @@ ZBX_METRIC	parameters_dbmon_pgsql[] =
 	{"pgsql.backup.exclusive",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.superuser.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.statements.stat",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.invalid.index.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
+	{"pgsql.unused.index.count",		CF_HAVEPARAMS,		PGSQL_GET_RESULT,	NULL},
 	{"pgsql.query.nojson",			CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
 	{"pgsql.query.onerow",			CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
 	{"pgsql.query.twocoll",			CF_HAVEPARAMS,		PGSQL_QUERY,		NULL},
@@ -1597,7 +1611,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.db.bloating"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_BLOATING_TABLES_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = pgsql_make_result(request, result, PGSQL_BLOATING_TABLES_CNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "pgsql.connections"))
 	{
@@ -1710,6 +1724,14 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	else if (0 == strcmp(request->key, "pgsql.statements.stat"))
 	{
 		ret = pgsql_make_result(request, result, PGSQL_STAT_STATEMENTS_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.invalid.index.count"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_INVALID_INDEX_CNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+	}
+	else if (0 == strcmp(request->key, "pgsql.unused.index.count"))
+	{
+		ret = pgsql_make_result(request, result, PGSQL_UNUSED_INDEX_CNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else
 	{
