@@ -5212,7 +5212,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <trigger_prototype>
                             <expression>{DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},slot_name].strlen()}&gt;0 and {DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},active].min(10m)}=0</expression>
                             <name>Inactive replication slot</name>
-                            <opdata>active: {ITEM.VALUE}</opdata>
+                            <opdata>active: {ITEM.LASTVALUE}</opdata>
                             <priority>INFO</priority>
                             <description>Слот '{#SLOT_NAME}' находиться в состоянии False.&#13;
 Если слот репликации будет слишком долго находиться в состоянии False, то на сервере будет накапливаться журналы WAL, это может привести к переполнению диска и остановке работы СУБД.&#13;
