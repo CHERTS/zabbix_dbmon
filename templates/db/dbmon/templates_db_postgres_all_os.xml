@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-04-26T17:45:00Z</date>
+    <date>2021-07-06T11:57:40Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -2768,10 +2768,13 @@ See pg_stat_activity for details.&#13;
                             <recovery_expression>{min(#2)}=1</recovery_expression>
                             <name>Instance access failed</name>
                             <priority>DISASTER</priority>
-                            <description>Тестовое подключение к экземпляру БД PostgreSQL не успешно.&#13;
-Необходимо проверить работу экземпляра БД, проверьте postgres.log на предмет ошибок.&#13;
-Далее проверьте работу и настройки zabbix-agent.&#13;
-Проверьте лог-файл zabbix-agent на предмет ошибок подключения к БД.</description>
+                            <description>Тестовое подключение к экземпляру PostgreSQL не успешно.&#13;
+&#13;
+Необходимо:&#13;
+1. Проверить работу экземпляра PgSQL. Попробуйте подключиться к БД из консоли сервера используя psql, далее проверьте лог-файл postgres.log на предмет ошибок.&#13;
+2. Проверить работу и настройки zabbix-agent. Возможно агент не может подключиться к БД, для этого посмотрите лог-файл zabbix-agent на предмет ошибок подключения.&#13;
+&#13;
+Доведите информацию до эксперта и заказчика.</description>
                             <dependencies>
                                 <dependency>
                                     <name>Database test connection data not received for more than {$DBS_PGSQL_PING_NODATA_WARN} (minutes)</name>
@@ -3013,6 +3016,21 @@ See pg_stat_activity for details.&#13;
                     </triggers>
                 </item>
                 <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get replication slots lag</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.replication.slots.lag[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>2m</delay>
+                    <history>0</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Collect lag metrics from pg_replication_slots (JSON).</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get replication slots stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.replication.slots[{$DBS_PGSQL_CONN_STRING}]</key>
@@ -3056,6 +3074,26 @@ See pg_stat_activity for details.&#13;
                             <name>stubs</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Number of super-user</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>pgsql.superuser.count[{$DBS_PGSQL_CONN_STRING}]</key>
+                    <delay>10m</delay>
+                    <history>30d</history>
+                    <description>The number of users with the SUPER privilege.&#13;
+Количество пользователей с привилегией SUPER.</description>
+                    <applications>
+                        <application>
+                            <name>PgSQL: Replication</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>1h</params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get transactions stat</name>
@@ -3236,6 +3274,25 @@ See pg_stat_activity for details.&#13;
                         </conditions>
                     </filter>
                     <item_prototypes>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Number of bloating table</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>pgsql.db.bloating[{$DBS_PGSQL_CONN_STRING},{#DBNAME}]</key>
+                            <delay>10m</delay>
+                            <history>30d</history>
+                            <description>Number of bloating table in database '{#DBNAME}'.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
                         <item_prototype>
                             <name>[PgSQL] Database '{#DBNAME}': Age</name>
                             <type>DEPENDENT</type>
@@ -4477,6 +4534,44 @@ https://pgpedia.info/p/pg_stat_database_conflicts.html</description>
                                 <key>pgsql.db.stat[{$DBS_PGSQL_CONN_STRING}]</key>
                             </master_item>
                         </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Number of invalid index</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>pgsql.invalid.index.count[{$DBS_PGSQL_CONN_STRING},{#DBNAME}]</key>
+                            <delay>10m</delay>
+                            <history>30d</history>
+                            <description>Number of invalid index in database '{#DBNAME}'.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Database '{#DBNAME}': Number of unused index</name>
+                            <type>ZABBIX_ACTIVE</type>
+                            <key>pgsql.unused.index.count[{$DBS_PGSQL_CONN_STRING},{#DBNAME}]</key>
+                            <delay>10m</delay>
+                            <history>30d</history>
+                            <description>Number of unused index in database '{#DBNAME}'.</description>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Database: {#DBNAME}, Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>1h</params>
+                                </step>
+                            </preprocessing>
+                        </item_prototype>
                     </item_prototypes>
                     <graph_prototypes>
                         <graph_prototype>
@@ -5136,6 +5231,73 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </master_item>
                         </item_prototype>
                         <item_prototype>
+                            <name>[PgSQL] Replication slot '{#SLOT_NAME}': Behind</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.slot.info[{#SLOT_NAME},behind]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>B</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Replication slot '{#SLOT_NAME}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <valuemap>
+                                <name>DBS PostgreSQL (Replication slot active)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.SLOT_NAME== &quot;{#SLOT_NAME}&quot;)].BEHIND.first()</params>
+                                </step>
+                                <step>
+                                    <type>MATCHES_REGEX</type>
+                                    <params>^\d*$</params>
+                                    <error_handler>CUSTOM_VALUE</error_handler>
+                                    <error_handler_params>0</error_handler_params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>10m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.slots[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[PgSQL] Replication slot '{#SLOT_NAME}': Lag</name>
+                            <type>DEPENDENT</type>
+                            <key>pgsql.replication.slot.info[{#SLOT_NAME},replication_slot_lag]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <units>s</units>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>PgSQL: Replication slot '{#SLOT_NAME}', Info</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.SLOT_NAME== &quot;{#SLOT_NAME}&quot;)].REPLICATION_SLOT_LAG.first()</params>
+                                </step>
+                                <step>
+                                    <type>MATCHES_REGEX</type>
+                                    <params>^\d*$</params>
+                                    <error_handler>CUSTOM_VALUE</error_handler>
+                                    <error_handler_params>0</error_handler_params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>10m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>pgsql.replication.slots.lag[{$DBS_PGSQL_CONN_STRING}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
                             <name>[PgSQL] Replication slot '{#SLOT_NAME}': Name</name>
                             <type>DEPENDENT</type>
                             <key>pgsql.replication.slot.info[{#SLOT_NAME},slot_name]</key>
@@ -5210,7 +5372,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},slot_name].strlen()}&gt;0 and {DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},active].min(10m)}=0</expression>
+                            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},active].min(10m)}=0 and {DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},slot_name].strlen()}&gt;0</expression>
                             <name>Inactive replication slot</name>
                             <opdata>active: {ITEM.LASTVALUE}</opdata>
                             <priority>INFO</priority>
