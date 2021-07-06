@@ -27,9 +27,9 @@
 
 // Default query config file location
 #if !defined(_WINDOWS) && !defined(__MINGW32__)
-#define DEFAULT_DBMON_CONFIG_FILE    "/etc/zabbix/zabbix_agentd_dbmon_sql.conf"
+#define DEFAULT_DBMON_CONFIG_FILE    "/etc/zabbix/zabbix_agentd_dbmon.sql.conf"
 #else
-#define DEFAULT_DBMON_CONFIG_FILE    "C:\\DBS_Zabbix_DBMON\\zabbix_agentd_dbmon_sql.conf"
+#define DEFAULT_DBMON_CONFIG_FILE    "C:\\DBS_Zabbix_DBMON\\zabbix_agentd_dbmon.sql.conf"
 #endif
 
 // Default memory usage

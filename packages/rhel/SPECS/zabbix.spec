@@ -1,16 +1,17 @@
 Name:		zabbix
-Version:	5.0.5
+Version:	5.0.12
 Release:	%{?alphatag:0.}1%{?alphatag}%{?dist}
 Summary:	The Enterprise-class open source monitoring solution
 Group:		Applications/Internet
 License:	GPLv2+
 URL:		http://www.zabbix.com/
 Source0:	%{name}-%{version}%{?alphatag}.tar.gz
-Source1:    zabbix-logrotate.in
+Source1:	zabbix-logrotate.in
 Source2:	zabbix-tmpfiles.conf
-Source3:    zabbix-agent-dbmon.service
-Source4:    zabbix-agent-dbmon.init
-Source5:    zabbix-agent-dbmon.sysconfig
+Source3:	zabbix-agent-dbmon.service
+Source4:	zabbix-agent-dbmon@.service
+Source5:	zabbix-agent-dbmon.init
+Source6:	zabbix-agent-dbmon.sysconfig
 
 Buildroot:	%{_tmppath}/zabbix-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -127,7 +128,7 @@ install -m 0755 -p src/zabbix_agent/zabbix_agentd_dbmon $RPM_BUILD_ROOT%{_sbindi
 mkdir $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d
 install -m 0644 conf/zabbix_agentd_dbmon/userparameter_dbmon.conf $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d
 install -Dm 0755 conf/zabbix_agentd_dbmon/dbmon.sh $RPM_BUILD_ROOT%{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d
-install -m 0644 conf/zabbix_agentd_dbmon_sql.conf $RPM_BUILD_ROOT%{_sysconfdir}/zabbix
+install -m 0644 conf/zabbix_agentd_dbmon.sql.conf $RPM_BUILD_ROOT%{_sysconfdir}/zabbix
 
 cat conf/zabbix_agentd_dbmon.conf | sed \
         -e '/^# PidFile=/a \\nPidFile=%{_localstatedir}/run/zabbix/zabbix_agentd_dbmon.pid' \
@@ -146,12 +147,13 @@ cat %{SOURCE1} | sed \
 # install startup scripts
 %if 0%{?rhel} >= 7
 install -Dm 0644 -p %{SOURCE3} $RPM_BUILD_ROOT%{_unitdir}/zabbix-agent-dbmon.service
+install -Dm 0644 -p %{SOURCE4} $RPM_BUILD_ROOT%{_unitdir}/zabbix-agent-dbmon@.service
 %else
-install -Dm 0755 -p %{SOURCE4} $RPM_BUILD_ROOT%{_sysconfdir}/init.d/zabbix-agent-dbmon
+install -Dm 0755 -p %{SOURCE5} $RPM_BUILD_ROOT%{_sysconfdir}/init.d/zabbix-agent-dbmon
 %endif
 
 %if 0%{?rhel} <= 6
-install -Dm 0644 -p %{SOURCE5} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/zabbix-agent-dbmon
+install -Dm 0644 -p %{SOURCE6} $RPM_BUILD_ROOT%{_sysconfdir}/sysconfig/zabbix-agent-dbmon
 %endif
 
 # install systemd-tmpfiles conf
@@ -183,6 +185,10 @@ chown -R zabbix:zabbix %{_localstatedir}/lib/zabbix > /dev/null
 # preserve old userparameter_dbmon.conf file during upgrade
 if [ -f %{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d/userparameter_dbmon.conf.rpmsave ] && [ ! -f %{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d/userparameter_dbmon.conf ]; then
         cp -vn %{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d/userparameter_dbmon.conf.rpmsave %{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d/userparameter_dbmon.conf
+fi
+# move zabbix_agentd_dbmon_sql.conf to zabbix_agentd_dbmon.sql.conf
+if [ -f %{_sysconfdir}/zabbix/zabbix_agentd_dbmon_sql.conf ]; then
+        yes | mv %{_sysconfdir}/zabbix/zabbix_agentd_dbmon_sql.conf %{_sysconfdir}/zabbix/zabbix_agentd_dbmon.sql.conf
 fi
 :
 
@@ -217,7 +223,7 @@ fi
 %dir %{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d
 %config(noreplace) %{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d/userparameter_dbmon.conf
 %config %{_sysconfdir}/zabbix/zabbix_agentd_dbmon.d/dbmon.sh
-%config(noreplace) %{_sysconfdir}/zabbix/zabbix_agentd_dbmon_sql.conf
+%config(noreplace) %{_sysconfdir}/zabbix/zabbix_agentd_dbmon.sql.conf
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/log/zabbix
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/run/zabbix
 %attr(0755,zabbix,zabbix) %dir %{_localstatedir}/lib/zabbix
@@ -225,6 +231,7 @@ fi
 %{_mandir}/man8/zabbix_agentd_dbmon.8*
 %if 0%{?rhel} >= 7
 %{_unitdir}/zabbix-agent-dbmon.service
+%{_unitdir}/zabbix-agent-dbmon@.service
 %{_prefix}/lib/tmpfiles.d/zabbix-agent-dbmon.conf
 %else
 %{_sysconfdir}/init.d/zabbix-agent-dbmon
@@ -243,5 +250,8 @@ fi
 %{_mandir}/man1/zabbix_sender.1*
 
 %changelog
+* Fri Jul 06 2021 Mikhail Grigorev <support@db-service.ru> - 5.0.12-1
+- Added multi service support and rename zabbix_agentd_dbmon_sql.conf to zabbix_agentd_dbmon.sql.conf
+
 * Fri Jul 17 2020 Mikhail Grigorev <support@db-service.ru> - 5.0.0-1
 - update to 5.0.0
