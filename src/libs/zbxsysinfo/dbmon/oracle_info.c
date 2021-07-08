@@ -819,6 +819,32 @@ FROM gv$session a, gv$locked_object b, dba_objects c \
 WHERE b.object_id = c.object_id AND a.sid = b.session_id AND a.event \
 LIKE 'enq:%%'"
 
+#define ORACLE_ACTIVE_SESSION_CNT_DBS "\
+SELECT NVL(count(*), 0) AS SESSION_CNT \
+FROM gv$instance i, gv$session s \
+WHERE i.instance_number = s.inst_id \
+  AND i.instance_name = '%s' \
+  AND s.username is not null \
+  AND s.status = 'ACTIVE'"
+
+#define ORACLE_PROCESSES_CNT_DBS "\
+SELECT NVL(count(*), 0) AS PROCESS_CNT \
+FROM gv$instance i, gv$process p \
+WHERE i.instance_number = p.inst_id \
+  AND i.instance_name = '%s' \
+  AND p.username is not null;"
+
+#define ORACLE_ACTIVE_SESSION_BY_USER_MACHINE_CNT_DBS "\
+SELECT DISTINCT s.username AS USERNAME, s.machine AS MACHINE, count(*) AS PROCESS_CNT \
+FROM gv$session s \
+LEFT JOIN gv$instance i ON s.inst_id = i.instance_number \
+LEFT JOIN gv$process p ON s.paddr = p.addr AND s.inst_id =  p.inst_id \
+WHERE s.username is not null \
+  AND s.status = 'ACTIVE' \
+  AND i.instance_name = '%s' \
+GROUP BY s.username, s.machine \
+ORDER BY 3 DESC;"
+
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
 {
@@ -835,6 +861,9 @@ ZBX_METRIC	parameters_dbmon_oracle[] =
 	{"oracle.instance.redolog_switch_rate",		CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.redolog_size_per_hour",	CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.instance.blocked",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.active_session_cnt",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.processes_cnt",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
+	{"oracle.instance.active_session_by_user_machine_cnt",					CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.backup.archivelog",				CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.backup.full",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
 	{"oracle.backup.incr",						CF_HAVEPARAMS,		ORACLE_GET_INSTANCE_RESULT,		NULL},
@@ -1406,6 +1435,18 @@ static int	oracle_get_instance_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 	else if (0 == strcmp(request->key, "oracle.instance.blocked"))
 	{
 		ret = oracle_make_result(request, result, ORACLE_BLOCKED_INFO_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_PRIMARY, 1, ORA_ACTIVE);
+	}
+	else if (0 == strcmp(request->key, "oracle.instance.active_session_cnt"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_ACTIVE_SESSION_CNT_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
+	}
+	else if (0 == strcmp(request->key, "oracle.instance.processes_cnt"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_PROCESSES_CNT_DBS, ZBX_DB_RES_TYPE_NOJSON, ORA_ANY_ROLE, 0, ORA_ACTIVE);
+	}
+	else if (0 == strcmp(request->key, "oracle.instance.active_session_by_user_machine_cnt"))
+	{
+		ret = oracle_make_result(request, result, ORACLE_ACTIVE_SESSION_BY_USER_MACHINE_CNT_DBS, ZBX_DB_RES_TYPE_MULTIROW, ORA_ANY_ROLE, 0, ORA_ACTIVE);
 	}
 	else if (0 == strcmp(request->key, "oracle.backup.archivelog"))
 	{
