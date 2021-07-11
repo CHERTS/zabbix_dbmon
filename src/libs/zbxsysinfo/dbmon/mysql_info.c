@@ -43,11 +43,13 @@ extern int init_dbmon_config_done;
 
 #define MYSQL_SERVER_INFO_DBS "\
 SELECT /*DBS_002*/ @@server_id AS SERVER_ID, \
-	@@server_uuid AS SERVER_UUID, \
 	VERSION() AS VERSION, \
 	CAST(SUM(TRUNCATE(UNIX_TIMESTAMP()-VARIABLE_VALUE, 0))/COUNT(TRUNCATE(UNIX_TIMESTAMP()-VARIABLE_VALUE, 0)) AS UNSIGNED) AS STARTUPTIME \
 FROM %s.global_status \
 WHERE VARIABLE_NAME='UPTIME';"
+
+#define MYSQL_SERVER_UUID_DBS "\
+SELECT /*DBS_003*/ @@server_uuid AS SERVER_UUID;"
 
 #define MYSQL_GLOBAL_STATUS_DBS "SHOW GLOBAL STATUS;"
 
@@ -106,6 +108,7 @@ ZBX_METRIC	parameters_dbmon_mysql[] =
 	{"mysql.version",				CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
 	{"mysql.version.full",			CF_HAVEPARAMS,		MYSQL_VERSION,		NULL},
 	{"mysql.server.info",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
+	{"mysql.server.uuid",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.global.status",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.innodb.status",			CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
 	{"mysql.global.variables",		CF_HAVEPARAMS,		MYSQL_GET_RESULT,	NULL},
@@ -535,6 +538,10 @@ static int	mysql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	if (0 == strcmp(request->key, "mysql.server.info"))
 	{
 		ret = mysql_make_result(request, result, MYSQL_SERVER_INFO_DBS, ZBX_DB_RES_TYPE_ONEROW);
+	}
+	else if (0 == strcmp(request->key, "mysql.server.uuid"))
+	{
+		ret = mysql_make_result(request, result, MYSQL_SERVER_UUID_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "mysql.global.status"))
 	{
