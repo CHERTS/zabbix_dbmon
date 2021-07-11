@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-02-18T04:27:19Z</date>
+    <date>2021-07-11T19:16:45Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -232,30 +232,6 @@ Version: 1.0</description>
                         <step>
                             <type>JSONPATH</type>
                             <params>$.STARTUPTIME</params>
-                        </step>
-                    </preprocessing>
-                    <master_item>
-                        <key>mysql.server.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
-                    </master_item>
-                </item>
-                <item>
-                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': UUID</name>
-                    <type>DEPENDENT</type>
-                    <key>mysql.instance[{$DBS_MYSQL_INSTANCE},uuid]</key>
-                    <delay>0</delay>
-                    <history>30d</history>
-                    <trends>0</trends>
-                    <value_type>TEXT</value_type>
-                    <description>Universal Unique Identifier (UUID).</description>
-                    <applications>
-                        <application>
-                            <name>MySQL: Info</name>
-                        </application>
-                    </applications>
-                    <preprocessing>
-                        <step>
-                            <type>JSONPATH</type>
-                            <params>$.SERVER_UUID</params>
                         </step>
                     </preprocessing>
                     <master_item>
@@ -630,6 +606,30 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                             <name>stubs</name>
                         </application>
                     </applications>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Server UUID</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>mysql.server.uuid[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <description>Server Universal Unique Identifier (UUID).</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>REGEX</type>
+                            <params>[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}
+\1</params>
+                            <error_handler>CUSTOM_ERROR</error_handler>
+                            <error_handler_params>Not supported in this MySQL version</error_handler_params>
+                        </step>
+                    </preprocessing>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get slave status</name>
@@ -5012,13 +5012,13 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                         <conditions>
                             <condition>
                                 <macro>{#DBNAME}</macro>
-                                <value>{$DBS_MYSQL_LLD_FILTER_DB_NOT_MATCHES}</value>
-                                <operator>NOT_MATCHES_REGEX</operator>
+                                <value>{$DBS_MYSQL_LLD_FILTER_DB_MATCHES}</value>
                                 <formulaid>A</formulaid>
                             </condition>
                             <condition>
                                 <macro>{#DBNAME}</macro>
-                                <value>{$DBS_MYSQL_LLD_FILTER_DB_MATCHES}</value>
+                                <value>{$DBS_MYSQL_LLD_FILTER_DB_NOT_MATCHES}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
                                 <formulaid>B</formulaid>
                             </condition>
                         </conditions>
