@@ -832,7 +832,7 @@ SELECT NVL(count(*), 0) AS PROCESS_CNT \
 FROM gv$instance i, gv$process p \
 WHERE i.instance_number = p.inst_id \
   AND i.instance_name = '%s' \
-  AND p.username is not null;"
+  AND p.username is not null"
 
 #define ORACLE_ACTIVE_SESSION_BY_USER_MACHINE_CNT_DBS "\
 SELECT DISTINCT s.username AS USERNAME, s.machine AS MACHINE, count(*) AS PROCESS_CNT \
@@ -843,7 +843,7 @@ WHERE s.username is not null \
   AND s.status = 'ACTIVE' \
   AND i.instance_name = '%s' \
 GROUP BY s.username, s.machine \
-ORDER BY 3 DESC;"
+ORDER BY 3 DESC"
 
 ZBX_METRIC	parameters_dbmon_oracle[] =
 /*	KEY											FLAG				FUNCTION						TEST PARAMETERS */
