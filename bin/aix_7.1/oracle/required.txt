@@ -7,7 +7,6 @@ zlib >= 1.2.11-1
 libgcc >= 6.3.0-1
 libstdc++ >= 6.3.0-1
 libconfig >= 1.4.9
-openssl >= 1.0.0e
 
 Download and install
 oracle-instant-client-11g
