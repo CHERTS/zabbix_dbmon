@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-04-26T18:04:31Z</date>
+    <date>2021-07-16T07:39:25Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -29,6 +29,12 @@ Version: 1.0</description>
                 </application>
                 <application>
                     <name>Oracle: Instance info</name>
+                </application>
+                <application>
+                    <name>Oracle: Instance parameters</name>
+                </application>
+                <application>
+                    <name>Oracle: Sessions by user</name>
                 </application>
                 <application>
                     <name>stubs</name>
@@ -409,6 +415,40 @@ Version: 1.0</description>
                     </applications>
                 </item>
                 <item>
+                    <name>[Oracle] Get instance '{$DBS_ORACLE_INSTANCE}' active sessions by user</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.active_session_by_user_machine_cnt[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>{$DBS_ORACLE_SESSION_INTERVAL}</delay>
+                    <history>0</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <description>Get active sessions by user and machine.</description>
+                    <applications>
+                        <application>
+                            <name>stubs</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>5m</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Number of active sessions</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.active_session_cnt[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>{$DBS_ORACLE_SESSION_INTERVAL}</delay>
+                    <history>30d</history>
+                    <description>Number of active sessions.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
+                </item>
+                <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Count bad processes</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.bad_processes[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
@@ -478,7 +518,7 @@ Version: 1.0</description>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Number of blocking</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.blocked[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
-                    <delay>2m</delay>
+                    <delay>{$DBS_ORACLE_BLOCKED_INTERVAL}</delay>
                     <history>30d</history>
                     <description>Number of blocking.</description>
                     <applications>
@@ -707,6 +747,19 @@ Version: 1.0</description>
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Number of processes</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>oracle.instance.processes_cnt[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    <delay>{$DBS_ORACLE_PROCESES_INTERVAL}</delay>
+                    <history>30d</history>
+                    <description>Number of processes.</description>
+                    <applications>
+                        <application>
+                            <name>Oracle: Instance info</name>
+                        </application>
+                    </applications>
                 </item>
                 <item>
                     <name>[Oracle] Instance '{$DBS_ORACLE_INSTANCE}': Size of redo log in last 1 hour</name>
@@ -2848,9 +2901,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <key>oracle.instance_parameter[{#INSTANCE},{#PARAMETER}]</key>
                             <delay>0</delay>
                             <history>30d</history>
+                            <description>Not default instance parameter: {#PARAMETER}</description>
                             <applications>
                                 <application>
-                                    <name>Oracle: Instance info</name>
+                                    <name>Oracle: Instance parameters</name>
                                 </application>
                             </applications>
                             <preprocessing>
@@ -3624,6 +3678,58 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <step>
                             <type>DISCARD_UNCHANGED_HEARTBEAT</type>
                             <params>1h</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Oracle sessions by user discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>oracle.sessions.by.user.discovery[{$DBS_ORACLE_INSTANCE}]</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[Oracle] User '{#USERNAME}', machine '{#MACHINE}': Number of active sessions</name>
+                            <type>DEPENDENT</type>
+                            <key>oracle.sessions.by.user[{$DBS_ORACLE_INSTANCE},{#USERNAME},{#MACHINE},sessions_cnt]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>The number of active sessions for user &quot;{#USERNAME}&quot; from computer &quot;{#MACHINE}&quot;.</description>
+                            <applications>
+                                <application>
+                                    <name>Oracle: Sessions by user</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$[?(@.USERNAME==&quot;{#USERNAME}&quot; &amp;&amp; @.MACHINE== &quot;{#MACHINE}&quot;)].PROCESS_CNT.first()</params>
+                                </step>
+                                <step>
+                                    <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                                    <params>10m</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>oracle.instance.active_session_by_user_machine_cnt[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>oracle.instance.active_session_by_user_machine_cnt[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>output = JSON.parse(value).map(function(proc){
+    return {
+        &quot;{#USERNAME}&quot;: proc.USERNAME,
+        &quot;{#MACHINE}&quot;: proc.MACHINE
+    }})
+return JSON.stringify({&quot;data&quot;: output})</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>10m</params>
                         </step>
                     </preprocessing>
                 </discovery_rule>
@@ -4881,7 +4987,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_BLOCKED_INTERVAL}</macro>
-                    <value>1m</value>
+                    <value>2m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_BLOCKED_WARN}</macro>
@@ -5065,6 +5171,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <description>This connection is used only for connecting to the primary database with standby to collect metrics on apply and transport lag. Allow: 0 - OCI_DEFAULT, 1 - OCI_SYSDBA, 2 - OCI_SYSOPER, 3 - OCI_SYSASM, 4 - OCI_SYSDGD</description>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_PROCESES_INTERVAL}</macro>
+                    <value>1m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_PROCESSES_PRC_CRIT}</macro>
                     <value>90</value>
                 </macro>
@@ -5112,6 +5222,10 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                 <macro>
                     <macro>{$DBS_ORACLE_SESSIONS_PRC_WARN}</macro>
                     <value>80</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_SESSION_INTERVAL}</macro>
+                    <value>1m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_TBS_FREESPACE_MB_CRIT}</macro>
