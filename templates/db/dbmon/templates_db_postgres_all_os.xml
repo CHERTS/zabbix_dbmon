@@ -770,7 +770,7 @@ See more info: https://www.postgresql.org/docs/current/monitoring-stats.html#PG-
                     <name>[PgSQL] Instance '{$DBS_PGSQL_INSTANCE}': Get buffercache stat</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>pgsql.buffercache[{$DBS_PGSQL_CONN_STRING}]</key>
-                    <delay>30m</delay>
+                    <delay>1h</delay>
                     <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
