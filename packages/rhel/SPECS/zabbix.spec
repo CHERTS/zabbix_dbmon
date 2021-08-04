@@ -15,18 +15,23 @@ Source6:	zabbix-agent-dbmon.sysconfig
 
 Buildroot:	%{_tmppath}/zabbix-%{version}-%{release}-root-%(%{__id_u} -n)
 
-# FIXME: Building debuginfo is broken on RHEL-8. Disabled for now.
-%if 0%{?rhel} >= 6
+BuildRequires:  make
+# FIXME: Building debuginfo is broken on RHEL 5 & 8. Disabled for now.
+%if 0%{?rhel} <= 5 || 0%{?rhel} >= 8
 %define debug_package %{nil}
 %endif
 
+%if 0%{?rhel} >= 8
+BuildRequires:  mariadb-connector-c-devel
+BuildRequires:  postgresql-devel >= 12.0
+%endif
+%if 0%{?rhel} == 7
+BuildRequires:	mysql-devel >= 5.5
+BuildRequires:	postgresql-devel >= 9.2
+%endif
 %if 0%{?rhel} == 6
 BuildRequires:  mysql-devel >= 5.1
 BuildRequires:  postgresql-devel >= 8.4
-%endif
-%if 0%{?rhel} >= 7
-BuildRequires:	mysql-devel >= 5.5
-BuildRequires:	postgresql-devel >= 9.2
 %endif
 BuildRequires:	curl-devel >= 7.13.1
 BuildRequires:	libxml2-devel
