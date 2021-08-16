@@ -87,17 +87,17 @@ WITH T AS \
 (SELECT db.datname AS DBNAME, \
 	lower(replace(Q.mode, 'Lock', '')) AS MODE, \
 	coalesce(T.qty, 0) val \
-	FROM pg_database db \
+	FROM pg_catalog.pg_database db \
 	JOIN( \
 		VALUES('AccessShareLock'), ('RowShareLock'), ('RowExclusiveLock'), ('ShareUpdateExclusiveLock'), ('ShareLock'), ('ShareRowExclusiveLock'), ('ExclusiveLock'), ('AccessExclusiveLock')) Q(MODE) ON TRUE NATURAL \
 	LEFT JOIN \
 	(SELECT datname, \
 		MODE, \
 		count(MODE) qty \
-		FROM pg_locks lc \
-		RIGHT JOIN pg_database db ON db.oid = lc.database \
+		FROM pg_catalog.pg_locks lc \
+		RIGHT JOIN pg_catalog.pg_database db ON db.oid = lc.database \
 		GROUP BY 1, 2) T \
-	WHERE NOT db.datistemplate \
+	WHERE db.datistemplate = 'n' \
 	ORDER BY 1, 2) \
 	SELECT json_object_agg(dbname, row_to_json(T2)) \
 	FROM \
@@ -193,8 +193,8 @@ FROM( \
 	count(*) AS total, \
 	count(*) * 100 / (SELECT current_setting('max_connections')::int) AS total_pct, \
 	coalesce(sum(%s),0) AS waiting, \
-	(SELECT count(*) FROM pg_prepared_xacts) AS prepared \
-	FROM pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() AND datid is not NULL) \
+	(SELECT count(*) FROM pg_catalog.pg_prepared_xacts) AS prepared \
+	FROM pg_catalog.pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() AND datid is not NULL) \
 T;"
 
 #define PGSQL_TRANSACTIONS_INFO_DBS "\
@@ -224,7 +224,7 @@ FROM( \
 	count(*) AS total_connection, \
 	count(*) * 100 / (SELECT current_setting('max_connections')::int) AS total_pct, \
 	(SELECT current_setting('max_connections')::int) AS max_connections \
-	FROM pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() AND datid IS NOT NULL \
+	FROM pg_catalog.pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() AND datid IS NOT NULL \
 ) T;"
 
 #define PGSQL_WAL_STAT_DBS "\
@@ -336,14 +336,14 @@ SELECT json_build_object( \
 	'extensions', ( \
 		SELECT array_agg(extname) FROM ( \
 			SELECT extname FROM \
-			pg_extension \
+			pg_catalog.pg_extension \
 			ORDER BY extname \
 		) AS e \
 	), \
 	'settings', ( \
 		SELECT json_object(array_agg(name), array_agg(setting)) FROM ( \
 			SELECT name, setting \
-			FROM pg_settings \
+			FROM pg_catalog.pg_settings \
 			WHERE name != 'application_name' AND name != 'server_version' AND name != 'server_version_num' \
 			ORDER BY name \
 		) AS s \
@@ -362,7 +362,7 @@ SELECT json_build_object( \
 	'settings', ( \
 		SELECT json_object(array_agg(name), array_agg(setting)) FROM ( \
 			SELECT name, setting \
-			FROM pg_settings \
+			FROM pg_catalog.pg_settings \
 			WHERE (source NOT IN ('default', 'session') OR name = 'server_version_num') AND name NOT IN ('application_name') \
 			ORDER BY name \
 		) AS s \
@@ -375,14 +375,14 @@ SELECT md5( \
 		'extensions', ( \
 			SELECT array_agg(extname) FROM ( \
 				SELECT extname \
-				FROM pg_extension \
+				FROM pg_catalog.pg_extension \
 				ORDER BY extname \
 			) AS e \
 		), \
 		'settings', ( \
 			SELECT json_object(array_agg(name), array_agg(setting)) FROM ( \
 				SELECT name, setting \
-				FROM pg_settings \
+				FROM pg_catalog.pg_settings \
 				WHERE name != 'application_name' AND name != 'server_version' AND name != 'server_version_num' \
 				ORDER BY name \
 			) AS s \
