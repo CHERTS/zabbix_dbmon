@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-08-12T07:11:27Z</date>
+    <date>2021-08-24T15:02:30Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -528,7 +528,7 @@ Version: 1.0</description>
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{min(10m)}&gt;{$DBS_ORACLE_BLOCKED_CRIT}</expression>
+                            <expression>{min({$DBS_ORACLE_BLOCKED_CRIT_ALARM})}&gt;{$DBS_ORACLE_BLOCKED_CRIT}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_BLOCKED_CRIT}</recovery_expression>
                             <name>Locking issue has been detected</name>
@@ -551,7 +551,7 @@ Version: 1.0</description>
                             </tags>
                         </trigger>
                         <trigger>
-                            <expression>{min(10m)}&gt;{$DBS_ORACLE_BLOCKED_WARN}</expression>
+                            <expression>{min({$DBS_ORACLE_BLOCKED_WARN_ALARM})}&gt;{$DBS_ORACLE_BLOCKED_WARN}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_BLOCKED_WARN}</recovery_expression>
                             <name>Locking issue has been detected</name>
@@ -567,7 +567,7 @@ Version: 1.0</description>
                                 </dependency>
                                 <dependency>
                                     <name>Locking issue has been detected</name>
-                                    <expression>{DBS_Template DB Oracle:oracle.instance.blocked[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(10m)}&gt;{$DBS_ORACLE_BLOCKED_CRIT}</expression>
+                                    <expression>{DBS_Template DB Oracle:oracle.instance.blocked[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min({$DBS_ORACLE_BLOCKED_CRIT_ALARM})}&gt;{$DBS_ORACLE_BLOCKED_CRIT}</expression>
                                     <recovery_expression>{DBS_Template DB Oracle:oracle.instance.blocked[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(5m)}&lt;={$DBS_ORACLE_BLOCKED_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
@@ -4986,12 +4986,20 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>5</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_BLOCKED_CRIT_ALARM}</macro>
+                    <value>10m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_BLOCKED_INTERVAL}</macro>
                     <value>2m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_BLOCKED_WARN}</macro>
                     <value>2</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_BLOCKED_WARN_ALARM}</macro>
+                    <value>10m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_CF_BACKUP_CRIT}</macro>
