@@ -973,7 +973,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		min_nparams = 2;
 	}
 
-	if (0 == strcmp(request->key, "pgsql.db.bloating"))
+	if (0 == strcmp(request->key, "pgsql.db.bloating") || 0 == strcmp(request->key, "pgsql.invalid.index.count") || 0 == strcmp(request->key, "pgsql.unused.index.count"))
 	{
 		max_nparams = 2;
 		min_nparams = 2;
@@ -999,7 +999,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		return SYSINFO_RET_FAIL;
 	}
 
-	if (0 == strcmp(request->key, "pgsql.db.bloating"))
+	if (0 == strcmp(request->key, "pgsql.db.bloating") || 0 == strcmp(request->key, "pgsql.invalid.index.count") || 0 == strcmp(request->key, "pgsql.unused.index.count"))
 	{
 		pg_database = get_rparam(request, 1);
 
