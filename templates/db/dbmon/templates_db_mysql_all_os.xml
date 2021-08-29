@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-07-16T07:41:58Z</date>
+    <date>2021-08-10T06:20:39Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -157,7 +157,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.db.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     <delay>30m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -170,7 +170,7 @@ Version: 1.0</description>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get global status</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -184,7 +184,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     <delay>30m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -598,7 +598,7 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.server.info[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                     <delay>1h</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -635,7 +635,7 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Get slave status</name>
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.slave.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -2854,7 +2854,7 @@ The cache miss rate can be calculated as Threads_created/Connections.</descripti
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.top10_table_by_rows[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT},{$DBS_MYSQL_TOP_TABLE_BY_ROWS}]</key>
                     <delay>10m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -2868,7 +2868,7 @@ The cache miss rate can be calculated as Threads_created/Connections.</descripti
                     <type>ZABBIX_ACTIVE</type>
                     <key>mysql.top10_table_by_size[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT},{$DBS_MYSQL_TOP_TABLE_BY_SIZE}]</key>
                     <delay>10m</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -5377,7 +5377,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Last IO Errno</name>
                             <type>DEPENDENT</type>
-                            <key>mysql.slave[{#MASTER_UUID},last_io_errno]</key>
+                            <key>mysql.slave[{#MASTER_HOST},{#MASTER_PORT},last_io_errno]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <applications>
@@ -5388,7 +5388,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].LAST_IO_ERRNO.first()</params>
+                                    <params>$[?(@.MASTER_HOST== &quot;{#MASTER_HOST}&quot; &amp;&amp; @.MASTER_PORT== &quot;{#MASTER_PORT}&quot;)].LAST_IO_ERRNO.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -5402,7 +5402,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Last IO Error</name>
                             <type>DEPENDENT</type>
-                            <key>mysql.slave[{#MASTER_UUID},last_io_error]</key>
+                            <key>mysql.slave[{#MASTER_HOST},{#MASTER_PORT},last_io_error]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <trends>0</trends>
@@ -5416,7 +5416,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].LAST_IO_ERROR.first()</params>
+                                    <params>$[?(@.MASTER_HOST== &quot;{#MASTER_HOST}&quot; &amp;&amp; @.MASTER_PORT== &quot;{#MASTER_PORT}&quot;)].LAST_IO_ERROR.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -5430,7 +5430,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Last SQL Errno</name>
                             <type>DEPENDENT</type>
-                            <key>mysql.slave[{#MASTER_UUID},last_sql_errno]</key>
+                            <key>mysql.slave[{#MASTER_HOST},{#MASTER_PORT},last_sql_errno]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <applications>
@@ -5441,7 +5441,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].LAST_SQL_ERRNO.first()</params>
+                                    <params>$[?(@.MASTER_HOST== &quot;{#MASTER_HOST}&quot; &amp;&amp; @.MASTER_PORT== &quot;{#MASTER_PORT}&quot;)].LAST_SQL_ERRNO.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -5455,7 +5455,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Last SQL Error</name>
                             <type>DEPENDENT</type>
-                            <key>mysql.slave[{#MASTER_UUID},last_sql_error]</key>
+                            <key>mysql.slave[{#MASTER_HOST},{#MASTER_PORT},last_sql_error]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <trends>0</trends>
@@ -5469,7 +5469,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].LAST_SQL_ERROR.first()</params>
+                                    <params>$[?(@.MASTER_HOST== &quot;{#MASTER_HOST}&quot; &amp;&amp; @.MASTER_PORT== &quot;{#MASTER_PORT}&quot;)].LAST_SQL_ERROR.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -5483,7 +5483,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Seconds Behind Master</name>
                             <type>DEPENDENT</type>
-                            <key>mysql.slave[{#MASTER_UUID},seconds_behind_master]</key>
+                            <key>mysql.slave[{#MASTER_HOST},{#MASTER_PORT},seconds_behind_master]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <units>s</units>
@@ -5496,7 +5496,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].SECONDS_BEHIND_MASTER.first()</params>
+                                    <params>$[?(@.MASTER_HOST== &quot;{#MASTER_HOST}&quot; &amp;&amp; @.MASTER_PORT== &quot;{#MASTER_PORT}&quot;)].SECONDS_BEHIND_MASTER.first()</params>
                                 </step>
                                 <step>
                                     <type>DISCARD_UNCHANGED_HEARTBEAT</type>
@@ -5567,8 +5567,8 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                                         </dependency>
                                         <dependency>
                                             <name>Replication lag is too high</name>
-                                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},seconds_behind_master].min(10m)}&gt;{$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}</expression>
-                                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},seconds_behind_master].max(5m)}&lt;={$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}</recovery_expression>
+                                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},seconds_behind_master].min(10m)}&gt;{$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}</expression>
+                                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},seconds_behind_master].max(5m)}&lt;={$DBS_MYSQL_APPLY_LAG_CRIT:&quot;{#MASTER_UUID}&quot;}</recovery_expression>
                                         </dependency>
                                     </dependencies>
                                     <tags>
@@ -5595,7 +5595,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <item_prototype>
                             <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Slave IO Running</name>
                             <type>DEPENDENT</type>
-                            <key>mysql.slave[{#MASTER_UUID},slave_io_running]</key>
+                            <key>mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_io_running]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <description>Whether the I/O thread for reading the master's binary log is running. &#13;
@@ -5611,7 +5611,7 @@ Normally, you want this to be Yes unless you have not yet started replication or
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].SLAVE_IO_RUNNING.first()</params>
+                                    <params>$[?(@.MASTER_HOST== &quot;{#MASTER_HOST}&quot; &amp;&amp; @.MASTER_PORT== &quot;{#MASTER_PORT}&quot;)].SLAVE_IO_RUNNING.first()</params>
                                 </step>
                                 <step>
                                     <type>JAVASCRIPT</type>
@@ -5642,7 +5642,7 @@ Normally, you want this to be Yes unless you have not yet started replication or
                         <item_prototype>
                             <name>[MySQL] Replication '{#MASTER_HOST}:{#MASTER_PORT}': Slave SQL Running</name>
                             <type>DEPENDENT</type>
-                            <key>mysql.slave[{#MASTER_UUID},slave_sql_running]</key>
+                            <key>mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_sql_running]</key>
                             <delay>0</delay>
                             <history>30d</history>
                             <description>Whether the SQL thread for executing events in the relay log is running. &#13;
@@ -5658,7 +5658,7 @@ As with the I/O thread, this should normally be Yes.</description>
                             <preprocessing>
                                 <step>
                                     <type>JSONPATH</type>
-                                    <params>$[?(@.MASTER_UUID== &quot;{#MASTER_UUID}&quot;)].SLAVE_SQL_RUNNING.first()</params>
+                                    <params>$[?(@.MASTER_HOST== &quot;{#MASTER_HOST}&quot; &amp;&amp; @.MASTER_PORT== &quot;{#MASTER_PORT}&quot;)].SLAVE_SQL_RUNNING.first()</params>
                                 </step>
                                 <step>
                                     <type>JAVASCRIPT</type>
@@ -5686,9 +5686,9 @@ As with the I/O thread, this should normally be Yes.</description>
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_io_errno].last()}=0</expression>
+                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_io_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},last_io_errno].last()}=0</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}=1</recovery_expression>
+                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_io_running].last()}=1</recovery_expression>
                             <name>Replication process is stopped (IO thread not running)</name>
                             <priority>WARNING</priority>
                             <description>Репликация остановлена (IO thread) в ручном режиме, возможно для выполнения каких-то работ.&#13;
@@ -5701,8 +5701,8 @@ As with the I/O thread, this should normally be Yes.</description>
                                 </dependency>
                                 <dependency>
                                     <name>Replication process is stopped due to an error (IO thread not running)</name>
-                                    <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_io_errno].last()}&lt;&gt;0</expression>
-                                    <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}=1</recovery_expression>
+                                    <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_io_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},last_io_errno].last()}&lt;&gt;0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_io_running].last()}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -5725,9 +5725,9 @@ As with the I/O thread, this should normally be Yes.</description>
                             </tags>
                         </trigger_prototype>
                         <trigger_prototype>
-                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_sql_errno].last()}=0</expression>
+                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_sql_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},last_sql_errno].last()}=0</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}=1</recovery_expression>
+                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_sql_running].last()}=1</recovery_expression>
                             <name>Replication process is stopped (SQL thread not running)</name>
                             <priority>WARNING</priority>
                             <description>Репликация остановлена (SQL thread) в ручном режиме, возможно для выполнения каких-то работ.&#13;
@@ -5740,8 +5740,8 @@ As with the I/O thread, this should normally be Yes.</description>
                                 </dependency>
                                 <dependency>
                                     <name>Replication process is stopped due to an error (SQL thread not running)</name>
-                                    <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_sql_errno].last()}&lt;&gt;0</expression>
-                                    <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}=1</recovery_expression>
+                                    <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_sql_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},last_sql_errno].last()}&lt;&gt;0</expression>
+                                    <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_sql_running].last()}=1</recovery_expression>
                                 </dependency>
                             </dependencies>
                             <tags>
@@ -5764,9 +5764,9 @@ As with the I/O thread, this should normally be Yes.</description>
                             </tags>
                         </trigger_prototype>
                         <trigger_prototype>
-                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_io_errno].last()}&lt;&gt;0</expression>
+                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_io_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},last_io_errno].last()}&lt;&gt;0</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_io_running].last()}=1</recovery_expression>
+                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_io_running].last()}=1</recovery_expression>
                             <name>Replication process is stopped due to an error (IO thread not running)</name>
                             <opdata>last errno: {ITEM.LASTVALUE2}</opdata>
                             <priority>HIGH</priority>
@@ -5800,9 +5800,9 @@ As with the I/O thread, this should normally be Yes.</description>
                             </tags>
                         </trigger_prototype>
                         <trigger_prototype>
-                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},last_sql_errno].last()}&lt;&gt;0</expression>
+                            <expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_sql_running].last()}&lt;&gt;1 and {DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},last_sql_errno].last()}&lt;&gt;0</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
-                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_UUID},slave_sql_running].last()}=1</recovery_expression>
+                            <recovery_expression>{DBS_Template DB MySQL:mysql.slave[{#MASTER_HOST},{#MASTER_PORT},slave_sql_running].last()}=1</recovery_expression>
                             <name>Replication process is stopped due to an error (SQL thread not running)</name>
                             <opdata>last errno: {ITEM.LASTVALUE2}</opdata>
                             <priority>HIGH</priority>
@@ -5844,7 +5844,6 @@ As with the I/O thread, this should normally be Yes.</description>
                             <type>JAVASCRIPT</type>
                             <params>output = JSON.parse(value).map(function(slave){
     return {
-        &quot;{#MASTER_UUID}&quot;: slave.MASTER_UUID,
         &quot;{#MASTER_HOST}&quot;: slave.MASTER_HOST,
         &quot;{#MASTER_PORT}&quot;: slave.MASTER_PORT
     }})

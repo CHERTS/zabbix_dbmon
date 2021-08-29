@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-07-16T07:39:25Z</date>
+    <date>2021-08-24T15:02:30Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -145,7 +145,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.archlogdest.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>{$DBS_ORACLE_ARCHLOGDEST_INTERVAL}</delay>
-                    <history>1h</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -528,7 +528,7 @@ Version: 1.0</description>
                     </applications>
                     <triggers>
                         <trigger>
-                            <expression>{min(10m)}&gt;{$DBS_ORACLE_BLOCKED_CRIT}</expression>
+                            <expression>{min({$DBS_ORACLE_BLOCKED_CRIT_ALARM})}&gt;{$DBS_ORACLE_BLOCKED_CRIT}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_BLOCKED_CRIT}</recovery_expression>
                             <name>Locking issue has been detected</name>
@@ -551,7 +551,7 @@ Version: 1.0</description>
                             </tags>
                         </trigger>
                         <trigger>
-                            <expression>{min(10m)}&gt;{$DBS_ORACLE_BLOCKED_WARN}</expression>
+                            <expression>{min({$DBS_ORACLE_BLOCKED_WARN_ALARM})}&gt;{$DBS_ORACLE_BLOCKED_WARN}</expression>
                             <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
                             <recovery_expression>{max(5m)}&lt;={$DBS_ORACLE_BLOCKED_WARN}</recovery_expression>
                             <name>Locking issue has been detected</name>
@@ -567,7 +567,7 @@ Version: 1.0</description>
                                 </dependency>
                                 <dependency>
                                     <name>Locking issue has been detected</name>
-                                    <expression>{DBS_Template DB Oracle:oracle.instance.blocked[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min(10m)}&gt;{$DBS_ORACLE_BLOCKED_CRIT}</expression>
+                                    <expression>{DBS_Template DB Oracle:oracle.instance.blocked[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].min({$DBS_ORACLE_BLOCKED_CRIT_ALARM})}&gt;{$DBS_ORACLE_BLOCKED_CRIT}</expression>
                                     <recovery_expression>{DBS_Template DB Oracle:oracle.instance.blocked[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}].max(5m)}&lt;={$DBS_ORACLE_BLOCKED_CRIT}</recovery_expression>
                                 </dependency>
                             </dependencies>
@@ -598,7 +598,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.fra[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>{$DBS_ORACLE_FRA_INTERVAL}</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -612,7 +612,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>{$DBS_ORACLE_INSTANCE_INTERVAL}</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -626,7 +626,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.parameters[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>{$DBS_ORACLE_PARAMETERS_INTERVAL}</delay>
-                    <history>1h</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -640,7 +640,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.parameter[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>{$DBS_ORACLE_PARAMETER_INTERVAL}</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -654,7 +654,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.patch_info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>{$DBS_ORACLE_PATCH_INFO_INTERVAL}</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -793,7 +793,7 @@ Version: 1.0</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.instance.resource[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>{$DBS_ORACLE_RESOURCE_INTERVAL}</delay>
-                    <history>1d</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -1574,7 +1574,7 @@ INSTANCE RECOVERY</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.pdb.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE}]</key>
                     <delay>{$DBS_ORACLE_PDB_INTERVAL}</delay>
-                    <history>1h</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -1588,7 +1588,7 @@ INSTANCE RECOVERY</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},0]</key>
                     <delay>{$DBS_ORACLE_TBS_PERM_INTERVAL}</delay>
-                    <history>1h</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -1602,7 +1602,7 @@ INSTANCE RECOVERY</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},1]</key>
                     <delay>{$DBS_ORACLE_TBS_TMP_INTERVAL}</delay>
-                    <history>1h</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -1616,7 +1616,7 @@ INSTANCE RECOVERY</description>
                     <type>ZABBIX_ACTIVE</type>
                     <key>oracle.tablespace.info[{$DBS_ORACLE_CONN_STRING},{$DBS_ORACLE_INSTANCE},{$DBS_ORACLE_MODE},2]</key>
                     <delay>{$DBS_ORACLE_TBS_UNDO_INTERVAL}</delay>
-                    <history>1h</history>
+                    <history>0</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -4986,12 +4986,20 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <value>5</value>
                 </macro>
                 <macro>
+                    <macro>{$DBS_ORACLE_BLOCKED_CRIT_ALARM}</macro>
+                    <value>10m</value>
+                </macro>
+                <macro>
                     <macro>{$DBS_ORACLE_BLOCKED_INTERVAL}</macro>
                     <value>2m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_BLOCKED_WARN}</macro>
                     <value>2</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_ORACLE_BLOCKED_WARN_ALARM}</macro>
+                    <value>10m</value>
                 </macro>
                 <macro>
                     <macro>{$DBS_ORACLE_CF_BACKUP_CRIT}</macro>

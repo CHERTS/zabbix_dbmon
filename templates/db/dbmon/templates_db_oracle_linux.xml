@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-10-08T09:01:45Z</date>
+    <date>2021-08-12T07:34:49Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -63,13 +63,13 @@
                         <conditions>
                             <condition>
                                 <macro>{#LSNR_NAME}</macro>
-                                <value>{$DBS_ORACLE_LLD_INCLUDE_LISTENER}</value>
+                                <value>{$DBS_ORACLE_LLD_EXCLUDE_LISTENER}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
                                 <formulaid>A</formulaid>
                             </condition>
                             <condition>
                                 <macro>{#LSNR_NAME}</macro>
-                                <value>{$DBS_ORACLE_LLD_EXCLUDE_LISTENER}</value>
-                                <operator>NOT_MATCHES_REGEX</operator>
+                                <value>{$DBS_ORACLE_LLD_INCLUDE_LISTENER}</value>
                                 <formulaid>B</formulaid>
                             </condition>
                         </conditions>
@@ -169,7 +169,7 @@
                         <item_prototype>
                             <name>[Oracle] Listener: Number of process '{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;}'</name>
                             <type>ZABBIX_ACTIVE</type>
-                            <key>proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;},{#LSNR_USER},,&quot;^.*{#LSNR_NAME}.*$&quot;]</key>
+                            <key>proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;},{#LSNR_USER},,&quot;^.*({#LSNR_NAME}|{#LSNR_NAME_UPPER}).*$&quot;]</key>
                             <history>30d</history>
                             <application_prototypes>
                                 <application_prototype>
@@ -218,8 +218,8 @@
                             <dependencies>
                                 <dependency>
                                     <name>Listener '{#LSNR_NAME}' has been stopped or crashed</name>
-                                    <expression>{DBS_Template Oracle for Linux:proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;},{#LSNR_USER},,&quot;^.*{#LSNR_NAME}.*$&quot;].max(#2)}=0</expression>
-                                    <recovery_expression>{DBS_Template Oracle for Linux:proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;},{#LSNR_USER},,&quot;^.*{#LSNR_NAME}.*$&quot;].min(#2)}&gt;0</recovery_expression>
+                                    <expression>{DBS_Template Oracle for Linux:proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;},{#LSNR_USER},,&quot;^.*({#LSNR_NAME}|{#LSNR_NAME_UPPER}).*$&quot;].max(#2)}=0</expression>
+                                    <recovery_expression>{DBS_Template Oracle for Linux:proc.num[{$DBS_ORACLE_LSNR_SERVICE_NAME:&quot;{#LSNR_NAME}&quot;},{#LSNR_USER},,&quot;^.*({#LSNR_NAME}|{#LSNR_NAME_UPPER}).*$&quot;].min(#2)}&gt;0</recovery_expression>
                                 </dependency>
                                 <dependency>
                                     <name>Zabbix agent for database monitoring is unreachable for more {$DBS_DBMON_AGENTD_NODATA_WARN} (minutes)</name>
@@ -249,19 +249,19 @@
                         <conditions>
                             <condition>
                                 <macro>{#SERVICE_NAME}</macro>
-                                <value>{$DBS_ORACLE_LLD_INCLUDE_SERVICE}</value>
-                                <formulaid>B</formulaid>
-                            </condition>
-                            <condition>
-                                <macro>{#SERVICE_NAME}</macro>
                                 <value>{$DBS_ORACLE_LLD_EXCLUDE_SERVICE}</value>
                                 <operator>NOT_MATCHES_REGEX</operator>
-                                <formulaid>C</formulaid>
+                                <formulaid>B</formulaid>
                             </condition>
                             <condition>
                                 <macro>{#LSNR_NAME}</macro>
                                 <value>{$DBS_ORACLE_LLD_INCLUDE_LISTENER}</value>
                                 <formulaid>A</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#SERVICE_NAME}</macro>
+                                <value>{$DBS_ORACLE_LLD_INCLUDE_SERVICE}</value>
+                                <formulaid>C</formulaid>
                             </condition>
                         </conditions>
                     </filter>
