@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-07-16T07:40:59Z</date>
+    <date>2021-08-30T19:29:42Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -3085,7 +3085,7 @@ See pg_stat_activity for details.&#13;
 Количество пользователей с привилегией SUPER.</description>
                     <applications>
                         <application>
-                            <name>PgSQL: Replication</name>
+                            <name>PgSQL: Info</name>
                         </application>
                     </applications>
                     <preprocessing>
