@@ -13,7 +13,7 @@ set ZBX_SENDER_BIN=%BASE_DIR%\bin\win32\zabbix_sender.exe
 set ZBX_GET_BIN=%BASE_DIR%\bin\win32\zabbix_get.exe
 
 set cert_timestamp_server=http://time.certum.pl
-set cert_thumbprint=feb73ceedc91104ba207ebb4eb09a98413f4451f
+set cert_thumbprint=c5f60c11bb7effdea6c983dced1f0e95a8d547bf
 
 title Build zabbix-agent %ZBX_ARCH%...
 
