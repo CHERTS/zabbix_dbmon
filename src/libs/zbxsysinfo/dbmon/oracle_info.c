@@ -817,7 +817,7 @@ ORDER BY dg.name"
 SELECT NVL(count(*), 0) AS BLOCKED_NUM \
 FROM gv$session a, gv$locked_object b, dba_objects c \
 WHERE b.object_id = c.object_id AND a.sid = b.session_id AND a.event \
-LIKE 'enq:%%'"
+LIKE 'enq: T%%lock contention'"
 
 #define ORACLE_ACTIVE_SESSION_CNT_DBS "\
 SELECT NVL(count(*), 0) AS SESSION_CNT \
