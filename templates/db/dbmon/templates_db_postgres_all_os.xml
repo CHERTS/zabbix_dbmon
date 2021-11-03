@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-08-30T19:29:42Z</date>
+    <date>2021-11-03T07:10:39Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -17,7 +17,7 @@ This template was developed by Mikhail Grigorev for the Distributed Service comp
 &#13;
 Support e-mail: m.grigoriev@db-service.ru&#13;
 &#13;
-Version: 1.0</description>
+Version: 1.0.1</description>
             <groups>
                 <group>
                     <name>DBS.Templates/Modules</name>
@@ -4839,6 +4839,22 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <type>DEPENDENT</type>
                     <key>pgsql.replication.discovery[{$DBS_PGSQL_INSTANCE}]</key>
                     <delay>0</delay>
+                    <filter>
+                        <evaltype>AND</evaltype>
+                        <conditions>
+                            <condition>
+                                <macro>{#SLOT_NAME}</macro>
+                                <value>{$DBS_PGSQL_LLD_FILTER_SLOT_MATCHES}</value>
+                                <formulaid>A</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#SLOT_NAME}</macro>
+                                <value>{$DBS_PGSQL_LLD_FILTER_SLOT_NOT_MATCHES}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>B</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
                     <item_prototypes>
                         <item_prototype>
                             <name>[PgSQL] Replication '{#IPADDRESS}': Application name</name>
@@ -5491,6 +5507,16 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <macro>{$DBS_PGSQL_LLD_FILTER_DB_NOT_MATCHES}</macro>
                     <value>CHANGE_IF_NEEDED</value>
                     <description>Filter to exclude discovered databases</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_LLD_FILTER_SLOT_MATCHES}</macro>
+                    <value>.*</value>
+                    <description>Filter of discoverable replication slots</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_LLD_FILTER_SLOT_NOT_MATCHES}</macro>
+                    <value>^(pg_basebackup_.*)$</value>
+                    <description>Filter to exclude discovered replication slots</description>
                 </macro>
                 <macro>
                     <macro>{$DBS_PGSQL_MAX_ACTIVE_TIME_WARN}</macro>
