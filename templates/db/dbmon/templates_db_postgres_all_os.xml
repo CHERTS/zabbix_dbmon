@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-11-03T07:10:39Z</date>
+    <date>2021-11-10T12:21:01Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -17,7 +17,7 @@ This template was developed by Mikhail Grigorev for the Distributed Service comp
 &#13;
 Support e-mail: m.grigoriev@db-service.ru&#13;
 &#13;
-Version: 1.0.1</description>
+Version: 1.0.2</description>
             <groups>
                 <group>
                     <name>DBS.Templates/Modules</name>
@@ -4843,14 +4843,14 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                         <evaltype>AND</evaltype>
                         <conditions>
                             <condition>
-                                <macro>{#SLOT_NAME}</macro>
-                                <value>{$DBS_PGSQL_LLD_FILTER_SLOT_MATCHES}</value>
+                                <macro>{#APPNAME}</macro>
+                                <value>{$DBS_PGSQL_LLD_FILTER_APPNAME_NOT_MATCHES}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
                                 <formulaid>A</formulaid>
                             </condition>
                             <condition>
-                                <macro>{#SLOT_NAME}</macro>
-                                <value>{$DBS_PGSQL_LLD_FILTER_SLOT_NOT_MATCHES}</value>
-                                <operator>NOT_MATCHES_REGEX</operator>
+                                <macro>{#APPNAME}</macro>
+                                <value>{$DBS_PGSQL_LLD_FILTER_APPNAME_MATCHES}</value>
                                 <formulaid>B</formulaid>
                             </condition>
                         </conditions>
@@ -5205,7 +5205,8 @@ Possible values are:&#13;
                             <type>JAVASCRIPT</type>
                             <params>output = JSON.parse(value).map(function(repl){
     return {
-        &quot;{#IPADDRESS}&quot;: repl.IP_ADDRESS
+        &quot;{#IPADDRESS}&quot;: repl.IP_ADDRESS,
+        &quot;{#APPNAME}&quot;: repl.APP_NAME,
     }})
 return JSON.stringify({&quot;data&quot;: output})</params>
                         </step>
@@ -5216,6 +5217,22 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <type>DEPENDENT</type>
                     <key>pgsql.replication.slots.discovery[{$DBS_PGSQL_INSTANCE}]</key>
                     <delay>0</delay>
+                    <filter>
+                        <evaltype>AND</evaltype>
+                        <conditions>
+                            <condition>
+                                <macro>{#SLOT_NAME}</macro>
+                                <value>{$DBS_PGSQL_LLD_FILTER_SLOTNAME_MATCHES}</value>
+                                <formulaid>A</formulaid>
+                            </condition>
+                            <condition>
+                                <macro>{#SLOT_NAME}</macro>
+                                <value>{$DBS_PGSQL_LLD_FILTER_SLOTNAME_NOT_MATCHES}</value>
+                                <operator>NOT_MATCHES_REGEX</operator>
+                                <formulaid>B</formulaid>
+                            </condition>
+                        </conditions>
+                    </filter>
                     <item_prototypes>
                         <item_prototype>
                             <name>[PgSQL] Replication slot '{#SLOT_NAME}': Active</name>
@@ -5388,7 +5405,7 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     </item_prototypes>
                     <trigger_prototypes>
                         <trigger_prototype>
-                            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},active].min(10m)}=0 and {DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},slot_name].strlen()}&gt;0</expression>
+                            <expression>{DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},active].min(6m)}=0 and {DBS_Template DB PostgreSQL:pgsql.replication.slot.info[{#SLOT_NAME},slot_name].strlen()}&gt;0 and {DBS_Template DB PostgreSQL:pgsql.replication.count[{$DBS_PGSQL_CONN_STRING}].last()}&gt;0</expression>
                             <name>Inactive replication slot</name>
                             <opdata>active: {ITEM.LASTVALUE}</opdata>
                             <priority>INFO</priority>
@@ -5499,6 +5516,16 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <description>Unique instance name of PgSQL</description>
                 </macro>
                 <macro>
+                    <macro>{$DBS_PGSQL_LLD_FILTER_APPNAME_MATCHES}</macro>
+                    <value>.*</value>
+                    <description>Filter of discoverable replication info</description>
+                </macro>
+                <macro>
+                    <macro>{$DBS_PGSQL_LLD_FILTER_APPNAME_NOT_MATCHES}</macro>
+                    <value>^(pg_basebackup_.*)$</value>
+                    <description>Filter to exclude discovered replication info</description>
+                </macro>
+                <macro>
                     <macro>{$DBS_PGSQL_LLD_FILTER_DB_MATCHES}</macro>
                     <value>.*</value>
                     <description>Filter of discoverable databases</description>
@@ -5509,12 +5536,12 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                     <description>Filter to exclude discovered databases</description>
                 </macro>
                 <macro>
-                    <macro>{$DBS_PGSQL_LLD_FILTER_SLOT_MATCHES}</macro>
+                    <macro>{$DBS_PGSQL_LLD_FILTER_SLOTNAME_MATCHES}</macro>
                     <value>.*</value>
                     <description>Filter of discoverable replication slots</description>
                 </macro>
                 <macro>
-                    <macro>{$DBS_PGSQL_LLD_FILTER_SLOT_NOT_MATCHES}</macro>
+                    <macro>{$DBS_PGSQL_LLD_FILTER_SLOTNAME_NOT_MATCHES}</macro>
                     <value>^(pg_basebackup_.*)$</value>
                     <description>Filter to exclude discovered replication slots</description>
                 </macro>
