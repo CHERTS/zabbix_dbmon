@@ -420,7 +420,8 @@ SELECT \
   (pg_xlog_location_diff(sent_location, write_location)/1024)::int as write_lag, \
   (pg_xlog_location_diff(write_location, flush_location)/1024)::int as flush_lag, \
   (pg_xlog_location_diff(pg_current_xlog_location(), replay_location)/1024)::int as total_lag \
-FROM pg_stat_replication;"
+FROM pg_stat_replication \
+WHERE client_addr is not null;"
 
 // Query to track lag in bytes from PostgreSQL >= 10.0
 // sending_lag could indicate heavy load on primary
@@ -437,7 +438,8 @@ SELECT \
   (pg_wal_lsn_diff(sent_lsn, flush_lsn)/1024)::int as receiving_lag, \
   (pg_wal_lsn_diff(flush_lsn, replay_lsn)/1024)::int as replaying_lag, \
   (pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn)/1024)::int as total_lag \
-FROM pg_stat_replication;"
+FROM pg_stat_replication \
+WHERE client_addr is not null;"
 
 // Get replication role (0 - Master, 1 - Standby)
 #define PGSQL_REPLICATION_ROLE_DBS "\
