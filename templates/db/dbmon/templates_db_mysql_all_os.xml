@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-11-10T12:27:12Z</date>
+    <date>2021-11-24T06:27:11Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -5370,6 +5370,127 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>MariaDB discovery</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.mariadb.discovery[{$DBS_MYSQL_INSTANCE}]</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>[MariaDB] Instance '{$DBS_MYSQL_INSTANCE}' variable: Slave parallel mode</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.variable[{$DBS_MYSQL_INSTANCE},{#MARIADB},slave_parallel_mode]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Controls what transactions are applied in parallel when using parallel replication.&#13;
+&#13;
+optimistic: tries to apply most transactional DML in parallel, and handles any conflicts with rollback and retry.&#13;
+conservative: limits parallelism in an effort to avoid any conflicts. See conservative mode.&#13;
+aggressive: tries to maximize the parallelism, possibly at the cost of increased conflict rate.&#13;
+minimal: only parallelizes the commit steps of transactions.&#13;
+none: disables parallel apply completely.&#13;
+&#13;
+See more info: https://mariadb.com/kb/en/replication-and-binary-log-system-variables/#slave_parallel_mode</description>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Variables</name>
+                                </application>
+                            </applications>
+                            <valuemap>
+                                <name>DBS MariaDB (slave_parallel_mode)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.SLAVE_PARALLEL_MODE</params>
+                                </step>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <params>switch (value) {
+  case &quot;optimistic&quot;:
+    return 1;
+    break;
+  case &quot;conservative&quot;:
+    return 2;
+    break;
+  case &quot;aggressive&quot;:
+    return 3;
+    break;
+  case &quot;minimal&quot;:
+    return 4;
+    break;
+  case &quot;none&quot;:
+    return 5;
+    break;
+  default:
+    return 0;
+    break;
+}</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>[MariaDB] Instance '{$DBS_MYSQL_INSTANCE}' variable: WSREP_GTID mode</name>
+                            <type>DEPENDENT</type>
+                            <key>mysql.variable[{$DBS_MYSQL_INSTANCE},{#MARIADB},wsrep_gtid_mode]</key>
+                            <delay>0</delay>
+                            <history>30d</history>
+                            <description>Wsrep GTID mode attempts to keep GTIDs consistent for Galera Cluster write sets on all cluster nodes.&#13;
+GTID state is initially copied to a joiner node during an SST.&#13;
+If you are planning to use Galera Cluster with MariaDB replication, then wsrep GTID mode can be helpful.&#13;
+See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_gtid_mode</description>
+                            <applications>
+                                <application>
+                                    <name>MySQL: Variables</name>
+                                </application>
+                            </applications>
+                            <valuemap>
+                                <name>DBS MySQL (gtid_mode)</name>
+                            </valuemap>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.WSREP_GTID_MODE</params>
+                                </step>
+                                <step>
+                                    <type>JAVASCRIPT</type>
+                                    <params>switch (value) {
+  case &quot;OFF&quot;:
+    return 0;
+    break;
+  case &quot;ON&quot;:
+    return 1;
+    break;
+  case &quot;OFF_PERMISSIVE&quot;:
+    return 2;
+    break;
+  case &quot;ON_PERMISSIVE&quot;:
+    return 3;
+    break;
+  default:
+    return 4;
+    break;
+}</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>mysql.instance[{$DBS_MYSQL_INSTANCE},version_full]</key>
+                    </master_item>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>return JSON.stringify(value.search('MariaDB')&gt;-1 ? [{'{#MARIADB}': ''}] : []);</params>
+                        </step>
+                    </preprocessing>
                 </discovery_rule>
                 <discovery_rule>
                     <name>MySQL slave discovery</name>
