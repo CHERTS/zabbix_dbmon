@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2021-11-24T07:19:02Z</date>
+    <groups>
+        <group>
+            <name>DBS.Templates/Databases</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>DBS_Template MySQL for Linux</template>
+            <name>MySQL for Linux (Active, DBMON)</name>
+            <description>Template for monitoring MySQL DB for Linux (active agent)</description>
+            <templates>
+                <template>
+                    <name>DBS_Template DB MySQL</name>
+                </template>
+            </templates>
+            <groups>
+                <group>
+                    <name>DBS.Templates/Databases</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': state</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>proc.num[{$DBS_MYSQL_SERVICE_NAME},{$DBS_MYSQL_SERVICE_USER},,{$DBS_MYSQL_SERVICE_CMD}]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <triggers>
+                        <trigger>
+                            <expression>{max(2m)}=0</expression>
+                            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+                            <recovery_expression>{min(3m)}&gt;0</recovery_expression>
+                            <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is not running</name>
+                            <priority>DISASTER</priority>
+                            <description>Основной процесс '{$DBS_MYSQL_SERVICE_NAME}' экземпляра '{$DBS_MYSQL_INSTANCE}' был остановлен или аварийно завершил работу (crash).&#13;
+Зайдите на сервер и проверьте состояние экземпляра, проверьте журнал error.log на предмет ошибок работы.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+                            <tags>
+                                <tag>
+                                    <tag>Instance</tag>
+                                    <value>{$DBS_MYSQL_INSTANCE}</value>
+                                </tag>
+                            </tags>
+                        </trigger>
+                    </triggers>
+                </item>
+            </items>
+            <tags>
+                <tag>
+                    <tag>OS</tag>
+                    <value>Linux</value>
+                </tag>
+            </tags>
+            <macros>
+                <macro>
+                    <macro>{$DBS_MYSQL_SERVICE_CMD}</macro>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_SERVICE_NAME}</macro>
+                    <value>mysqld</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_SERVICE_USER}</macro>
+                    <value>mysql</value>
+                </macro>
+            </macros>
+        </template>
+        <template>
+            <template>DBS_Template MySQL for Windows</template>
+            <name>MySQL for Windows (Active, DBMON)</name>
+            <description>Template for monitoring MySQL DB for Windows (active agent)</description>
+            <templates>
+                <template>
+                    <name>DBS_Template DB MySQL</name>
+                </template>
+            </templates>
+            <groups>
+                <group>
+                    <name>DBS.Templates/Databases</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': CPU usage (% Processor Time)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>perf_counter_en[&quot;\Process({$DBS_MYSQL_SERVICE_EXE_NAME})\% Processor Time&quot;]</key>
+                    <history>30d</history>
+                    <value_type>FLOAT</value_type>
+                    <description>Processor Time shows the amount of CPU usage that the process is using, note that a multi-threaded process on a multi-core server could drive this counter above 100%.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>10m</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_EXE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': Memory usage (Working Set)</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>perf_counter_en[&quot;\Process({$DBS_MYSQL_SERVICE_EXE_NAME})\Working Set&quot;]</key>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>Working Set shows the amount of physical memory the process is using.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>10m</params>
+                        </step>
+                    </preprocessing>
+                </item>
+                <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': startup type</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>service.info[{$DBS_MYSQL_SERVICE_NAME},startup]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>Windows service startup type</name>
+                    </valuemap>
+                </item>
+                <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': state</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>service.info[{$DBS_MYSQL_SERVICE_NAME},state]</key>
+                    <history>30d</history>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>Windows service state</name>
+                    </valuemap>
+                </item>
+                <item>
+                    <name>[MySQL] Service '{$DBS_MYSQL_SERVICE_NAME}', instance '{$DBS_MYSQL_INSTANCE}': account</name>
+                    <type>ZABBIX_ACTIVE</type>
+                    <key>service.info[{$DBS_MYSQL_SERVICE_NAME},user]</key>
+                    <delay>1h</delay>
+                    <history>30d</history>
+                    <trends>0</trends>
+                    <value_type>CHAR</value_type>
+                    <applications>
+                        <application>
+                            <name>MySQL: Info</name>
+                        </application>
+                    </applications>
+                    <valuemap>
+                        <name>Windows service startup type</name>
+                    </valuemap>
+                </item>
+            </items>
+            <tags>
+                <tag>
+                    <tag>OS</tag>
+                    <value>Windows</value>
+                </tag>
+            </tags>
+            <macros>
+                <macro>
+                    <macro>{$DBS_MYSQL_SERVICE_EXE_NAME}</macro>
+                    <value>mysqld</value>
+                </macro>
+                <macro>
+                    <macro>{$DBS_MYSQL_SERVICE_NAME}</macro>
+                    <value>MySQL</value>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <triggers>
+        <trigger>
+            <expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].last()}=255</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].max(2m)}=0 or {DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},startup].last()}=3</recovery_expression>
+            <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is not found</name>
+            <priority>HIGH</priority>
+            <description>Служба '{$DBS_MYSQL_SERVICE_NAME}' не найдена.&#13;
+Создайте или исправьте макрос DBS_MYSQL_SERVICE_NAME у хоста, содержащий корректное имя службы MySQL.&#13;
+В противном случае мониторинг будет работать некорректно.</description>
+            <tags>
+                <tag>
+                    <tag>Service</tag>
+                    <value>{$DBS_MYSQL_SERVICE_NAME}</value>
+                </tag>
+            </tags>
+        </trigger>
+        <trigger>
+            <expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].last()}&lt;&gt;0 and {DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},startup].last()}&lt;&gt;3</expression>
+            <recovery_mode>RECOVERY_EXPRESSION</recovery_mode>
+            <recovery_expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].max(3m)}=0 or {DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},startup].last()}=3</recovery_expression>
+            <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is not running</name>
+            <opdata>current state: {ITEM.LASTVALUE1}, startup type: {ITEM.LASTVALUE2}</opdata>
+            <priority>DISASTER</priority>
+            <description>Служба '{$DBS_MYSQL_SERVICE_NAME}' была остановлена или аварийно завершила работу (crash).&#13;
+Зайдите на сервер и проверьте состояние службы, проверьте журнал событий Windows на предмет ошибок работы службы.&#13;
+Доведите информацию до заказчика и эксперта.</description>
+            <dependencies>
+                <dependency>
+                    <name>Service '{$DBS_MYSQL_SERVICE_NAME}' is not found</name>
+                    <expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].last()}=255</expression>
+                    <recovery_expression>{DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},state].max(2m)}=0 or {DBS_Template MySQL for Windows:service.info[{$DBS_MYSQL_SERVICE_NAME},startup].last()}=3</recovery_expression>
+                </dependency>
+            </dependencies>
+            <tags>
+                <tag>
+                    <tag>Service</tag>
+                    <value>{$DBS_MYSQL_SERVICE_NAME}</value>
+                </tag>
+            </tags>
+        </trigger>
+    </triggers>
+    <value_maps>
+        <value_map>
+            <name>Windows service startup type</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>Automatic</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Automatic delayed</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>Manual</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>Disabled</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>Unknown</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+        <value_map>
+            <name>Windows service state</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>Running</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Paused</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>Start pending</newvalue>
+                </mapping>
+                <mapping>
+                    <value>3</value>
+                    <newvalue>Pause pending</newvalue>
+                </mapping>
+                <mapping>
+                    <value>4</value>
+                    <newvalue>Continue pending</newvalue>
+                </mapping>
+                <mapping>
+                    <value>5</value>
+                    <newvalue>Stop pending</newvalue>
+                </mapping>
+                <mapping>
+                    <value>6</value>
+                    <newvalue>Stopped</newvalue>
+                </mapping>
+                <mapping>
+                    <value>7</value>
+                    <newvalue>Unknown</newvalue>
+                </mapping>
+                <mapping>
+                    <value>255</value>
+                    <newvalue>No such service</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
+</zabbix_export>
