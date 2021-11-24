@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-11-24T06:27:11Z</date>
+    <date>2021-11-24T06:40:43Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Databases</name>
@@ -4316,6 +4316,7 @@ See more info: https://dev.mysql.com/doc/refman/5.7/en/mrr-optimization.html</de
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},slave_parallel_mode]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <status>DISABLED</status>
                     <description>Controls what transactions are applied in parallel when using parallel replication.&#13;
 &#13;
 optimistic: tries to apply most transactional DML in parallel, and handles any conflicts with rollback and retry.&#13;
@@ -4901,6 +4902,7 @@ On thread startup, the session wait_timeout value is initialized from the global
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},wsrep_gtid_mode]</key>
                     <delay>0</delay>
                     <history>30d</history>
+                    <status>DISABLED</status>
                     <description>Wsrep GTID mode attempts to keep GTIDs consistent for Galera Cluster write sets on all cluster nodes.&#13;
 GTID state is initially copied to a joiner node during an SST.&#13;
 If you are planning to use Galera Cluster with MariaDB replication, then wsrep GTID mode can be helpful.&#13;
@@ -5404,6 +5406,8 @@ See more info: https://mariadb.com/kb/en/replication-and-binary-log-system-varia
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$.SLAVE_PARALLEL_MODE</params>
+                                    <error_handler>CUSTOM_ERROR</error_handler>
+                                    <error_handler_params>Not supported in this MariaDB version</error_handler_params>
                                 </step>
                                 <step>
                                     <type>JAVASCRIPT</type>
@@ -5455,6 +5459,8 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                                 <step>
                                     <type>JSONPATH</type>
                                     <params>$.WSREP_GTID_MODE</params>
+                                    <error_handler>CUSTOM_ERROR</error_handler>
+                                    <error_handler_params>Not supported in this MariaDB version</error_handler_params>
                                 </step>
                                 <step>
                                     <type>JAVASCRIPT</type>
@@ -5480,6 +5486,26 @@ See more info: https://mariadb.com/kb/en/galera-cluster-system-variables/#wsrep_
                             <master_item>
                                 <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1</expression>
+                                    <recovery_mode>NONE</recovery_mode>
+                                    <name>Setting 'wsrep_gtid_mode' has been changed</name>
+                                    <opdata>current: {ITEM.VALUE}</opdata>
+                                    <priority>INFO</priority>
+                                    <description>Настройка 'wsrep_gtid_mode' была изменена.&#13;
+Данная настройка отвечает за включение/отключение режима GTID и важна при репликации.&#13;
+Доведите информацию до эксперту.</description>
+                                    <type>MULTIPLE</type>
+                                    <manual_close>YES</manual_close>
+                                    <tags>
+                                        <tag>
+                                            <tag>Instance</tag>
+                                            <value>{$DBS_MYSQL_INSTANCE}</value>
+                                        </tag>
+                                    </tags>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
                     <master_item>
