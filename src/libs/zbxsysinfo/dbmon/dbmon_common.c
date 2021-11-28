@@ -248,8 +248,29 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 
 	if (0 == db_result.nb_rows && ZBX_DB_RES_TYPE_DISCOVERY != mode)
 	{
-		SET_MSG_RESULT(result, zbx_strdup(NULL, "The request returned a null result."));
-		zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): The request returned a null result.", __func__, request->key);
+		if (ZBX_DB_RES_TYPE_ONEROW == mode)
+		{
+			SET_STR_RESULT(result, zbx_strdup(NULL, "{}"));
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Return {}", __func__, request->key);
+			ret = SYSINFO_RET_OK;
+		}
+		else if (ZBX_DB_RES_TYPE_TWOCOLL == mode)
+		{
+			SET_STR_RESULT(result, zbx_strdup(NULL, "{}"));
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Return {}", __func__, request->key);
+			ret = SYSINFO_RET_OK;
+		}
+		else if (ZBX_DB_RES_TYPE_MULTIROW == mode)
+		{
+			SET_STR_RESULT(result, zbx_strdup(NULL, "[]"));
+			zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Return []", __func__, request->key);
+			ret = SYSINFO_RET_OK;
+		}
+		else
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "The request returned a null result."));
+			zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): The request returned a null result.", __func__, request->key);
+		}
 		goto out;
 	}
 
