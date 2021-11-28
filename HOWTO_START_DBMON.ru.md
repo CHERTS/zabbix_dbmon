@@ -54,7 +54,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
 
 Лог старта должен быть примерто таким:
 ~~~~
- 22646:20200219:211042.119 Starting Zabbix Agent [XXXXXX]. Zabbix 5.0.5 (revision XXXXXXX).
+ 22646:20200219:211042.119 Starting Zabbix Agent [XXXXXX]. Zabbix 5.0.16 (revision XXXXXXX).
  22646:20200219:211042.119 **** Enabled features ****
  22646:20200219:211042.119 IPv6 support:          YES
  22646:20200219:211042.119 TLS support:           YES
@@ -74,11 +74,13 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
 
 7. Теперь Вы можете импортировать в Zabbix web-frontend новые шаблоны из папки templates\db\dbmon в следующей последовательности:
 
-Последовательность импорта шаблонов (НЕ НАРУШАЙТЕ ЕЕ!):
+Последовательность импорта шаблонов:
 ~~~~
-1. templates_db_mysql_all_os.xml, templates_db_postgres_all_os.xml, templates_db_oracle_all_os.xml
-2. templates_db_mysql_linux.xml, templates_db_mysql_windows.xml, templates_db_postgres_linux.xml, templates_db_postgres_windows.xml, templates_db_oracle_linux.xml, templates_db_oracle_windows.xml и templates_db_oracle_aix.xml
-3. templates_zabbix_agent_dbmon_linux.xml, templates_zabbix_agent_dbmon_windows.xml и templates_zabbix_agent_dbmon_aix.xml
+1. templates_db_mysql_all_os.xml
+2. templates_db_postgres_all_os.xml
+3. templates_db_oracle_all_os.xml
+4. templates_db_oracle_asm_all_os.xml
+5. templates_zabbix_agent_dbmon_all_os.xml
 ~~~~
 
 Дополнительные действия по связыванию триггеров для MySQL for Windows:
