@@ -445,9 +445,14 @@ WHERE client_addr is not null;"
 #define PGSQL_REPLICATION_ROLE_DBS "\
 SELECT pg_is_in_recovery()::int AS REPLICATION_ROLE;"
 
-// Get replication standby count
-#define PGSQL_REPLICATION_STANDBY_COUNT_DBS "\
+// Get replication standby count from PostgreSQL < 10
+#define PGSQL_REPLICATION_STANDBY_COUNT_V96_DBS "\
 SELECT count(*) AS REPLICATION_STANDBY_COUNT FROM pg_stat_replication;"
+
+// Get replication standby count from PostgreSQL >= 10
+#define PGSQL_REPLICATION_STANDBY_COUNT_V100_DBS "\
+SELECT count(r.pid) AS REPLICATION_STANDBY_COUNT FROM pg_stat_replication r JOIN pg_replication_slots s ON s.active_pid = r.pid \
+	WHERE s.temporary = false;"
 
 // Get replication status from PostgreSQL < 9.6 (0 - Down, 1 - Up, 2 - Master, 3 - Not supported)
 #define PGSQL_REPLICATION_STATUS_V95_DBS "\
@@ -1469,6 +1474,31 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				goto out;
 			}
 		}
+		else if (0 == strcmp(request->key, "pgsql.replication.count"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version < 100000)
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STATUS_V96_DBS);
+				}
+				else
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STATUS_V100_DBS);
+				}
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
 		else if (0 == strcmp(request->key, "pgsql.replication.slots"))
 		{
 			version = zbx_db_version(pgsql_conn);
@@ -1689,7 +1719,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.count"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STANDBY_COUNT_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STANDBY_COUNT_V96_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.status"))
 	{
