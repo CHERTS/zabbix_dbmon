@@ -427,7 +427,7 @@ WHERE client_addr is not null;"
 // sending_lag could indicate heavy load on primary
 // receiving_lag could indicate network issues or replica under heavy load
 // replaying_lag could indicate replica under heavy load
-#define PGSQL_REPLICATION_STAT_V10_DBS "\
+#define PGSQL_REPLICATION_STAT_V100_DBS "\
 SELECT \
   client_addr as ip_address, \
   usename as user_name, \
@@ -474,7 +474,7 @@ SELECT \
 #define PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V96_DBS "SELECT pg_is_xlog_replay_paused()::int;"
 
 // Get replication replay paused from PostgreSQL >= 10.0 (0 - Running, 1 - Paused, 2 - Master, 3 - Not supported)
-#define PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V10_DBS "SELECT pg_is_wal_replay_paused()::int;"
+#define PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V100_DBS "SELECT pg_is_wal_replay_paused()::int;"
 
 // Get lag in second from PostgreSQL < 10.0
 #define PGSQL_REPLICATION_LAG_IN_SEC_V9_DBS "\
@@ -522,13 +522,6 @@ SELECT slot_name, \
 FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
-// Get replication slot lag from PostgreSQL <= 9.6
-#define PGSQL_REPLICATION_SLOTS_LAG_V95_DBS "\
-SELECT slot_name, \
-	pg_xlog_location_diff(pg_current_xlog_location(), restart_lsn) AS replication_slot_lag \
-FROM pg_replication_slots \
-ORDER BY slot_name ASC;"
-
 // Get replication slot info from PostgreSQL = 9.6
 #define PGSQL_REPLICATION_SLOTS_INFO_V96_DBS "\
 SELECT slot_name, \
@@ -546,7 +539,7 @@ FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 10.0 and < 14.0
-#define PGSQL_REPLICATION_SLOTS_INFO_V10_DBS "\
+#define PGSQL_REPLICATION_SLOTS_INFO_V100_DBS "\
 SELECT slot_name, \
 	COALESCE(plugin, '') AS plugin, \
 	slot_type, \
@@ -561,15 +554,22 @@ SELECT slot_name, \
 FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
+// Get replication slot lag from PostgreSQL <= 9.6
+#define PGSQL_REPLICATION_SLOTS_LAG_V95_DBS "\
+SELECT slot_name, \
+	pg_xlog_location_diff(pg_current_xlog_location(), restart_lsn) AS replication_slot_lag \
+FROM pg_replication_slots \
+ORDER BY slot_name ASC;"
+
 // Get replication slot info from PostgreSQL >= 10.0 and <= 13.0
-#define PGSQL_REPLICATION_SLOTS_LAG_V10_DBS "\
+#define PGSQL_REPLICATION_SLOTS_LAG_V100_DBS "\
 SELECT slot_name, \
 	pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) AS replication_slot_lag \
 FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 13.0
-#define PGSQL_REPLICATION_SLOTS_INFO_V13_DBS "\
+#define PGSQL_REPLICATION_SLOTS_INFO_V130_DBS "\
 SELECT slot_name, \
 	COALESCE(plugin, '') AS plugin, \
 	slot_type, \
@@ -1255,7 +1255,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 					}
 					else
 					{
-						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STAT_V10_DBS);
+						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STAT_V100_DBS);
 					}
 				}
 				else
@@ -1344,7 +1344,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 					}
 					else
 					{
-						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V10_DBS);
+						db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V100_DBS);
 					}
 				}
 				else
@@ -1524,11 +1524,11 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				}
 				else if (version >= 100000 && version < 130000)
 				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V10_DBS);
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V100_DBS);
 				}
 				else
 				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V13_DBS);
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_INFO_V130_DBS);
 				}
 			}
 			else
@@ -1560,11 +1560,11 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				}
 				else if (version >= 100000 && version <= 130000)
 				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_LAG_V10_DBS);
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_LAG_V100_DBS);
 				}
 				else
 				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_LAG_V10_DBS);
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_LAG_V100_DBS);
 				}
 			}
 			else
@@ -1711,7 +1711,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if ((0 == strcmp(request->key, "pgsql.replication.info")) || (0 == strcmp(request->key, "pgsql.replication.stat")))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STAT_V10_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_STAT_V100_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.role"))
 	{
@@ -1727,7 +1727,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.replay"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V10_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_REPLAY_PAUSED_STATUS_V100_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.lag_byte"))
 	{
@@ -1743,7 +1743,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.slots.lag"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_SLOTS_LAG_V10_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_SLOTS_LAG_V100_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else if (0 == strcmp(request->key, "pgsql.backup.exclusive"))
 	{
