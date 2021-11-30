@@ -1089,11 +1089,11 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 
 				if (version >= 90600)
 				{
-					pg_wait_event = "CASE WHEN wait_event IS NOT NULL THEN 1 ELSE 0 END";
+					pg_wait_event = "CASE WHEN wait_event IS NOT NULL AND state != 'idle' THEN 1 ELSE 0 END";
 				}
 				else
 				{
-					pg_wait_event = "CASE WHEN waiting = 't' THEN 1 ELSE 0 END";
+					pg_wait_event = "CASE WHEN waiting = 't' AND state != 'idle' THEN 1 ELSE 0 END";
 				}
 
 				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query, pg_wait_event);
