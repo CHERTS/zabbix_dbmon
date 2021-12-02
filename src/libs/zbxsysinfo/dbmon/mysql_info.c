@@ -600,7 +600,7 @@ int	MYSQL_GET_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result)
  * Parameters:
  *   0:  mysql host address
  *   1:  mysql port
- *   2:  scalar SQL query to execute
+ *   2:  name SQL query to execute
  *   n:  query parameters
  *
  * Returns: string
@@ -615,6 +615,18 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 	DBMONparams			params = NULL;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
+
+	if (3 < request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too many parameters."));
+		return SYSINFO_RET_FAIL;
+	}
+
+	if (3 > request->nparam)
+	{
+		SET_MSG_RESULT(result, zbx_strdup(NULL, "Too few parameters."));
+		return SYSINFO_RET_FAIL;
+	}
 
 	if (0 == strcmp(request->key, "mysql.query.nojson"))
 	{
@@ -669,19 +681,23 @@ int	MYSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 		//query = query_key;
 	}
 
-	// parse user params
-	dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query", request->nparam - 3);
-
-	for (i = 3; i < request->nparam; i++)
+	if (3 < request->nparam)
 	{
-		params = dbmon_param_append(params, get_rparam(request, i));
+		// parse user params
+		dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query", request->nparam - 3);
+
+		for (i = 3; i < request->nparam; i++)
+		{
+			params = dbmon_param_append(params, get_rparam(request, i));
+		}
 	}
 
 	dbmon_log_result(result, LOG_LEVEL_TRACE, "Execute query: %s", query);
 
 	ret = mysql_make_result(request, result, query, query_result_type);
 
-	dbmon_param_free(params);
+	if (3 > request->nparam)
+		dbmon_param_free(params);
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 

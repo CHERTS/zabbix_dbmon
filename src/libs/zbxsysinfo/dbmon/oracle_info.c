@@ -2462,7 +2462,7 @@ int	ORACLE_TS_INFO(AGENT_REQUEST *request, AGENT_RESULT *result)
  *   1:  oracle instance name string
  *   2:  oracle connection mode string
  *   3:  oracle database name string
- *   4:  scalar SQL query to execute
+ *   4:  name SQL query to execute
  *   n:  query parameters
  *
  * Returns: string
@@ -2543,19 +2543,23 @@ int	ORACLE_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 		//query = query_key;
 	}
 
-	// parse user params
-	dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query.", request->nparam - 5);
-
-	for (i = 5; i < request->nparam; i++)
+	if (5 < request->nparam)
 	{
-		params = dbmon_param_append(params, get_rparam(request, i));
+		// parse user params
+		dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query.", request->nparam - 5);
+
+		for (i = 5; i < request->nparam; i++)
+		{
+			params = dbmon_param_append(params, get_rparam(request, i));
+		}
 	}
 
 	dbmon_log_result(result, LOG_LEVEL_TRACE, "Execute query: %s", query);
 
 	ret = oracle_make_result(request, result, query, query_result_type, ORA_ANY_ROLE, 0, ORA_ANY_STATUS);
 
-	dbmon_param_free(params);
+	if (5 < request->nparam)
+		dbmon_param_free(params);
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 

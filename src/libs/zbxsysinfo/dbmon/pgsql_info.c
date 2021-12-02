@@ -538,7 +538,7 @@ SELECT slot_name, \
 FROM pg_control_checkpoint(), pg_replication_slots \
 ORDER BY slot_name ASC;"
 
-// Get replication slot info from PostgreSQL >= 10.0 and < 14.0
+// Get replication slot info from PostgreSQL >= 10.0 and < 13.0
 #define PGSQL_REPLICATION_SLOTS_INFO_V100_DBS "\
 SELECT slot_name, \
 	COALESCE(plugin, '') AS plugin, \
@@ -552,20 +552,6 @@ SELECT slot_name, \
 	confirmed_flush_lsn, \
 	round(abs(redo_lsn-restart_lsn),0) AS behind \
 FROM pg_control_checkpoint(), pg_replication_slots \
-ORDER BY slot_name ASC;"
-
-// Get replication slot lag from PostgreSQL <= 9.6
-#define PGSQL_REPLICATION_SLOTS_LAG_V95_DBS "\
-SELECT slot_name, \
-	pg_xlog_location_diff(pg_current_xlog_location(), restart_lsn) AS replication_slot_lag \
-FROM pg_replication_slots \
-ORDER BY slot_name ASC;"
-
-// Get replication slot info from PostgreSQL >= 10.0 and <= 13.0
-#define PGSQL_REPLICATION_SLOTS_LAG_V100_DBS "\
-SELECT slot_name, \
-	pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) AS replication_slot_lag \
-FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get replication slot info from PostgreSQL >= 13.0
@@ -585,6 +571,20 @@ SELECT slot_name, \
 	round(abs(redo_lsn-restart_lsn),0) AS behind, \
 	pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) AS replication_slot_lag \
 FROM pg_control_checkpoint(), pg_replication_slots \
+ORDER BY slot_name ASC;"
+
+// Get replication slot lag from PostgreSQL <= 9.6
+#define PGSQL_REPLICATION_SLOTS_LAG_V95_DBS "\
+SELECT slot_name, \
+	pg_xlog_location_diff(pg_current_xlog_location(), restart_lsn) AS replication_slot_lag \
+FROM pg_replication_slots \
+ORDER BY slot_name ASC;"
+
+// Get replication slot info from PostgreSQL >= 10.0 and <= 13.0
+#define PGSQL_REPLICATION_SLOTS_LAG_V100_DBS "\
+SELECT slot_name, \
+	pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn) AS replication_slot_lag \
+FROM pg_replication_slots \
 ORDER BY slot_name ASC;"
 
 // Get exclusive (non-exclusive) backup status
@@ -1484,11 +1484,11 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 
 				if (version < 100000)
 				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STATUS_V96_DBS);
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STATUS_V95_DBS);
 				}
 				else
 				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STATUS_V100_DBS);
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STATUS_V96_DBS);
 				}
 			}
 			else
@@ -1739,7 +1739,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.slots"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_SLOTS_INFO_V13_DBS, ZBX_DB_RES_TYPE_MULTIROW);
+		ret = pgsql_make_result(request, result, PGSQL_REPLICATION_SLOTS_INFO_V100_DBS, ZBX_DB_RES_TYPE_MULTIROW);
 	}
 	else if (0 == strcmp(request->key, "pgsql.replication.slots.lag"))
 	{
@@ -1793,7 +1793,7 @@ int	PGSQL_GET_RESULT(AGENT_REQUEST *request, AGENT_RESULT *result)
  *
  * Parameters:
  *   0:  pgsql connections string
- *   1:  scalar SQL query to execute
+ *   1:  name SQL query to execute
  *   n:  query parameters
  *
  * Returns: string
@@ -1874,19 +1874,23 @@ int	PGSQL_QUERY(AGENT_REQUEST *request, AGENT_RESULT *result)
 		//query = query_key;
 	}
 
-	// parse user params
-	dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query.", request->nparam - 2);
-
-	for (i = 2; i < request->nparam; i++)
+	if (2 < request->nparam)
 	{
-		params = dbmon_param_append(params, get_rparam(request, i));
+		// parse user params
+		dbmon_log_result(result, LOG_LEVEL_DEBUG, "Appending %i params to query.", request->nparam - 2);
+
+		for (i = 2; i < request->nparam; i++)
+		{
+			params = dbmon_param_append(params, get_rparam(request, i));
+		}
 	}
 
 	dbmon_log_result(result, LOG_LEVEL_TRACE, "Execute query: %s", query);
 
 	ret = pgsql_make_result(request, result, query, query_result_type);
 
-	dbmon_param_free(params);
+	if (2 < request->nparam)
+		dbmon_param_free(params);
 out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 

@@ -74,6 +74,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)zbxsysinfo_common_http.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)zbxsysinfo_common_http.obj</ObjectFileName>
     </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\http_metrics.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\net.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\system.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\zabbix_stats.c" />
@@ -125,6 +126,7 @@
     <ClCompile Include="..\..\src\zabbix_agent\eventlog.c" />
     <ClCompile Include="..\..\src\zabbix_agent\listener.c" />
     <ClCompile Include="..\..\src\zabbix_agent\logfiles\logfiles.c" />
+    <ClCompile Include="..\..\src\zabbix_agent\logfiles\persistent_state.c" />
     <ClCompile Include="..\..\src\zabbix_agent\perfstat.c" />
     <ClCompile Include="..\..\src\zabbix_agent\stats.c" />
     <ClCompile Include="..\..\src\zabbix_agent\vmstats.c" />

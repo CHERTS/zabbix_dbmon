@@ -1246,6 +1246,30 @@ int	check_vcenter_hv_status(AGENT_REQUEST *request, const char *username, const 
 	return ret;
 }
 
+int	check_vcenter_hv_maintenance(AGENT_REQUEST *request, const char *username, const char *password,
+		AGENT_RESULT *result)
+{
+	int	ret;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
+
+	ret = get_vcenter_hvprop(request, username, password, ZBX_VMWARE_HVPROP_MAINTENANCE, result);
+
+	if (SYSINFO_RET_OK == ret && NULL != GET_STR_RESULT(result))
+	{
+		if (0 == strcmp(result->str, "false"))
+			SET_UI64_RESULT(result, 0);
+		else
+			SET_UI64_RESULT(result, 1);
+
+		UNSET_STR_RESULT(result);
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __func__, zbx_sysinfo_ret_string(ret));
+
+	return ret;
+}
+
 int	check_vcenter_hv_uptime(AGENT_REQUEST *request, const char *username, const char *password,
 		AGENT_RESULT *result)
 {
@@ -1268,6 +1292,20 @@ int	check_vcenter_hv_version(AGENT_REQUEST *request, const char *username, const
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
 
 	ret = get_vcenter_hvprop(request, username, password, ZBX_VMWARE_HVPROP_VERSION, result);
+
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __func__, zbx_sysinfo_ret_string(ret));
+
+	return ret;
+}
+
+int	check_vcenter_hv_sensors_get(AGENT_REQUEST *request, const char *username, const char *password,
+		AGENT_RESULT *result)
+{
+	int	ret;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
+
+	ret = get_vcenter_hvprop(request, username, password, ZBX_VMWARE_HVPROP_SENSOR, result);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __func__, zbx_sysinfo_ret_string(ret));
 
@@ -2179,6 +2217,14 @@ static int	check_vcenter_datastore_latency(AGENT_REQUEST *request, const char *u
 		if (SYSINFO_RET_OK != (ret = vmware_service_get_counter_value_by_id(service, "HostSystem", hv->id,
 				counterid, datastore->uuid, 1, result)))
 		{
+			char	*err, *msg = *GET_MSG_RESULT(result);
+
+			*msg = (char)tolower(*msg);
+			err = zbx_dsprintf(NULL, "Counter %s for datastore %s is not available for hypervisor %s: %s",
+					perfcounter, datastore->name,
+					ZBX_NULL2EMPTY_STR(hv->props[ZBX_VMWARE_HVPROP_NAME]), msg);
+			UNSET_MSG_RESULT(result);
+			SET_MSG_RESULT(result, err);
 			goto unlock;
 		}
 

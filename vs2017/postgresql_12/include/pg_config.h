@@ -371,6 +371,9 @@
 /* Define to 1 if you have the <security/pam_appl.h> header file. */
 /* #undef HAVE_SECURITY_PAM_APPL_H */
 
+/* Define to 1 if you have the `setenv' function. */
+/* #undef HAVE_SETENV */
+
 /* Define to 1 if you have the `setproctitle' function. */
 /* #undef HAVE_SETPROCTITLE */
 
@@ -645,10 +648,10 @@
 #define PACKAGE_NAME "PostgreSQL"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "PostgreSQL 12.2"
+#define PACKAGE_STRING "PostgreSQL 12.9"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "12.2"
+#define PACKAGE_VERSION "12.9"
 
 /* Define to the name of a signed 128-bit integer type. */
 #undef PG_INT128_TYPE
@@ -657,10 +660,10 @@
 #define PG_INT64_TYPE long long int
 
 /* PostgreSQL version as a string */
-#define PG_VERSION "12.2"
+#define PG_VERSION "12.9"
 
 /* PostgreSQL version as a number */
-#define PG_VERSION_NUM 120002
+#define PG_VERSION_NUM 120009
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "postgresql"
@@ -670,7 +673,7 @@
 #define PG_KRB_SRVNAM "postgres"
 
 /* A string containing the version number, platform, and C compiler */
-#define PG_VERSION_STR "PostgreSQL 12.2, compiled by Visual C++ build " CppAsString2(_MSC_VER) ", 64-bit"
+#define PG_VERSION_STR "PostgreSQL 12.9, compiled by Visual C++ build " CppAsString2(_MSC_VER) ", 64-bit"
 
 /* The size of `bool', as computed by sizeof. */
 #define SIZEOF_BOOL 1
@@ -817,6 +820,10 @@
 #define HAVE_LIBXSLT
 #define USE_LIBXSLT
 #define USE_OPENSSL 1
+#define HAVE_ASN1_STRING_GET0_DATA 1
+#define HAVE_BIO_GET_DATA 1
+#define HAVE_BIO_METH_NEW 1
+#define HAVE_OPENSSL_INIT_SSL 1
 #define USE_ICU 1
 #define VAL_CONFIGURE "--enable-thread-safety --enable-nls --with-ldap --with-openssl --with-ossp-uuid --with-libxml --with-libxslt --with-icu --with-perl --with-python"
 #endif /* IGNORE_CONFIGURED_SETTINGS */
