@@ -194,7 +194,7 @@ FROM( \
 	count(*) * 100 / (SELECT current_setting('max_connections')::int) AS total_pct, \
 	coalesce(sum(%s),0) AS waiting, \
 	(SELECT count(*) FROM pg_catalog.pg_prepared_xacts) AS prepared \
-	FROM pg_catalog.pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() AND datid is not NULL) \
+	FROM pg_catalog.pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() AND datid IS NOT NULL AND state IS NOT NULL) \
 T;"
 
 #define PGSQL_TRANSACTIONS_INFO_DBS "\
@@ -224,7 +224,7 @@ FROM( \
 	count(*) AS total_connection, \
 	count(*) * 100 / (SELECT current_setting('max_connections')::int) AS total_pct, \
 	(SELECT current_setting('max_connections')::int) AS max_connections \
-	FROM pg_catalog.pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() AND datid IS NOT NULL \
+	FROM pg_catalog.pg_stat_activity WHERE pid <> pg_catalog.pg_backend_pid() AND datid IS NOT NULL AND state IS NOT NULL \
 ) T;"
 
 #define PGSQL_WAL_STAT_DBS "\
@@ -232,11 +232,15 @@ SELECT row_to_json(T) \
 FROM( \
 	SELECT \
 		CASE \
-			WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN pg_wal_lsn_diff(pg_current_wal_lsn(), '0/00000000') \
-			ELSE 0 \
+			WHEN pg_is_in_recovery() THEN 0 \
+			ELSE pg_wal_lsn_diff(pg_current_wal_lsn(),'0/00000000') \
 			END AS WRITE, \
+		CASE  \
+			WHEN NOT pg_is_in_recovery() THEN 0 \
+			ELSE pg_wal_lsn_diff(pg_last_wal_receive_lsn(),'0/00000000') \
+			END AS RECEIVE, \
 		count(*) * 16 * 1024 * 1024 AS TOTAL_SIZE, \
-		count(*)  \
+		count(*) \
 	FROM pg_ls_waldir() AS COUNT \
 ) T;"
 
@@ -245,11 +249,15 @@ SELECT row_to_json(T) \
 FROM( \
 	SELECT \
 		CASE \
-			WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN pg_xlog_location_diff(pg_current_xlog_location(), '0/00000000') \
-			ELSE 0 \
+			WHEN pg_is_in_recovery() THEN 0 \
+			ELSE pg_xlog_location_diff(pg_current_xlog_location(), '0/00000000') \
 			END AS WRITE, \
-	count(*) * 16 * 1024 * 1024 AS TOTAL_SIZE, \
-	count(*) \
+		CASE  \
+			WHEN NOT pg_is_in_recovery() THEN 0 \
+			ELSE pg_xlog_location_diff(pg_last_xlog_receive_location(),'0/00000000') \
+			END AS RECEIVE, \
+		count(*) * 16 * 1024 * 1024 AS TOTAL_SIZE, \
+		count(*) \
 	FROM pg_ls_dir('pg_xlog') AS t(fname) WHERE fname <> 'archive_status' \
 ) T;"
 
@@ -301,7 +309,7 @@ FROM pg_catalog.pg_stat_bgwriter, \
 #define PGSQL_AUTOVACUUM_COUNT_DBS "\
 SELECT count(*) AS autovacuum_cnt \
 FROM pg_catalog.pg_stat_activity \
-WHERE query like '%%autovacuum%%' \
+WHERE query ~ '^autovacuum:' \
 	AND state <> 'idle' \
 	AND pid <> pg_catalog.pg_backend_pid();"
 
@@ -312,16 +320,37 @@ FROM( \
 	FROM pg_stat_archiver \
 ) T;"
 
-#define PGSQL_ARCHIVE_SIZE_DBS "\
+#define PGSQL_ARCHIVE_SIZE_V96_DBS "\
 SELECT row_to_json(T) \
 FROM( \
 	SELECT count(name) AS count_files, \
-	coalesce(sum((pg_stat_file('./%s/' || rtrim(ready.name, '.ready'))).size), 0) AS size_files \
+	coalesce(sum((pg_stat_file('./pg_xlog/' || rtrim(ready.name, '.ready'))).size), 0) AS size_files \
 	FROM( \
 		SELECT name \
-		FROM pg_ls_dir('./%s/archive_status') name \
+		FROM pg_ls_dir('./pg_xlog/archive_status') name \
 		WHERE right(name, 6) = '.ready' \
 	) ready \
+) T;"
+
+#define PGSQL_ARCHIVE_SIZE_V100_DBS "\
+SELECT row_to_json(T) \
+	FROM ( \
+		WITH values AS ( \
+			SELECT \
+				4096/(ceil(pg_settings.setting::numeric/1024/1024))::int AS segment_parts_count, \
+				setting::bigint AS segment_size, \
+				('x' || substring(pg_stat_archiver.last_archived_wal from 9 for 8))::bit(32)::int AS last_wal_div, \
+				('x' || substring(pg_stat_archiver.last_archived_wal from 17 for 8))::bit(32)::int AS last_wal_mod, \
+				CASE WHEN pg_is_in_recovery() THEN NULL  \
+					ELSE ('x' || substring(pg_walfile_name(pg_current_wal_lsn()) from 9 for 8))::bit(32)::int END AS current_wal_div, \
+				CASE WHEN pg_is_in_recovery() THEN NULL  \
+					ELSE ('x' || substring(pg_walfile_name(pg_current_wal_lsn()) from 17 for 8))::bit(32)::int END AS current_wal_mod \
+			FROM pg_settings, pg_stat_archiver \
+			WHERE pg_settings.name = 'wal_segment_size') \
+				SELECT  \
+					greatest(coalesce((segment_parts_count - last_wal_mod) + ((current_wal_div - last_wal_div - 1) * segment_parts_count) + current_wal_mod - 1, 0), 0) AS count_files, \
+					greatest(coalesce(((segment_parts_count - last_wal_mod) + ((current_wal_div - last_wal_div - 1) * segment_parts_count) + current_wal_mod - 1) * segment_size, 0), 0) AS size_files \
+				FROM values \
 ) T;"
 
 #define PGSQL_PREPARED_COUNT_DBS "\
@@ -400,6 +429,8 @@ FROM( \
 	FROM pg_buffercache \
 ) AS T;"
 
+// Discovery replication client
+// SELECT json_build_object('data',COALESCE(json_agg(json_build_object('{#APPLICATION_NAME}',application_name)), '[]')) FROM pg_stat_replication;
 #define PGSQL_REPLICATION_STANDBY_DISCOVERY_DBS "\
 SELECT client_addr AS STANDBY FROM pg_stat_replication;"
 
@@ -421,7 +452,7 @@ SELECT \
   (pg_xlog_location_diff(write_location, flush_location)/1024)::int as flush_lag, \
   (pg_xlog_location_diff(pg_current_xlog_location(), replay_location)/1024)::int as total_lag \
 FROM pg_stat_replication \
-WHERE client_addr is not null;"
+WHERE client_addr IS NOT NULL;"
 
 // Query to track lag in bytes from PostgreSQL >= 10.0
 // sending_lag could indicate heavy load on primary
@@ -439,15 +470,15 @@ SELECT \
   (pg_wal_lsn_diff(flush_lsn, replay_lsn)/1024)::int as replaying_lag, \
   (pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn)/1024)::int as total_lag \
 FROM pg_stat_replication \
-WHERE client_addr is not null;"
+WHERE client_addr IS NOT NULL;"
 
 // Get replication role (0 - Master, 1 - Standby)
 #define PGSQL_REPLICATION_ROLE_DBS "\
 SELECT pg_is_in_recovery()::int AS REPLICATION_ROLE;"
 
-// Get replication standby count from PostgreSQL < 10
+// Get replication standby count from PostgreSQL
 #define PGSQL_REPLICATION_STANDBY_COUNT_V96_DBS "\
-SELECT count(*) AS REPLICATION_STANDBY_COUNT FROM pg_stat_replication;"
+SELECT COUNT(DISTINCT client_addr) + COALESCE(SUM(CASE WHEN client_addr IS NULL THEN 1 ELSE 0 END), 0) AS REPLICATION_STANDBY_COUNT FROM pg_stat_replication;"
 
 // Get replication standby count from PostgreSQL >= 10
 #define PGSQL_REPLICATION_STANDBY_COUNT_V100_DBS "\
@@ -458,7 +489,7 @@ SELECT count(r.pid) AS REPLICATION_STANDBY_COUNT FROM pg_stat_replication r JOIN
 #define PGSQL_REPLICATION_STATUS_V95_DBS "\
 SELECT \
 	CASE \
-		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 2 \
+		WHEN NOT pg_is_in_recovery() THEN 2 \
 		ELSE 3 \
 	END AS REPLICATION_STATUS;"
 
@@ -466,7 +497,7 @@ SELECT \
 #define PGSQL_REPLICATION_STATUS_V96_DBS "\
 SELECT \
 	CASE \
-		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 2 \
+		WHEN NOT pg_is_in_recovery() THEN 2 \
 		ELSE (SELECT COUNT(*) AS REPLICATION_RECEIVER_COUNT FROM pg_stat_wal_receiver) \
 	END AS REPLICATION_STATUS;"
 
@@ -488,16 +519,16 @@ SELECT \
 #define PGSQL_REPLICATION_LAG_IN_SEC_V10_DBS "\
 SELECT \
 	CASE \
-		WHEN pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 \
+		WHEN NOT pg_is_in_recovery() OR pg_last_wal_receive_lsn() = pg_last_wal_replay_lsn() THEN 0 \
 		ELSE COALESCE(EXTRACT(EPOCH FROM now() - pg_last_xact_replay_timestamp())::integer, 0) \
-	END AS LAG_IN_SEC;"
+END AS LAG_IN_SEC;"
 
 // Get lag in byte from PostgreSQL < 10.0
 #define PGSQL_REPLICATION_LAG_IN_BYTE_V9_DBS "\
 SELECT \
 	CASE \
 		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 0 \
-		ELSE (SELECT pg_catalog.pg_xlog_location_diff(received_lsn, pg_last_xlog_replay_location())::int FROM pg_stat_wal_receiver) \
+		ELSE (SELECT pg_catalog.pg_xlog_location_diff(received_lsn, pg_last_xlog_replay_location())::bigint FROM pg_stat_wal_receiver) \
 	END AS LAG_IN_BYTE;"
 
 // Get lag in byte from PostgreSQL >= 10.0
@@ -505,7 +536,7 @@ SELECT \
 SELECT \
 	CASE \
 		WHEN (SELECT pg_is_in_recovery()::int) = 0 THEN 0 \
-		ELSE (SELECT pg_catalog.pg_wal_lsn_diff(received_lsn, pg_last_wal_replay_lsn())::int FROM pg_stat_wal_receiver) \
+		ELSE (SELECT pg_catalog.pg_wal_lsn_diff (pg_last_wal_receive_lsn(), pg_last_wal_replay_lsn())) \
 	END AS LAG_IN_BYTE;"
 
 // Get replication slot info from PostgreSQL < 9.6
@@ -609,18 +640,35 @@ SELECT coalesce(count(*), 0) AS SUPER_USER_CNT \
 	FROM pg_catalog.pg_user \
 	WHERE usesuper = 't' OR usecreatedb = 't';"
 
-#define PGSQL_STAT_STATEMENTS_DBS " \
+// Get pg_stat_statements info from PostgreSQL < 13.0
+#define PGSQL_STAT_STATEMENTS_V12_DBS " \
 SELECT row_to_json(T) \
 FROM( \
 	SELECT SUM(shared_blks_read+local_blks_read+temp_blks_read)*current_setting('block_size')::int AS READ_BYTES, \
 		SUM(shared_blks_written+local_blks_written+temp_blks_written)*current_setting('block_size')::int AS WRITE_BYTES, \
 		SUM(shared_blks_dirtied+local_blks_dirtied)*current_setting('block_size')::int AS DIRTY_BYTES, \
-		SUM(blk_read_time)/float4(100) AS READ_TIME, \
-		SUM(blk_write_time)/float4(100) AS WRITE_TIME, \
-		ROUND((SUM(total_time-blk_read_time-blk_write_time)/float4(100))::numeric, 2) AS OTHER_TIME, \
-		ROUND((SUM(total_time)/SUM(calls)*float4(100))::numeric, 2) AS AVG_QUERY_TIME, \
+		SUM(blk_read_time)/float4(1000) AS READ_TIME, \
+		SUM(blk_write_time)/float4(1000) AS WRITE_TIME, \
+		ROUND((SUM(total_time-blk_read_time-blk_write_time)/float4(1000))::numeric, 2) AS OTHER_TIME, \
+		ROUND((SUM(total_time)/(SUM(calls)*float4(1000)))::numeric, 8) AS AVG_QUERY_TIME, \
 		SUM(calls) AS TOTAL_CALLS, \
-		ROUND((SUM(total_time)/float4(100))::numeric, 2) AS TOTAL_TIME \
+		ROUND((SUM(total_time)/float4(1000))::numeric, 2) AS TOTAL_TIME \
+	FROM public.pg_stat_statements \
+) T;"
+
+// Get pg_stat_statements info from PostgreSQL >= 13.0
+#define PGSQL_STAT_STATEMENTS_V13_DBS " \
+SELECT row_to_json(T) \
+FROM( \
+	SELECT SUM(shared_blks_read+local_blks_read+temp_blks_read)*current_setting('block_size')::int AS READ_BYTES, \
+		SUM(shared_blks_written+local_blks_written+temp_blks_written)*current_setting('block_size')::int AS WRITE_BYTES, \
+		SUM(shared_blks_dirtied+local_blks_dirtied)*current_setting('block_size')::int AS DIRTY_BYTES, \
+		SUM(blk_read_time)/float4(1000) AS READ_TIME, \
+		SUM(blk_write_time)/float4(1000) AS WRITE_TIME, \
+		ROUND((SUM(total_exec_time-blk_read_time-blk_write_time)/float4(1000))::numeric, 2) AS OTHER_TIME, \
+		ROUND((SUM(total_exec_time)/(SUM(calls)*float4(1000)))::numeric, 8) AS AVG_QUERY_TIME, \
+		SUM(calls) AS TOTAL_CALLS, \
+		ROUND((SUM(total_exec_time)/float4(1000))::numeric, 2) AS TOTAL_TIME \
 	FROM public.pg_stat_statements \
 ) T;"
 
@@ -970,7 +1018,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 	struct zbx_db_connection	*pgsql_conn;
 	struct zbx_db_result		pgsql_result;
 	unsigned long				version;
-	const char					*pg_db_sum, *pg_wait_event, *pg_wal_dir;
+	const char					*pg_db_sum, *pg_wait_event;
 	unsigned int				pg_replication_role = 0; // 0 - Master, 1 - Standby
 	int							min_nparams = 1, max_nparams = 1;
 
@@ -1143,14 +1191,12 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 
 				if (version >= 100000)
 				{
-					query = PGSQL_WAL_STAT_DBS;
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_WAL_STAT_DBS);
 				}
 				else
 				{
-					query = PGSQL_XLOG_STAT_DBS;
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_XLOG_STAT_DBS);
 				}
-
-				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", query);
 			}
 			else
 			{
@@ -1170,14 +1216,12 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 
 				if (version >= 100000)
 				{
-					pg_wal_dir = "pg_wal";
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_ARCHIVE_SIZE_V100_DBS);
 				}
 				else
 				{
-					pg_wal_dir = "pg_xlog";
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_ARCHIVE_SIZE_V96_DBS);
 				}
-
-				db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, query, pg_wal_dir, pg_wal_dir);
 			}
 			else
 			{
@@ -1484,11 +1528,11 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 
 				if (version < 100000)
 				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STATUS_V95_DBS);
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STANDBY_COUNT_V96_DBS);
 				}
 				else
 				{
-					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STATUS_V96_DBS);
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_STANDBY_COUNT_V100_DBS);
 				}
 			}
 			else
@@ -1565,6 +1609,31 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 				else
 				{
 					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_REPLICATION_SLOTS_LAG_V100_DBS);
+				}
+			}
+			else
+			{
+				zabbix_log(LOG_LEVEL_WARNING, "In %s(%s): Error get PgSQL version.", __func__, request->key);
+				SET_MSG_RESULT(result, zbx_strdup(NULL, "Error get PgSQL version."));
+				ret = SYSINFO_RET_FAIL;
+				goto out;
+			}
+		}
+		else if (0 == strcmp(request->key, "pgsql.statements.stat"))
+		{
+			version = zbx_db_version(pgsql_conn);
+
+			if (0 != version)
+			{
+				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): PgSQL version: %lu", __func__, request->key, version);
+
+				if (version < 130000)
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_STAT_STATEMENTS_V12_DBS);
+				}
+				else
+				{
+					db_ret = zbx_db_query_select(pgsql_conn, &pgsql_result, "%s", PGSQL_STAT_STATEMENTS_V13_DBS);
 				}
 			}
 			else
@@ -1687,7 +1756,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.archive.size"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_ARCHIVE_SIZE_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = pgsql_make_result(request, result, PGSQL_ARCHIVE_SIZE_V100_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "pgsql.prepared.transactions"))
 	{
@@ -1755,7 +1824,7 @@ static int	pgsql_get_result(AGENT_REQUEST *request, AGENT_RESULT *result, HANDLE
 	}
 	else if (0 == strcmp(request->key, "pgsql.statements.stat"))
 	{
-		ret = pgsql_make_result(request, result, PGSQL_STAT_STATEMENTS_DBS, ZBX_DB_RES_TYPE_NOJSON);
+		ret = pgsql_make_result(request, result, PGSQL_STAT_STATEMENTS_V12_DBS, ZBX_DB_RES_TYPE_NOJSON);
 	}
 	else if (0 == strcmp(request->key, "pgsql.invalid.index.count"))
 	{
