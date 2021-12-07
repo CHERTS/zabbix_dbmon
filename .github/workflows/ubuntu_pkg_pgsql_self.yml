@@ -38,15 +38,15 @@ jobs:
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
+        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION.*@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
         mv include/version.h.new include/version.h
-        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \"\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
+        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \".*\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
         mv src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java
-        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \"\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
+        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \".*\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
         mv src/go/pkg/version/version.go.new src/go/pkg/version/version.go
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
-        dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
+        dch -v "1:${{ env.ZABBIX_VERSION }}-${{ secrets.DBMON_DEB_SUB_VER }}+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}-${{ secrets.DBMON_DEB_SUB_VER }}"
     - name: Build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       env:
@@ -92,15 +92,15 @@ jobs:
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
+        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION.*@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
         mv include/version.h.new include/version.h
-        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \"\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
+        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \".*\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
         mv src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java
-        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \"\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
+        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \".*\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
         mv src/go/pkg/version/version.go.new src/go/pkg/version/version.go
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
-        dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
+        dch -v "1:${{ env.ZABBIX_VERSION }}-${{ secrets.DBMON_DEB_SUB_VER }}+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}-${{ secrets.DBMON_DEB_SUB_VER }}"
     - name: Build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       env:
@@ -146,15 +146,15 @@ jobs:
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
+        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION.*@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
         mv include/version.h.new include/version.h
-        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \"\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
+        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \".*\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
         mv src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java
-        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \"\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
+        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \".*\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
         mv src/go/pkg/version/version.go.new src/go/pkg/version/version.go
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
-        dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
+        dch -v "1:${{ env.ZABBIX_VERSION }}-${{ secrets.DBMON_DEB_SUB_VER }}+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}-${{ secrets.DBMON_DEB_SUB_VER }}"
     - name: Build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       env:
@@ -200,15 +200,15 @@ jobs:
     - name: Prepare build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
+        cat include/version.h | sed "s@define ZABBIX_VERSION_REVISION.*@define ZABBIX_VERSION_REVISION ${GITHUB_SHA_SHORT}@g" > include/version.h.new
         mv include/version.h.new include/version.h
-        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \"\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
+        cat src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java | sed "s@REVISION = \".*\";@REVISION = \"${GITHUB_SHA_SHORT}\";@g" > src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new
         mv src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java.new src/zabbix_java/src/com/zabbix/gateway/GeneralInformation.java
-        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \"\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
+        cat src/go/pkg/version/version.go | sed "s@ZABBIX_VERSION_REVISION = \".*\"@ZABBIX_VERSION_REVISION = \"${GITHUB_SHA_SHORT}\"@g" > src/go/pkg/version/version.go.new
         mv src/go/pkg/version/version.go.new src/go/pkg/version/version.go
         cp "../packages/$(lsb_release -i -s | tr '[:upper:]' '[:lower:]')_only_pgsql/$(lsb_release -c -s).tar.gz" ubuntu.tar.gz
         tar -zxf ubuntu.tar.gz
-        dch -v "1:${{ env.ZABBIX_VERSION }}-1+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}"
+        dch -v "1:${{ env.ZABBIX_VERSION }}-${{ secrets.DBMON_DEB_SUB_VER }}+$(lsb_release -c -s)" --distribution "$(lsb_release -c -s)" "Release ${{ env.ZABBIX_VERSION }}-${{ secrets.DBMON_DEB_SUB_VER }}"
     - name: Build DEB
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       env:
