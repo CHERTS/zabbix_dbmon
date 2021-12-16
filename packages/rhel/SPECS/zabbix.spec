@@ -1,6 +1,6 @@
 Name:		zabbix
-Version:	5.0.13
-Release:	%{?alphatag:0.}1%{?alphatag}%{?dist}
+Version:	5.0.18
+Release:	%{?alphatag:0.}2%{?alphatag}%{?dist}
 Summary:	The Enterprise-class open source monitoring solution
 Group:		Applications/Internet
 License:	GPLv2+
