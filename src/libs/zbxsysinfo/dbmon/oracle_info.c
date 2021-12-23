@@ -688,7 +688,7 @@ FROM d,t,a WHERE d.con_id=t.con_id \
 #define ORACLE_V11_UNDO_TS_INFO_DBS "\
 WITH \
 i AS (SELECT i.instance_name, d.name FROM gv$database d, gv$instance i WHERE d.inst_id = i.inst_id), \
-f AS (SELECT tablespace_name, SUM(bytes) AS usedbytes FROM dba_undo_extents WHERE status = 'ACTIVE' GROUP BY tablespace_name), \
+f AS (SELECT ue.tablespace_name, SUM(ue.bytes * decode(ue.status, 'ACTIVE', 1, decode(ts.RETENTION, 'GUARANTEE', 1, 0))) AS usedbytes FROM dba_undo_extents ue, dba_tablespaces ts WHERE ue.status in ('ACTIVE', 'UNEXPIRED') AND ts.TABLESPACE_NAME = ue.TABLESPACE_NAME GROUP BY ue.tablespace_name), \
 m AS (SELECT tablespace_name, SUM(bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) AS file_max_size FROM dba_data_files GROUP BY tablespace_name), \
 d AS (SELECT tablespace_name, status FROM dba_tablespaces WHERE contents = 'UNDO'), \
 df AS (SELECT tablespace_name, count(*) AS df_cnt FROM dba_data_files GROUP BY tablespace_name) \
