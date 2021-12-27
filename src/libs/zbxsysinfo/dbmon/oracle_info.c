@@ -709,8 +709,9 @@ WHERE d.tablespace_name = f.tablespace_name(+) \
 #define ORACLE_V12_UNDO_TS_INFO_DBS "\
 WITH \
 d AS (SELECT i.instance_name, p.con_id, DECODE(p.con_id, 0, d.name, p.name) dbname FROM v$containers p, v$database d, v$instance i), \
-f AS (SELECT con_id, tablespace_name, SUM(bytes) AS usedbytes FROM cdb_undo_extents WHERE status = 'ACTIVE' GROUP BY con_id,tablespace_name), \
-tbs AS (SELECT t.con_id, t.tablespace_name, SUM(bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) AS file_max_size, DECODE(t.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) ts_status, COUNT(file_id) df_cnt  \
+f AS (SELECT ue.con_id, ue.tablespace_name, SUM(ue.bytes * decode(ue.status, 'ACTIVE', 1, decode(ts.RETENTION, 'GUARANTEE', 1, 0))) AS usedbytes \
+	FROM cdb_undo_extents ue, cdb_tablespaces ts WHERE ue.status in ('ACTIVE', 'UNEXPIRED') and ue.con_id = ts.con_id GROUP BY ue.con_id, ue.tablespace_name),
+tbs AS (SELECT t.con_id, t.tablespace_name, SUM(bytes) AS file_size, SUM(CASE WHEN autoextensible = 'NO' THEN bytes ELSE GREATEST(bytes, maxbytes) END) AS file_max_size, DECODE(t.status, 'ONLINE', 1, 'OFFLINE', 2, 'READ ONLY', 3, 0) ts_status, COUNT(file_id) df_cnt \
 	FROM cdb_tablespaces t, cdb_data_files d WHERE t.con_id=d.con_id AND t.tablespace_name=d.tablespace_name AND t.contents='UNDO' GROUP BY t.con_id,t.tablespace_name,t.status) \
 SELECT d.con_id AS CONID, \
 	d.instance_name AS INSTANCE, \
