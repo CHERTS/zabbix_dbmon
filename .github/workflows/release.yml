@@ -28,10 +28,9 @@ jobs:
       uses: actions/checkout@v2
     - name: Delete old binary
       run: |
-        rm -rf ./bin/aix_7.1 2>/dev/null
-        rm -rf ./bin/ol7_oracle 2>/dev/null
+        rm -rf ./bin/aix 2>/dev/null
+        rm -rf ./bin/rhel 2>/dev/null
         rm -rf ./bin/ubuntu 2>/dev/null
-        rm -rf ./bin/ubuntu_only_pgsql 2>/dev/null
         rm -rf ./bin/win32/*.pdb 2>/dev/null
         rm -rf ./bin/win32/*.dll 2>/dev/null
         rm -rf ./bin/win32/*.exe 2>/dev/null
