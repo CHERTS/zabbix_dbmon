@@ -19,9 +19,9 @@ yum install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre
 ### 2. Скачать и распаковать свежую версию исходного кода:
 
 ~~~~
-wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.16/zabbix-5.0.16.tar.gz
-tar -zxf zabbix-5.0.16.tar.gz
-cd zabbix-5.0.16
+wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.19/zabbix-5.0.19.tar.gz
+tar -zxf zabbix-5.0.19.tar.gz
+cd zabbix-5.0.19
 ~~~~
 
 ### 3. Сборка zabbix-agent с поддержкой Oracle 18c:
@@ -68,9 +68,9 @@ dnf install -y wget unzip gettext libxml2-devel openssl-devel libcurl-devel pcre
 ### 2. Скачать и распаковать свежую версию исходного кода:
 
 ~~~~
-wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.16/zabbix-5.0.16.tar.gz
-tar -zxf zabbix-5.0.16.tar.gz
-cd zabbix-5.0.16
+wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.19/zabbix-5.0.19.tar.gz
+tar -zxf zabbix-5.0.19.tar.gz
+cd zabbix-5.0.19
 ~~~~
 
 ### 3. Сборка zabbix-agent с поддержкой Oracle 18c:

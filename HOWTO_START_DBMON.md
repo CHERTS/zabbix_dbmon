@@ -56,7 +56,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
 
 The start log should look something like this:
 ~~~~
- 22646:20200219:211042.119 Starting Zabbix Agent [XXXXXX]. Zabbix 5.0.16 (revision XXXXXXX).
+ 22646:20200219:211042.119 Starting Zabbix Agent [XXXXXX]. Zabbix 5.0.19 (revision XXXXXXX).
  22646:20200219:211042.119 **** Enabled features ****
  22646:20200219:211042.119 IPv6 support:          YES
  22646:20200219:211042.119 TLS support:           YES
