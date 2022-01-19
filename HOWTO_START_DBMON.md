@@ -133,3 +133,157 @@ To monitor Oracle on AIX template "Oracle for AIX (Active, DBMON)"
 To monitor Oracle on Windows template "Oracle for Windows (Active, DBMON)"
 
 ### 9. Add the necessary zabbix macros for the monitoring to work correctly.
+
+#### To monitor PostgreSQL on Linux:
+
+(Required) Connection string:
+~~~~
+Macros: DBS_PGSQL_CONN_STRING
+Value: host=localhost port=5432 dbname=postgres user=zabbixmon password=XXXXXXX connect_timeout=10
+~~~~
+
+(Optional) Name of the master process:
+~~~~
+Macros: DBS_PGSQL_SERVICE_NAME
+Value: postgres
+~~~~
+
+(Optional) The username under which the master process is running:
+~~~~
+Macros: DBS_PGSQL_SERVICE_USER
+Value: postgres
+~~~~
+
+(Optional) Parameters of the master process if the data directory is in a non-standard location:
+~~~~
+Macros: DBS_PGSQL_SERVICE_CMD_REGEXP
+Value: ^.*(config_file|--config-file)=.*\.conf.*$
+~~~~
+
+#### To monitor PostgreSQL on Windows:
+
+(Required) Connection string:
+~~~~
+Macros: DBS_PGSQL_CONN_STRING
+Value: host=localhost port=5432 dbname=postgres user=zabbixmon password=XXXXXXX connect_timeout=10
+~~~~
+
+(Optional) Windows service name:
+~~~~
+Macros: DBS_PGSQL_SERVICE_NAME
+Value: postgres-12
+~~~~
+
+#### To monitor MySQL on Linux:
+
+ATTENTION! For MySQL monitoring, the username and password are entered in the agent configuration file.
+
+(Optional) DNS name or IP address to connect to MySQL:
+~~~~
+Macros: DBS_MYSQL_HOST
+Value: localhost
+~~~~
+
+(Optional) Process name:
+~~~~
+Macros: DBS_MYSQL_SERVICE_NAME
+Value: mysqld
+~~~~
+
+(Optional) The username under which the process is running:
+~~~~
+Macros: DBS_MYSQL_SERVICE_USER
+Value: mysql
+~~~~
+
+(Optional) Process launch options:
+~~~~
+Macros: DBS_MYSQL_SERVICE_CMD
+Value: <empty>
+~~~~
+
+#### To monitor MySQL on Windows:
+
+ATTENTION! For MySQL monitoring, the username and password are entered in the agent configuration file.
+
+(Optional) DNS name or IP address to connect to MySQL:
+~~~~
+Macros: DBS_MYSQL_HOST
+Value: localhost
+~~~~
+
+(Optional) Executable file name without extension:
+~~~~
+Macros: DBS_MYSQL_SERVICE_EXE_NAME
+Value: mysqld
+~~~~
+
+(Optional) Windows service name:
+~~~~
+Macros: DBS_MYSQL_SERVICE_NAME
+Value: MySQL
+~~~~
+
+#### To monitor Oracle on Linux or AIX:
+
+ATTENTION! For Oracle monitoring, the username and password are entered in the agent configuration file.
+
+(Required) Instance connection string in EasyConnect format:
+~~~~
+Macros: DBS_ORACLE_CONN_STRING
+Value: 127.0.0.1:1521/orcl
+~~~~
+
+(Required) Instance name:
+~~~~
+Macros: DBS_ORACLE_INSTANCE
+Value: orcl
+~~~~
+
+(Optional) Authorization rights when connecting to an instance (possible values: 0 - OCI_DEFAULT (default), 1 - OCI_SYSDBA, 2 - OCI_SYSOPER, 3 - OCI_SYSASM, 4 - OCI_SYSDGD):
+~~~~
+Macros: DBS_ORACLE_MODE
+Value: 0
+~~~~
+When connecting to Oracle Standby, as a macro value, you need to choose 1 - OCI_SYSDBA or 4 - OCI_SYSDGD
+
+(Optional) Имя Service Monitor процесса Oracle:
+~~~~
+Macros: DBS_ORACLE_SERVICE_NAME
+Value: ora_smon
+~~~~
+
+#### To monitor Oracle on Windows:
+
+ATTENTION! For Oracle monitoring, the username and password are entered in the agent configuration file.
+
+(Required) Instance connection string in EasyConnect format:
+~~~~
+Macros: DBS_ORACLE_CONN_STRING
+Value: 127.0.0.1:1521/orcl
+~~~~
+
+(Required) Instance name:
+~~~~
+Macros: DBS_ORACLE_INSTANCE
+Value: orcl
+~~~~
+
+(Optional) Authorization rights when connecting to an instance (possible values: 0 - OCI_DEFAULT (default), 1 - OCI_SYSDBA, 2 - OCI_SYSOPER, 3 - OCI_SYSASM, 4 - OCI_SYSDGD):
+~~~~
+Macros: DBS_ORACLE_MODE
+Value: 0
+~~~~
+When connecting to Oracle Standby, as a macro value, you need to choose 1 - OCI_SYSDBA or 4 - OCI_SYSDGD
+
+(Optional) Oracle Windows service name:
+~~~~
+Macros: DBS_ORACLE_SERVICE_NAME
+Value: OracleServiceORCL
+~~~~
+
+(Optional) Listener Windows service name:
+~~~~
+Macros: DBS_ORACLE_LSNR_SERVICE_NAME
+Value: OracleOraDb11g_home1TNSListener
+~~~~
