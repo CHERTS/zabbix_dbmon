@@ -17,4 +17,4 @@
 
 [Сборка zabbix-agent-dbmon из исходников под Oracle Linux (RedHat) с поддержкой СУБД Oracle](BUILD_DBMON_ORACLE.ru.md)
 
-[Инструкция по быстрому старту нативного мониторинга СУБД с помощью zabbix-agent-dbmon](HOWTO_START_DBMON.md)
+[Инструкция по быстрому старту нативного мониторинга СУБД с помощью zabbix-agent-dbmon](HOWTO_START_DBMON.ru.md)
