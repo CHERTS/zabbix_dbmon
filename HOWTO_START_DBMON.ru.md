@@ -1,8 +1,10 @@
 # Инструкция по быстрому старту нативного мониторинга СУБД с помощью zabbix-agent-dbmon
 
+[In English / По-английски](HOWTO_START_DBMON.md)
+
 После установки агента из репозитария Вам необходимо сделать:
 
-1. Настроить подключение агента к MySQL/PostgreSQL или Oracle (создать пользователя и назначить ему права);
+### 1. Настроить подключение агента к MySQL/PostgreSQL или Oracle (создать пользователя и назначить ему права);
 
 Пример создания пользователя и назначения прав для MySQL есть в файле templates\db\dbmon\mysql_grants.sql
 
@@ -10,7 +12,7 @@
 
 Пример создания пользователя и назначения прав для Oracle есть в файле templates\db\dbmon\oracle_grants.sql
 
-2. Отредактировать файл конфигурации /etc/zabbix/zabbix_agentd_dbmon.conf
+### 2. Отредактировать файл конфигурации /etc/zabbix/zabbix_agentd_dbmon.conf
 
 Если Вы собрали агента с поддержкой мониторинга СУБД MySQL прописать в файле zabbix_agentd_dbmon.conf новые настройки:
 ~~~~
@@ -24,7 +26,7 @@ OracleUser=zabbixmon
 OraclePassword=zabbixmon
 ~~~~
 
-3. Если Вы собрали агента из исходников с поддержкой мониторинга СУБД Oracle, то необходимо сделать доп. настройки - создать файл /etc/sysconfig/zabbix-agent-dbmon следующего вида:
+### 3. Если Вы собрали агента из исходников с поддержкой мониторинга СУБД Oracle, то необходимо сделать доп. настройки - создать файл /etc/sysconfig/zabbix-agent-dbmon следующего вида:
 
 ~~~~
 ORACLE_HOME=/u01/app/oracle/18c/dbhome_1
@@ -34,20 +36,20 @@ PATH=$ORACLE_HOME/bin:/sbin:/bin:/usr/sbin:/usr/bin
 LD_LIBRARY_PATH=/u01/app/oracle/18c/dbhome_1/lib:${LD_LIBRARY_PATH}
 ~~~~
 
-4. Если Вы собрали агента с поддержкой мониторинга СУБД Oracle, то необходимо добавить пользователя zabbix в группу oinstall, таким образом агент сможет читать некоторые каталоги и файлы из $ORACLE_HOME:
+### 4. Если Вы собрали агента с поддержкой мониторинга СУБД Oracle, то необходимо добавить пользователя zabbix в группу oinstall, таким образом агент сможет читать некоторые каталоги и файлы из $ORACLE_HOME:
 
 ~~~~
 usermod -a -G oinstall zabbix
 ~~~~
 
-5. Запустить нового агента:
+### 5. Запустить нового агента:
 
 ~~~~
 systemctl start zabbix-agent-dbmon
 systemctl enable zabbix-agent-dbmon
 ~~~~
 
-6. Проверить лог агента:
+### 6. Проверить лог агента:
 ~~~~
 tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
 ~~~~
@@ -72,7 +74,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
 
 В нем Вы увидите с поддержкой мониторинга каких СУБД собран агент.
 
-7. Теперь Вы можете импортировать в Zabbix web-frontend новые шаблоны из папки templates\db\dbmon в следующей последовательности:
+### 7. Теперь Вы можете импортировать в Zabbix web-frontend новые шаблоны из папки templates\db\dbmon в следующей последовательности:
 
 Последовательность импорта шаблонов:
 ~~~~
@@ -114,7 +116,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
 5. Добавьте зависимость от триггера "Service '{$DBS_PGSQL_SERVICE_NAME}' is not running" (Service 'postgresql-12' is not running)
 ~~~~
 
-8. Теперь подключите шаблон мониторинга к Вашему хосту в Zabbix web-frontend:
+### 8. Теперь подключите шаблон мониторинга к Вашему хосту в Zabbix web-frontend:
 
 Для мониторинга MySQL в Linux шаблон "MySQL for Linux (Active, DBMON)"
 
@@ -130,4 +132,4 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
 
 Для мониторинга Oracle в Windows шаблон "Oracle for Windows (Active, DBMON)"
 
-9. Добавьте необходимые макросы для корректной работы мониторинга.
+### 9. Добавьте необходимые макросы для корректной работы мониторинга.

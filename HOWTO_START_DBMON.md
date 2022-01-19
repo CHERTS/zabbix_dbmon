@@ -1,8 +1,10 @@
 # Instructions for a quick start of native DBMS monitoring using zabbix-agent-dbmon
 
+[По-русски / In Russian](HOWTO_START_DBMON.ru.md)
+
 After installing the agent from the repository, you need to do:
 
-1. Set up an agent connection to MySQL/PostgreSQL or Oracle (create a user and add rights);
+### 1. Set up an agent connection to MySQL/PostgreSQL or Oracle (create a user and add rights);
 
 An example of creating a user and add rights for MySQL is in the file templates\db\dbmon\mysql_grants.sql
 
@@ -10,7 +12,7 @@ An example of creating a user and add rights for PostgreSQL is in the file templ
 
 An example of creating a user and add rights for Oracle is in the file templates\db\dbmon\oracle_grants.sql
 
-2. Edit configuration file /etc/zabbix/zabbix_agentd_dbmon.conf
+### 2. Edit configuration file /etc/zabbix/zabbix_agentd_dbmon.conf
 
 If you have compiled an agent with MySQL DBMS monitoring support, add new settings in the zabbix_agentd_dbmon.conf file:
 ~~~~
@@ -24,7 +26,7 @@ OracleUser=zabbixmon
 OraclePassword=zabbixmon
 ~~~~
 
-3. If you have compiled the agent from source with support for Oracle monitoring, then you need to make additional settings - create the /etc/sysconfig/zabbix-agent-dbmon file of the following form:
+### 3. If you have compiled the agent from source with support for Oracle monitoring, then you need to make additional settings - create the /etc/sysconfig/zabbix-agent-dbmon file of the following form:
 
 ~~~~
 ORACLE_HOME=/u01/app/oracle/18c/dbhome_1
@@ -34,20 +36,20 @@ PATH=$ORACLE_HOME/bin:/sbin:/bin:/usr/sbin:/usr/bin
 LD_LIBRARY_PATH=/u01/app/oracle/18c/dbhome_1/lib:${LD_LIBRARY_PATH}
 ~~~~
 
-4. If you have compiled an agent with Oracle monitoring support, then you need to add the zabbix user to the oinstall group, so the agent will be able to read some directories and files from $ORACLE_HOME:
+### 4. If you have compiled an agent with Oracle monitoring support, then you need to add the zabbix user to the oinstall group, so the agent will be able to read some directories and files from $ORACLE_HOME:
 
 ~~~~
 usermod -a -G oinstall zabbix
 ~~~~
 
-5. Start a new agent:
+### 5. Start a new agent:
 
 ~~~~
 systemctl start zabbix-agent-dbmon
 systemctl enable zabbix-agent-dbmon
 ~~~~
 
-6. Check agent log file:
+### 6. Check agent log file:
 ~~~~
 tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
 ~~~~
@@ -72,7 +74,7 @@ The start log should look something like this:
 
 In it you will see which DB the agent is built with monitoring support for.
 
-7. Now you can import new templates from the templates\db\dbmon folder into Zabbix web-frontend in the following steps:
+### 7. Now you can import new templates from the templates\db\dbmon folder into Zabbix web-frontend in the following steps:
 
 Template import steps:
 ~~~~
@@ -114,7 +116,7 @@ Additional trigger link steps for PostgreSQL for Windows:
 5. Add dependency on trigger "Service '{$DBS_PGSQL_SERVICE_NAME}' is not running" (Service 'postgresql-12' is not running)
 ~~~~
 
-8. Now connect the monitoring template to your host in Zabbix web-frontend:
+### 8. Now connect the monitoring template to your host in Zabbix web-frontend:
 
 To monitor MySQL on Linux template "MySQL for Linux (Active, DBMON)"
 
@@ -130,4 +132,4 @@ To monitor Oracle on AIX template "Oracle for AIX (Active, DBMON)"
 
 To monitor Oracle on Windows template "Oracle for Windows (Active, DBMON)"
 
-9. Add the necessary zabbix macros for the monitoring to work correctly.
+### 9. Add the necessary zabbix macros for the monitoring to work correctly.
