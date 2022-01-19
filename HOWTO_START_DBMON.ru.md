@@ -76,11 +76,15 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
 
 Последовательность импорта шаблонов:
 ~~~~
-1. templates_db_mysql_all_os.xml
-2. templates_db_postgres_all_os.xml
-3. templates_db_oracle_all_os.xml
-4. templates_db_oracle_asm_all_os.xml
-5. templates_zabbix_agent_dbmon_all_os.xml
+1. templates_zabbix_agent_dbmon_all_os.xml
+2. templates_db_mysql_all_os.xml
+3. templates_db_postgres_all_os.xml
+4. templates_db_oracle_all_os.xml
+5. templates_db_oracle_asm_all_os.xml
+6. templates_db_mysql_windows_linux.xml
+7. templates_db_postgres_windows_linux.xml
+8. templates_db_oracle_asm_aix.xml
+9. templates_db_oracle_windows_linux_aix.xml
 ~~~~
 
 Дополнительные действия по связыванию триггеров для MySQL for Windows:
@@ -126,3 +130,4 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
 
 Для мониторинга Oracle в Windows шаблон "Oracle for Windows (Active, DBMON)"
 
+9. Добавьте необходимые макросы для корректной работы мониторинга.
