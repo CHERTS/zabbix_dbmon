@@ -6,11 +6,11 @@
 
 ### 1. Настроить подключение агента к MySQL/PostgreSQL или Oracle (создать пользователя и назначить ему права);
 
-Пример создания пользователя и назначения прав для MySQL есть в файле templates\db\dbmon\mysql_grants.sql
+Пример создания пользователя и назначения прав для MySQL есть в файле [templates\db\dbmon\mysql_grants.sql](templates\db\dbmon\mysql_grants.sql)
 
-Пример создания пользователя и назначения прав для PostgreSQL есть в файле templates\db\dbmon\pgsql_grants.sql
+Пример создания пользователя и назначения прав для PostgreSQL есть в файле [templates\db\dbmon\pgsql_grants.sql](templates\db\dbmon\pgsql_grants.sql)
 
-Пример создания пользователя и назначения прав для Oracle есть в файле templates\db\dbmon\oracle_grants.sql
+Пример создания пользователя и назначения прав для Oracle есть в файле [templates\db\dbmon\oracle_grants.sql](templates\db\dbmon\oracle_grants.sql)
 
 ### 2. Отредактировать файл конфигурации /etc/zabbix/zabbix_agentd_dbmon.conf
 
