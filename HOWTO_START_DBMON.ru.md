@@ -14,20 +14,21 @@
 
 ### 2. Отредактировать файл конфигурации /etc/zabbix/zabbix_agentd_dbmon.conf
 
-Если Вы собрали агента с поддержкой мониторинга СУБД MySQL прописать в файле zabbix_agentd_dbmon.conf новые настройки:
+Если Вы установили агента с поддержкой мониторинга СУБД MySQL прописать в файле /etc/zabbix/zabbix_agentd_dbmon.conf новые настройки:
 ~~~~
 MySQLUser=zabbixmon
 MySQLPassword=zabbixmon
 ~~~~
 
-Если Вы собрали агента с поддержкой мониторинга СУБД Oracle, то прописать в файле zabbix_agentd_dbmon.conf новые настройки:
+Если Вы установили агента с поддержкой мониторинга СУБД Oracle, то прописать в файле /etc/zabbix/zabbix_agentd_dbmon.conf новые настройки:
 ~~~~
 OracleUser=zabbixmon
 OraclePassword=zabbixmon
 ~~~~
 
-### 3. Если Вы собрали агента из исходников с поддержкой мониторинга СУБД Oracle, то необходимо сделать доп. настройки - создать файл /etc/sysconfig/zabbix-agent-dbmon следующего вида:
+### 3. Если Вы собирали агента из исходников с поддержкой мониторинга СУБД Oracle (пропустите этот пункт если Вы устанавливали готового агента с помощью bash-скриптов)
 
+Создайте файл /etc/sysconfig/zabbix-agent-dbmon следующего вида:
 ~~~~
 ORACLE_HOME=/u01/app/oracle/18c/dbhome_1
 ORACLE_SID=orcl
@@ -36,7 +37,7 @@ PATH=$ORACLE_HOME/bin:/sbin:/bin:/usr/sbin:/usr/bin
 LD_LIBRARY_PATH=/u01/app/oracle/18c/dbhome_1/lib:${LD_LIBRARY_PATH}
 ~~~~
 
-### 4. Если Вы собрали агента с поддержкой мониторинга СУБД Oracle, то необходимо добавить пользователя zabbix в группу oinstall, таким образом агент сможет читать некоторые каталоги и файлы из $ORACLE_HOME:
+### 4. Если Вы собрали агента с поддержкой мониторинга СУБД Oracle, то необходимо добавить пользователя zabbix в группу oinstall, таким образом агент сможет читать некоторые каталоги и файлы из $ORACLE_HOME (пропустите этот пункт если Вы устанавливали готового агента с помощью bash-скриптов):
 
 ~~~~
 usermod -a -G oinstall zabbix
@@ -44,14 +45,38 @@ usermod -a -G oinstall zabbix
 
 ### 5. Запустить нового агента:
 
+Для запуска агента мониторинга MySQL или PostgreSQL или мониторинга одного экземпляра Oracle выполните:
 ~~~~
 systemctl start zabbix-agent-dbmon
 systemctl enable zabbix-agent-dbmon
 ~~~~
 
+Для запуска агента мониторинга нескольких экземпляра Oracle выполните:
+
+Запуск агента для мониторинга экземпляра orcl1 (у Вас будет свое имя экземпляра):
+~~~~
+systemctl start zabbix-agent-dbmon@orcl1
+systemctl enable zabbix-agent-dbmon@orcl1
+~~~~
+
+Запуск агента для мониторинга экземпляра orcl2 (у Вас будет свое имя экземпляра):
+~~~~
+systemctl start zabbix-agent-dbmon@orcl2
+systemctl enable zabbix-agent-dbmon@orcl2
+~~~~
+
 ### 6. Проверить лог агента:
+
+Для проверки лог-файла в случае мониторинга MySQL или PostgreSQL или мониторинга одного экземпляра Oracle выполните:
 ~~~~
 tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
+~~~~
+
+Для проверки лог-файла в случае мониторинга нескольких экземпляров Oracle выполните (у каждого агента будет свой лог-файл с именам экземпляра на конце файла):
+~~~~
+tail -n20 /var/log/zabbix/zabbix_agentd_dbmon_orcl1.log
+или
+tail -n20 /var/log/zabbix/zabbix_agentd_dbmon_orcl2.log
 ~~~~
 
 Лог старта должен быть примерто таким:
@@ -65,7 +90,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon.log
  22646:20200219:211042.119 Oracle support:        YES
  22646:20200219:211042.119 MSSQL support:         NO
  22646:20200219:211042.119 **************************
- 22646:20200219:211042.119 using configuration file: /etc/zabbix/zabbix_agentd.conf
+ 22646:20200219:211042.119 using configuration file: /etc/zabbix/zabbix_agentd_dbmon.conf
  22646:20200219:211042.119 agent #0 started [main process]
  22647:20200219:211042.120 agent #1 started [collector]
  22648:20200219:211042.120 agent #2 started [listener #1]
