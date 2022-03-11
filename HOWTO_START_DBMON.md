@@ -74,7 +74,7 @@ The start log should look something like this:
 
 In it you will see which DB the agent is built with monitoring support for.
 
-### 7. Now you can import new templates from the templates\db\dbmon folder into Zabbix web-frontend in the following steps:
+### 7. Now you can import new templates from the [templates\db\dbmon](https://github.com/CHERTS/zabbix_dbmon/archive/refs/heads/master.zip) folder into Zabbix web-frontend in the following steps:
 
 Template import steps:
 ~~~~

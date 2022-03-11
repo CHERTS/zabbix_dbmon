@@ -99,7 +99,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon_orcl2.log
 
 В нем Вы увидите с поддержкой мониторинга каких СУБД собран агент.
 
-### 7. Теперь Вы можете импортировать в Zabbix web-frontend новые шаблоны из папки templates\db\dbmon в следующей последовательности:
+### 7. Теперь Вы можете импортировать в Zabbix web-frontend новые шаблоны из папки [templates\db\dbmon](https://github.com/CHERTS/zabbix_dbmon/archive/refs/heads/master.zip) в следующей последовательности:
 
 Последовательность импорта шаблонов:
 ~~~~
