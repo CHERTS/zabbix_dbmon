@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2021-11-24T07:18:44Z</date>
+    <date>2022-04-11T12:56:52Z</date>
     <groups>
         <group>
             <name>DBS.Templates/Modules</name>
@@ -776,6 +776,58 @@ Total memory usage = Base memory usage + (Memory per connection * variable[max_c
                             </tags>
                         </trigger>
                     </triggers>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Binlog cache disk use</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},binlog_cache_disk_use]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of transactions that used the temporary binary log cache but that exceeded the value of binlog_cache_size and used a temporary file to store statements from the transaction.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Status</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.BINLOG_CACHE_DISK_USE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>10m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Binlog stmt cache disk use</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.status[{$DBS_MYSQL_INSTANCE},binlog_stmt_cache_disk_use]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <description>The number of nontransaction statements that used the binary log statement cache but that exceeded the value of binlog_stmt_cache_size and used a temporary file to store those statements.</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Status</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.BINLOG_STMT_CACHE_DISK_USE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>10m</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.status[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
                 </item>
                 <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' status: Bytes received</name>
@@ -3063,6 +3115,35 @@ NOBLOB: Log all columns (same as full), except for BLOB and TEXT columns that ar
                     </master_item>
                 </item>
                 <item>
+                    <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Binlog stmt cache size</name>
+                    <type>DEPENDENT</type>
+                    <key>mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_stmt_cache_size]</key>
+                    <delay>0</delay>
+                    <history>30d</history>
+                    <units>B</units>
+                    <description>The size of the memory buffer for the binary log to hold nontransactional statements issued during a transaction.&#13;
+&#13;
+See more info: https://dev.mysql.com/doc/refman/5.7/en/binary-log.html</description>
+                    <applications>
+                        <application>
+                            <name>MySQL: Variables</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.BINLOG_STMT_CACHE_SIZE</params>
+                        </step>
+                        <step>
+                            <type>DISCARD_UNCHANGED_HEARTBEAT</type>
+                            <params>6h</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>mysql.global.variables[{$DBS_MYSQL_HOST},{$DBS_MYSQL_PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
                     <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}' variable: Binlog transaction dependency tracking</name>
                     <type>DEPENDENT</type>
                     <key>mysql.variable[{$DBS_MYSQL_INSTANCE},binlog_transaction_dependency_tracking]</key>
@@ -5279,7 +5360,6 @@ return JSON.stringify({&quot;data&quot;: output})</params>
                             <name>[MySQL] Instance '{$DBS_MYSQL_INSTANCE}': Log file '{#LOG_ERROR}' content</name>
                             <type>ZABBIX_ACTIVE</type>
                             <key>logrt[&quot;{#LOG_ERROR}&quot;,&quot;{$DBS_MYSQL_ERRORLOG_REGEXP}&quot;,,,skip,,,{$DBS_MYSQL_ERRORLOG_OPTIONS}]</key>
-                            <delay>10s</delay>
                             <history>30d</history>
                             <trends>0</trends>
                             <value_type>LOG</value_type>
@@ -7492,7 +7572,7 @@ SELECT * FROM INFORMATION_SCHEMA.PROCESSLIST WHERE COMMAND NOT REGEXP '(Daemon|S
             <mappings>
                 <mapping>
                     <value>1</value>
-                    <newvalue>Up</newvalue>
+                    <newvalue>UP</newvalue>
                 </mapping>
             </mappings>
         </value_map>
