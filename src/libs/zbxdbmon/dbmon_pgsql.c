@@ -109,6 +109,7 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 			zbx_db_pgsql_error(&error, res);
 			zbx_db_err_log(ZBX_DB_TYPE_POSTGRESQL, ERR_Z3005, 0, error, query);
 			zbx_free(error);
+			PQclear(res);
 			ret = ZBX_DB_ERROR_QUERY;
 		}
 		else
