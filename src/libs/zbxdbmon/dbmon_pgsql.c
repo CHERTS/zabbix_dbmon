@@ -109,7 +109,6 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 			zbx_db_pgsql_error(&error, res);
 			zbx_db_err_log(ZBX_DB_TYPE_POSTGRESQL, ERR_Z3005, 0, error, query);
 			zbx_free(error);
-			PQclear(res);
 			ret = ZBX_DB_ERROR_QUERY;
 		}
 		else
@@ -222,9 +221,9 @@ int zbx_db_execute_query_pgsql(const struct zbx_db_connection *conn, struct zbx_
 					}
 				}
 			}
-
-			PQclear(res);
 		}
+
+		PQclear(res);
 
 		pthread_mutex_unlock(&(((struct zbx_db_pgsql *)conn->connection)->lock));
 	}
@@ -306,6 +305,7 @@ struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 			if (PGRES_TUPLES_OK != PQresultStatus(res) && PGRES_COMMAND_OK != PQresultStatus(res) && 2 == PQnfields(res))
 			{
 				zbx_db_err_log(ZBX_DB_TYPE_POSTGRESQL, ERR_Z3005, 0, PQerrorMessage(((struct zbx_db_pgsql *)conn->connection)->db_handle), "\"select oid, typname from pg_type\"");
+				PQclear(res);
 				PQfinish(((struct zbx_db_pgsql *)conn->connection)->db_handle);
 				zbx_db_free(conn->connection);
 				zbx_db_free(conn);
@@ -365,6 +365,7 @@ struct zbx_db_connection *zbx_db_connect_pgsql(const char *conn_string)
 				else
 				{
 					zabbix_log(LOG_LEVEL_CRIT, "In %s(): Error allocating resources for list_type", __func__);
+					PQclear(res);
 					PQfinish(((struct zbx_db_pgsql *)conn->connection)->db_handle);
 					zbx_db_free(conn->connection);
 					zbx_db_free(conn);
