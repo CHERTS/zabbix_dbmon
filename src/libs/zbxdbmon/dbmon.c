@@ -693,7 +693,6 @@ int zbx_db_row_add_data(struct zbx_db_data **row, struct zbx_db_data *e_data, in
 				((struct zbx_db_type_int *)tmp[cols].t_data)->value = ((struct zbx_db_type_int *)e_data->t_data)->value;
 				return ZBX_DB_OK;
 			}
-			break;
 		case ZBX_COL_TYPE_DOUBLE:
 			tmp[cols].type = ZBX_COL_TYPE_DOUBLE;
 			tmp[cols].t_data = zbx_db_malloc(sizeof(struct zbx_db_type_double));
@@ -707,7 +706,6 @@ int zbx_db_row_add_data(struct zbx_db_data **row, struct zbx_db_data *e_data, in
 				((struct zbx_db_type_double *)tmp[cols].t_data)->value = ((struct zbx_db_type_double *)e_data->t_data)->value;
 				return ZBX_DB_OK;
 			}
-			break;
 		case ZBX_COL_TYPE_TEXT:
 			tmp[cols].type = ZBX_COL_TYPE_TEXT;
 			tmp[cols].t_data = zbx_db_malloc(sizeof(struct zbx_db_type_text));
@@ -732,7 +730,6 @@ int zbx_db_row_add_data(struct zbx_db_data **row, struct zbx_db_data *e_data, in
 
 				return ZBX_DB_OK;
 			}
-			break;
 		case ZBX_COL_TYPE_BLOB:
 			tmp[cols].type = ZBX_COL_TYPE_BLOB;
 			tmp[cols].t_data = zbx_db_malloc(sizeof(struct zbx_db_type_blob));
@@ -757,7 +754,6 @@ int zbx_db_row_add_data(struct zbx_db_data **row, struct zbx_db_data *e_data, in
 
 				return ZBX_DB_OK;
 			}
-			break;
 		case ZBX_COL_TYPE_DATE:
 			tmp[cols].type = ZBX_COL_TYPE_DATE;
 			tmp[cols].t_data = zbx_db_malloc(sizeof(struct zbx_db_type_datetime));
@@ -771,14 +767,12 @@ int zbx_db_row_add_data(struct zbx_db_data **row, struct zbx_db_data *e_data, in
 				((struct zbx_db_type_datetime *)tmp[cols].t_data)->value = ((struct zbx_db_type_datetime *)e_data->t_data)->value;
 				return ZBX_DB_OK;
 			}
-			break;
 		case ZBX_COL_TYPE_NULL:
 			tmp[cols].type = ZBX_COL_TYPE_NULL;
 			tmp[cols].t_data = NULL;
 			break;
 		default:
 			return ZBX_DB_ERROR_PARAMS;
-			break;
 		}
 		return ZBX_DB_OK;
 	}
