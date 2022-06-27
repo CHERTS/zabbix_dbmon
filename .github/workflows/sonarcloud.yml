@@ -6,7 +6,6 @@ on:
      - 'master'
      - 'release/*'
     paths-ignore:
-      - ".github/**"
       - "bin/**"
       - "build/**"
       - "conf/**"
@@ -46,10 +45,10 @@ jobs:
           echo "$HOME/.sonar/sonar-scanner-${{ env.SONAR_SCANNER_VERSION }}-linux/bin" >> $GITHUB_PATH
       - name: Download and compile Zabbix
         run: |
-          sudo apt-get install libsnmp-dev snmp libopenipmi-dev libevent-dev libcurl4-openssl-dev
+          sudo apt-get install libsnmp-dev snmp libopenipmi-dev libevent-dev libcurl4-openssl-dev libconfig-dev libmysqlclient-dev libpq-dev
           cd $GITHUB_WORKSPACE
           sh bootstrap.sh
-          ./configure --enable-server --enable-agent --with-postgresql --enable-ipv6 --with-net-snmp --with-libcurl --with-libxml2 --with-openipmi --enable-proxy --enable-agent2 --enable-java --prefix=$(pwd) --with-openssl
+          ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix --prefix=$(pwd)
           make
           make clean
       - name: Download and set up build-wrapper
