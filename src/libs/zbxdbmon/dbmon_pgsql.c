@@ -73,8 +73,6 @@ static unsigned short zbx_db_get_type_from_oid(const struct zbx_db_connection *c
 		}
 	}
 
-	pthread_mutex_unlock(&(((struct zbx_db_pgsql *)conn->connection)->lock));
-
 	return ZBX_COL_TYPE_TEXT;
 }
 
