@@ -107,8 +107,8 @@ jobs:
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2
       with:
-        key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
+        key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
@@ -190,8 +190,8 @@ jobs:
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2
       with:
-        key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
+        key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
@@ -273,8 +273,8 @@ jobs:
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2
       with:
-        key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
+        key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
@@ -356,8 +356,8 @@ jobs:
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2
       with:
-        key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
+        key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
@@ -439,8 +439,8 @@ jobs:
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2
       with:
-        key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
+        key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload deb from dev server
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |

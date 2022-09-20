@@ -108,8 +108,8 @@ jobs:
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2
       with:
-        key: ${{ secrets.REPO_SERVER_PRIVATE_KEY }}
-        known_hosts: ${{ secrets.REPO_SERVER_KNOWN_HOSTS }}
+        key: ${{ secrets.DBMON_REPO_SERVER_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload rpm from dev server
       run: |
         scp RPMS/noarch/*.rpm ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon-docker/rhel/9
