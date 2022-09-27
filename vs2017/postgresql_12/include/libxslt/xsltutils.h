@@ -13,9 +13,6 @@
 #define __XML_XSLTUTILS_H__
 
 #include <libxslt/xsltconfig.h>
-#ifdef HAVE_STDARG_H
-#include <stdarg.h>
-#endif
 #include <libxml/xpath.h>
 #include <libxml/dict.h>
 #include <libxml/xmlerror.h>
@@ -80,7 +77,7 @@ extern "C" {
       ((n)->type == XML_PI_NODE)))
 
 /*
- * Our own version of namespaced atributes lookup.
+ * Our own version of namespaced attributes lookup.
  */
 XSLTPUBFUN xmlChar * XSLTCALL
 		xsltGetNsProp	(xmlNodePtr node,

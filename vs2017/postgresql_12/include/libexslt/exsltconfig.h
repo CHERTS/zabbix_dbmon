@@ -1,5 +1,5 @@
 /*
- * exsltconfig.h: compile-time version informations for the EXSLT library
+ * exsltconfig.h: compile-time version information for the EXSLT library
  *
  * See Copyright for the status of this software.
  *
@@ -18,7 +18,7 @@ extern "C" {
  *
  * the version string like "1.2.3"
  */
-#define LIBEXSLT_DOTTED_VERSION "0.8.20"
+#define LIBEXSLT_DOTTED_VERSION "@LIBEXSLT_VERSION@"
 
 /**
  * LIBEXSLT_VERSION:
@@ -37,7 +37,7 @@ extern "C" {
 /**
  * LIBEXSLT_VERSION_EXTRA:
  *
- * extra version information, used to show a CVS compilation
+ * extra version information, used to show a Git commit description
  */
 #define	LIBEXSLT_VERSION_EXTRA ""
 
@@ -56,9 +56,6 @@ extern "C" {
  * This macro is used to flag unused function parameters to GCC
  */
 #ifdef __GNUC__
-#ifdef HAVE_ANSIDECL_H
-#include <ansidecl.h>
-#endif
 #ifndef ATTRIBUTE_UNUSED
 #define ATTRIBUTE_UNUSED __attribute__((unused))
 #endif

@@ -648,10 +648,10 @@
 #define PACKAGE_NAME "PostgreSQL"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "PostgreSQL 12.9"
+#define PACKAGE_STRING "PostgreSQL 12.12"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "12.9"
+#define PACKAGE_VERSION "12.12"
 
 /* Define to the name of a signed 128-bit integer type. */
 #undef PG_INT128_TYPE
@@ -660,10 +660,10 @@
 #define PG_INT64_TYPE long long int
 
 /* PostgreSQL version as a string */
-#define PG_VERSION "12.9"
+#define PG_VERSION "12.12"
 
 /* PostgreSQL version as a number */
-#define PG_VERSION_NUM 120009
+#define PG_VERSION_NUM 120012
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "postgresql"
@@ -673,7 +673,7 @@
 #define PG_KRB_SRVNAM "postgres"
 
 /* A string containing the version number, platform, and C compiler */
-#define PG_VERSION_STR "PostgreSQL 12.9, compiled by Visual C++ build " CppAsString2(_MSC_VER) ", 64-bit"
+#define PG_VERSION_STR "PostgreSQL 12.12, compiled by Visual C++ build " CppAsString2(_MSC_VER) ", 64-bit"
 
 /* The size of `bool', as computed by sizeof. */
 #define SIZEOF_BOOL 1
