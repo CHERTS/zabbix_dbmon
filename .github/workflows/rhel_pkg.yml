@@ -108,8 +108,8 @@ jobs:
         known_hosts: ${{ secrets.DBMON_REPO_SERVER_KNOWN_HOSTS }}
     - name: Upload rpm from dev server
       run: |
-        scp RPMS/noarch/*.rpm ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon-docker/rhel/7
-        scp RPMS/x86_64/*.rpm ${{ secrets.REPO_SERVER_USER }}@${{ secrets.REPO_SERVER }}:zabbix-dbmon-docker/rhel/7
+        scp RPMS/noarch/*.rpm ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon-docker/rhel/7
+        scp RPMS/x86_64/*.rpm ${{ secrets.DBMON_REPO_SERVER_USER }}@${{ secrets.DBMON_REPO_SERVER }}:zabbix-dbmon-docker/rhel/7
   github-job-rockylinux:
     name: RockyLinux 8
     runs-on: [ubuntu-22.04]
