@@ -1,6 +1,9 @@
+//go:build !windows
+// +build !windows
+
 /*
 ** Zabbix
-** Copyright (C) 2001-2021 Zabbix SIA
+** Copyright (C) 2001-2022 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,25 +20,29 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-package zabbixsync
+package zbxcomms
 
 import (
-	"zabbix.com/pkg/plugin"
-	"zabbix.com/pkg/zbxlib"
+	"fmt"
+	"net"
+
+	"zabbix.com/pkg/tls"
 )
 
-// Plugin -
-type Plugin struct {
-	plugin.Base
-}
+func Listen(address string, args ...interface{}) (c *Listener, err error) {
+	var tlsconfig *tls.Config
 
-var impl Plugin
+	if len(args) > 0 {
+		var ok bool
+		if tlsconfig, ok = args[0].(*tls.Config); !ok {
+			return nil, fmt.Errorf("invalid TLS configuration parameter of type %T", args[0])
+		}
+	}
+	l, tmperr := net.Listen("tcp", address)
+	if tmperr != nil {
+		return nil, fmt.Errorf("Listen failed: %s", tmperr.Error())
+	}
+	c = &Listener{listener: l.(*net.TCPListener), tlsconfig: tlsconfig}
 
-func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider) (result interface{}, err error) {
-	return zbxlib.ExecuteCheck(key, params)
-}
-
-func init() {
-	plugin.RegisterMetrics(&impl, "ZabbixSync", getMetrics()...)
-	impl.SetCapacity(1)
+	return
 }

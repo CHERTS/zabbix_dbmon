@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2021 Zabbix SIA
+** Copyright (C) 2001-2022 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -183,9 +183,16 @@ static int	proxy_data_sender(int *more, int now, int *hist_upload_state)
 		reserved = j.buffer_size;
 		zbx_json_free(&j);	/* json buffer can be large, free as fast as possible */
 
+		update_selfmon_counter(ZBX_PROCESS_STATE_IDLE);
+
 		/* retry till have a connection */
 		if (FAIL == connect_to_server(&sock, 600, CONFIG_PROXYDATA_FREQUENCY))
+		{
+			update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
 			goto clean;
+		}
+
+		update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
 
 		upload_state = put_data_to_server(&sock, &buffer, buffer_size, reserved, &error);
 		get_hist_upload_state(sock.buffer, hist_upload_state);
