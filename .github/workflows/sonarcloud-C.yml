@@ -1,8 +1,30 @@
-name: SonarCloud C Build
+name: SonarCloud Build
 
 on:
-  schedule:
-    - cron: "0 0 * * *"
+  push:
+    branches:
+     - 'master'
+     - 'release/*'
+    paths-ignore:
+      - ".github/**"
+      - "bin/**"
+      - "build/**"
+      - "conf/**"
+      - "create/**"
+      - "database/**"
+      - "man/**"
+      - "misc/**"
+      - "packages/**"
+      - "sass/**"
+      - "templates/**"
+      - "tests/**"
+      - "frontends/**"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Launch reason'
+        required: true
+        default: 'Run SonarCloud Build'
 
 jobs:
   SonarCloud-C:
@@ -13,6 +35,9 @@ jobs:
       SONAR_SERVER_URL: "https://sonarcloud.io"
       BUILD_WRAPPER_OUT_DIR: $GITHUB_WORKSPACE/build_wrapper_output_directory # Directory where build-wrapper output will be placed
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update --fix-missing
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis

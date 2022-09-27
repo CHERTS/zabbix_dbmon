@@ -1,18 +1,21 @@
-name: SonarCloud Others Build
+name: SonarCloud Build
 
 on:
-  push:
-    branches:
-     - 'master'
-     - 'release/*'
-  pull_request:
-    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Launch reason'
+        required: true
+        default: 'Run SonarCloud Build'
 
 jobs:
   SonarCloud-others:
     name: SonarCloud-others
     runs-on: [ubuntu-22.04]
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update --fix-missing
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
