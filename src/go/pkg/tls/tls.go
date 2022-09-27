@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2021 Zabbix SIA
+** Copyright (C) 2001-2022 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -282,9 +282,18 @@ static unsigned int tls_psk_server_cb(SSL *ssl, const char *identity, unsigned c
 
 static int	zbx_set_ecdhe_parameters(SSL_CTX *ctx)
 {
-	EC_KEY	*ecdh;
 	long	res;
 	int	ret = 0;
+#if defined(OPENSSL_VERSION_MAJOR) && OPENSSL_VERSION_NUMBER >= 3	// OpenSSL 3.0.0 or newer
+#define ARRSIZE(a)	(sizeof(a) / sizeof(*a))
+
+	int	grp_list[1] = { NID_X9_62_prime256v1 };	// use curve secp256r1/prime256v1/NIST P-256
+
+	if (1 != (res = SSL_CTX_set1_groups(ctx, grp_list, ARRSIZE(grp_list))))
+		ret = -1;
+#undef ARRSIZE
+#else
+	EC_KEY	*ecdh;
 
 	// use curve secp256r1/prime256v1/NIST P-256
 
@@ -297,7 +306,7 @@ static int	zbx_set_ecdhe_parameters(SSL_CTX *ctx)
 		ret = -1;
 
 	EC_KEY_free(ecdh);
-
+#endif
 	return ret;
 }
 
@@ -605,6 +614,8 @@ static int tls_close(tls_t *tls)
 
 static void tls_free(tls_t *tls)
 {
+	if (NULL == tls)
+		return;
 	if (NULL != tls->ssl)
 		SSL_free(tls->ssl);
 	if (NULL != tls->err)
@@ -1041,6 +1052,10 @@ func (c *tlsConn) SetWriteDeadline(t time.Time) error {
 func (c *tlsConn) Close() (err error) {
 	cr := C.tls_close((*C.tls_t)(c.tls))
 	c.conn.Close()
+
+	C.tls_free((*C.tls_t)(c.tls))
+	c.tls = nil
+
 	if cr < 0 {
 		return c.Error()
 	}

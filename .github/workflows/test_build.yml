@@ -37,13 +37,23 @@ jobs:
         sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev libsnmp-dev libsqlite3-dev libopenipmi-dev libssh2-1-dev unixodbc-dev libevent-dev
         sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
         sudo apt-get install -y libmysqlclient-dev libpq-dev
-        sudo wget https://github.com/sass/dart-sass/releases/download/1.54.5/dart-sass-1.54.5-linux-x64.tar.gz -O /tmp/dart-sass-linux-x64.tar.gz
+        sudo wget https://github.com/sass/dart-sass/releases/download/1.55.0/dart-sass-1.55.0-linux-x64.tar.gz -O /tmp/dart-sass-linux-x64.tar.gz
         sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
     - name: Code checkout
       uses: actions/checkout@v2
     - name: Delete old binary
       run: |
-        rm -rf ./bin/* 2>/dev/null
+        rm -rf ./bin/aix 2>/dev/null
+        rm -rf ./bin/rhel 2>/dev/null
+        rm -rf ./bin/ubuntu 2>/dev/null
+        rm -rf ./bin/win32/*.pdb 2>/dev/null
+        rm -rf ./bin/win32/*.dll 2>/dev/null
+        rm -rf ./bin/win32/*.exe 2>/dev/null
+        rm -rf ./bin/win32/*.cmd 2>/dev/null
+        rm -rf ./bin/win64/*.pdb 2>/dev/null
+        rm -rf ./bin/win64/*.dll 2>/dev/null
+        rm -rf ./bin/win64/*.exe 2>/dev/null
+        rm -rf ./bin/win64/*.cmd 2>/dev/null
         rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
       run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2021 Zabbix SIA
+** Copyright (C) 2001-2022 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -81,8 +81,15 @@ static void	process_configuration_sync(size_t *data_size)
 	reserved = j.buffer_size;
 	zbx_json_free(&j);
 
+	update_selfmon_counter(ZBX_PROCESS_STATE_IDLE);
+
 	if (FAIL == connect_to_server(&sock, 600, CONFIG_PROXYCONFIG_RETRY))	/* retry till have a connection */
+	{
+		update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
 		goto out;
+	}
+
+	update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
 
 	if (SUCCEED != get_data_from_server(&sock, &buffer, buffer_size, reserved, &error))
 	{

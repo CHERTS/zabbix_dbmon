@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2021 Zabbix SIA
+** Copyright (C) 2001-2022 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -220,7 +220,8 @@ static int	get_data_from_proxy(DC_PROXY *proxy, const char *request, char **data
 				}
 				else
 				{
-					ret = zbx_send_proxy_data_response(proxy, &s, NULL, ZBX_PROXY_UPLOAD_UNDEFINED);
+					ret = zbx_send_proxy_data_response(proxy, &s, NULL, SUCCEED,
+							ZBX_PROXY_UPLOAD_UNDEFINED);
 
 					if (SUCCEED == ret)
 						*data = zbx_strdup(*data, s.buffer);
@@ -546,6 +547,7 @@ static int	process_proxy(void)
 		if (proxy.last_cfg_error_time < DCconfig_get_last_sync_time())
 		{
 			char	*port = NULL;
+			int	check_tasks = 0;
 
 			proxy.addr = proxy.addr_orig;
 
@@ -567,22 +569,27 @@ static int	process_proxy(void)
 					goto error;
 			}
 
+			if (proxy.proxy_tasks_nextcheck <= now)
+				check_tasks = 1;
+
 			if (proxy.proxy_data_nextcheck <= now)
 			{
-
 				int	more;
 
 				do
 				{
 					if (FAIL == zbx_hc_check_proxy(proxy.hostid))
-						goto error;
+						break;
 
 					if (SUCCEED != (ret = proxy_get_data(&proxy, &more)))
 						goto error;
+
+					check_tasks = 0;
 				}
 				while (ZBX_PROXY_DATA_MORE == more);
 			}
-			else if (proxy.proxy_tasks_nextcheck <= now)
+
+			if (1 == check_tasks)
 			{
 				if (SUCCEED != (ret = proxy_get_tasks(&proxy)))
 					goto error;
