@@ -27,9 +27,9 @@ yum install -y postgresql-devel postgresql-libs
 ### 2. Скачать и распаковать свежую версию исходного кода:
 
 ~~~~
-wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.19/zabbix-5.0.19.tar.gz
-tar -zxf zabbix-5.0.19.tar.gz
-cd zabbix-5.0.19
+wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.28/zabbix-5.0.28.tar.gz
+tar -zxf zabbix-5.0.28.tar.gz
+cd zabbix-5.0.28
 ~~~~
 
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:
@@ -79,9 +79,9 @@ dnf install -y mariadb-devel postgresql-devel
 ### 2. Скачать и распаковать свежую версию исходного кода:
 
 ~~~~
-wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.19/zabbix-5.0.19.tar.gz
-tar -zxf zabbix-5.0.19.tar.gz
-cd zabbix-5.0.19
+wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.28/zabbix-5.0.28.tar.gz
+tar -zxf zabbix-5.0.28.tar.gz
+cd zabbix-5.0.28
 ~~~~
 
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:
@@ -150,9 +150,9 @@ sudo apt-get install -y libpq-dev
 ### 2. Скачать и распаковать свежую версию исходного кода:
 
 ~~~~
-wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.19/zabbix-5.0.19.tar.gz
-tar -zxf zabbix-5.0.19.tar.gz
-cd zabbix-5.0.19
+wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.28/zabbix-5.0.28.tar.gz
+tar -zxf zabbix-5.0.28.tar.gz
+cd zabbix-5.0.28
 ~~~~
 
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:
@@ -221,9 +221,9 @@ sudo apt-get install -y libpq-dev
 ### 2. Скачать и распаковать свежую версию исходного кода:
 
 ~~~~
-wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.19/zabbix-5.0.19.tar.gz
-tar -zxf zabbix-5.0.19.tar.gz
-cd zabbix-5.0.19
+wget https://github.com/CHERTS/zabbix_dbmon/releases/download/v5.0.28/zabbix-5.0.28.tar.gz
+tar -zxf zabbix-5.0.28.tar.gz
+cd zabbix-5.0.28
 ~~~~
 
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:

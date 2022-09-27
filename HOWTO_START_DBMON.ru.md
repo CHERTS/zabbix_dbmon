@@ -81,7 +81,7 @@ tail -n20 /var/log/zabbix/zabbix_agentd_dbmon_orcl2.log
 
 Лог старта должен быть примерто таким:
 ~~~~
- 22646:20200219:211042.119 Starting Zabbix Agent [XXXXXX]. Zabbix 5.0.19 (revision XXXXXXX).
+ 22646:20200219:211042.119 Starting Zabbix Agent [XXXXXX]. Zabbix 5.0.28 (revision XXXXXXX).
  22646:20200219:211042.119 **** Enabled features ****
  22646:20200219:211042.119 IPv6 support:          YES
  22646:20200219:211042.119 TLS support:           YES
