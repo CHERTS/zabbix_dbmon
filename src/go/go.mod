@@ -18,7 +18,7 @@ require (
 	github.com/natefinch/npipe v0.0.0-20160621034901-c1b8fa8bdcce
 	github.com/omeid/go-yarn v0.0.1
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/sys v0.0.0-20210303074136-134d130e1a04
+	golang.org/x/sys v0.1.0
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
