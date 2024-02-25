@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,6 @@
 /**
  * @var CView $this
  */
-insert_javascript_for_visibilitybox();
 ?>
 <script type="text/x-jquery-tmpl" id="lldoverride-row-templated">
 	<?= (new CRow([
@@ -75,12 +74,20 @@ insert_javascript_for_visibilitybox();
 				->setAttribute('data-formulaid', '#{formulaId}'),
 			(new CSelect('overrides_filters[#{rowNum}][operator]'))
 				->setValue(CONDITION_OPERATOR_REGEXP)
-				->addOption(new CSelectOption(CONDITION_OPERATOR_REGEXP, _('matches')))
-				->addOption(new CSelectOption(CONDITION_OPERATOR_NOT_REGEXP, _('does not match'))),
-			(new CTextBox('overrides_filters[#{rowNum}][value]', '', false,
+				->addClass('js-operator')
+				->addOptions(CSelect::createOptionsFromArray([
+					CONDITION_OPERATOR_REGEXP => _('matches'),
+					CONDITION_OPERATOR_NOT_REGEXP => _('does not match'),
+					CONDITION_OPERATOR_EXISTS => _('exists'),
+					CONDITION_OPERATOR_NOT_EXISTS => _('does not exist')
+				])),
+			(new CDiv(
+				(new CTextBox('overrides_filters[#{rowNum}][value]', '', false,
 					DB::getFieldLength('lld_override_condition', 'value')))
-				->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH)
-				->setAttribute('placeholder', _('regular expression')),
+						->addClass('js-value')
+						->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH)
+						->setAttribute('placeholder', _('regular expression'))
+			))->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH),
 			(new CCol(
 				(new CButton('overrides_filters#{rowNum}_remove', _('Remove')))
 					->addClass(ZBX_STYLE_BTN_LINK)
@@ -650,7 +657,7 @@ insert_javascript_for_visibilitybox();
 	}
 
 	/**
-	 * Opens popup for a override.
+	 * Opens popup for an override.
 	 *
 	 * @param {number} no
 	 */
@@ -659,7 +666,7 @@ insert_javascript_for_visibilitybox();
 	};
 
 	/**
-	 * This object represents a override of web scenario.
+	 * This object represents an override of web scenario.
 	 *
 	 * @param {object} data  Optional override initial data.
 	 */
@@ -700,10 +707,10 @@ insert_javascript_for_visibilitybox();
 	 * Opens override popup - edit or create form.
 	 * Note: a callback this.onStepOverlayReadyCb is called from within popup form once it is parsed.
 	 *
-	 * @param {number} step     Override index.
-	 * @param {object} refocus  A node to set focus to, when popup is closed.
+	 * @param {number} step             Override index.
+	 * @param {Node}   trigger_element  A node to set focus to, when popup is closed.
 	 */
-	Override.prototype.open = function(no, refocus) {
+	Override.prototype.open = function(no, trigger_element) {
 		return PopUp('popup.lldoverride', {
 			no:                 no,
 			templated:          lldoverrides.templated,
@@ -715,7 +722,7 @@ insert_javascript_for_visibilitybox();
 			overrides_filters:  this.data.overrides_filters,
 			operations:         this.data.operations,
 			overrides_names:    lldoverrides.overrides.getOverrideNames()
-		}, null, refocus);
+		}, {dialogue_class: 'modal-popup-generic', trigger_element});
 	};
 
 	/**
@@ -777,6 +784,11 @@ insert_javascript_for_visibilitybox();
 					that.updateExpression();
 				}
 			})
+			.on('afteradd.dynamicRows', (event) => {
+				[...event.currentTarget.querySelectorAll('.js-operator')]
+					.pop()
+					.addEventListener('change', view.toggleConditionValue);
+			})
 			.ready(function() {
 				jQuery('#overrideRow').toggle(jQuery('.form_row', jQuery('#overrides_filters')).length > 1);
 				overlays_stack.end().centerDialog();
@@ -795,6 +807,10 @@ insert_javascript_for_visibilitybox();
 		});
 
 		jQuery('#overrides-evaltype').trigger('change');
+
+		[...document.getElementById('overrides_filters').querySelectorAll('.js-operator')].map((elem) => {
+			elem.addEventListener('change', view.toggleConditionValue);
+		});
 	};
 
 	/**
@@ -811,7 +827,8 @@ insert_javascript_for_visibilitybox();
 		this.$form.parent().find('.msg-bad, .msg-good').remove();
 
 		var form_data = this.$form.serializeJSON();
-		if (Object.keys(form_data.overrides_filters).length <= 1) {
+
+		if (!('overrides_filters' in form_data) || Object.keys(form_data.overrides_filters).length <= 1) {
 			delete form_data.overrides_formula;
 			delete form_data.overrides_evaltype;
 		}
@@ -988,11 +1005,11 @@ insert_javascript_for_visibilitybox();
 	 * Opens override popup - edit or create form.
 	 * Note: a callback this.onStepOverlayReadyCb is called from within popup form once it is parsed.
 	 *
-	 * @param {number}  step     Override index.
-	 * @param {object}  refocus  A node to set focus to, when popup is closed.
+	 * @param {number} step             Override index.
+	 * @param {Node}   trigger_element  A node to set focus to, when popup is closed.
 	 */
-	Operation.prototype.open = function(no, refocus) {
-		var params = {
+	Operation.prototype.open = function(no, trigger_element) {
+		var parameters = {
 			no:                 no,
 			templated:          lldoverrides.templated,
 			operationobject:    this.data.operationobject,
@@ -1002,11 +1019,11 @@ insert_javascript_for_visibilitybox();
 
 		window.lldoverrides.actions.forEach(function(action) {
 			if (action in this.data) {
-				params[action] = this.data[action];
+				parameters[action] = this.data[action];
 			}
 		}.bind(this));
 
-		return PopUp('popup.lldoperation', params, null, refocus);
+		return PopUp('popup.lldoperation', parameters, {dialogue_class: 'modal-popup-generic', trigger_element});
 	};
 
 	/**
@@ -1063,19 +1080,20 @@ insert_javascript_for_visibilitybox();
 			})
 			.trigger('change');
 
-		jQuery('#tags-table .<?= ZBX_STYLE_TEXTAREA_FLEXIBLE ?>', this.$form).textareaFlexible();
-		jQuery('#tags-table', this.$form)
+		jQuery('.tags-table .<?= ZBX_STYLE_TEXTAREA_FLEXIBLE ?>', this.$form).textareaFlexible();
+		jQuery('.tags-table', this.$form)
 			.dynamicRows({template: '#lldoverride-tag-row'})
 			.on('click', 'button.element-table-add', function() {
-				jQuery('#tags-table .<?= ZBX_STYLE_TEXTAREA_FLEXIBLE ?>', this.$form).textareaFlexible();
+				jQuery('.tags-table .<?= ZBX_STYLE_TEXTAREA_FLEXIBLE ?>', this.$form).textareaFlexible();
 			});
 
 		// Override actions available per override object.
 		var available_actions = {
-			'<?= OPERATION_OBJECT_ITEM_PROTOTYPE ?>': ['opstatus', 'opdiscover', 'opperiod', 'ophistory', 'optrends'],
+			'<?= OPERATION_OBJECT_ITEM_PROTOTYPE ?>': ['opstatus', 'opdiscover', 'opperiod', 'ophistory', 'optrends',
+														'optag'],
 			'<?= OPERATION_OBJECT_TRIGGER_PROTOTYPE ?>': ['opstatus', 'opdiscover', 'opseverity', 'optag'],
 			'<?= OPERATION_OBJECT_GRAPH_PROTOTYPE ?>': ['opdiscover'],
-			'<?= OPERATION_OBJECT_HOST_PROTOTYPE ?>': ['opstatus', 'opdiscover', 'optemplate', 'opinventory']
+			'<?= OPERATION_OBJECT_HOST_PROTOTYPE ?>': ['opstatus', 'opdiscover', 'optemplate', 'optag', 'opinventory']
 		};
 
 		jQuery('#operationobject', this.$form)

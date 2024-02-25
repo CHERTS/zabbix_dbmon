@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,8 +26,10 @@ $fields = $data['dialogue']['fields'];
 
 $form = CWidgetHelper::createForm();
 
+$rf_rate_field = ($data['templateid'] === null) ? $fields['rf_rate'] : null;
+
 $form_list = CWidgetHelper::createFormList($data['dialogue']['name'], $data['dialogue']['type'],
-	$data['dialogue']['view_mode'], $data['known_widget_types'], $fields['rf_rate']
+	$data['dialogue']['view_mode'], $data['known_widget_types'], $rf_rate_field
 );
 
 $scripts = [];
@@ -41,7 +43,7 @@ $form_list->addRow(
 // Graph prototype.
 if (array_key_exists('graphid', $fields)) {
 	$field_graphid = CWidgetHelper::getGraphPrototype($fields['graphid'],
-		$data['captions']['ms']['graph_prototypes']['graphid'], $form->getName()
+		$data['captions']['graph_prototypes']['graphid'], $form->getName()
 	);
 	$form_list->addRow(CWidgetHelper::getMultiselectLabel($fields['graphid']), $field_graphid);
 	$scripts[] = $field_graphid->getPostJS();
@@ -50,7 +52,7 @@ if (array_key_exists('graphid', $fields)) {
 // Item prototype.
 if (array_key_exists('itemid', $fields)) {
 	$field_itemid = CWidgetHelper::getItemPrototype($fields['itemid'],
-		$data['captions']['ms']['item_prototypes']['itemid'], $form->getName()
+		$data['captions']['item_prototypes']['itemid'], $form->getName()
 	);
 	$form_list->addRow(CWidgetHelper::getMultiselectLabel($fields['itemid']), $field_itemid);
 	$scripts[] = $field_itemid->getPostJS();
@@ -60,7 +62,9 @@ if (array_key_exists('itemid', $fields)) {
 $form_list->addRow(CWidgetHelper::getLabel($fields['show_legend']), CWidgetHelper::getCheckBox($fields['show_legend']));
 
 // Dynamic item.
-$form_list->addRow(CWidgetHelper::getLabel($fields['dynamic']), CWidgetHelper::getCheckBox($fields['dynamic']));
+if ($data['templateid'] === null) {
+	$form_list->addRow(CWidgetHelper::getLabel($fields['dynamic']), CWidgetHelper::getCheckBox($fields['dynamic']));
+}
 
 // Columns and Rows.
 CWidgetHelper::addIteratorFields($form_list, $fields['columns'], $fields['rows']);

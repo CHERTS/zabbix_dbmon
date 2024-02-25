@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,7 +37,8 @@ if ($data['form_refresh'] == 0) {
 
 // create form
 $mediaTypeForm = (new CForm())
-	->setId('media_type_form')
+	->addItem((new CVar('form_refresh', $data['form_refresh'] + 1))->removeId())
+	->setId('media-type-form')
 	->addVar('form', 1)
 	->addVar('mediatypeid', $data['mediatypeid'])
 	->addItem((new CVar('status', MEDIA_TYPE_STATUS_DISABLED))->removeId())
@@ -294,7 +295,9 @@ $message_templates_formlist = (new CFormList('messageTemplatesFormlist'))
 			->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
 			->addStyle('width: '.ZBX_TEXTAREA_BIG_WIDTH.'px;')
 	);
-$tabs->addTab('messageTemplatesTab', _('Message templates'), $message_templates_formlist);
+$tabs->addTab('messageTemplatesTab', _('Message templates'), $message_templates_formlist,
+	TAB_INDICATOR_MESSAGE_TEMPLATE
+);
 
 // media options tab
 $max_sessions = ($data['maxsessions'] > 1) ? $data['maxsessions'] : 0;
@@ -340,7 +343,7 @@ $mediaOptionsForm = (new CFormList('options'))
 			->setWidth(ZBX_TEXTAREA_TINY_WIDTH)
 			->setAriaRequired()
 	);
-$tabs->addTab('optionsTab', _('Options'), $mediaOptionsForm);
+$tabs->addTab('optionsTab', _('Options'), $mediaOptionsForm, TAB_INDICATOR_MEDIATYPE_OPTIONS);
 
 // append buttons to form
 $cancelButton = (new CRedirectButton(_('Cancel'), (new CUrl('zabbix.php'))

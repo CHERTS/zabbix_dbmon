@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types = 0);
 
 namespace Modules\Example_F;
 
@@ -19,6 +19,6 @@ class Module extends CModule {
 		$menu
 			->find('Monitoring')
 			->getSubMenu()
-			->remove('Screens');
+			->remove('Maps');
 	}
 }

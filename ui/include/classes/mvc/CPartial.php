@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -128,7 +128,7 @@ class CPartial {
 	 *
 	 * @return string
 	 */
-	public function readJsFile(string $file_name, ?array $data = null): string {
+	public function readJsFile(string $file_name, array $data = null): string {
 		$data = ($data === null) ? $this->data : $data;
 
 		$file_path = $this->directory.'/js/'.$file_name;
@@ -155,7 +155,7 @@ class CPartial {
 	 *
 	 * @throws RuntimeException if the file not found, not readable or returned false.
 	 */
-	public function includeJsFile(string $file_name, array $data = null) {
+	public function includeJsFile(string $file_name, array $data = null): void {
 		echo $this->readJsFile($file_name, $data);
 	}
 
@@ -168,5 +168,14 @@ class CPartial {
 		if (!in_array($directory, self::$directories)) {
 			array_unshift(self::$directories, $directory);
 		}
+	}
+
+	/**
+	 * Get partial file name.
+	 *
+	 * @return string
+	 */
+	public function getName(): string {
+		return $this->name;
 	}
 }

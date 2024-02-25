@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,17 +26,15 @@ require_once dirname(__FILE__).'/include/forms.inc.php';
 
 $page['title'] = _('Configuration of maintenance periods');
 $page['file'] = 'maintenance.php';
-$page['scripts'] = ['class.cviewswitcher.js', 'class.calendar.js', 'multiselect.js'];
-
-require_once dirname(__FILE__).'/include/page_header.php';
+$page['scripts'] = ['class.calendar.js'];
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
 $fields = [
-	'hostids' =>							[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null],
-	'groupids' =>							[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null],
+	'hostids' =>							[T_ZBX_INT, O_OPT, P_SYS|P_ONLY_ARRAY,	DB_ID,	null],
+	'groupids' =>							[T_ZBX_INT, O_OPT, P_SYS|P_ONLY_ARRAY,	DB_ID,	null],
 	// maintenance
 	'maintenanceid' =>						[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		'isset({form}) && {form} == "update"'],
-	'maintenanceids' =>						[T_ZBX_INT, O_OPT, P_SYS,	DB_ID, 		null],
+	'maintenanceids' =>						[T_ZBX_INT, O_OPT, P_SYS|P_ONLY_ARRAY,	DB_ID,	null],
 	'mname' =>								[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({add}) || isset({update})', _('Name')],
 	'maintenance_type' =>					[T_ZBX_INT, O_OPT, null,	null,		'isset({add}) || isset({update})'],
 	'description' =>						[T_ZBX_STR, O_OPT, null,	null,		'isset({add}) || isset({update})'],
@@ -46,9 +44,9 @@ $fields = [
 	'active_till' =>						[T_ZBX_ABS_TIME, O_OPT, null, NOT_EMPTY,
 												'isset({add}) || isset({update})', _('Active till')
 											],
-	'timeperiods' =>						[T_ZBX_STR, O_OPT, null,	null,		null],
-	'tags_evaltype' =>						[T_ZBX_INT, O_OPT, null,	null,		null],
-	'tags' =>								[T_ZBX_STR, O_OPT, null,	null,		null],
+	'timeperiods' =>						[T_ZBX_STR, O_OPT, P_ONLY_TD_ARRAY,	null,	null],
+	'tags_evaltype' =>						[T_ZBX_INT, O_OPT, null,			null,	null],
+	'tags' =>								[T_ZBX_STR, O_OPT, P_ONLY_TD_ARRAY,	null,	null],
 	// actions
 	'action' =>								[T_ZBX_STR, O_OPT, P_SYS|P_ACT, IN('"maintenance.massdelete"'), null],
 	'add' =>								[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
@@ -58,13 +56,13 @@ $fields = [
 	'cancel' =>								[T_ZBX_STR, O_OPT, P_SYS,		 null,	null],
 	// form
 	'form' =>								[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
-	'form_refresh' =>						[T_ZBX_INT, O_OPT, null,	null,		null],
+	'form_refresh' =>						[T_ZBX_INT, O_OPT, P_SYS,	null,		null],
 	// filter
 	'filter_set' =>							[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'filter_rst' =>							[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'filter_name' =>						[T_ZBX_STR, O_OPT, null,	null,		null],
 	'filter_status' =>						[T_ZBX_INT, O_OPT, null,	IN([-1, MAINTENANCE_STATUS_ACTIVE, MAINTENANCE_STATUS_APPROACH, MAINTENANCE_STATUS_EXPIRED]), null],
-	'filter_groups' =>						[T_ZBX_INT, O_OPT, null,	DB_ID,		null],
+	'filter_groups' =>						[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	DB_ID,	null],
 	// sort and sortorder
 	'sort' =>								[T_ZBX_STR, O_OPT, P_SYS,
 												IN('"active_since","active_till","maintenance_type","name"'),
@@ -96,6 +94,18 @@ if (hasRequest('action') && (!hasRequest('maintenanceids') || !is_array(getReque
 	access_deny();
 }
 
+$allowed_edit = CWebUser::checkAccess(CRoleHelper::ACTIONS_EDIT_MAINTENANCE);
+
+if (!$allowed_edit && array_filter([
+	hasRequest('form') && getRequest('form') !== 'update',
+	hasRequest('add') || hasRequest('update'),
+	hasRequest('delete') || getRequest('action', '') == 'maintenance.massdelete'
+])) {
+	access_deny(ACCESS_DENY_PAGE);
+}
+
+require_once dirname(__FILE__).'/include/page_header.php';
+
 /*
  * Actions
  */
@@ -122,20 +132,14 @@ elseif (hasRequest('add') || hasRequest('update')) {
 	$absolute_time_parser->parse(getRequest('active_till'));
 	$active_till_date = $absolute_time_parser->getDateTime(true);
 
-	if (!validateDateInterval($active_since_date->format('Y'), $active_since_date->format('m'),
-			$active_since_date->format('d'))) {
-		info(_s('"%1$s" must be between 1970.01.01 and 2038.01.18.', _('Active since')));
-		$result = false;
-	}
-
-	if (!validateDateInterval($active_till_date->format('Y'), $active_till_date->format('m'),
-			$active_till_date->format('d'))) {
-		info(_s('"%1$s" must be between 1970.01.01 and 2038.01.18.', _('Active till')));
-		$result = false;
-	}
-
 	if ($result) {
 		$timeperiods = getRequest('timeperiods', []);
+		$type_fields = [
+			TIMEPERIOD_TYPE_ONETIME => ['start_date'],
+			TIMEPERIOD_TYPE_DAILY => ['start_time', 'every'],
+			TIMEPERIOD_TYPE_WEEKLY => ['start_time', 'every', 'dayofweek'],
+			TIMEPERIOD_TYPE_MONTHLY => ['start_time', 'every', 'day', 'dayofweek', 'month']
+		];
 
 		foreach ($timeperiods as &$timeperiod) {
 			if ($timeperiod['timeperiod_type'] == TIMEPERIOD_TYPE_ONETIME) {
@@ -144,6 +148,10 @@ elseif (hasRequest('add') || hasRequest('update')) {
 					->getDateTime(true)
 					->getTimestamp();
 			}
+
+			$timeperiod = array_intersect_key($timeperiod,
+				array_flip(['period', 'timeperiod_type']) + array_flip($type_fields[$timeperiod['timeperiod_type']])
+			);
 		}
 		unset($timeperiod);
 
@@ -153,9 +161,9 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			'description' => getRequest('description'),
 			'active_since' => $active_since_date->getTimestamp(),
 			'active_till' => $active_till_date->getTimestamp(),
-			'timeperiods' => $timeperiods,
-			'hostids' => getRequest('hostids', []),
-			'groupids' => getRequest('groupids', [])
+			'groups' => zbx_toObject(getRequest('groupids', []), 'groupid'),
+			'hosts' => zbx_toObject(getRequest('hostids', []), 'hostid'),
+			'timeperiods' => $timeperiods
 		];
 
 		if ($maintenance['maintenance_type'] != MAINTENANCE_TYPE_NODATA) {
@@ -216,7 +224,8 @@ elseif (hasRequest('delete') || getRequest('action', '') == 'maintenance.massdel
  * Display
  */
 $data = [
-	'form' => getRequest('form')
+	'form' => getRequest('form'),
+	'allowed_edit' => $allowed_edit
 ];
 
 if (!empty($data['form'])) {
@@ -341,14 +350,13 @@ else {
 		$filter_groupids = getSubGroups($filter_groupids);
 	}
 
-	$config = select_config();
-
 	$data = [
 		'sort' => $sortField,
 		'sortorder' => $sortOrder,
 		'filter' => $filter,
 		'profileIdx' => 'web.maintenance.filter',
-		'active_tab' => CProfile::get('web.maintenance.filter.active', 1)
+		'active_tab' => CProfile::get('web.maintenance.filter.active', 1),
+		'allowed_edit' => $allowed_edit
 	];
 
 	// Get list of maintenances.
@@ -361,7 +369,7 @@ else {
 		'editable' => true,
 		'sortfield' => $sortField,
 		'sortorder' => $sortOrder,
-		'limit' => $config['search_limit'] + 1
+		'limit' => CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT) + 1
 	];
 
 	$data['maintenances'] = API::Maintenance()->get($options);

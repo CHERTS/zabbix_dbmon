@@ -2,7 +2,7 @@
 
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,6 +18,7 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
+
 
 require_once 'vendor/autoload.php';
 
@@ -54,6 +55,9 @@ class CAPIHelper {
 	 */
 	public static function callRaw($data) {
 		global $URL;
+		if (!is_string($URL)) {
+			$URL = PHPUNIT_URL.'api_jsonrpc.php';
+		}
 
 		if (is_array($data)) {
 			$data = json_encode($data);
@@ -75,12 +79,13 @@ class CAPIHelper {
 			]
 		];
 
-		$handle = fopen($URL, 'rb', false, stream_context_create($params));
+		$handle = @fopen($URL, 'rb', false, stream_context_create($params));
 		if ($handle) {
 			$response = @stream_get_contents($handle);
 			fclose($handle);
 		}
 		else {
+			$php_errormsg = CTestArrayHelper::get(error_get_last(), 'message');
 			$response = false;
 		}
 
@@ -165,15 +170,15 @@ class CAPIHelper {
 	/**
 	 * Authorize as user.
 	 *
-	 * @param string $user        username to be used for authorization.
-	 * @param string $password    password.
+	 * @param string $username
+	 * @param string $password
 	 *
 	 * @returns CAPIHelper
 	 */
-	public static function authorize($user, $password) {
+	public static function authorize(string $username, string $password) {
 		static::$session = false;
 
-		$result = static::call('user.login', ['user' => $user, 'password' => $password]);
+		$result = static::call('user.login', ['username' => $username, 'password' => $password]);
 		if (array_key_exists('result', $result)) {
 			static::setSessionId($result['result']);
 		}

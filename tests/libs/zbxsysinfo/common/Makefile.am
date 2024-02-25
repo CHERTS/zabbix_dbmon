@@ -13,7 +13,7 @@ COMMON_SRC_FILES = \
 
 COMMON_LIB_FILES = \
 	$(top_srcdir)/src/libs/zbxsysinfo/libzbxagentsysinfo.a \
-	$(top_srcdir)/src/libs/zbxsysinfo/$(ARCH)/libspecsysinfo.a \
+	$(top_srcdir)/src/libs/zbxsysinfo/$(ARCH)/libfunclistsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/$(ARCH)/libspechostnamesysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/agent/libagentsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
@@ -21,14 +21,16 @@ COMMON_LIB_FILES = \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo_httpmetrics.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo_http.a \
 	$(top_srcdir)/src/libs/zbxlog/libzbxlog.a \
+	$(top_srcdir)/src/libs/zbxprof/libzbxprof.a \
+	$(top_srcdir)/src/libs/zbxsysinfo/$(ARCH)/libspecsysinfo.a \
 	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
-	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxsys/libzbxsys.a \
 	$(top_srcdir)/src/libs/zbxnix/libzbxnix.a \
 	$(top_srcdir)/src/libs/zbxcomms/libzbxcomms.a \
 	$(top_srcdir)/src/libs/zbxcompress/libzbxcompress.a \
 	$(top_srcdir)/src/libs/zbxconf/libzbxconf.a \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
+	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
@@ -55,9 +57,9 @@ SYSTEM_LOCALTIME_LDADD = \
 
 SYSTEM_LOCALTIME_LDADD += @AGENT_LIBS@
 
-SYSTEM_LOCALTIME_LDFLAGS = @AGENT_LDFLAGS@
+SYSTEM_LOCALTIME_LDFLAGS = @AGENT_LDFLAGS@ $(SYSTEM_LOCALTIME_WRAP_FUNCS)
 
-SYSTEM_LOCALTIME_CFLAGS = $(SYSTEM_LOCALTIME_WRAP_FUNCS) $(COMMON_COMPILER_FLAGS)
+SYSTEM_LOCALTIME_CFLAGS = $(COMMON_COMPILER_FLAGS)
 
 WEB_PAGE_GET_SOURCES = \
 	WEB_PAGE_GET.c \
@@ -82,9 +84,9 @@ WEB_PAGE_GET_LDADD = \
 
 WEB_PAGE_GET_LDADD += @AGENT_LIBS@
 
-WEB_PAGE_GET_LDFLAGS = @AGENT_LDFLAGS@
+WEB_PAGE_GET_LDFLAGS = @AGENT_LDFLAGS@ $(WEB_PAGE_GET_WRAP_FUNCS)
 
-WEB_PAGE_GET_CFLAGS = $(WEB_PAGE_GET_WRAP_FUNCS) $(COMMON_COMPILER_FLAGS)
+WEB_PAGE_GET_CFLAGS = $(COMMON_COMPILER_FLAGS)
 
 VFS_FILE_EXISTS_SOURCES = \
 	VFS_FILE_EXISTS.c \

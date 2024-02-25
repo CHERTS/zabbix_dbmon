@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 **/
 
 require_once dirname(__FILE__).'/../include/CWebTest.php';
-require_once dirname(__FILE__).'/traits/TableTrait.php';
 require_once dirname(__FILE__).'/behaviors/CMessageBehavior.php';
+require_once dirname(__FILE__).'/behaviors/CTableBehavior.php';
 
 /**
  * @backup module
@@ -28,16 +28,15 @@ require_once dirname(__FILE__).'/behaviors/CMessageBehavior.php';
 
 class testPageAdministrationGeneralModules extends CWebTest {
 
-	use TableTrait;
-
 	/**
-	 * Attach MessageBehavior to the test.
+	 * Attach MessageBehavior and TableBehavior to the test.
 	 *
 	 * @return array
 	 */
 	public function getBehaviors() {
 		return [
-			'class' => CMessageBehavior::class
+			CMessageBehavior::class,
+			CTableBehavior::class
 		];
 	}
 
@@ -75,7 +74,7 @@ class testPageAdministrationGeneralModules extends CWebTest {
 				'Name' => 'шестой модуль',
 				'Version' => 'бета 2',
 				'Author' => 'Работник Заббикса',
-				'Description' => 'Удалить "Reports" из меню верхнего уровня, а так же удалить "Scripts" из секции "Administration".',
+				'Description' => 'Удалить "Reports" из меню верхнего уровня, а так же удалить "Maps" из секции "Monitoring".',
 				'Status' => 'Disabled'
 			]
 		];
@@ -172,7 +171,7 @@ class testPageAdministrationGeneralModules extends CWebTest {
 					'Name' => 'шестой модуль',
 					'Version' => 'бета 2',
 					'Author' => 'Работник Заббикса',
-					'Description' => 'Удалить "Reports" из меню верхнего уровня, а так же удалить "Scripts" из секции "Administration".',
+					'Description' => 'Удалить "Reports" из меню верхнего уровня, а так же удалить "Maps" из секции "Monitoring".',
 					'Directory' => 'module_number_6',
 					'Namespace' => 'Example_F',
 					'Homepage' => '-',
@@ -311,14 +310,14 @@ class testPageAdministrationGeneralModules extends CWebTest {
 					]
 				]
 			],
-			// Enable шестой модуль - Top level menu Reports and menu entry Screens are removed.
+			// Enable шестой модуль - Top level menu Reports and menu entry Maps are removed.
 			[
 				[
 					[
 						'module_name' => 'шестой модуль',
 						'remove' => true,
 						'top_menu_entry' => 'Reports',
-						'menu_entry' => 'Screens'
+						'menu_entry' => 'Maps'
 					]
 				]
 			]
@@ -483,7 +482,7 @@ class testPageAdministrationGeneralModules extends CWebTest {
 		$this->page->waitUntilReady();
 		$this->query('button:Update')->one()->click();
 
-		$this->assertMessage(TEST_GOOD, 'Module updated: 1st Module name.');
+		$this->assertMessage(TEST_GOOD, 'Module updated');
 		// Check that Module has been updated and that there are no changes took place.
 		$this->assertEquals($initial_hash, CDBHelper::getHash($sql));
 	}
@@ -547,8 +546,8 @@ class testPageAdministrationGeneralModules extends CWebTest {
 		// If module adds single or multiple menu entries, open each corresponding view, check view header and URL.
 		$top_entry = CTestArrayHelper::get($module, 'top_menu_entry', 'Monitoring');
 
+		$this->query('link', $top_entry)->one()->waitUntilClickable()->click();
 		foreach ($module['menu_entries'] as $entry) {
-			$this->query('link', $top_entry)->one()->waitUntilClickable()->click();
 			sleep(1);
 			$this->query($xpath.$entry['name'].'"]')->one()->waitUntilClickable()->click();
 			$this->page->waitUntilReady();
@@ -564,7 +563,7 @@ class testPageAdministrationGeneralModules extends CWebTest {
 	 * If enabling the module removes a menu entry, the function checks that it is back after disabling the module.
 	 */
 	private function assertModuleDisabled($module) {
-		$xpath = 'xpath://ul[@class="menu-main"]//a[text()="';
+		$xpath = 'xpath://ul[@class="menu-main"]//li/a[text()="';
 		// If module removes a menu entry or top level menu entry, check that entries are back after disabling the module.
 		if (CTestArrayHelper::get($module, 'remove', false)) {
 			$this->assertEquals(1, $this->query($xpath.$module['menu_entry'].'"]')->count());
@@ -578,11 +577,11 @@ class testPageAdministrationGeneralModules extends CWebTest {
 		foreach ($module['menu_entries'] as $entry) {
 			$check_entry = CTestArrayHelper::get($module, 'top_menu_entry', $entry['name']);
 			$this->assertEquals(0, $this->query($xpath.$check_entry.'"]')->count());
-			// In case if module meny entry leads to an existing view, don't check that menu entry URL isn't available.
+			// In case if module many entry leads to an existing view, don't check that menu entry URL isn't available.
 			if (CTestArrayHelper::get($entry, 'check_disabled', true)) {
 				$this->page->open('zabbix.php?action='.$entry['action'])->waitUntilReady();
 				$message = CMessageElement::find()->one();
-				$this->assertStringContainsString('Class not found for action '.$entry['action'], $message->getText());
+				$this->assertStringContainsString('Class not found', $message->getText());
 				$this->page->open('zabbix.php?action=module.list');
 			}
 		}
@@ -604,14 +603,14 @@ class testPageAdministrationGeneralModules extends CWebTest {
 			}
 			// In case of negative test check error message and confirm that module wasn't applied.
 			if (CTestArrayHelper::get($module, 'expected', TEST_GOOD) === TEST_BAD) {
-				$title = $from_form ? 'Cannot update module: ' : 'Cannot enable module: ';
-				$this->assertMessage($module['expected'], $title.$module['module_name'].'.', $module['error_details']);
+				$title = $from_form ? 'Cannot update module' : 'Cannot enable module';
+				$this->assertMessage($module['expected'], $title, $module['error_details']);
 				$this->assertModuleDisabled($module);
 				continue;
 			}
 			// Check message and confirm that changes, made by the enabled module, took place.
-			$message = $from_form ? 'Module updated: ' : 'Module enabled: ';
-			$this->assertMessage(CTestArrayHelper::get($module, 'expected', TEST_GOOD), $message.$module['module_name'].'.');
+			$message = $from_form ? 'Module updated' : 'Module enabled';
+			$this->assertMessage(CTestArrayHelper::get($module, 'expected', TEST_GOOD), $message);
 			$this->assertModuleEnabled($module);
 		}
 	}
@@ -634,9 +633,9 @@ class testPageAdministrationGeneralModules extends CWebTest {
 			else {
 				$this->changeModuleStatusFromPage($module['module_name'], 'Enabled');
 			}
-			// Check message and confirm that changes, made by the module, were revered.
-			$message = $from_form ? 'Module updated: ' : 'Module disabled: ';
-			$this->assertMessage(TEST_GOOD, $message.$module['module_name'].'.');
+			// Check message and confirm that changes, made by the module, were reversed.
+			$message = $from_form ? 'Module updated' : 'Module disabled';
+			$this->assertMessage(TEST_GOOD, $message);
 			$this->assertModuleDisabled($module);
 		}
 	}

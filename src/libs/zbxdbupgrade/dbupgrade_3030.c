@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -224,7 +224,7 @@ static int	DBpatch_3030018(void)
 	const char	*formula;
 	int		ret;
 
-	zbx_db_insert_prepare(&db_insert, "item_preproc", "item_preprocid", "itemid", "step", "type", "params", NULL);
+	zbx_db_insert_prepare(&db_insert, "item_preproc", "item_preprocid", "itemid", "step", "type", "params", (char *)NULL);
 
 	result = DBselect("select itemid,value_type,data_type,multiplier,formula,delta from items");
 
@@ -645,7 +645,7 @@ static int	DBpatch_3030053(void)
 	int		ret = FAIL;
 
 	zbx_db_insert_prepare(&db_insert, "sysmap_element_trigger", "selement_triggerid", "selementid", "triggerid",
-			NULL);
+			(char *)NULL);
 
 	/* sysmaps_elements.elementid for trigger map elements (2) should be migrated to table sysmap_element_trigger */
 	result = DBselect("select e.selementid,e.label,t.triggerid"
@@ -861,7 +861,7 @@ static int	DBpatch_3030060_migrate_pairs(const char *table, const char *field, i
 	target_id = zbx_dsprintf(NULL, "%s%s", table, "_fieldid");
 	source_id = zbx_dsprintf(NULL, "%s%s", table, "id");
 
-	zbx_db_insert_prepare(&db_insert, target, target_id, source_id, "type", "name", "value", NULL);
+	zbx_db_insert_prepare(&db_insert, target, target_id, source_id, "type", "name", "value", (char *)NULL);
 
 	result = DBselect("select %s,%s from %s", source_id, field, table);
 
@@ -2161,7 +2161,7 @@ static int	DBpatch_3030186(void)
 	return DBadd_foreign_key("items", 5, &field);
 }
 
-/* Patches 3030187-3030198 are solve ZBX-12505 issue */
+/* Patches 3030187-3030198 solve the issue ZBX-12505 */
 
 static int	DBpatch_3030187(void)
 {

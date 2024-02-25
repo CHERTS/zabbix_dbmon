@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,32 +17,34 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
+#include "heart.h"
+
 #include "daemon.h"
 #include "log.h"
 #include "zbxjson.h"
 #include "zbxself.h"
 
-#include "heart.h"
-#include "../servercomms.h"
 #include "zbxcrypto.h"
 #include "zbxcompress.h"
+#include "comms.h"
 
-extern unsigned char	process_type, program_type;
-extern int		server_num, process_num;
+extern ZBX_THREAD_LOCAL unsigned char	process_type;
+extern unsigned char			program_type;
+extern ZBX_THREAD_LOCAL int		server_num, process_num;
 
-/******************************************************************************
- *                                                                            *
- * Function: send_heartbeat                                                   *
- *                                                                            *
- ******************************************************************************/
+extern zbx_vector_ptr_t	zbx_addrs;
+extern char		*CONFIG_HOSTNAME;
+extern char		*CONFIG_SOURCE_IP;
+extern int		CONFIG_TIMEOUT;
+extern unsigned int	configured_tls_connect_mode;
+
 static int	send_heartbeat(void)
 {
-	zbx_socket_t	sock;
-	struct zbx_json	j;
-	int		ret = SUCCEED;
-	char		*error = NULL, *buffer = NULL;
-	size_t		buffer_size, reserved;
+	zbx_socket_t		sock;
+	struct zbx_json		j;
+	int			ret = SUCCEED;
+	char			*error = NULL, *buffer = NULL;
+	size_t			buffer_size, reserved;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In send_heartbeat()");
 
@@ -59,8 +61,11 @@ static int	send_heartbeat(void)
 
 	reserved = j.buffer_size;
 
-	if (FAIL == (ret = connect_to_server(&sock, CONFIG_HEARTBEAT_FREQUENCY, 0))) /* do not retry */
+	if (FAIL == (ret = connect_to_server(&sock, CONFIG_SOURCE_IP, &zbx_addrs, CONFIG_HEARTBEAT_FREQUENCY,
+			CONFIG_TIMEOUT, configured_tls_connect_mode, 0, LOG_LEVEL_DEBUG))) /* do not retry */
+	{
 		goto clean;
+	}
 
 	if (SUCCEED != (ret = put_data_to_server(&sock, &buffer, buffer_size, reserved, &error)))
 	{
@@ -78,8 +83,6 @@ clean:
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: main_heart_loop                                                  *
  *                                                                            *
  * Purpose: periodically send heartbeat message to the server                 *
  *                                                                            *
@@ -112,7 +115,7 @@ ZBX_THREAD_ENTRY(heart_thread, args)
 	while (ZBX_IS_RUNNING())
 	{
 		sec = zbx_time();
-		zbx_update_env(sec);
+		zbx_update_env(get_process_type_string(process_type), sec);
 
 		if (0 != sleeptime)
 		{

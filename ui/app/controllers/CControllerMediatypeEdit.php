@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ class CControllerMediatypeEdit extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_MEDIA_TYPES)) {
 			return false;
 		}
 
@@ -153,8 +153,9 @@ class CControllerMediatypeEdit extends CController {
 			'content_type' => $db_defaults['content_type'],
 			'message_templates' => []
 		];
+		$message_templates = [];
 
-		// get values from the dabatase
+		// get values from the database
 		if ($this->hasInput('mediatypeid')) {
 			$data['mediatypeid'] = $this->mediatype['mediatypeid'];
 			$data['type'] = $this->mediatype['type'];
@@ -170,7 +171,7 @@ class CControllerMediatypeEdit extends CController {
 			$data['exec_path'] = $this->mediatype['exec_path'];
 			$data['content_type'] = $this->mediatype['content_type'];
 			$data['description'] = $this->mediatype['description'];
-			$data['message_templates'] = $this->mediatype['message_templates'];
+			$message_templates = $this->mediatype['message_templates'];
 
 			$this->mediatype['exec_params'] = explode("\n", $this->mediatype['exec_params']);
 			foreach ($this->mediatype['exec_params'] as $exec_param) {
@@ -231,10 +232,23 @@ class CControllerMediatypeEdit extends CController {
 				$value = next($parameters['value']);
 			}
 
-			$data['message_templates'] = $this->getInput('message_templates', []);
+			$message_templates = $this->getInput('message_templates', []);
 		}
 
-		CArrayHelper::sort($data['message_templates'], ['eventsource', 'recovery']);
+		if ($message_templates) {
+			CArrayHelper::sort($message_templates, ['recovery']);
+
+			// Sort message templates in a certain order by event source.
+			foreach ([EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_SERVICE, EVENT_SOURCE_DISCOVERY,
+					EVENT_SOURCE_AUTOREGISTRATION, EVENT_SOURCE_INTERNAL] as $eventsource) {
+				foreach ($message_templates as $index => $message_template) {
+					if ($message_template['eventsource'] == $eventsource) {
+						$data['message_templates'][] = $message_template;
+						unset($message_templates[$index]);
+					}
+				}
+			}
+		}
 
 		$response = new CControllerResponseData($data);
 		$response->setTitle(_('Configuration of media types'));

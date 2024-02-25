@@ -6,6 +6,8 @@ SERVER_tests = \
 	calculate_item_nextcheck \
 	calculate_item_nextcheck_unreachable \
 	zbx_function_get_param_dyn \
+	zbx_json_to_xml \
+	zbx_xml_to_json \
 	zbx_token_find \
 	zbx_interval_preproc \
 	zbx_validate_interval \
@@ -19,7 +21,17 @@ SERVER_tests = \
 	convert_to_utf8 \
 	zbx_truncate_itemkey \
 	zbx_truncate_value \
-	zbx_dyn_escape_string
+	zbx_dyn_escape_string \
+	zbx_tm_add \
+	zbx_tm_sub \
+	zbx_tm_round_up \
+	zbx_tm_round_down \
+	zbx_get_report_nextcheck \
+	zbx_ltrim_utf8 \
+	zbx_rtrim_utf8 \
+	zbx_get_week_number \
+	zbx_function_param_parse_ext \
+	zbx_buf_readln
 endif
 
 noinst_PROGRAMS = $(SERVER_tests)
@@ -64,18 +76,20 @@ COMMON_LIB_FILES = \
 	$(top_srcdir)/src/libs/zbxmemory/libzbxmemory.a \
 	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
 	$(top_srcdir)/src/libs/zbxself/libzbxself.a \
-	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxsys/libzbxsys.a \
 	$(top_srcdir)/src/libs/zbxconf/libzbxconf.a \
 	$(top_srcdir)/src/libs/zbxmedia/libzbxmedia.a \
 	$(top_srcdir)/src/libs/zbxxml/libzbxxml.a \
+	$(top_srcdir)/tests/libzbxmockdata.a \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 	$(top_srcdir)/src/libs/zbxnix/libzbxnix.a \
 	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 	$(top_srcdir)/src/libs/zbxcomms/libzbxcomms.a \
 	$(top_srcdir)/src/libs/zbxcompress/libzbxcompress.a \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
+	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
+	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
 	$(top_srcdir)/src/libs/zbxsys/libzbxsys.a \
 	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 	$(top_srcdir)/src/libs/zbxcommshigh/libzbxcommshigh.a \
@@ -89,6 +103,7 @@ COMMON_LIB_FILES = \
 	$(top_srcdir)/src/libs/zbxmodules/libzbxmodules.a \
 	$(top_srcdir)/src/libs/zbxtasks/libzbxtasks.a \
 	$(top_srcdir)/src/libs/zbxlog/libzbxlog.a \
+	$(top_srcdir)/src/libs/zbxprof/libzbxprof.a \
 	$(top_srcdir)/src/libs/zbxsys/libzbxsys.a \
 	$(top_srcdir)/src/libs/zbxconf/libzbxconf.a \
 	$(top_srcdir)/src/libs/zbxhistory/libzbxhistory.a \
@@ -167,6 +182,7 @@ calculate_item_nextcheck_unreachable_LDFLAGS = @SERVER_LDFLAGS@
 
 calculate_item_nextcheck_unreachable_CFLAGS = $(COMMON_COMPILER_FLAGS)
 
+
 zbx_function_get_param_dyn_SOURCES = \
 	zbx_function_get_param_dyn.c \
 	$(COMMON_SRC_FILES)
@@ -179,6 +195,34 @@ zbx_function_get_param_dyn_LDADD += @SERVER_LIBS@
 zbx_function_get_param_dyn_LDFLAGS = @SERVER_LDFLAGS@
 
 zbx_function_get_param_dyn_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+
+zbx_json_to_xml_SOURCES = \
+	zbx_json_to_xml.c \
+	$(COMMON_SRC_FILES)
+
+zbx_json_to_xml_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_json_to_xml_LDADD += @SERVER_LIBS@
+
+zbx_json_to_xml_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_json_to_xml_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+
+zbx_xml_to_json_SOURCES = \
+	zbx_xml_to_json.c \
+	$(COMMON_SRC_FILES)
+
+zbx_xml_to_json_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_xml_to_json_LDADD += @SERVER_LIBS@
+
+zbx_xml_to_json_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_xml_to_json_CFLAGS = $(COMMON_COMPILER_FLAGS)
 
 
 zbx_token_find_SOURCES = \
@@ -373,5 +417,153 @@ zbx_dyn_escape_string_LDADD += @SERVER_LIBS@
 zbx_dyn_escape_string_LDFLAGS = @SERVER_LDFLAGS@
 
 zbx_dyn_escape_string_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+# zbx_tm_add
+
+zbx_tm_add_SOURCES = \
+	zbx_tm_add.c \
+	$(COMMON_SRC_FILES)
+
+zbx_tm_add_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_tm_add_LDADD += @SERVER_LIBS@
+
+zbx_tm_add_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_tm_add_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+# zbx_tm_sub
+
+zbx_tm_sub_SOURCES = \
+	zbx_tm_sub.c \
+	$(COMMON_SRC_FILES)
+
+zbx_tm_sub_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_tm_sub_LDADD += @SERVER_LIBS@
+
+zbx_tm_sub_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_tm_sub_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+# zbx_tm_round_up
+
+zbx_tm_round_up_SOURCES = \
+	zbx_tm_round_up.c \
+	$(COMMON_SRC_FILES)
+
+zbx_tm_round_up_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_tm_round_up_LDADD += @SERVER_LIBS@
+
+zbx_tm_round_up_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_tm_round_up_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+# zbx_tm_round_up
+
+zbx_tm_round_down_SOURCES = \
+	zbx_tm_round_down.c \
+	$(COMMON_SRC_FILES)
+
+zbx_tm_round_down_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_tm_round_down_LDADD += @SERVER_LIBS@
+
+zbx_tm_round_down_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_tm_round_down_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+# zbx_get_report_nextcheck
+
+zbx_get_report_nextcheck_SOURCES = \
+	zbx_get_report_nextcheck.c \
+	$(COMMON_SRC_FILES)
+
+zbx_get_report_nextcheck_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_get_report_nextcheck_LDADD += @SERVER_LIBS@
+
+zbx_get_report_nextcheck_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_get_report_nextcheck_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+# zbx_ltrim_utf8
+
+zbx_ltrim_utf8_SOURCES = \
+	zbx_common_trim_utf8.c \
+	zbx_ltrim_utf8.c \
+	$(COMMON_SRC_FILES)
+
+zbx_ltrim_utf8_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_ltrim_utf8_LDADD += @SERVER_LIBS@
+
+zbx_ltrim_utf8_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_ltrim_utf8_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+# zbx_ltrim_utf8
+
+zbx_rtrim_utf8_SOURCES = \
+	zbx_common_trim_utf8.c \
+	zbx_rtrim_utf8.c \
+	$(COMMON_SRC_FILES)
+
+zbx_rtrim_utf8_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_rtrim_utf8_LDADD += @SERVER_LIBS@
+
+zbx_rtrim_utf8_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_rtrim_utf8_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+# zbx_get_week_number
+
+zbx_get_week_number_SOURCES = \
+	zbx_get_week_number.c \
+	$(COMMON_SRC_FILES)
+
+zbx_get_week_number_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_get_week_number_LDADD += @SERVER_LIBS@
+
+zbx_get_week_number_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_get_week_number_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+zbx_function_param_parse_ext_SOURCES = \
+	zbx_function_param_parse_ext.c \
+	$(COMMON_SRC_FILES)
+
+zbx_function_param_parse_ext_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_function_param_parse_ext_LDADD += @SERVER_LIBS@
+
+zbx_function_param_parse_ext_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_function_param_parse_ext_CFLAGS = $(COMMON_COMPILER_FLAGS)
+
+zbx_buf_readln_SOURCES = \
+	$(COMMON_SRC_FILES) \
+	zbx_buf_readln.c
+
+zbx_buf_readln_LDADD = \
+	$(COMMON_LIB_FILES)
+
+zbx_buf_readln_LDADD += @SERVER_LIBS@
+
+zbx_buf_readln_LDFLAGS = @SERVER_LDFLAGS@
+
+zbx_buf_readln_CFLAGS = $(COMMON_COMPILER_FLAGS)
 
 endif

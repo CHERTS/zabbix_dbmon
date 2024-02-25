@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,17 +17,14 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
+#include "pinger.h"
 
-#include "dbcache.h"
 #include "log.h"
 #include "zbxserver.h"
 #include "zbxicmpping.h"
 #include "daemon.h"
 #include "zbxself.h"
 #include "preproc.h"
-
-#include "pinger.h"
 
 /* defines for `fping' and `fping6' to successfully process pings */
 #define MIN_COUNT	1
@@ -37,22 +34,13 @@
 #define MAX_SIZE	65507
 #define MIN_TIMEOUT	50
 
-extern unsigned char	process_type, program_type;
-extern int		server_num, process_num;
+extern ZBX_THREAD_LOCAL unsigned char	process_type;
+extern unsigned char			program_type;
+extern ZBX_THREAD_LOCAL int		server_num, process_num;
 
 /******************************************************************************
  *                                                                            *
- * Function: process_value                                                    *
- *                                                                            *
  * Purpose: process new item value                                            *
- *                                                                            *
- * Parameters:                                                                *
- *                                                                            *
- * Return value:                                                              *
- *                                                                            *
- * Author: Alexei Vladishev, Alexander Vladishev                              *
- *                                                                            *
- * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
 static void	process_value(zbx_uint64_t itemid, zbx_uint64_t *value_ui64, double *value_dbl,	zbx_timespec_t *ts,
@@ -97,7 +85,7 @@ static void	process_value(zbx_uint64_t itemid, zbx_uint64_t *value_ui64, double 
 		free_result(&value);
 	}
 clean:
-	DCrequeue_items(&item.itemid, &item.state, &ts->sec, &errcode, 1);
+	DCrequeue_items(&item.itemid, &ts->sec, &errcode, 1);
 
 	DCconfig_clean_items(&item, &errcode, 1);
 
@@ -106,17 +94,7 @@ clean:
 
 /******************************************************************************
  *                                                                            *
- * Function: process_values                                                   *
- *                                                                            *
  * Purpose: process new item values                                           *
- *                                                                            *
- * Parameters:                                                                *
- *                                                                            *
- * Return value:                                                              *
- *                                                                            *
- * Author: Alexei Vladishev, Alexander Vladishev                              *
- *                                                                            *
- * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
 static void	process_values(icmpitem_t *items, int first_index, int last_index, ZBX_FPING_HOST *hosts,
@@ -393,18 +371,10 @@ static void	add_icmpping_item(icmpitem_t **items, int *items_alloc, int *items_c
 
 /******************************************************************************
  *                                                                            *
- * Function: get_pinger_hosts                                                 *
- *                                                                            *
  * Purpose: creates buffer which contains list of hosts to ping               *
- *                                                                            *
- * Parameters:                                                                *
  *                                                                            *
  * Return value: SUCCEED - the file was created successfully                  *
  *               FAIL - otherwise                                             *
- *                                                                            *
- * Author: Alexei Vladishev, Alexander Vladishev                              *
- *                                                                            *
- * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
 static void	get_pinger_hosts(icmpitem_t **icmp_items, int *icmp_items_alloc, int *icmp_items_count)
@@ -447,7 +417,7 @@ static void	get_pinger_hosts(icmpitem_t **icmp_items, int *icmp_items_alloc, int
 			zbx_preprocess_item_value(items[i].itemid, items[i].host.hostid, items[i].value_type,
 					items[i].flags, NULL, &ts, items[i].state, error);
 
-			DCrequeue_items(&items[i].itemid, &items[i].state, &ts.sec, &errcode, 1);
+			DCrequeue_items(&items[i].itemid, &ts.sec, &errcode, 1);
 		}
 
 		zbx_free(items[i].key);
@@ -503,21 +473,6 @@ static void	add_pinger_host(ZBX_FPING_HOST **hosts, int *hosts_alloc, int *hosts
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
 }
 
-/******************************************************************************
- *                                                                            *
- * Function: process_pinger_hosts                                             *
- *                                                                            *
- * Purpose:                                                                   *
- *                                                                            *
- * Parameters:                                                                *
- *                                                                            *
- * Return value:                                                              *
- *                                                                            *
- * Author: Alexander Vladishev                                                *
- *                                                                            *
- * Comments:                                                                  *
- *                                                                            *
- ******************************************************************************/
 static void	process_pinger_hosts(icmpitem_t *items, int items_count)
 {
 	int			i, first_index = 0, ping_result;
@@ -560,15 +515,7 @@ static void	process_pinger_hosts(icmpitem_t *items, int items_count)
 
 /******************************************************************************
  *                                                                            *
- * Function: main_pinger_loop                                                 *
- *                                                                            *
  * Purpose: periodically perform ICMP pings                                   *
- *                                                                            *
- * Parameters:                                                                *
- *                                                                            *
- * Return value:                                                              *
- *                                                                            *
- * Author: Alexei Vladishev                                                   *
  *                                                                            *
  * Comments: never returns                                                    *
  *                                                                            *
@@ -595,7 +542,7 @@ ZBX_THREAD_ENTRY(pinger_thread, args)
 	while (ZBX_IS_RUNNING())
 	{
 		sec = zbx_time();
-		zbx_update_env(sec);
+		zbx_update_env(get_process_type_string(process_type), sec);
 
 		zbx_setproctitle("%s #%d [getting values]", get_process_type_string(process_type), process_num);
 

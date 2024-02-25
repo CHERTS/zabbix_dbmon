@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ class CControllerUserProfileEdit extends CControllerUserEditGeneral {
 
 	protected function checkInput() {
 		$locales = array_keys(getLocales());
+		$locales[] = LANG_DEFAULT;
 		$themes = array_keys(APP::getThemes());
 		$themes[] = THEME_DEFAULT;
 
@@ -34,6 +35,7 @@ class CControllerUserProfileEdit extends CControllerUserEditGeneral {
 			'password1' =>			'string',
 			'password2' =>			'string',
 			'lang' =>				'db users.lang|in '.implode(',', $locales),
+			'timezone' =>			'db users.timezone|in '.implode(',', array_keys($this->timezones)),
 			'theme' =>				'db users.theme|in '.implode(',', $themes),
 			'autologin' =>			'db users.autologin|in 0,1',
 			'autologout' =>			'db users.autologout',
@@ -46,7 +48,7 @@ class CControllerUserProfileEdit extends CControllerUserEditGeneral {
 
 		if (CWebUser::$data['type'] > USER_TYPE_ZABBIX_USER) {
 			$fields += [
-				'user_medias' =>	'array',
+				'medias' =>			'array',
 				'new_media' =>		'array',
 				'enable_media' =>	'int32',
 				'disable_media' =>	'int32'
@@ -68,8 +70,8 @@ class CControllerUserProfileEdit extends CControllerUserEditGeneral {
 		}
 
 		$users = API::User()->get([
-			'output' => ['alias', 'name', 'surname', 'lang', 'theme', 'autologin', 'autologout', 'refresh',
-				'rows_per_page', 'url'
+			'output' => ['username', 'name', 'surname', 'lang', 'theme', 'autologin', 'autologout', 'refresh',
+				'rows_per_page', 'url', 'timezone'
 			],
 			'selectMedias' => (CWebUser::$data['type'] > USER_TYPE_ZABBIX_USER)
 				? ['mediatypeid', 'period', 'sendto', 'severity', 'active']
@@ -91,17 +93,18 @@ class CControllerUserProfileEdit extends CControllerUserEditGeneral {
 	 * Set user medias if user is at least admin and set messages in data.
 	 */
 	protected function doAction() {
-		$config = select_config();
 
 		$data = [
 			'userid' => CWebUser::$data['userid'],
-			'alias' => $this->user['alias'],
+			'username' => $this->user['username'],
 			'name' => $this->user['name'],
 			'surname' => $this->user['surname'],
 			'change_password' => $this->hasInput('change_password') || $this->hasInput('password1'),
 			'password1' => '',
 			'password2' => '',
 			'lang' => $this->user['lang'],
+			'timezone' => $this->user['timezone'],
+			'timezones' => $this->timezones,
 			'theme' => $this->user['theme'],
 			'autologin' => $this->user['autologin'],
 			'autologout' => $this->user['autologout'],
@@ -109,30 +112,24 @@ class CControllerUserProfileEdit extends CControllerUserEditGeneral {
 			'rows_per_page' => $this->user['rows_per_page'],
 			'url' => $this->user['url'],
 			'messages' => $this->getInput('messages', []) + getMessageSettings(),
-			'config' => [
-				'severity_name_0' => $config['severity_name_0'],
-				'severity_name_1' => $config['severity_name_1'],
-				'severity_name_2' => $config['severity_name_2'],
-				'severity_name_3' => $config['severity_name_3'],
-				'severity_name_4' => $config['severity_name_4'],
-				'severity_name_5' => $config['severity_name_5']
-			],
 			'form_refresh' => 0,
 			'action' => $this->getAction()
 		];
 
 		if (CWebUser::$data['type'] > USER_TYPE_ZABBIX_USER) {
-			$data['user_medias'] = $this->user['medias'];
+			$data['medias'] = $this->user['medias'];
 		}
 
 		// Overwrite with input variables.
-		$this->getInputs($data, ['password1', 'password2', 'lang', 'theme', 'autologin', 'autologout', 'refresh',
-			'rows_per_page', 'url', 'form_refresh'
+		$this->getInputs($data, ['password1', 'password2', 'lang', 'timezone', 'theme', 'autologin', 'autologout',
+			'refresh', 'rows_per_page', 'url', 'form_refresh'
 		]);
+
+		$data['password_requirements'] = $this->getPasswordRequirements();
 
 		if (CWebUser::$data['type'] > USER_TYPE_ZABBIX_USER) {
 			if ($data['form_refresh'] != 0) {
-				$data['user_medias'] = $this->getInput('user_medias', []);
+				$data['medias'] = $this->getInput('medias', []);
 			}
 
 			$data = $this->setUserMedias($data);

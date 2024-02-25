@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -730,10 +730,10 @@ typedef struct
 }
 dbu_interface_t;
 
-ZBX_PTR_VECTOR_DECL(dbu_interface, dbu_interface_t);
-ZBX_PTR_VECTOR_IMPL(dbu_interface, dbu_interface_t);
-ZBX_PTR_VECTOR_DECL(dbu_snmp_if, dbu_snmp_if_t);
-ZBX_PTR_VECTOR_IMPL(dbu_snmp_if, dbu_snmp_if_t);
+ZBX_PTR_VECTOR_DECL(dbu_interface, dbu_interface_t)
+ZBX_PTR_VECTOR_IMPL(dbu_interface, dbu_interface_t)
+ZBX_PTR_VECTOR_DECL(dbu_snmp_if, dbu_snmp_if_t)
+ZBX_PTR_VECTOR_IMPL(dbu_snmp_if, dbu_snmp_if_t)
 
 static void	db_interface_free(dbu_interface_t interface)
 {
@@ -812,8 +812,6 @@ static int	db_snmp_new_if_find(const dbu_snmp_if_t *snmp, const zbx_vector_dbu_s
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: DBpatch_load_data                                                *
  *                                                                            *
  * Purpose: loading a set of unique combination of snmp data within a single  *
  *          interface and associated interface data                           *
@@ -984,7 +982,7 @@ static int	DBpatch_snmp_if_save(zbx_vector_dbu_snmp_if_t *snmp_ifs)
 
 	zbx_db_insert_prepare(&db_insert_snmp_if, "interface_snmp", "interfaceid", "version", "bulk", "community",
 			"securityname", "securitylevel", "authpassphrase", "privpassphrase", "authprotocol",
-			"privprotocol", "contextname", NULL);
+			"privprotocol", "contextname", (char *)NULL);
 
 	for (i = 0; i < snmp_ifs->values_num; i++)
 	{
@@ -1010,7 +1008,7 @@ static int	DBpatch_interface_create(zbx_vector_dbu_interface_t *interfaces)
 	int		i, ret;
 
 	zbx_db_insert_prepare(&db_insert_interfaces, "interface", "interfaceid", "hostid", "main", "type", "useip",
-			"ip", "dns", "port", NULL);
+			"ip", "dns", "port", (char *)NULL);
 
 	for (i = 0; i < interfaces->values_num; i++)
 	{
@@ -1149,8 +1147,6 @@ static int	DBpatch_items_type_update(void)
 
 /******************************************************************************
  *                                                                            *
- * Function: DBpatch_4050046                                                  *
- *                                                                            *
  * Purpose: migration snmp data from 'items' table to 'interface_snmp' new    *
  *          table linked with 'interface' table, except interface links for   *
  *          discovered hosts and parent host interface                        *
@@ -1259,8 +1255,6 @@ static void	db_if_link(zbx_uint64_t if_slave, zbx_uint64_t if_master, zbx_vector
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: DBpatch_if_load_data                                             *
  *                                                                            *
  * Purpose: loading all unlinked interfaces, snmp data and hostid of host     *
  *          prototype for discovered hosts                                    *
@@ -1375,7 +1369,7 @@ static int	DBpatch_interface_discovery_save(zbx_vector_uint64_pair_t *if_links)
 	zbx_db_insert_t	db_insert_if_links;
 	int		i, ret;
 
-	zbx_db_insert_prepare(&db_insert_if_links, "interface_discovery", "interfaceid", "parent_interfaceid", NULL);
+	zbx_db_insert_prepare(&db_insert_if_links, "interface_discovery", "interfaceid", "parent_interfaceid", (char *)NULL);
 
 	for (i = 0; i < if_links->values_num; i++)
 	{
@@ -1391,8 +1385,6 @@ static int	DBpatch_interface_discovery_save(zbx_vector_uint64_pair_t *if_links)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: DBpatch_4050047                                                  *
  *                                                                            *
  * Purpose: recovery links between the interfaceid of discovered host and     *
  *          parent interfaceid from parent host                               *

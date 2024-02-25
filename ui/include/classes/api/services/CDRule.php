@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,13 @@
  * Class containing methods for operations with discovery rules.
  */
 class CDRule extends CApiService {
+
+	public const ACCESS_RULES = [
+		'get' => ['min_user_type' => USER_TYPE_ZABBIX_USER],
+		'create' => ['min_user_type' => USER_TYPE_ZABBIX_ADMIN],
+		'update' => ['min_user_type' => USER_TYPE_ZABBIX_ADMIN],
+		'delete' => ['min_user_type' => USER_TYPE_ZABBIX_ADMIN]
+	];
 
 	protected $tableName = 'drules';
 	protected $tableAlias = 'dr';
@@ -581,8 +588,7 @@ class CDRule extends CApiService {
 				if ($dcheck['snmpv3_securitylevel'] == ITEM_SNMPV3_SECURITYLEVEL_AUTHNOPRIV
 						|| $dcheck['snmpv3_securitylevel'] == ITEM_SNMPV3_SECURITYLEVEL_AUTHPRIV) {
 					if (!array_key_exists('snmpv3_authprotocol', $dcheck)
-							|| $dcheck['snmpv3_authprotocol'] != ITEM_AUTHPROTOCOL_MD5
-								&& $dcheck['snmpv3_authprotocol'] != ITEM_AUTHPROTOCOL_SHA) {
+							|| !array_key_exists($dcheck['snmpv3_authprotocol'], getSnmpV3AuthProtocols())) {
 						self::exception(ZBX_API_ERROR_PARAMETERS,
 							_s('Incorrect value "%1$s" for "%2$s" field.',
 								$dcheck['snmpv3_authprotocol'], 'snmpv3_authprotocol'
@@ -594,8 +600,7 @@ class CDRule extends CApiService {
 				// snmpv3 privprotocol
 				if ($dcheck['snmpv3_securitylevel'] == ITEM_SNMPV3_SECURITYLEVEL_AUTHPRIV) {
 					if (!array_key_exists('snmpv3_privprotocol', $dcheck)
-							|| $dcheck['snmpv3_privprotocol'] != ITEM_PRIVPROTOCOL_DES
-								&& $dcheck['snmpv3_privprotocol'] != ITEM_PRIVPROTOCOL_AES) {
+							|| !array_key_exists($dcheck['snmpv3_privprotocol'], getSnmpV3PrivProtocols())) {
 						self::exception(ZBX_API_ERROR_PARAMETERS,
 							_s('Incorrect value "%1$s" for "%2$s" field.',
 								$dcheck['snmpv3_privprotocol'], 'snmpv3_privprotocol'
@@ -624,13 +629,13 @@ class CDRule extends CApiService {
 
 			switch ($dcheck['snmpv3_securitylevel']) {
 				case ITEM_SNMPV3_SECURITYLEVEL_NOAUTHNOPRIV:
-					$dcheck['snmpv3_authprotocol'] = ITEM_AUTHPROTOCOL_MD5;
-					$dcheck['snmpv3_privprotocol'] = ITEM_PRIVPROTOCOL_DES;
+					$dcheck['snmpv3_authprotocol'] = ITEM_SNMPV3_AUTHPROTOCOL_MD5;
+					$dcheck['snmpv3_privprotocol'] = ITEM_SNMPV3_PRIVPROTOCOL_DES;
 					$dcheck['snmpv3_authpassphrase'] = '';
 					$dcheck['snmpv3_privpassphrase'] = '';
 					break;
 				case ITEM_SNMPV3_SECURITYLEVEL_AUTHNOPRIV:
-					$dcheck['snmpv3_privprotocol'] = ITEM_PRIVPROTOCOL_DES;
+					$dcheck['snmpv3_privprotocol'] = ITEM_SNMPV3_PRIVPROTOCOL_DES;
 					$dcheck['snmpv3_privpassphrase'] = '';
 					break;
 			}
@@ -687,6 +692,12 @@ class CDRule extends CApiService {
 		$this->validateCreate($drules);
 
 		$druleids = DB::insert('drules', $drules);
+
+		array_walk($drules, function (&$drule, $index) use ($druleids) {
+			$drule['druleid'] = $druleids[$index];
+		});
+
+		$this->addAuditBulk(CAudit::ACTION_ADD, CAudit::RESOURCE_DISCOVERY_RULE, $drules);
 
 		$create_dchecks = [];
 		foreach ($drules as $dnum => $drule) {
@@ -748,8 +759,6 @@ class CDRule extends CApiService {
 
 		$default_values = DB::getDefaults('dchecks');
 
-		$upd_drules = [];
-
 		foreach ($drules as $drule) {
 			$db_drule = $db_drules[$drule['druleid']];
 
@@ -792,6 +801,8 @@ class CDRule extends CApiService {
 				DB::replace('dchecks', $db_dchecks, array_merge($old_dchecks, $new_dchecks));
 			}
 		}
+
+		$this->addAuditBulk(CAudit::ACTION_UPDATE, CAudit::RESOURCE_DISCOVERY_RULE, $drules, $db_drules);
 
 		return ['druleids' => $druleids];
 	}
@@ -857,7 +868,7 @@ class CDRule extends CApiService {
 
 		DB::delete('drules', ['druleid' => $druleids]);
 
-		$this->addAuditBulk(AUDIT_ACTION_DELETE, AUDIT_RESOURCE_DISCOVERY_RULE, $db_drules);
+		$this->addAuditBulk(CAudit::ACTION_DELETE, CAudit::RESOURCE_DISCOVERY_RULE, $db_drules);
 
 		return ['druleids' => $druleids];
 	}

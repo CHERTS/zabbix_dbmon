@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@ class CControllerImageDelete extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'imageid'   => 'required | db images.imageid',
-			'imagetype' => 'required | db images.imagetype'
+			'imageid'   => 'required|db images.imageid',
+			'imagetype' => 'required|db images.imagetype'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -37,11 +37,11 @@ class CControllerImageDelete extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_GENERAL)) {
 			return false;
 		}
 
-		$images = API::Image()->get(['imageids' => (array) $this->getInput('imageid')]);
+		$images = API::Image()->get(['imageids' => $this->getInput('imageid')]);
 		if (!$images) {
 			return false;
 		}
@@ -52,22 +52,23 @@ class CControllerImageDelete extends CController {
 	}
 
 	protected function doAction() {
-		$result = API::Image()->delete((array) $this->image['imageid']);
+		$result = API::Image()->delete([$this->image['imageid']]);
 
 		if ($result) {
-			add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_IMAGE, 'Image ['.$this->image['name'].'] deleted');
-			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))
-				->setArgument('action', 'image.list')
-				->setArgument('imagetype', $this->getInput('imagetype'))
+			$response = new CControllerResponseRedirect(
+				(new CUrl('zabbix.php'))
+					->setArgument('action', 'image.list')
+					->setArgument('imagetype', $this->getInput('imagetype'))
 			);
-			$response->setMessageOk(_('Image deleted'));
+			CMessageHelper::setSuccessTitle(_('Image deleted'));
 		}
 		else {
-			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))
-				->setArgument('action', 'image.edit')
-				->setArgument('imageid', $this->getInput('imageid'))
+			$response = new CControllerResponseRedirect(
+				(new CUrl('zabbix.php'))
+					->setArgument('action', 'image.edit')
+					->setArgument('imageid', $this->getInput('imageid'))
 			);
-			$response->setMessageError(_('Cannot delete image'));
+			CMessageHelper::setErrorTitle(_('Cannot delete image'));
 		}
 
 		$this->setResponse($response);

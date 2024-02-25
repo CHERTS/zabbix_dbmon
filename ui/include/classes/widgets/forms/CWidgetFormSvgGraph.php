@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
 
 class CWidgetFormSvgGraph extends CWidgetForm {
 
-	public function __construct($data) {
-		parent::__construct($data, WIDGET_SVG_GRAPH);
+	public function __construct($data, $templateid) {
+		parent::__construct($data, $templateid, WIDGET_SVG_GRAPH);
 
 		$this->data = self::convertDottedKeys($this->data);
 
@@ -76,7 +76,9 @@ class CWidgetFormSvgGraph extends CWidgetForm {
 		$this->fields[$field_graph_time->getName()] = $field_graph_time;
 
 		// Date from.
-		$field_time_from = (new CWidgetFieldDatePicker('time_from', _('From')))->setDefault('now-1h');
+		$field_time_from = (new CWidgetFieldDatePicker('time_from', _('From'), false))
+			->setDefault('now-1h')
+			->setFlags(CWidgetField::FLAG_NOT_EMPTY);
 
 		if ($field_graph_time->getValue() != SVG_GRAPH_CUSTOM_TIME) {
 			$field_time_from->setFlags(CWidgetField::FLAG_DISABLED);
@@ -88,7 +90,9 @@ class CWidgetFormSvgGraph extends CWidgetForm {
 		$this->fields[$field_time_from->getName()] = $field_time_from;
 
 		// Time to.
-		$field_time_to = (new CWidgetFieldDatePicker('time_to', _('To')))->setDefault('now');
+		$field_time_to = (new CWidgetFieldDatePicker('time_to', _('To'), false))
+			->setDefault('now')
+			->setFlags(CWidgetField::FLAG_NOT_EMPTY);
 
 		if ($field_graph_time->getValue() != SVG_GRAPH_CUSTOM_TIME) {
 			$field_time_to->setFlags(CWidgetField::FLAG_DISABLED);
@@ -305,7 +309,7 @@ class CWidgetFormSvgGraph extends CWidgetForm {
 				'jQuery("#problemhosts_").multiSelect(on ? "enable" : "disable");'.
 				'jQuery("[name^=\"severities[\"]", widget).prop("disabled", !on);'.
 				'jQuery("[name=\"evaltype\"]", widget).prop("disabled", !on);'.
-				'jQuery("input, button", jQuery("#tags_table_tags", widget)).prop("disabled", !on);'
+				'jQuery("input, button, z-select", jQuery("#tags_table_tags", widget)).prop("disabled", !on);'
 			);
 
 		if (array_key_exists('show_problems', $this->data)) {
@@ -419,23 +423,30 @@ class CWidgetFormSvgGraph extends CWidgetForm {
 	private static function validateTimeSelectorPeriod($from, $to) {
 		$errors = [];
 		$ts = [];
+		$ts['now'] = time();
 		$range_time_parser = new CRangeTimeParser();
 
 		foreach (['from' => $from, 'to' => $to] as $field => $value) {
 			$range_time_parser->parse($value);
-			$ts[$field] = $range_time_parser->getDateTime($field === 'from')->getTimestamp();
+			$ts[$field] = $range_time_parser
+				->getDateTime($field === 'from')
+				->getTimestamp();
 		}
 
 		$period = $ts['to'] - $ts['from'] + 1;
+		$range_time_parser->parse('now-'.CSettingsHelper::get(CSettingsHelper::MAX_PERIOD));
+		$max_period = 1 + $ts['now'] - $range_time_parser
+			->getDateTime(true)
+			->getTimestamp();
 
 		if ($period < ZBX_MIN_PERIOD) {
 			$errors[] = _n('Minimum time period to display is %1$s minute.',
 				'Minimum time period to display is %1$s minutes.', (int) (ZBX_MIN_PERIOD / SEC_PER_MIN)
 			);
 		}
-		elseif ($period > ZBX_MAX_PERIOD) {
+		elseif ($period > $max_period) {
 			$errors[] = _n('Maximum time period to display is %1$s day.',
-				'Maximum time period to display is %1$s days.', (int) (ZBX_MAX_PERIOD / SEC_PER_DAY)
+				'Maximum time period to display is %1$s days.', (int) round($max_period / SEC_PER_DAY)
 			);
 		}
 
@@ -460,7 +471,7 @@ class CWidgetFormSvgGraph extends CWidgetForm {
 			));
 		}
 
-		$number_parser = new CNumberParser(['with_suffix' => true]);
+		$number_parser = new CNumberParser(['with_size_suffix' => true, 'with_time_suffix' => true]);
 
 		// Validate Min/Max values in Axes tab.
 		if ($this->fields['lefty']->getValue() == SVG_GRAPH_AXIS_SHOW) {

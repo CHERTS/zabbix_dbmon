@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,6 +54,11 @@ int	CONFIG_IPMIMANAGER_FORKS	= 0;
 int	CONFIG_ALERTMANAGER_FORKS	= 1;
 int	CONFIG_PREPROCMAN_FORKS		= 1;
 int	CONFIG_PREPROCESSOR_FORKS	= 3;
+int	CONFIG_HISTORYPOLLER_FORKS	= 5;
+int	CONFIG_AVAILMAN_FORKS		= 1;
+int	CONFIG_SERVICEMAN_FORKS		= 0;
+int	CONFIG_TRIGGERHOUSEKEEPER_FORKS = 0;
+int	CONFIG_ODBCPOLLER_FORKS		= 5;
 
 int	CONFIG_LISTEN_PORT		= 0;
 char	*CONFIG_LISTEN_IP		= NULL;
@@ -66,6 +71,7 @@ int	CONFIG_HISTSYNCER_FORKS		= 4;
 int	CONFIG_HISTSYNCER_FREQUENCY	= 1;
 int	CONFIG_CONFSYNCER_FORKS		= 1;
 int	CONFIG_CONFSYNCER_FREQUENCY	= 60;
+int	CONFIG_PROBLEMHOUSEKEEPING_FREQUENCY = 60;
 
 int	CONFIG_VMWARE_FORKS		= 0;
 int	CONFIG_VMWARE_FREQUENCY		= 60;
@@ -79,6 +85,7 @@ zbx_uint64_t	CONFIG_TRENDS_CACHE_SIZE	= 4 * 0;
 zbx_uint64_t	CONFIG_VALUE_CACHE_SIZE		= 8 * 0;
 zbx_uint64_t	CONFIG_VMWARE_CACHE_SIZE	= 8 * 0;
 zbx_uint64_t	CONFIG_EXPORT_FILE_SIZE;
+zbx_uint64_t	CONFIG_TREND_FUNC_CACHE_SIZE	= 0;
 
 int	CONFIG_UNREACHABLE_PERIOD	= 45;
 int	CONFIG_UNREACHABLE_DELAY	= 15;
@@ -94,6 +101,9 @@ char	*CONFIG_DBNAME			= NULL;
 char	*CONFIG_DBSCHEMA		= NULL;
 char	*CONFIG_DBUSER			= NULL;
 char	*CONFIG_DBPASSWORD		= NULL;
+char	*CONFIG_VAULTTOKEN		= NULL;
+char	*CONFIG_VAULTURL		= NULL;
+char	*CONFIG_VAULTDBPATH		= NULL;
 char	*CONFIG_DBSOCKET		= NULL;
 char	*CONFIG_DB_TLS_CONNECT		= NULL;
 char	*CONFIG_DB_TLS_CERT_FILE	= NULL;
@@ -124,6 +134,8 @@ int	CONFIG_PROXYPOLLER_FORKS	= 1;	/* parameters for passive proxies */
 /* how often Zabbix server sends configuration data to proxy, in seconds */
 int	CONFIG_PROXYCONFIG_FREQUENCY	= 0;
 int	CONFIG_PROXYDATA_FREQUENCY	= 1;	/* 1s */
+
+int	CONFIG_ALLOW_UNSUPPORTED_DB_VERSIONS = 0;
 
 char	*CONFIG_LOAD_MODULE_PATH	= NULL;
 char	**CONFIG_LOAD_MODULE		= NULL;
@@ -178,10 +190,12 @@ const char	*progname = "mock_progname";
 const char	syslog_app_name[] = "mock_syslog_app_name";
 
 char	*CONFIG_HOSTS_ALLOWED		= NULL;
-char	*CONFIG_HOSTNAME		= NULL;
+char	*CONFIG_HOSTNAMES		= NULL;
 char	*CONFIG_HOSTNAME_ITEM		= NULL;
 char	*CONFIG_HOST_METADATA		= NULL;
 char	*CONFIG_HOST_METADATA_ITEM	= NULL;
+
+ZBX_THREAD_LOCAL char	*CONFIG_HOSTNAME	= NULL;
 
 int	CONFIG_REFRESH_ACTIVE_CHECKS	= 120;
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,8 @@ function httptest_authentications($type = null) {
 		HTTPTEST_AUTH_NONE => _('None'),
 		HTTPTEST_AUTH_BASIC => _('Basic'),
 		HTTPTEST_AUTH_NTLM => _('NTLM'),
-		HTTPTEST_AUTH_KERBEROS => _('Kerberos')
+		HTTPTEST_AUTH_KERBEROS => _('Kerberos'),
+		HTTPTEST_AUTH_DIGEST => _('Digest')
 	];
 
 	if (is_null($type)) {
@@ -75,40 +76,44 @@ function httptest_status2style($status) {
 /**
  * Delete web scenario item and web scenario step item history and trends by given web scenario IDs.
  *
- * @param array $http_testids
+ * @param array $httptestids
  *
  * @return bool
  */
-function deleteHistoryByHttpTestIds(array $http_testids) {
+function deleteHistoryByHttpTestIds(array $httptestids): bool {
+	DBstart();
+
 	$itemids = [];
 
 	$db_items = DBselect(
 		'SELECT hti.itemid'.
 		' FROM httptestitem hti'.
-		' WHERE '.dbConditionInt('httptestid', $http_testids).
+		' WHERE '.dbConditionInt('httptestid', $httptestids).
 		' UNION ALL '.
 		'SELECT hsi.itemid'.
 		' FROM httpstep hs,httpstepitem hsi'.
 		' WHERE hs.httpstepid=hsi.httpstepid'.
-			' AND '.dbConditionInt('httptestid', $http_testids)
+			' AND '.dbConditionInt('httptestid', $httptestids)
 	);
 
 	while ($db_item = DBfetch($db_items)) {
 		$itemids[] = $db_item['itemid'];
 	}
 
-	if ($itemids) {
-		$items = API::Item()->get([
-			'output' => ['itemid', 'value_type'],
-			'itemids' => $itemids,
-			'editable' => true,
-			'webitems' => true
-		]);
+	$result = true;
 
-		return Manager::History()->deleteHistory(array_column($items, 'value_type', 'itemid'));
+	if ($itemids) {
+		$result = (bool) API::History()->clear($itemids);
 	}
 
-	return true;
+	$result = ($result && DB::update('httptest', [
+		'values' => ['nextcheck' => 0],
+		'where' => ['httptestid' => $httptestids]
+	]));
+
+	$result = DBend($result);
+
+	return $result;
 }
 
 function get_httptest_by_httptestid($httptestid) {
@@ -228,10 +233,11 @@ function getHttpTestParentTemplates(array $httptests) {
  *
  * @param string $httptestid
  * @param array  $parent_templates  The list of the templates, prepared by getHttpTestParentTemplates() function.
+ * @param bool   $provide_links     If this parameter is false, prefix will not contain links.
  *
  * @return array|null
  */
-function makeHttpTestTemplatePrefix($httptestid, array $parent_templates) {
+function makeHttpTestTemplatePrefix($httptestid, array $parent_templates, bool $provide_links) {
 	if (!array_key_exists($httptestid, $parent_templates['links'])) {
 		return null;
 	}
@@ -242,15 +248,16 @@ function makeHttpTestTemplatePrefix($httptestid, array $parent_templates) {
 
 	$template = $parent_templates['templates'][$parent_templates['links'][$httptestid]['hostid']];
 
-	if ($template['permission'] == PERM_READ_WRITE) {
-		$name = (new CLink(CHtml::encode($template['name']),
+	if ($provide_links && $template['permission'] == PERM_READ_WRITE) {
+		$name = (new CLink($template['name'],
 			(new CUrl('httpconf.php'))
 				->setArgument('filter_set', '1')
 				->setArgument('filter_hostids', [$template['hostid']])
+				->setArgument('context', 'template')
 		))->addClass(ZBX_STYLE_LINK_ALT);
 	}
 	else {
-		$name = new CSpan(CHtml::encode($template['name']));
+		$name = new CSpan($template['name']);
 	}
 
 	return [$name->addClass(ZBX_STYLE_GREY), NAME_DELIMITER];
@@ -261,28 +268,30 @@ function makeHttpTestTemplatePrefix($httptestid, array $parent_templates) {
  *
  * @param string $httptestid
  * @param array  $parent_templates  The list of the templates, prepared by getHttpTestParentTemplates() function.
+ * @param bool   $provide_links     If this parameter is false, prefix will not contain links.
  *
  * @return array
  */
-function makeHttpTestTemplatesHtml($httptestid, array $parent_templates) {
+function makeHttpTestTemplatesHtml($httptestid, array $parent_templates, bool $provide_links) {
 	$list = [];
 
 	while (array_key_exists($httptestid, $parent_templates['links'])) {
 		$template = $parent_templates['templates'][$parent_templates['links'][$httptestid]['hostid']];
 
-		if ($template['permission'] == PERM_READ_WRITE) {
-			$name = new CLink(CHtml::encode($template['name']),
+		if ($provide_links && $template['permission'] == PERM_READ_WRITE) {
+			$name = new CLink($template['name'],
 				(new CUrl('httpconf.php'))
 					->setArgument('form', 'update')
 					->setArgument('hostid', $template['hostid'])
 					->setArgument('httptestid', $parent_templates['links'][$httptestid]['httptestid'])
+					->setArgument('context', 'template')
 			);
 		}
 		else {
-			$name = (new CSpan(CHtml::encode($template['name'])))->addClass(ZBX_STYLE_GREY);
+			$name = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
 		}
 
-		array_unshift($list, $name, '&nbsp;&rArr;&nbsp;');
+		array_unshift($list, $name, [NBSP(), RARR(), NBSP()]);
 
 		$httptestid = $parent_templates['links'][$httptestid]['httptestid'];
 	}
@@ -351,11 +360,12 @@ function resolveHttpTestMacros(array $httpTests, $resolveName = true, $resolveSt
  */
 function copyHttpTests($srcHostId, $dstHostId) {
 	$httpTests = API::HttpTest()->get([
-		'output' => ['name', 'applicationid', 'delay', 'status', 'variables', 'agent', 'authentication',
+		'output' => ['name', 'delay', 'status', 'variables', 'agent', 'authentication',
 			'http_user', 'http_password', 'http_proxy', 'retries', 'ssl_cert_file', 'ssl_key_file',
 			'ssl_key_password', 'verify_peer', 'verify_host', 'headers'
 		],
 		'hostids' => $srcHostId,
+		'selectTags' => ['tag', 'value'],
 		'selectSteps' => ['name', 'no', 'url', 'query_fields', 'timeout', 'posts', 'required', 'status_codes',
 			'variables', 'follow_redirects', 'retrieve_mode', 'headers'
 		],
@@ -366,27 +376,8 @@ function copyHttpTests($srcHostId, $dstHostId) {
 		return true;
 	}
 
-	// get destination application IDs
-	$srcApplicationIds = [];
-	foreach ($httpTests as $httpTest) {
-		if ($httpTest['applicationid'] != 0) {
-			$srcApplicationIds[] = $httpTest['applicationid'];
-		}
-	}
-
-	if ($srcApplicationIds) {
-		$dstApplicationIds = get_same_applications_for_host($srcApplicationIds, $dstHostId);
-	}
-
 	foreach ($httpTests as &$httpTest) {
 		$httpTest['hostid'] = $dstHostId;
-
-		if (isset($dstApplicationIds[$httpTest['applicationid']])) {
-			$httpTest['applicationid'] = $dstApplicationIds[$httpTest['applicationid']];
-		}
-		else {
-			unset($httpTest['applicationid']);
-		}
 
 		unset($httpTest['httptestid']);
 	}
@@ -445,4 +436,91 @@ function userAgents() {
 			'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' => 'Googlebot 2.1'
 		]
 	];
+}
+
+/**
+ * Get direct or inherited tags for web scenario edit form.
+ *
+ * @param array  $data
+ * @param string $data['templates'][<templateid>]['hostid']
+ * @param string $data['templates'][<templateid>]['name']
+ * @param int    $data['templates'][<templateid>]['permission']
+ * @param string $data['hostid']
+ * @param array  $data['tags']
+ * @param string $data['tags'][]['tag']
+ * @param string $data['tags'][]['value']
+ * @param int    $data['show_inherited_tags']
+ *
+ * @return array
+ */
+function getHttpTestTags(array $data): array {
+	$tags = array_key_exists('tags', $data) ? $data['tags'] : [];
+
+	if ($data['show_inherited_tags']) {
+		$db_templates = $data['templates']
+			? API::Template()->get([
+				'output' => ['templateid'],
+				'selectTags' => ['tag', 'value'],
+				'templateids' => array_keys($data['templates']),
+				'preservekeys' => true
+			])
+			: [];
+
+		$inherited_tags = [];
+
+		// Make list of template tags.
+		foreach ($data['templates'] as $templateid => $template) {
+			if (array_key_exists($templateid, $db_templates)) {
+				foreach ($db_templates[$templateid]['tags'] as $tag) {
+					if (array_key_exists($tag['tag'], $inherited_tags)
+							&& array_key_exists($tag['value'], $inherited_tags[$tag['tag']])) {
+						$inherited_tags[$tag['tag']][$tag['value']]['parent_templates'] += [
+							$templateid => $template
+						];
+					}
+					else {
+						$inherited_tags[$tag['tag']][$tag['value']] = $tag + [
+							'parent_templates' => [$templateid => $template],
+							'type' => ZBX_PROPERTY_INHERITED
+						];
+					}
+				}
+			}
+		}
+
+		$db_hosts = API::Host()->get([
+			'output' => ['hostid', 'name'],
+			'selectTags' => ['tag', 'value'],
+			'hostids' => $data['hostid'],
+			'templated_hosts' => true
+		]);
+
+		// Overwrite and attach host level tags.
+		if ($db_hosts) {
+			foreach ($db_hosts[0]['tags'] as $tag) {
+				$inherited_tags[$tag['tag']][$tag['value']] = $tag;
+				$inherited_tags[$tag['tag']][$tag['value']]['type'] = ZBX_PROPERTY_INHERITED;
+			}
+		}
+
+		// Overwrite and attach http test's own tags.
+		foreach ($data['tags'] as $tag) {
+			if (array_key_exists($tag['tag'], $inherited_tags)
+					&& array_key_exists($tag['value'], $inherited_tags[$tag['tag']])) {
+				$inherited_tags[$tag['tag']][$tag['value']]['type'] = ZBX_PROPERTY_BOTH;
+			}
+			else {
+				$inherited_tags[$tag['tag']][$tag['value']] = $tag + ['type' => ZBX_PROPERTY_OWN];
+			}
+		}
+
+		$tags = [];
+		foreach ($inherited_tags as $tag) {
+			foreach ($tag as $value) {
+				$tags[] = $value;
+			}
+		}
+	}
+
+	return $tags;
 }

@@ -1,8 +1,5 @@
 # LIBSSH_CHECK_CONFIG ([DEFAULT-ACTION])
 # ----------------------------------------------------------
-#    Alexander Vladishev                      Oct-26-2009
-#    Dmitry Borovikov                         Feb-13-2010
-#          --version control added (1.0.0)
 #
 # Checks for ssh.  DEFAULT-ACTION is the string yes or no to
 # specify whether to default to --with-ssh or --without-ssh.
@@ -23,15 +20,12 @@
 
 AC_DEFUN([LIBSSH_TRY_LINK],
 [
-AC_TRY_LINK(
-[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <libssh/libssh.h>
-],
-[
+]], [[
 	ssh_session my_ssh_session;
 	my_ssh_session = ssh_new();
-],
-found_ssh="yes",)
+]])],[found_ssh="yes"],[])
 ])dnl
 
 AC_DEFUN([LIBSSH_ACCEPT_VERSION],
@@ -59,7 +53,7 @@ AC_DEFUN([LIBSSH_CHECK_CONFIG],
 [
   AC_ARG_WITH(ssh,[
 If you want to use SSH based checks:
-AC_HELP_STRING([--with-ssh@<:@=DIR@:>@],[use SSH package @<:@default=no@:>@, DIR is the SSH library install directory.])],
+AS_HELP_STRING([--with-ssh@<:@=DIR@:>@],[use SSH package @<:@default=no@:>@, DIR is the SSH library install directory.])],
     [
 	if test "$withval" = "no"; then
 	    want_ssh="no"
@@ -133,6 +127,14 @@ AC_HELP_STRING([--with-ssh@<:@=DIR@:>@],[use SSH package @<:@default=no@:>@, DIR
     if test "x$found_ssh" = "xyes"; then
       AC_DEFINE([HAVE_SSH], 1, [Define to 1 if you have the 'libssh' library (-lssh)])
       AC_MSG_RESULT(yes)
+
+      ENUM_CHECK([SSH_OPTIONS_KEY_EXCHANGE],[libssh/libssh.h])
+      ENUM_CHECK([SSH_OPTIONS_HOSTKEYS],[libssh/libssh.h])
+      ENUM_CHECK([SSH_OPTIONS_CIPHERS_C_S],[libssh/libssh.h])
+      ENUM_CHECK([SSH_OPTIONS_CIPHERS_S_C],[libssh/libssh.h])
+      ENUM_CHECK([SSH_OPTIONS_HMAC_C_S],[libssh/libssh.h])
+      ENUM_CHECK([SSH_OPTIONS_HMAC_S_C],[libssh/libssh.h])
+      ENUM_CHECK([SSH_OPTIONS_PROCESS_CONFIG],[libssh/libssh.h])
     else
       AC_MSG_RESULT(no)
       SSH_CFLAGS=""

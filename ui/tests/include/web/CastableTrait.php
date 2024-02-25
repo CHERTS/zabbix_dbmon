@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -100,6 +100,17 @@ trait CastableTrait {
 	 */
 	public function asForm($options = []) {
 		return $this->cast(CFormElement::class, $options);
+	}
+
+	/**
+	 * Cast object to Grid form element.
+	 *
+	 * @param array $options    additional casting options
+	 *
+	 * @return CGridFormElement
+	 */
+	public function asGridForm($options = []) {
+		return $this->cast(CGridFormElement::class, $options);
 	}
 
 	/**
@@ -287,5 +298,27 @@ trait CastableTrait {
 	 */
 	public function asHostInterfaceElement($options = []) {
 		return $this->cast(CHostInterfaceElement::class, $options);
+	}
+
+	/**
+	 * Cast object to Filter element.
+	 *
+	 * @param array $options    additional casting options
+	 *
+	 * @return CFilterElement
+	 */
+	public function asFilterElement($options = []) {
+		return $this->cast(CFilterElement::class, $options);
+	}
+
+	/**
+	 * Cast object to MainMenu element.
+	 *
+	 * @param array $options    additional casting options
+	 *
+	 * @return CMainMenuElement
+	 */
+	public function asMainMenu($options = []) {
+		return $this->cast(CMainMenuElement::class, $options);
 	}
 }

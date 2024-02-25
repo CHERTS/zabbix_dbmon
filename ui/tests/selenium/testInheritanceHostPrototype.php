@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 **/
 
 require_once dirname(__FILE__).'/../include/CLegacyWebTest.php';
-require_once dirname(__FILE__).'/traits/MacrosTrait.php';
+require_once dirname(__FILE__).'/behaviors/CMacrosBehavior.php';
 
 /**
  * Test the creation of inheritance of new objects on a previously linked template.
@@ -28,7 +28,14 @@ require_once dirname(__FILE__).'/traits/MacrosTrait.php';
  */
 class testInheritanceHostPrototype extends CLegacyWebTest {
 
-	use MacrosTrait;
+	/**
+	 * Attach MacrosBehavior to the test.
+	 *
+	 * @return array
+	 */
+	public function getBehaviors() {
+		return [CMacrosBehavior::class];
+	}
 
 	public static function getLayoutData() {
 		return [
@@ -78,16 +85,16 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 		$this->zbxTestAssertElementPresentXpath('//input[@id="proxy_hostid"][@readonly]');
 
 		// Check layout at Groups tab.
-		$this->zbxTestTabSwitch('Groups');
 		$this->zbxTestAssertElementPresentXpath('//div[@id="group_links_"]//ul[@class="multiselect-list disabled"]');
 		$this->zbxTestAssertElementPresentXpath('//button[@class="btn-grey"][@disabled]');
 		$this->zbxTestAssertElementPresentXpath('//input[@name="group_prototypes[0][name]"][@readonly]');
 
 		// Check layout at IPMI tab.
 		$this->zbxTestTabSwitch('IPMI');
-		foreach (['ipmi_authtype', 'ipmi_privilege', 'ipmi_username', 'ipmi_password'] as $id) {
-			$this->zbxTestAssertElementPresentXpath('//input[@id="'.$id.'"][@readonly]');
-		}
+		$this->zbxTestAssertElementPresentXpath('//z-select[@id="ipmi_authtype"][@readonly]');
+		$this->zbxTestAssertElementPresentXpath('//z-select[@id="ipmi_privilege"][@readonly]');
+		$this->zbxTestAssertElementPresentXpath('//input[@id="ipmi_username"][@readonly]');
+		$this->zbxTestAssertElementPresentXpath('//input[@id="ipmi_password"][@readonly]');
 
 		// Check layout at Macros tab.
 		$this->zbxTestTabSwitch('Macros');
@@ -153,11 +160,17 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 		return [
 			[
 				[
-					'host' => 'test Inheritance host prototype',
-					'group' => 'Zabbix servers',
-					'templates' => [
-						['name' => 'Inheritance test template', 'group' => 'Templates']
-					]
+					'fields' => [
+						'Host name' => 'test Inheritance host prototype',
+						'Groups' => 'Zabbix servers'
+					],
+					'interfaces' => [
+						[
+							'action' => USER_ACTION_ADD,
+							'type' => 'Agent'
+						]
+					],
+					'template' => 'Inheritance test template'
 				]
 			]
 		];
@@ -167,49 +180,38 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 	 * @dataProvider getCreateData
 	 */
 	public function testInheritanceHostPrototype_CreateHostLinkTemplate($data) {
-		$this->zbxTestLogin('hosts.php?form=create');
-		$this->zbxTestInputTypeWait('host', $data['host']);
-		$this->zbxTestClickButtonMultiselect('groups_');
-		$this->zbxTestLaunchOverlayDialog('Host groups');
-		$this->zbxTestClickLinkTextWait($data['group']);
-		$this->zbxTestTabSwitch('Templates');
-		$this->zbxTestClickButtonMultiselect('add_templates_');
-		$this->zbxTestLaunchOverlayDialog('Templates');
+		$this->zbxTestLogin('zabbix.php?action=host.edit');
+		$form = $this->query('id:host-form')->asForm()->one()->waitUntilVisible();
+		$form->fill($data['fields']);
 
-		foreach ($data['templates'] as $template) {
-			COverlayDialogElement::find()->one()->query('class:multiselect-button')->one()->click();
-			$this->zbxTestLaunchOverlayDialog('Host groups');
-			COverlayDialogElement::find()->all()->last()->query('link', $template['group'])->one()->waitUntilClickable()->click();
-			$this->zbxTestClickLinkTextWait($template['name']);
-			$this->zbxTestWaitForPageToLoad();
-		}
+		$form->getFieldContainer('Interfaces')->asHostInterfaceElement(['names' => ['1' => 'default']])
+				->fill($data['interfaces']);
+		$form->getFieldContainer('Templates')->asMultiselect()->fill($data['template']);
+		$form->submit();
+		$this->page->waitUntilReady();
 
-		$this->zbxTestClickWait('add');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Host added');
 
 		// DB check.
-		foreach ($data['templates'] as $template) {
-			// Linked templates on host.
-			$hosts_templates = 'SELECT NULL'.
-					' FROM hosts_templates'.
-					' WHERE hostid IN ('.
-						'SELECT hostid'.
-						' FROM hosts'.
-						' WHERE host='.zbx_dbstr($data['host']).
-					')'.
-					' AND templateid IN ('.
-						'SELECT hostid'.
-						' FROM hosts'.
-						' WHERE host='.zbx_dbstr($template['name']).
-					')';
+		$hosts_templates = 'SELECT NULL'.
+				' FROM hosts_templates'.
+				' WHERE hostid IN ('.
+					'SELECT hostid'.
+					' FROM hosts'.
+					' WHERE host='.zbx_dbstr($data['fields']['Host name']).
+				')'.
+				' AND templateid IN ('.
+					'SELECT hostid'.
+					' FROM hosts'.
+					' WHERE host='.zbx_dbstr($data['template']).
+				')';
 
-			$this->assertEquals(1, CDBHelper::getCount($hosts_templates));
+		$this->assertEquals(1, CDBHelper::getCount($hosts_templates));
 
-			// Host prototype on host and on template are the same.
-			$prototype_on_host = $this->sqlForHostPrototypeCompare($data['host']);
-			$prototype_on_template = $this->sqlForHostPrototypeCompare($template['name']);
-			$this->assertEquals($prototype_on_host, $prototype_on_template);
-		}
+		// Host prototype on host and on template are the same.
+		$prototype_on_host = $this->sqlForHostPrototypeCompare($data['fields']['Host name']);
+		$prototype_on_template = $this->sqlForHostPrototypeCompare($data['template']);
+		$this->assertEquals($prototype_on_host, $prototype_on_template);
 	}
 
 	/**
@@ -218,10 +220,9 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 	 * @param array $data	test case data from data provider
 	 */
 	private function sqlForHostPrototypeCompare($data) {
-		$sql = 'SELECT host, status, name, disable_until, error, available, errors_from, lastaccess, ipmi_authtype,'.
-				' ipmi_privilege, ipmi_username, ipmi_password, ipmi_disable_until, snmp_disable_until,'.
-				' snmp_available, ipmi_errors_from, ipmi_error, snmp_error, jmx_disable_until, jmx_available,'.
-				' jmx_errors_from, jmx_error, description, tls_connect, tls_accept, tls_issuer, tls_subject,'.
+		$sql = 'SELECT host, status, name, lastaccess, ipmi_authtype,'.
+				' ipmi_privilege, ipmi_username, ipmi_password,'.
+				' description, tls_connect, tls_accept, tls_issuer, tls_subject,'.
 				' tls_psk_identity, tls_psk, auto_compress, flags'.
 				' FROM hosts'.
 				' WHERE flags=2 AND hostid IN ('.
@@ -326,8 +327,7 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 			$this->zbxTestCheckboxSelect('status', $data['create_enabled']);
 		}
 
-		// Groups tab.
-		$this->zbxTestTabSwitch('Groups');
+		// Groups.
 		if (array_key_exists('groups', $data)) {
 			foreach ($data['groups'] as $group) {
 				$this->zbxTestClickButtonMultiselect('group_links_');
@@ -340,8 +340,7 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 			$this->zbxTestInputTypeByXpath('//*[@name="group_prototypes[0][name]"]', $data['group_macro']);
 		}
 
-		// Templates tab.
-		$this->zbxTestTabSwitch('Templates');
+		// Templates.
 		if (array_key_exists('templates', $data)) {
 			foreach ($data['templates'] as $template) {
 				$this->zbxTestClickButtonMultiselect('add_templates_');
@@ -419,7 +418,7 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 					'create_enabled' => true,
 					'hostgroup' => 'Hypervisors',
 					'group_prototype' => 'Clone group prototype {#CLONE_GROUP_PROTO}',
-					'template' => 'Template OS Mac OS X',
+					'template' => 'macOS by Zabbix agent',
 					'inventory' => 'Manual',
 					'check_form' => true
 				]
@@ -448,7 +447,6 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 
 		// Change groups.
 		if (array_key_exists('hostgroup', $data) || array_key_exists('group_prototype', $data)) {
-			$this->zbxTestTabSwitch('Groups');
 			if (array_key_exists('hostgroup', $data)) {
 				$this->zbxTestClickXpathWait('//span[@class="subfilter-disable-btn"]');
 				$this->zbxTestMultiselectClear('group_links_');
@@ -463,10 +461,9 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 
 		// Change template.
 		if (array_key_exists('template', $data)) {
-			$this->zbxTestTabSwitch('Templates');
 			$this->zbxTestClickButtonMultiselect('add_templates_');
 			$this->zbxTestLaunchOverlayDialog('Templates');
-			COverlayDialogElement::find()->one()->setDataContext('Templates');
+			COverlayDialogElement::find()->waitUntilReady()->one()->setDataContext('Templates');
 			$this->zbxTestClickLinkTextWait($data['template']);
 		}
 
@@ -501,11 +498,9 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 				$this->zbxTestAssertElementValue('host', $data['cloned_name']);
 				$this->zbxTestAssertElementValue('name', $data['cloned_visible_name']);
 				$this->zbxTestCheckboxSelected('status');
-				$this->zbxTestTabSwitch('Groups');
 				$this->zbxTestMultiselectAssertSelected('group_links_', $data['hostgroup']);
 				$this->zbxTestAssertAttribute('//*[@name="group_prototypes[0][name]"]', 'value' , $data['group_prototype']);
-				$this->zbxTestTabSwitch('Templates');
-				$this->zbxTestAssertElementText('//div[@id="templateTab"]//a', $data['template']);
+				$this->query('link', $data['template']);
 				$this->zbxTestTabSwitch('Inventory');
 				$this->zbxTestAssertAttribute('//label[text()="'.$data['inventory'].'"]/../input', 'checked');
 			}
@@ -535,7 +530,7 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 			);
 		}
 
-		$this->zbxTestLogin('host_prototypes.php?form=update&parent_discoveryid='.$discovery_id.'&hostid='.
+		$this->zbxTestLogin('host_prototypes.php?form=update&context=host&parent_discoveryid='.$discovery_id.'&hostid='.
 				$host_prototype
 		);
 	}
@@ -564,7 +559,7 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 			]
 		];
 		// Edit host prototype on template and add macros.
-		$this->page->login()->open('host_prototypes.php?form=update&parent_discoveryid='
+		$this->page->login()->open('host_prototypes.php?form=update&context=host&parent_discoveryid='
 			.$template_lld_id.'&hostid='.$template_prototype_id);
 
 		$form = $this->query('name:hostPrototypeForm')->waitUntilPresent()->asForm()->one();
@@ -573,7 +568,7 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 		$form->submit();
 
 		// Open host prototype inherited from template on host and check inherited macros.
-		$this->page->open('host_prototypes.php?form=update&parent_discoveryid='
+		$this->page->open('host_prototypes.php?form=update&context=host&parent_discoveryid='
 			.$host_lld_id.'&hostid='.$host_prototype_id);
 		$form->selectTab('Macros');
 		$this->assertMacros($macros);
@@ -586,10 +581,10 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 			$this->assertFalse($this->query('id:macros_'.$i.'_description')->one()->isEnabled());
 		}
 
-		// Check that added macros are written in DB 2 times: for template and for linked host.
-		foreach ($macros as $macro) {
-			$this->assertEquals(2, CDBHelper::getCount('SELECT NULL FROM hostmacro WHERE macro='.zbx_dbstr($macro['macro'])));
-		}
+		$sql = 'SELECT macro,type,value,description FROM hostmacro WHERE hostid=%d ORDER BY hostmacroid';
+		$this->assertSame(CDBHelper::getHash(vsprintf($sql, [$template_prototype_id])),
+			CDBHelper::getHash(vsprintf($sql, [$host_prototype_id]))
+		);
 	}
 
 		public static function getDeleteData() {
@@ -618,7 +613,7 @@ class testInheritanceHostPrototype extends CLegacyWebTest {
 				(array_key_exists('error', $data) ? ' NOT' : '').' NULL AND name='.zbx_dbstr($data['discovery'])
 		);
 
-		$this->zbxTestLogin('host_prototypes.php?parent_discoveryid='.$discovery_id);
+		$this->zbxTestLogin('host_prototypes.php?context=host&parent_discoveryid='.$discovery_id);
 		$this->zbxTestCheckboxSelect('all_hosts');
 		$this->zbxTestClickButtonText('Delete');
 		$this->zbxTestAcceptAlert();

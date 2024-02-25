@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ class testFormTagsTrigger extends testFormTags {
 
 	public $update_name = 'Trigger with tags for updating';
 	public $clone_name = 'Trigger with tags for cloning';
+	public $remove_name = 'Trigger for tags removing';
 	public $link;
 	public $saved_link = 'triggers.php?form=update&context=host&triggerid=';
 	public $host = 'Host for tags testing';
@@ -42,7 +43,7 @@ class testFormTagsTrigger extends testFormTags {
 	public function testFormTagsTrigger_Create($data) {
 		$hostid = CDataHelper::get('EntitiesTags.hostids.'.$this->host);
 		$this->link = 'triggers.php?filter_set=1&context=host&filter_hostids%5B0%5D='.$hostid;
-		$expression = '{Host for tags testing:trap.host.last()}=0';
+		$expression = 'last(/Host for tags testing/trap.host)=0';
 		$this->checkTagsCreate($data, 'trigger', $expression);
 	}
 
@@ -108,7 +109,7 @@ class testFormTagsTrigger extends testFormTags {
 	public function testFormTagsTrigger_CopyToHost() {
 		$hostid = CDataHelper::get('EntitiesTags.hostids.Host with tags for cloning');
 		$this->link = 'triggers.php?filter_set=1&context=host&filter_hostids%5B0%5D='.$hostid;
-		$this->executeTriggerCopy('Host', 'Empty host');
+		$this->executeCopy('trigger', 'Host', 'Empty host');
 	}
 
 	/**
@@ -117,7 +118,7 @@ class testFormTagsTrigger extends testFormTags {
 	public function testFormTagsTrigger_CopyToHostGroup() {
 		$hostid = CDataHelper::get('EntitiesTags.hostids.Host with tags for cloning');
 		$this->link = 'triggers.php?filter_set=1&context=host&filter_hostids%5B0%5D='.$hostid;
-		$this->executeTriggerCopy('Host group', 'Group to copy graph');
+		$this->executeCopy('trigger', 'Host group', 'Group to copy graph');
 	}
 
 	/**
@@ -126,7 +127,7 @@ class testFormTagsTrigger extends testFormTags {
 	public function testFormTagsTrigger_CopyToTemplate() {
 		$hostid = CDataHelper::get('EntitiesTags.hostids.Host with tags for cloning');
 		$this->link = 'triggers.php?filter_set=1&context=host&filter_hostids%5B0%5D='.$hostid;
-		$this->executeTriggerCopy('Template', 'Empty template');
+		$this->executeCopy('trigger', 'Template', 'Empty template');
 	}
 
 	/**
@@ -136,7 +137,7 @@ class testFormTagsTrigger extends testFormTags {
 		$this->host = 'Host with tags for cloning';
 		$hostid = CDataHelper::get('EntitiesTags.hostids.'.$this->host);
 		$this->link = 'triggers.php?filter_set=1&context=host&filter_hostids%5B0%5D='.$hostid;
-		$this->executeFullCloning('trigger', 'Host');
+		$this->executeCloningByParent('trigger', 'Host');
 	}
 
 	/**
@@ -146,7 +147,7 @@ class testFormTagsTrigger extends testFormTags {
 		$templateid = CDataHelper::get('EntitiesTags.templateids.'.$this->template);
 		$this->link = 'triggers.php?filter_set=1&filter_hostids%5B0%5D='.$templateid.'&context=template';
 		$this->clone_name = 'Template trigger with tags for full cloning';
-		$this->executeFullCloning('trigger', 'Template');
+		$this->executeCloningByParent('trigger', 'Template');
 	}
 
 	/**
@@ -157,7 +158,7 @@ class testFormTagsTrigger extends testFormTags {
 	public function testFormTagsTrigger_InheritedHostTags($data) {
 		$hostid = CDataHelper::get('EntitiesTags.hostids.'.$this->host);
 		$this->link = 'triggers.php?filter_set=1&context=host&filter_hostids%5B0%5D='.$hostid;
-		$expression = '{Host for tags testing:trap.host.last()}=0';
+		$expression = 'last(/Host for tags testing/trap.host)=0';
 		$this->checkInheritedTags($data, 'trigger', 'Host', $expression);
 	}
 
@@ -170,7 +171,7 @@ class testFormTagsTrigger extends testFormTags {
 //	public function testFormTagsTrigger_InheritedTemplateTags($data) {
 //		$templateid = CDataHelper::get('EntitiesTags.templateids.'.$this->template);
 //		$this->link = 'triggers.php?filter_set=1&filter_hostids[0]='.$templateid.'&context=template';
-//		$expression = '{Template for tags testing:trap.template.last()}=0';
+//		$expression = 'last(/Template for tags testing/trap.template)=0';
 //		$this->checkInheritedTags($data, 'trigger', 'Template', $expression);
 //	}
 
@@ -180,12 +181,21 @@ class testFormTagsTrigger extends testFormTags {
 	 * @dataProvider getTagsInheritanceData
 	 */
 	public function testFormTagsTrigger_InheritedElementTags($data) {
-		$expression = '{Template for tags testing:trap.template.last()}=0';
+		$expression = 'last(/Template for tags testing/trap.template)=0';
 		$templateid = CDataHelper::get('EntitiesTags.templateids.'.$this->template);
 		$hostid = CDataHelper::get('EntitiesTags.hostids.'.$this->host);
 		$this->link = 'triggers.php?filter_set=1&context=template&filter_hostids[0]='.$templateid;
 		$host_link = 'triggers.php?filter_set=1&context=host&filter_hostids[0]='.$hostid;
 
 		$this->checkInheritedElementTags($data, 'trigger', $host_link, $expression);
+	}
+
+	/**
+	 * Test removing tags from Trigger.
+	 */
+	public function testFormTagsTrigger_RemoveTags() {
+		$hostid = CDataHelper::get('EntitiesTags.hostids.'.$this->host);
+		$this->link = 'triggers.php?filter_set=1&context=host&filter_hostids%5B0%5D='.$hostid;
+		$this->clearTags('trigger');
 	}
 }

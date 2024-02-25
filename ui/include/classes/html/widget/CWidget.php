@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,10 +20,22 @@
 
 
 class CWidget {
+	private const ZBX_STYLE_HEADER_TITLE = 'header-title';
+	private const ZBX_STYLE_HEADER_NAVIGATION = 'header-navigation';
+	private const ZBX_STYLE_HEADER_CONTROLS = 'header-controls';
+	private const ZBX_STYLE_HEADER_KIOSKMODE_CONTROLS = 'header-kioskmode-controls';
 
-	private $title = null;
-	private $title_submenu = null;
-	private $controls = null;
+	private $title;
+	private $title_submenu;
+	private $controls;
+	private $kiosk_mode_controls;
+
+	/**
+	 * Navigation, displayed exclusively in ZBX_LAYOUT_NORMAL mode.
+	 *
+	 * @var mixed
+	 */
+	private $navigation;
 
 	/**
 	 * The contents of the body of the widget.
@@ -52,8 +64,13 @@ class CWidget {
 	}
 
 	public function setControls($controls) {
-		zbx_value2array($controls);
 		$this->controls = $controls;
+
+		return $this;
+	}
+
+	public function setKioskModeControls($kiosk_mode_controls) {
+		$this->kiosk_mode_controls = $kiosk_mode_controls;
 
 		return $this;
 	}
@@ -71,10 +88,15 @@ class CWidget {
 		return $this;
 	}
 
-	public function setBreadcrumbs($breadcrumbs = null) {
-		if ($breadcrumbs !== null && $this->web_layout_mode == ZBX_LAYOUT_NORMAL) {
-			$this->body[] = $breadcrumbs;
-		}
+	/**
+	 * Set navigation for displaying exclusively in ZBX_LAYOUT_NORMAL mode.
+	 *
+	 * @param mixed $navigation
+	 *
+	 * @return CWidget
+	 */
+	public function setNavigation($navigation) {
+		$this->navigation = $navigation;
 
 		return $this;
 	}
@@ -98,8 +120,13 @@ class CWidget {
 
 		if ($this->web_layout_mode == ZBX_LAYOUT_KIOSKMODE) {
 			$this->addItem(
-				get_icon('kioskmode', ['mode' => ZBX_LAYOUT_KIOSKMODE])
-					->setAttribute('aria-label', _('Content controls'))
+				(new CList())
+					->addClass(self::ZBX_STYLE_HEADER_KIOSKMODE_CONTROLS)
+					->addItem($this->kiosk_mode_controls)
+					->addItem(
+						get_icon('kioskmode', ['mode' => ZBX_LAYOUT_KIOSKMODE])
+							->setAttribute('aria-label', _('Content controls'))
+					)
 			);
 		}
 		elseif ($this->title !== null || $this->controls !== null) {
@@ -112,7 +139,11 @@ class CWidget {
 			'with_current_messages' => true
 		]);
 
-		$items[] = new CTag('main', true, $this->body);
+		$navigation = ($this->navigation !== null && $this->web_layout_mode == ZBX_LAYOUT_NORMAL)
+			? (new CDiv($this->navigation))->addClass(self::ZBX_STYLE_HEADER_NAVIGATION)
+			: null;
+
+		$items[] = new CTag('main', true, [$navigation, $this->body]);
 
 		return unpack_object($items);
 	}
@@ -150,9 +181,9 @@ class CWidget {
 		}
 
 		if ($this->controls !== null) {
-			$divs[] = (new CDiv($this->controls))->addClass(ZBX_STYLE_HEADER_CONTROLS);
+			$divs[] = (new CDiv($this->controls))->addClass(self::ZBX_STYLE_HEADER_CONTROLS);
 		}
 
-		return (new CTag('header', true, $divs))->addClass(ZBX_STYLE_HEADER_TITLE);
+		return (new CTag('header', true, $divs))->addClass(self::ZBX_STYLE_HEADER_TITLE);
 	}
 }

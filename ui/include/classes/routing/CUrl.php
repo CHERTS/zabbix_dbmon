@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -124,7 +124,7 @@ class CUrl {
 	}
 
 	public function setArgumentSID() {
-		$this->arguments['sid'] = substr($_COOKIE[ZBX_SESSION_NAME], 16, 16);
+		$this->arguments['sid'] = substr(CSessionHelper::getId(), 16, 16);
 
 		return $this;
 	}

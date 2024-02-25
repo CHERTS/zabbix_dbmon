@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,17 +17,16 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
+#include "proxydata.h"
 #include "db.h"
 #include "log.h"
 #include "proxy.h"
 
-#include "proxydata.h"
-#include "../../libs/zbxcrypto/tls_tcp_active.h"
 #include "zbxtasks.h"
 #include "mutexs.h"
 #include "daemon.h"
 #include "zbxcompress.h"
+
 
 extern unsigned char	program_type;
 static zbx_mutex_t	proxy_lock = ZBX_MUTEX_NULL;
@@ -110,15 +109,13 @@ static int	proxy_data_no_history(const struct zbx_json_parse *jp)
 	if (SUCCEED == zbx_json_brackets_by_name(jp, ZBX_PROTO_TAG_AUTOREGISTRATION, &jp_data))
 		return FAIL;
 
-	if (SUCCEED == zbx_json_brackets_by_name(jp, ZBX_PROTO_TAG_HOST_AVAILABILITY, &jp_data))
+	if (SUCCEED == zbx_json_brackets_by_name(jp, ZBX_PROTO_TAG_INTERFACE_AVAILABILITY, &jp_data))
 		return FAIL;
 
 	return SUCCEED;
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_recv_proxy_data                                              *
  *                                                                            *
  * Purpose: receive 'proxy data' request from proxy                           *
  *                                                                            *
@@ -218,8 +215,6 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: send_data_to_server                                              *
- *                                                                            *
  * Purpose: sends data from proxy to server                                   *
  *                                                                            *
  * Parameters: sock  - [IN] the connection socket                             *
@@ -246,8 +241,6 @@ static int	send_data_to_server(zbx_socket_t *sock, char **buffer, size_t buffer_
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_send_proxy_data                                              *
  *                                                                            *
  * Purpose: sends 'proxy data' request to server                              *
  *                                                                            *
@@ -277,7 +270,7 @@ void	zbx_send_proxy_data(zbx_socket_t *sock, zbx_timespec_t *ts)
 	zbx_json_init(&j, ZBX_JSON_STAT_BUF_LEN);
 
 	zbx_json_addstring(&j, ZBX_PROTO_TAG_SESSION, zbx_dc_get_session_token(), ZBX_JSON_TYPE_STRING);
-	get_host_availability_data(&j, &availability_ts);
+	get_interface_availability_data(&j, &availability_ts);
 	proxy_get_hist_data(&j, &history_lastid, &more_history);
 	proxy_get_dhis_data(&j, &discovery_lastid, &more_discovery);
 	proxy_get_areg_data(&j, &areg_lastid, &more_areg);
@@ -358,10 +351,7 @@ out:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
 }
 
-
 /******************************************************************************
- *                                                                            *
- * Function: zbx_send_task_data                                               *
  *                                                                            *
  * Purpose: sends 'proxy data' request to server                              *
  *                                                                            *
@@ -455,4 +445,3 @@ void	free_proxy_history_lock(void)
 	if (0 != (program_type & ZBX_PROGRAM_TYPE_PROXY_PASSIVE))
 		zbx_mutex_destroy(&proxy_lock);
 }
-

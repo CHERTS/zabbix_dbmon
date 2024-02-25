@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,14 +53,10 @@
 			if (jQuery('[name="preprocessing[' + num + '][params][1]"]', $preprocessing).length) {
 				params.push(jQuery('[name="preprocessing[' + num + '][params][1]"]', $preprocessing).val());
 			}
-			if (jQuery('[name="preprocessing[' + num + '][params][2]"]', $preprocessing).length) {
-				// ZBX-16642
+			if (jQuery('[name="preprocessing[' + num + '][params][2]"]:not(:disabled)', $preprocessing).length) {
 				if (type == <?= ZBX_PREPROC_CSV_TO_JSON ?>) {
 					if (jQuery('[name="preprocessing[' + num + '][params][2]"]', $preprocessing).is(':checked')) {
 						params.push(jQuery('[name="preprocessing[' + num + '][params][2]"]', $preprocessing).val());
-					}
-					else {
-						params.push(0);
 					}
 				}
 				else {
@@ -70,7 +66,7 @@
 
 			steps.push(jQuery.extend({
 				type: type,
-				params: params.join("\n")
+				params: params
 			}, on_fail));
 		});
 
@@ -122,7 +118,6 @@
 				break;
 
 			case <?= ITEM_TYPE_INTERNAL ?>:
-			case <?= ITEM_TYPE_AGGREGATE ?>:
 			case <?= ITEM_TYPE_EXTERNAL ?>:
 				properties = {
 					key: form_data['key'].trim()
@@ -225,6 +220,15 @@
 					password: form_data['password'],
 				};
 				break;
+
+			case <?= ITEM_TYPE_SCRIPT ?>:
+				properties = {
+					key: form_data['key'].trim(),
+					parameters: form_data['parameters'],
+					script: form_data['script'],
+					timeout: form_data['timeout']
+				};
+				break;
 		}
 
 		// Common properties.
@@ -247,17 +251,17 @@
 	/**
 	 * Creates item test modal dialog.
 	 *
-	 * @param {array}  step_nums          List of step numbers to collect.
-	 * @param {bool}   show_final_result  Either the final result should be displayed.
-	 * @param {bool}   get_value          Either to show 'get value from host' section.
-	 * @param {object} trigger_elmnt      UI element triggered function.
-	 * @param {int}    step_obj_nr        Value defines which 'test' button was pressed to open test item dialog:
+	 * @param {array} step_nums          List of step numbers to collect.
+	 * @param {bool}  show_final_result  Either the final result should be displayed.
+	 * @param {bool}  get_value          Either to show 'get value from host' section.
+	 * @param {Node}  trigger_element    UI element that triggered function.
+	 * @param {int}   step_obj_nr        Value defines which 'test' button was pressed to open test item dialog:
 	 *                                     - 'test' button in edit form footer (-2);
 	 *                                     - 'test all' button in preprocessinf tab (-1);
 	 *                                     - 'test' button to test single preprocessing step (step index).
 	 */
-	function openItemTestDialog(step_nums, show_final_result, get_value, trigger_elmnt, step_obj_nr) {
-		var $row = jQuery(trigger_elmnt).closest('.preprocessing-list-item, .preprocessing-list-foot, .tfoot-buttons'),
+	function openItemTestDialog(step_nums, show_final_result, get_value, trigger_element, step_obj_nr) {
+		var $row = jQuery(trigger_element).closest('.preprocessing-list-item, .preprocessing-list-foot, .tfoot-buttons'),
 			item_properties = getItemTestProperties('form[name="itemForm"]'),
 			cached_values = $row.data('test-data') || [];
 
@@ -265,6 +269,7 @@
 			delete cached_values.interfaceid;
 			delete cached_values.address;
 			delete cached_values.port;
+			delete cached_values.interface_details;
 		}
 
 		PopUp('popup.itemtest.edit', jQuery.extend(item_properties, {
@@ -275,6 +280,6 @@
 			show_final_result: show_final_result ? 1 : 0,
 			get_value: get_value ? 1 : 0,
 			data: cached_values
-		}), 'item-test', trigger_elmnt);
+		}), {dialogueid: 'item-test', dialogue_class: 'modal-popup-generic', trigger_element});
 	}
 </script>

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,19 +17,15 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
-#include "db.h"
+#include "actions.h"
+
 #include "log.h"
 #include "zbxserver.h"
-
-#include "actions.h"
 #include "operations.h"
-#include "events.h"
 #include "zbxregexp.h"
+#include "../../libs/zbxaudit/audit.h"
 
 /******************************************************************************
- *                                                                            *
- * Function: compare_events                                                   *
  *                                                                            *
  * Purpose: compare events by objectid                                        *
  *                                                                            *
@@ -52,8 +48,6 @@ static int	compare_events(const void *d1, const void *d2)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: add_condition_match                                              *
  *                                                                            *
  * Purpose: save eventids that match condition                                *
  *                                                                            *
@@ -100,8 +94,6 @@ static void	add_condition_match(const zbx_vector_ptr_t *esc_events, zbx_conditio
 
 /******************************************************************************
  *                                                                            *
- * Function: get_object_ids                                                   *
- *                                                                            *
  * Purpose: get objectids of escalation events                                *
  *                                                                            *
  * Parameters: esc_events [IN]  - events to check                             *
@@ -126,8 +118,6 @@ static void	get_object_ids(const zbx_vector_ptr_t *esc_events, zbx_vector_uint64
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_host_group_condition                                       *
  *                                                                            *
  * Purpose: check host group condition                                        *
  *                                                                            *
@@ -213,8 +203,6 @@ static int	check_host_group_condition(const zbx_vector_ptr_t *esc_events, zbx_co
 
 /******************************************************************************
  *                                                                            *
- * Function: trigger_parents_sql_alloc                                        *
- *                                                                            *
  * Purpose: mapping between discovered triggers and their prototypes          *
  *                                                                            *
  * Parameters: sql           [IN/OUT] - allocated sql query                   *
@@ -238,8 +226,6 @@ static void	trigger_parents_sql_alloc(char **sql, size_t *sql_alloc, zbx_vector_
 
 /******************************************************************************
  *                                                                            *
- * Function: objectids_to_pair                                                *
- *                                                                            *
  * Purpose: copy objects to pair, for hierarchy checks                        *
  *                                                                            *
  * Parameters: objectids       [IN]  - objects                                *
@@ -261,8 +247,6 @@ static void	objectids_to_pair(zbx_vector_uint64_t *objectids, zbx_vector_uint64_
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_object_hierarchy                                           *
  *                                                                            *
  * Purpose: there can be multiple levels of templates, that need              *
  *          resolving in order to compare to condition                        *
@@ -401,8 +385,6 @@ static void	check_object_hierarchy(int object, const zbx_vector_ptr_t *esc_event
 
 /******************************************************************************
  *                                                                            *
- * Function: check_host_template_condition                                    *
- *                                                                            *
  * Purpose: check host template condition                                     *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -467,8 +449,6 @@ static int	check_host_template_condition(const zbx_vector_ptr_t *esc_events, zbx
 
 /******************************************************************************
  *                                                                            *
- * Function: check_host_condition                                             *
- *                                                                            *
  * Purpose: check host condition                                              *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -531,8 +511,6 @@ static int	check_host_condition(const zbx_vector_ptr_t *esc_events, zbx_conditio
 
 /******************************************************************************
  *                                                                            *
- * Function: check_trigger_id_condition                                       *
- *                                                                            *
  * Purpose: check trigger id condition                                        *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -591,9 +569,7 @@ static int	check_trigger_id_condition(const zbx_vector_ptr_t *esc_events, zbx_co
 
 /******************************************************************************
  *                                                                            *
- * Function: check_trigger_name_condition                                     *
- *                                                                            *
- * Purpose: check trigger name condition                                      *
+ * Purpose: check event name condition                                        *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
  *             condition  - [IN/OUT] condition for matching, outputs          *
@@ -603,7 +579,7 @@ static int	check_trigger_id_condition(const zbx_vector_ptr_t *esc_events, zbx_co
  *               NOTSUPPORTED - not supported operator                        *
  *                                                                            *
  ******************************************************************************/
-static int	check_trigger_name_condition(const zbx_vector_ptr_t *esc_events, zbx_condition_t *condition)
+static int	check_event_name_condition(const zbx_vector_ptr_t *esc_events, zbx_condition_t *condition)
 {
 	int	i;
 
@@ -631,8 +607,6 @@ static int	check_trigger_name_condition(const zbx_vector_ptr_t *esc_events, zbx_
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_trigger_severity_condition                                 *
  *                                                                            *
  * Purpose: check trigger severity condition                                  *
  *                                                                            *
@@ -683,8 +657,6 @@ static int	check_trigger_severity_condition(const zbx_vector_ptr_t *esc_events, 
 
 /******************************************************************************
  *                                                                            *
- * Function: check_time_period_condition                                      *
- *                                                                            *
  * Purpose: check time period condition                                       *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -704,7 +676,7 @@ static int	check_time_period_condition(const zbx_vector_ptr_t *esc_events, zbx_c
 		return NOTSUPPORTED;
 
 	period = zbx_strdup(NULL, condition->value);
-	substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &period,
+	substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &period,
 			MACRO_TYPE_COMMON, NULL, 0);
 
 	for (i = 0; i < esc_events->values_num; i++)
@@ -712,7 +684,7 @@ static int	check_time_period_condition(const zbx_vector_ptr_t *esc_events, zbx_c
 		const DB_EVENT	*event = (DB_EVENT *)esc_events->values[i];
 		int		res;
 
-		if (SUCCEED == zbx_check_time_period(period, (time_t)event->clock, &res))
+		if (SUCCEED == zbx_check_time_period(period, (time_t)event->clock, NULL, &res))
 		{
 			switch (condition->op)
 			{
@@ -821,103 +793,6 @@ static int	check_acknowledged_condition(const zbx_vector_ptr_t *esc_events, zbx_
 
 /******************************************************************************
  *                                                                            *
- * Function: check_application_condition                                      *
- *                                                                            *
- * Purpose: check application condition                                       *
- *                                                                            *
- * Parameters: esc_events - [IN] events to check                              *
- *             condition  - [IN/OUT] condition for matching, outputs          *
- *                                   event ids that match condition           *
- *                                                                            *
- * Return value: SUCCEED - supported operator                                 *
- *               NOTSUPPORTED - not supported operator                        *
- *                                                                            *
- ******************************************************************************/
-static int	check_application_condition(const zbx_vector_ptr_t *esc_events, zbx_condition_t *condition)
-{
-	char			*sql = NULL;
-	size_t			sql_alloc = 0, sql_offset = 0;
-	DB_RESULT		result;
-	DB_ROW			row;
-	zbx_vector_uint64_t	objectids;
-	zbx_uint64_t		objectid;
-	int			i;
-
-	if (CONDITION_OPERATOR_EQUAL != condition->op && CONDITION_OPERATOR_LIKE != condition->op &&
-			CONDITION_OPERATOR_NOT_LIKE != condition->op)
-	{
-		return NOTSUPPORTED;
-	}
-
-	zbx_vector_uint64_create(&objectids);
-
-	get_object_ids(esc_events, &objectids);
-
-	zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-			"select distinct t.triggerid,a.name"
-			" from applications a,items_applications i,functions f,triggers t"
-			" where a.applicationid=i.applicationid"
-			" and i.itemid=f.itemid"
-			" and f.triggerid=t.triggerid"
-			" and");
-
-	DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.triggerid", objectids.values, objectids.values_num);
-
-	result = DBselect("%s", sql);
-
-	switch (condition->op)
-	{
-		case CONDITION_OPERATOR_EQUAL:
-			while (NULL != (row = DBfetch(result)))
-			{
-				if (0 == strcmp(row[1], condition->value))
-				{
-					ZBX_STR2UINT64(objectid, row[0]);
-					add_condition_match(esc_events, condition, objectid, EVENT_OBJECT_TRIGGER);
-				}
-			}
-			break;
-		case CONDITION_OPERATOR_LIKE:
-			while (NULL != (row = DBfetch(result)))
-			{
-				if (NULL != strstr(row[1], condition->value))
-				{
-					ZBX_STR2UINT64(objectid, row[0]);
-					add_condition_match(esc_events, condition, objectid, EVENT_OBJECT_TRIGGER);
-				}
-			}
-			break;
-		case CONDITION_OPERATOR_NOT_LIKE:
-			while (NULL != (row = DBfetch(result)))
-			{
-				if (NULL != strstr(row[1], condition->value))
-				{
-					ZBX_STR2UINT64(objectid, row[0]);
-
-					if (FAIL != (i = zbx_vector_uint64_search(&objectids, objectid,
-							ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
-					{
-						zbx_vector_uint64_remove_noorder(&objectids, i);
-					}
-				}
-			}
-
-			for (i = 0; i < objectids.values_num; i++)
-				add_condition_match(esc_events, condition, objectids.values[i], EVENT_OBJECT_TRIGGER);
-			break;
-	}
-	DBfree_result(result);
-
-	zbx_vector_uint64_destroy(&objectids);
-	zbx_free(sql);
-
-	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: check_condition_event_tag                                        *
- *                                                                            *
  * Purpose: check condition event tag                                         *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -954,8 +829,6 @@ static void	check_condition_event_tag(const zbx_vector_ptr_t *esc_events, zbx_co
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_condition_event_tag_value                                  *
  *                                                                            *
  * Purpose: check condition event tag value                                   *
  *                                                                            *
@@ -995,8 +868,6 @@ static void	check_condition_event_tag_value(const zbx_vector_ptr_t *esc_events, 
 
 /******************************************************************************
  *                                                                            *
- * Function: check_trigger_condition                                          *
- *                                                                            *
  * Purpose: check if event matches single condition                           *
  *                                                                            *
  * Parameters: event - trigger event to check                                 *
@@ -1004,8 +875,6 @@ static void	check_condition_event_tag_value(const zbx_vector_ptr_t *esc_events, 
  *             condition - condition for matching                             *
  *                                                                            *
  * Return value: SUCCEED - matches, FAIL - otherwise                          *
- *                                                                            *
- * Author: Alexei Vladishev                                                   *
  *                                                                            *
  ******************************************************************************/
 static void	check_trigger_condition(const zbx_vector_ptr_t *esc_events, zbx_condition_t *condition)
@@ -1028,8 +897,8 @@ static void	check_trigger_condition(const zbx_vector_ptr_t *esc_events, zbx_cond
 		case CONDITION_TYPE_TRIGGER:
 			ret = check_trigger_id_condition(esc_events, condition);
 			break;
-		case CONDITION_TYPE_TRIGGER_NAME:
-			ret = check_trigger_name_condition(esc_events, condition);
+		case CONDITION_TYPE_EVENT_NAME:
+			ret = check_event_name_condition(esc_events, condition);
 			break;
 		case CONDITION_TYPE_TRIGGER_SEVERITY:
 			ret = check_trigger_severity_condition(esc_events, condition);
@@ -1042,9 +911,6 @@ static void	check_trigger_condition(const zbx_vector_ptr_t *esc_events, zbx_cond
 			break;
 		case CONDITION_TYPE_EVENT_ACKNOWLEDGED:
 			ret = check_acknowledged_condition(esc_events, condition);
-			break;
-		case CONDITION_TYPE_APPLICATION:
-			ret = check_application_condition(esc_events, condition);
 			break;
 		case CONDITION_TYPE_EVENT_TAG:
 			check_condition_event_tag(esc_events, condition);
@@ -1070,8 +936,6 @@ static void	check_trigger_condition(const zbx_vector_ptr_t *esc_events, zbx_cond
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: get_object_ids_discovery                                         *
  *                                                                            *
  * Purpose: get objectids for dhost                                           *
  *                                                                            *
@@ -1099,8 +963,6 @@ static void	get_object_ids_discovery(const zbx_vector_ptr_t *esc_events, zbx_vec
 	zbx_vector_uint64_uniq(&objectids[1], ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 }
 /******************************************************************************
- *                                                                            *
- * Function: check_drule_condition                                            *
  *                                                                            *
  * Purpose: check discovery rule condition                                    *
  *                                                                            *
@@ -1198,8 +1060,6 @@ static int	check_drule_condition(const zbx_vector_ptr_t *esc_events, zbx_conditi
 
 /******************************************************************************
  *                                                                            *
- * Function: check_dcheck_condition                                           *
- *                                                                            *
  * Purpose: check discovery check condition                                   *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -1273,8 +1133,6 @@ static int	check_dcheck_condition(const zbx_vector_ptr_t *esc_events, zbx_condit
 
 /******************************************************************************
  *                                                                            *
- * Function: check_dobject_condition                                          *
- *                                                                            *
  * Purpose: check discovery object condition                                  *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -1304,8 +1162,6 @@ static int	check_dobject_condition(const zbx_vector_ptr_t *esc_events, zbx_condi
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_proxy_condition                                            *
  *                                                                            *
  * Purpose: check proxy condition for discovery event                         *
  *                                                                            *
@@ -1398,8 +1254,6 @@ static int	check_proxy_condition(const zbx_vector_ptr_t *esc_events, zbx_conditi
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_dvalue_condition                                           *
  *                                                                            *
  * Purpose: check discovery value condition                                   *
  *                                                                            *
@@ -1502,8 +1356,6 @@ static int	check_dvalue_condition(const zbx_vector_ptr_t *esc_events, zbx_condit
 
 /******************************************************************************
  *                                                                            *
- * Function: check_dhost_ip_condition                                         *
- *                                                                            *
  * Purpose: check host ip condition for discovery event                       *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -1593,8 +1445,6 @@ static int	check_dhost_ip_condition(const zbx_vector_ptr_t *esc_events, zbx_cond
 
 /******************************************************************************
  *                                                                            *
- * Function: check_dservice_type_condition                                    *
- *                                                                            *
  * Purpose: check service type condition for discovery event                  *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -1675,8 +1525,6 @@ static int	check_dservice_type_condition(const zbx_vector_ptr_t *esc_events, zbx
 
 /******************************************************************************
  *                                                                            *
- * Function: check_dstatus_condition                                          *
- *                                                                            *
  * Purpose: check discovery status condition                                  *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -1714,8 +1562,6 @@ static int	check_dstatus_condition(const zbx_vector_ptr_t *esc_events, zbx_condi
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_duptime_condition                                          *
  *                                                                            *
  * Purpose: check uptime condition for discovery                              *
  *                                                                            *
@@ -1811,8 +1657,6 @@ static int	check_duptime_condition(const zbx_vector_ptr_t *esc_events, zbx_condi
 
 /******************************************************************************
  *                                                                            *
- * Function: check_dservice_port_condition                                    *
- *                                                                            *
  * Purpose: check service port condition for discovery                        *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -1887,8 +1731,6 @@ static int	check_dservice_port_condition(const zbx_vector_ptr_t *esc_events, zbx
 
 /******************************************************************************
  *                                                                            *
- * Function: check_discovery_condition                                        *
- *                                                                            *
  * Purpose: check if event matches single condition                           *
  *                                                                            *
  * Parameters: event - discovery event to check                               *
@@ -1896,8 +1738,6 @@ static int	check_dservice_port_condition(const zbx_vector_ptr_t *esc_events, zbx
  *             condition - condition for matching                             *
  *                                                                            *
  * Return value: SUCCEED - matches, FAIL - otherwise                          *
- *                                                                            *
- * Author: Alexei Vladishev                                                   *
  *                                                                            *
  ******************************************************************************/
 static void	check_discovery_condition(const zbx_vector_ptr_t *esc_events, zbx_condition_t *condition)
@@ -1954,8 +1794,6 @@ static void	check_discovery_condition(const zbx_vector_ptr_t *esc_events, zbx_co
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_hostname_metadata_condition                                *
  *                                                                            *
  * Purpose: check metadata or host condition for auto registration            *
  *                                                                            *
@@ -2042,8 +1880,6 @@ static int	check_hostname_metadata_condition(const zbx_vector_ptr_t *esc_events,
 
 /******************************************************************************
  *                                                                            *
- * Function: check_areg_proxy_condition                                       *
- *                                                                            *
  * Purpose: check proxy condition for auto registration                       *
  *                                                                            *
  * Parameters: esc_events - [IN] events to check                              *
@@ -2112,8 +1948,6 @@ static int	check_areg_proxy_condition(const zbx_vector_ptr_t *esc_events, zbx_co
 
 /******************************************************************************
  *                                                                            *
- * Function: check_autoregistration_condition                                 *
- *                                                                            *
  * Purpose: check if event matches single condition                           *
  *                                                                            *
  * Parameters: event - autoregistration event to check                        *
@@ -2121,8 +1955,6 @@ static int	check_areg_proxy_condition(const zbx_vector_ptr_t *esc_events, zbx_co
  *             condition - condition for matching                             *
  *                                                                            *
  * Return value: SUCCEED - matches, FAIL - otherwise                          *
- *                                                                            *
- * Author: Alexei Vladishev                                                   *
  *                                                                            *
  ******************************************************************************/
 static void	check_autoregistration_condition(const zbx_vector_ptr_t *esc_events, zbx_condition_t *condition)
@@ -2158,8 +1990,6 @@ static void	check_autoregistration_condition(const zbx_vector_ptr_t *esc_events,
 
 /******************************************************************************
  *                                                                            *
- * Function: is_supported_event_object                                        *
- *                                                                            *
  * Purpose: not all event objects are supported for internal events           *
  *                                                                            *
  * Parameters: events     - [IN]  events to check                             *
@@ -2175,8 +2005,6 @@ static int	is_supported_event_object(const DB_EVENT *event)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_intern_event_type_condition                                *
  *                                                                            *
  * Purpose: check event type condition for internal events                    *
  *                                                                            *
@@ -2230,8 +2058,6 @@ static int	check_intern_event_type_condition(const zbx_vector_ptr_t *esc_events,
 
 /******************************************************************************
  *                                                                            *
- * Function: get_object_ids_internal                                          *
- *                                                                            *
  * Purpose: get objectids of escalation internal events                       *
  *                                                                            *
  * Parameters: esc_events  - [IN]  events to check                            *
@@ -2269,8 +2095,6 @@ static void	get_object_ids_internal(const zbx_vector_ptr_t *esc_events, zbx_vect
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_intern_host_group_condition                                *
  *                                                                            *
  * Purpose: check host group condition for internal events                    *
  *                                                                            *
@@ -2387,8 +2211,6 @@ static int	check_intern_host_group_condition(const zbx_vector_ptr_t *esc_events,
 
 /******************************************************************************
  *                                                                            *
- * Function: item_parents_sql_alloc                                           *
- *                                                                            *
  * Purpose: get parent id from item discovery                                 *
  *                                                                            *
  * Parameters: sql           [IN/OUT] - allocated sql query                   *
@@ -2413,11 +2235,7 @@ static void	item_parents_sql_alloc(char **sql, size_t *sql_alloc, zbx_vector_uin
 			objectids_tmp->values, objectids_tmp->values_num);
 }
 
-
-
 /******************************************************************************
- *                                                                            *
- * Function: check_intern_host_template_condition                             *
  *                                                                            *
  * Purpose: check host template condition for internal events                 *
  *                                                                            *
@@ -2511,8 +2329,6 @@ static int	check_intern_host_template_condition(const zbx_vector_ptr_t *esc_even
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_intern_host_condition                                      *
  *                                                                            *
  * Purpose: check host condition for internal events                          *
  *                                                                            *
@@ -2611,126 +2427,6 @@ static int	check_intern_host_condition(const zbx_vector_ptr_t *esc_events, zbx_c
 
 /******************************************************************************
  *                                                                            *
- * Function: check_intern_application_condition                               *
- *                                                                            *
- * Purpose: check application condition for internal events                   *
- *                                                                            *
- * Parameters: esc_events - [IN] events to check                              *
- *             condition  - [IN/OUT] condition for matching, outputs          *
- *                                   event ids that match condition           *
- *                                                                            *
- * Return value: SUCCEED - supported operator                                 *
- *               NOTSUPPORTED - not supported operator                        *
- *                                                                            *
- ******************************************************************************/
-static int	check_intern_application_condition(const zbx_vector_ptr_t *esc_events, zbx_condition_t *condition)
-{
-	char			*sql = NULL;
-	size_t			sql_alloc = 0;
-	DB_RESULT		result;
-	DB_ROW			row;
-	int			objects[3] = {EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE}, i, j;
-	zbx_vector_uint64_t	objectids[3];
-	zbx_uint64_t		objectid;
-
-	if (CONDITION_OPERATOR_EQUAL != condition->op && CONDITION_OPERATOR_LIKE != condition->op &&
-			CONDITION_OPERATOR_NOT_LIKE != condition->op)
-		return NOTSUPPORTED;
-
-	for (i = 0; i < (int)ARRSIZE(objects); i++)
-		zbx_vector_uint64_create(&objectids[i]);
-
-	get_object_ids_internal(esc_events, objectids, objects, (int)ARRSIZE(objects));
-
-	for (i = 0; i < (int)ARRSIZE(objects); i++)
-	{
-		size_t	sql_offset = 0;
-
-		if (0 == objectids[i].values_num)
-			continue;
-
-		if (EVENT_OBJECT_TRIGGER == objects[i])
-		{
-			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-					"select distinct t.triggerid,a.name"
-					" from applications a,items_applications i,functions f,triggers t"
-					" where a.applicationid=i.applicationid"
-						" and i.itemid=f.itemid"
-						" and f.triggerid=t.triggerid"
-						" and");
-
-			DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "t.triggerid",
-					objectids[i].values, objectids[i].values_num);
-		}
-		else	/* EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE */
-		{
-			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
-					"select distinct i.itemid,a.name"
-					" from applications a,items_applications i"
-					" where a.applicationid=i.applicationid"
-						" and");
-
-			DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "i.itemid",
-					objectids[i].values, objectids[i].values_num);
-		}
-
-		result = DBselect("%s", sql);
-
-		switch (condition->op)
-		{
-			case CONDITION_OPERATOR_EQUAL:
-				while (NULL != (row = DBfetch(result)))
-				{
-					if (0 == strcmp(row[1], condition->value))
-					{
-						ZBX_STR2UINT64(objectid, row[0]);
-						add_condition_match(esc_events, condition, objectid, objects[i]);
-					}
-				}
-				break;
-			case CONDITION_OPERATOR_LIKE:
-				while (NULL != (row = DBfetch(result)))
-				{
-					if (NULL != strstr(row[1], condition->value))
-					{
-						ZBX_STR2UINT64(objectid, row[0]);
-						add_condition_match(esc_events, condition, objectid, objects[i]);
-					}
-				}
-				break;
-			case CONDITION_OPERATOR_NOT_LIKE:
-				while (NULL != (row = DBfetch(result)))
-				{
-					if (NULL != strstr(row[1], condition->value))
-					{
-						ZBX_STR2UINT64(objectid, row[0]);
-						if (FAIL != (j = zbx_vector_uint64_search(&objectids[i], objectid,
-								ZBX_DEFAULT_UINT64_COMPARE_FUNC)))
-						{
-							zbx_vector_uint64_remove_noorder(&objectids[i], j);
-						}
-					}
-				}
-
-				for (j = 0; j < objectids[i].values_num; j++)
-					add_condition_match(esc_events, condition, objectids[i].values[j], objects[i]);
-				break;
-		}
-		DBfree_result(result);
-	}
-
-	for (i = 0; i < (int)ARRSIZE(objects); i++)
-		zbx_vector_uint64_destroy(&objectids[i]);
-
-	zbx_free(sql);
-
-	return SUCCEED;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: check_internal_condition                                         *
- *                                                                            *
  * Purpose: check if internal event matches single condition                  *
  *                                                                            *
  * Parameters: event     - [IN] trigger event to check                        *
@@ -2759,8 +2455,13 @@ static void	check_internal_condition(const zbx_vector_ptr_t *esc_events, zbx_con
 		case CONDITION_TYPE_HOST:
 			ret = check_intern_host_condition(esc_events, condition);
 			break;
-		case CONDITION_TYPE_APPLICATION:
-			ret = check_intern_application_condition(esc_events, condition);
+		case CONDITION_TYPE_EVENT_TAG:
+			check_condition_event_tag(esc_events, condition);
+			ret = SUCCEED;
+			break;
+		case CONDITION_TYPE_EVENT_TAG_VALUE:
+			check_condition_event_tag_value(esc_events,condition);
+			ret = SUCCEED;
 			break;
 		default:
 			ret = FAIL;
@@ -2774,13 +2475,10 @@ static void	check_internal_condition(const zbx_vector_ptr_t *esc_events, zbx_con
 				(int)condition->op, condition->conditionid);
 	}
 
-
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __func__, zbx_result_string(ret));
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_events_condition                                           *
  *                                                                            *
  * Purpose: check if multiple events matches single condition                 *
  *                                                                            *
@@ -2788,7 +2486,6 @@ static void	check_internal_condition(const zbx_vector_ptr_t *esc_events, zbx_con
  *             source     - [IN] specific event source that need checking     *
  *             condition  - [IN/OUT] condition for matching, outputs          *
  *                                   event ids that match condition           *
- * Author: Alexei Vladishev                                                   *
  *                                                                            *
  ******************************************************************************/
 static void	check_events_condition(const zbx_vector_ptr_t *esc_events, unsigned char source, zbx_condition_t *condition)
@@ -2822,16 +2519,12 @@ static void	check_events_condition(const zbx_vector_ptr_t *esc_events, unsigned 
 
 /******************************************************************************
  *                                                                            *
- * Function: check_action_condition                                           *
- *                                                                            *
  * Purpose: check if event matches single condition                           *
  *                                                                            *
  * Parameters: event - event to check                                         *
  *             condition - condition for matching                             *
  *                                                                            *
  * Return value: SUCCEED - matches, FAIL - otherwise                          *
- *                                                                            *
- * Author: Alexei Vladishev                                                   *
  *                                                                            *
  ******************************************************************************/
 int	check_action_condition(const DB_EVENT *event, zbx_condition_t *condition)
@@ -2859,8 +2552,6 @@ int	check_action_condition(const DB_EVENT *event, zbx_condition_t *condition)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: check_action_conditions                                          *
  *                                                                            *
  * Purpose: check if action have to be processed for the event                *
  *          (check all conditions of the action)                              *
@@ -2969,13 +2660,9 @@ clean:
 
 /******************************************************************************
  *                                                                            *
- * Function: execute_operations                                               *
- *                                                                            *
  * Purpose: execute host, group, template operations linked to the action     *
  *                                                                            *
  * Parameters: action - action to execute operations for                      *
- *                                                                            *
- * Author: Alexei Vladishev                                                   *
  *                                                                            *
  * Comments: for message, command operations see                              *
  *           escalation_execute_operations(),                                 *
@@ -2990,6 +2677,7 @@ static void	execute_operations(const DB_EVENT *event, zbx_uint64_t actionid)
 	zbx_vector_uint64_t	lnk_templateids, del_templateids,
 				new_groupids, del_groupids;
 	int			i;
+	zbx_config_t		cfg;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s() actionid:" ZBX_FS_UI64, __func__, actionid);
 
@@ -3008,6 +2696,10 @@ static void	execute_operations(const DB_EVENT *event, zbx_uint64_t actionid)
 			" order by o.operationid",
 			actionid);
 
+	zbx_config_get(&cfg, ZBX_CONFIG_FLAGS_DISCOVERY_GROUPID | ZBX_CONFIG_FLAGS_DEFAULT_INVENTORY_MODE |
+			ZBX_CONFIG_FLAGS_AUDITLOG_ENABLED);
+	zbx_audit_init(cfg.auditlog_enabled);
+
 	while (NULL != (row = DBfetch(result)))
 	{
 		int		inventory_mode;
@@ -3021,16 +2713,16 @@ static void	execute_operations(const DB_EVENT *event, zbx_uint64_t actionid)
 		switch (operationtype)
 		{
 			case OPERATION_TYPE_HOST_ADD:
-				op_host_add(event);
+				op_host_add(event, &cfg);
 				break;
 			case OPERATION_TYPE_HOST_REMOVE:
 				op_host_del(event);
 				break;
 			case OPERATION_TYPE_HOST_ENABLE:
-				op_host_enable(event);
+				op_host_enable(event, &cfg);
 				break;
 			case OPERATION_TYPE_HOST_DISABLE:
-				op_host_disable(event);
+				op_host_disable(event, &cfg);
 				break;
 			case OPERATION_TYPE_GROUP_ADD:
 				if (0 != groupid)
@@ -3065,7 +2757,7 @@ static void	execute_operations(const DB_EVENT *event, zbx_uint64_t actionid)
 				}
 				break;
 			case OPERATION_TYPE_HOST_INVENTORY:
-				op_host_inventory_mode(event, inventory_mode);
+				op_host_inventory_mode(event, &cfg, inventory_mode);
 				break;
 			default:
 				;
@@ -3084,14 +2776,14 @@ static void	execute_operations(const DB_EVENT *event, zbx_uint64_t actionid)
 	{
 		zbx_vector_uint64_sort(&lnk_templateids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 		zbx_vector_uint64_uniq(&lnk_templateids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-		op_template_add(event, &lnk_templateids);
+		op_template_add(event, &cfg, &lnk_templateids);
 	}
 
 	if (0 != new_groupids.values_num)
 	{
 		zbx_vector_uint64_sort(&new_groupids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
 		zbx_vector_uint64_uniq(&new_groupids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
-		op_groups_add(event, &new_groupids);
+		op_groups_add(event, &cfg, &new_groupids);
 	}
 
 	if (0 != del_groupids.values_num)
@@ -3106,6 +2798,8 @@ static void	execute_operations(const DB_EVENT *event, zbx_uint64_t actionid)
 	zbx_vector_uint64_destroy(&del_templateids);
 	zbx_vector_uint64_destroy(&lnk_templateids);
 
+	zbx_audit_flush();
+
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
 }
 
@@ -3119,8 +2813,6 @@ typedef struct
 zbx_escalation_new_t;
 
 /******************************************************************************
- *                                                                            *
- * Function: is_recovery_event                                                *
  *                                                                            *
  * Purpose: checks if the event is recovery event                             *
  *                                                                            *
@@ -3161,8 +2853,6 @@ static int	is_recovery_event(const DB_EVENT *event)
 
 /******************************************************************************
  *                                                                            *
- * Function: is_escalation_event                                              *
- *                                                                            *
  * Purpose: to determine if event needs condition checks                      *
  *                                                                            *
  * Parameters: event - [IN] event to validate                                 *
@@ -3187,8 +2877,6 @@ static int	is_escalation_event(const DB_EVENT *event)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: uniq_conditions_compare_func                                     *
  *                                                                            *
  * Purpose: compare to find equal conditions                                  *
  *                                                                            *
@@ -3218,12 +2906,9 @@ static int	uniq_conditions_compare_func(const void *d1, const void *d2)
 
 /******************************************************************************
  *                                                                            *
- * Function: uniq_conditions_hash_func                                        *
- *                                                                            *
  * Purpose: generate hash based on condition values                           *
  *                                                                            *
  * Parameters: data - [IN] condition structure                                *
- *                                                                            *
  *                                                                            *
  * Return value: hash is generated                                            *
  *                                                                            *
@@ -3242,8 +2927,6 @@ static zbx_hash_t	uniq_conditions_hash_func(const void *data)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: get_escalation_events                                            *
  *                                                                            *
  * Purpose: add events that have escalation possible and skip others, also    *
  *          adds according to source                                          *
@@ -3268,8 +2951,6 @@ static void	get_escalation_events(const zbx_vector_ptr_t *events, zbx_vector_ptr
 
 /******************************************************************************
  *                                                                            *
- * Function: db_condition_clean                                               *
- *                                                                            *
  * Purpose: cleans condition data structure                                   *
  *                                                                            *
  * Parameters: condition - [IN] the condition data to free                    *
@@ -3283,8 +2964,6 @@ static void	db_condition_clean(zbx_condition_t *condition)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_conditions_eval_clean                                        *
  *                                                                            *
  * Purpose: cleans condition data structures from hashset                     *
  *                                                                            *
@@ -3304,8 +2983,6 @@ static void	conditions_eval_clean(zbx_hashset_t *uniq_conditions)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_action_eval_free                                             *
- *                                                                            *
  * Purpose: frees action evaluation data structure                            *
  *                                                                            *
  * Parameters: action - [IN] the action evaluation to free                    *
@@ -3321,8 +2998,6 @@ static void	zbx_action_eval_free(zbx_action_eval_t *action)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: prepare_actions_conditions_eval                                  *
  *                                                                            *
  * Purpose: make actions to point, to conditions from hashset, where all      *
  *          conditions are unique, this ensures that we don't double check    *
@@ -3391,8 +3066,6 @@ static void	prepare_actions_conditions_eval(zbx_vector_ptr_t *actions, zbx_hashs
 
 /******************************************************************************
  *                                                                            *
- * Function: process_actions                                                  *
- *                                                                            *
  * Purpose: process all actions of each event in a list                       *
  *                                                                            *
  * Parameters: events        - [IN] events to apply actions for               *
@@ -3423,7 +3096,7 @@ void	process_actions(const zbx_vector_ptr_t *events, const zbx_vector_uint64_pai
 	}
 
 	zbx_vector_ptr_create(&actions);
-	zbx_dc_get_actions_eval(&actions, ZBX_ACTION_OPCLASS_NORMAL | ZBX_ACTION_OPCLASS_RECOVERY);
+	zbx_dc_config_history_sync_get_actions_eval(&actions, ZBX_ACTION_OPCLASS_NORMAL | ZBX_ACTION_OPCLASS_RECOVERY);
 	prepare_actions_conditions_eval(&actions, uniq_conditions);
 	get_escalation_events(events, esc_events);
 
@@ -3547,7 +3220,7 @@ void	process_actions(const zbx_vector_ptr_t *events, const zbx_vector_uint64_pai
 		int		j;
 
 		zbx_db_insert_prepare(&db_insert, "escalations", "escalationid", "actionid", "status", "triggerid",
-					"itemid", "eventid", "r_eventid", "acknowledgeid", NULL);
+					"itemid", "eventid", "r_eventid", "acknowledgeid", (char *)NULL);
 
 		for (j = 0; j < new_escalations.values_num; j++)
 		{
@@ -3616,14 +3289,12 @@ void	process_actions(const zbx_vector_ptr_t *events, const zbx_vector_uint64_pai
 
 /******************************************************************************
  *                                                                            *
- * Function: process_actions_by_acknowledgements                              *
- *                                                                            *
- * Purpose: process actions for each acknowledgement in the array             *
+ * Purpose: process actions for each acknowledgment in the array              *
  *                                                                            *
  * Parameters: event_ack        - [IN] vector for eventid/ackid pairs         *
  *                                                                            *
  ******************************************************************************/
-int	process_actions_by_acknowledgements(const zbx_vector_ptr_t *ack_tasks)
+int	process_actions_by_acknowledgments(const zbx_vector_ptr_t *ack_tasks)
 {
 	zbx_vector_ptr_t	actions;
 	zbx_hashset_t		uniq_conditions[EVENT_SOURCE_COUNT];
@@ -3647,7 +3318,7 @@ int	process_actions_by_acknowledgements(const zbx_vector_ptr_t *ack_tasks)
 	}
 
 	zbx_vector_ptr_create(&actions);
-	zbx_dc_get_actions_eval(&actions, ZBX_ACTION_OPCLASS_ACKNOWLEDGE);
+	zbx_dc_config_history_sync_get_actions_eval(&actions, ZBX_ACTION_OPCLASS_ACKNOWLEDGE);
 	prepare_actions_conditions_eval(&actions, uniq_conditions);
 
 	if (0 == actions.values_num)
@@ -3734,7 +3405,7 @@ int	process_actions_by_acknowledgements(const zbx_vector_ptr_t *ack_tasks)
 		zbx_db_insert_t	db_insert;
 
 		zbx_db_insert_prepare(&db_insert, "escalations", "escalationid", "actionid", "status", "triggerid",
-						"itemid", "eventid", "r_eventid", "acknowledgeid", NULL);
+						"itemid", "eventid", "r_eventid", "acknowledgeid", (char *)NULL);
 
 		zbx_vector_ptr_sort(&ack_escalations, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
 
@@ -3779,8 +3450,6 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: get_actions_info                                                 *
- *                                                                            *
  * Purpose: reads actions from database                                       *
  *                                                                            *
  * Parameters: actionids - [IN] requested action ids                          *
@@ -3803,7 +3472,7 @@ void	get_db_actions_info(zbx_vector_uint64_t *actionids, zbx_vector_ptr_t *actio
 	DBadd_condition_alloc(&filter, &filter_alloc, &filter_offset, "actionid", actionids->values,
 			actionids->values_num);
 
-	result = DBselect("select actionid,name,status,eventsource,esc_period,pause_suppressed"
+	result = DBselect("select actionid,name,status,eventsource,esc_period,pause_suppressed,notify_if_canceled"
 				" from actions"
 				" where%s order by actionid", filter);
 
@@ -3817,8 +3486,8 @@ void	get_db_actions_info(zbx_vector_uint64_t *actionids, zbx_vector_ptr_t *actio
 		ZBX_STR2UCHAR(action->eventsource, row[3]);
 
 		tmp = zbx_strdup(NULL, row[4]);
-		substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &tmp, MACRO_TYPE_COMMON,
-				NULL, 0);
+		substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &tmp,
+				MACRO_TYPE_COMMON, NULL, 0);
 		if (SUCCEED != is_time_suffix(tmp, &action->esc_period, ZBX_LENGTH_UNLIMITED))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "Invalid default operation step duration \"%s\" for action"
@@ -3828,6 +3497,7 @@ void	get_db_actions_info(zbx_vector_uint64_t *actionids, zbx_vector_ptr_t *actio
 		zbx_free(tmp);
 
 		ZBX_STR2UCHAR(action->pause_suppressed, row[5]);
+		ZBX_STR2UCHAR(action->notify_if_canceled, row[6]);
 		action->name = zbx_strdup(NULL, row[1]);
 		action->recovery = ZBX_ACTION_RECOVERY_NONE;
 

@@ -1,7 +1,7 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,9 +39,30 @@ class C20ImportConverterTest extends CImportConverterTest {
 						],
 						[
 							'items' => [
-								['key' => 'agent.ping', 'status' => ITEM_STATUS_ACTIVE],
-								['key' => 'net.tcp.service[ntp]', 'status' => ITEM_STATUS_DISABLED],
-								['key' => 'net.tcp.service[tcp,,5432]', 'status' => ITEM_STATUS_NOTSUPPORTED]
+								[
+									'key' => 'agent.ping',
+									'status' => ITEM_STATUS_ACTIVE,
+									'snmpv3_contextname' => '',
+									'snmpv3_authprotocol' => '',
+									'snmpv3_privprotocol' => '',
+									'logtimefmt' => ''
+								],
+								[
+									'key' => 'net.tcp.service[ntp]',
+									'status' => ITEM_STATUS_DISABLED,
+									'snmpv3_contextname' => '',
+									'snmpv3_authprotocol' => '',
+									'snmpv3_privprotocol' => '',
+									'logtimefmt' => ''
+								],
+								[
+									'key' => 'net.tcp.service[tcp,,5432]',
+									'status' => ITEM_STATUS_NOTSUPPORTED,
+									'snmpv3_contextname' => '',
+									'snmpv3_authprotocol' => '',
+									'snmpv3_privprotocol' => '',
+									'logtimefmt' => ''
+								]
 							]
 						],
 						[
@@ -53,10 +74,18 @@ class C20ImportConverterTest extends CImportConverterTest {
 									'filter' => [],
 									'item_prototypes' => [
 										[
-											'key' => 'net.if.in[{#IFNAME}]'
+											'key' => 'net.if.in[{#IFNAME}]',
+											'snmpv3_contextname' => '',
+											'snmpv3_authprotocol' => '',
+											'snmpv3_privprotocol' => '',
+											'logtimefmt' => ''
 										],
 										[
-											'key' => 'net.tcp.service[ntp, {#HOST}, {#PORT}]'
+											'key' => 'net.tcp.service[ntp, {#HOST}, {#PORT}]',
+											'snmpv3_contextname' => '',
+											'snmpv3_authprotocol' => '',
+											'snmpv3_privprotocol' => '',
+											'logtimefmt' => ''
 										]
 									],
 									'graph_prototypes' => [
@@ -96,7 +125,11 @@ class C20ImportConverterTest extends CImportConverterTest {
 									'filter' => '',
 									'item_prototypes' => [],
 									'graph_prototypes' => [],
-									'trigger_prototypes' => []
+									'trigger_prototypes' => [],
+									'snmpv3_contextname' => '',
+									'snmpv3_authprotocol' => '',
+									'snmpv3_privprotocol' => '',
+									'logtimefmt' => ''
 								],
 								[
 									'type' => ITEM_TYPE_SNMPV3,
@@ -105,7 +138,11 @@ class C20ImportConverterTest extends CImportConverterTest {
 									'filter' => ':',
 									'item_prototypes' => [],
 									'graph_prototypes' => [],
-									'trigger_prototypes' => []
+									'trigger_prototypes' => [],
+									'snmpv3_contextname' => '',
+									'snmpv3_authprotocol' => '',
+									'snmpv3_privprotocol' => '',
+									'logtimefmt' => ''
 								],
 								[
 									'type' => ITEM_TYPE_ZABBIX,
@@ -113,7 +150,11 @@ class C20ImportConverterTest extends CImportConverterTest {
 									'filter' => '{#MACRO}:regex',
 									'item_prototypes' => [],
 									'graph_prototypes' => [],
-									'trigger_prototypes' => []
+									'trigger_prototypes' => [],
+									'snmpv3_contextname' => '',
+									'snmpv3_authprotocol' => '',
+									'snmpv3_privprotocol' => '',
+									'logtimefmt' => ''
 								]
 							]
 						]
@@ -252,7 +293,8 @@ class C20ImportConverterTest extends CImportConverterTest {
 									'host_prototypes' => [],
 									'snmpv3_contextname' => '',
 									'snmpv3_authprotocol' => '',
-									'snmpv3_privprotocol' => ''
+									'snmpv3_privprotocol' => '',
+									'logtimefmt' => ''
 								],
 								[
 									'type' => ITEM_TYPE_SNMPV3,
@@ -269,7 +311,8 @@ class C20ImportConverterTest extends CImportConverterTest {
 									'host_prototypes' => [],
 									'snmpv3_contextname' => '',
 									'snmpv3_authprotocol' => '',
-									'snmpv3_privprotocol' => ''
+									'snmpv3_privprotocol' => '',
+									'logtimefmt' => ''
 								],
 								[
 									'type' => ITEM_TYPE_ZABBIX,
@@ -291,7 +334,8 @@ class C20ImportConverterTest extends CImportConverterTest {
 									'host_prototypes' => [],
 									'snmpv3_contextname' => '',
 									'snmpv3_authprotocol' => '',
-									'snmpv3_privprotocol' => ''
+									'snmpv3_privprotocol' => '',
+									'logtimefmt' => ''
 								]
 							],
 							'description' => '',
@@ -408,39 +452,6 @@ class C20ImportConverterTest extends CImportConverterTest {
 							]
 						],
 						[
-							'screens' => [
-								[],
-								[
-									'screen_items' => [
-										[
-											'rowspan' => 0,
-											'colspan' => 0,
-											'resourcetype' => SCREEN_RESOURCE_SIMPLE_GRAPH,
-											'resource' => [
-												'key' => 'net.tcp.service[ntp]'
-											]
-										],
-										[
-											'rowspan' => 1,
-											'colspan' => 2,
-											'resourcetype' => SCREEN_RESOURCE_PLAIN_TEXT,
-											'resource' => [
-												'key' => 'net.tcp.service[ntp]'
-											]
-										],
-										[
-											'rowspan' => 3,
-											'colspan' => 4,
-											'resourcetype' => SCREEN_RESOURCE_PLAIN_TEXT,
-											'resource' => [
-												'key' => 'net.tcp.service[tcp,,5432]'
-											]
-										]
-									]
-								]
-							]
-						],
-						[
 							'discovery_rules' => [
 								[
 									'type' => ITEM_TYPE_SNMPV3,
@@ -543,46 +554,6 @@ class C20ImportConverterTest extends CImportConverterTest {
 									'snmpv3_authprotocol' => '',
 									'snmpv3_privprotocol' => '',
 									'logtimefmt' => ''
-								]
-							],
-							'description' => ''
-						],
-						[
-							'screens' => [
-								[],
-								[
-									'screen_items' => [
-										[
-											'rowspan' => '1',
-											'colspan' => '1',
-											'resourcetype' => SCREEN_RESOURCE_SIMPLE_GRAPH,
-											'resource' => [
-												'key' => 'net.udp.service[ntp]'
-											],
-											'application' => '',
-											'max_columns' => '3'
-										],
-										[
-											'rowspan' => 1,
-											'colspan' => 2,
-											'resourcetype' => SCREEN_RESOURCE_PLAIN_TEXT,
-											'resource' => [
-												'key' => 'net.udp.service[ntp]'
-											],
-											'application' => '',
-											'max_columns' => '3'
-										],
-										[
-											'rowspan' => 3,
-											'colspan' => 4,
-											'resourcetype' => SCREEN_RESOURCE_PLAIN_TEXT,
-											'resource' => [
-												'key' => 'net.tcp.service[tcp,,5432]'
-											],
-											'application' => '',
-											'max_columns' => '3'
-										]
-									]
 								]
 							],
 							'description' => ''
@@ -702,80 +673,6 @@ class C20ImportConverterTest extends CImportConverterTest {
 								]
 							],
 							'description' => ''
-						]
-					]
-				]
-			],
-			[
-				[
-					'screens' => [
-						[],
-						[
-							'screen_items' => [
-								[
-									'rowspan' => 0,
-									'colspan' => 0,
-									'resourcetype' => SCREEN_RESOURCE_SIMPLE_GRAPH,
-									'resource' => [
-										'key' => 'net.tcp.service[ntp]'
-									]
-								],
-								[
-									'rowspan' => 1,
-									'colspan' => 2,
-									'resourcetype' => SCREEN_RESOURCE_PLAIN_TEXT,
-									'resource' => [
-										'key' => 'net.tcp.service[ntp]'
-									]
-								],
-								[
-									'rowspan' => 3,
-									'colspan' => 4,
-									'resourcetype' => SCREEN_RESOURCE_PLAIN_TEXT,
-									'resource' => [
-										'key' => 'net.tcp.service[tcp,,5432]'
-									]
-								]
-							]
-						]
-					]
-				],
-				[
-					'screens' => [
-						[],
-						[
-							'screen_items' => [
-								[
-									'rowspan' => '1',
-									'colspan' => '1',
-									'resourcetype' => SCREEN_RESOURCE_SIMPLE_GRAPH,
-									'resource' => [
-										'key' => 'net.udp.service[ntp]'
-									],
-									'application' => '',
-									'max_columns' => '3'
-								],
-								[
-									'rowspan' => 1,
-									'colspan' => 2,
-									'resourcetype' => SCREEN_RESOURCE_PLAIN_TEXT,
-									'resource' => [
-										'key' => 'net.udp.service[ntp]'
-									],
-									'application' => '',
-									'max_columns' => '3'
-								],
-								[
-									'rowspan' => 3,
-									'colspan' => 4,
-									'resourcetype' => SCREEN_RESOURCE_PLAIN_TEXT,
-									'resource' => [
-										'key' => 'net.tcp.service[tcp,,5432]'
-									],
-									'application' => '',
-									'max_columns' => '3'
-								]
-							]
 						]
 					]
 				]

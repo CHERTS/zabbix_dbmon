@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,11 +24,12 @@ import (
 	"fmt"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"sync"
 
-	"zabbix.com/pkg/plugin"
-
-	"github.com/godbus/dbus"
+	"git.zabbix.com/ap/plugin-support/errs"
+	"git.zabbix.com/ap/plugin-support/plugin"
+	"github.com/godbus/dbus/v5"
 )
 
 // Plugin -
@@ -53,6 +54,11 @@ type unit struct {
 	JobPath     string
 }
 
+type unitFile struct {
+	Name            string
+	EnablementState string
+}
+
 type unitJson struct {
 	Name          string `json:"{#UNIT.NAME}"`
 	Description   string `json:"{#UNIT.DESCRIPTION}"`
@@ -75,6 +81,18 @@ type state struct {
 type stateMapping struct {
 	unitName   string
 	stateNames []string
+}
+
+func init() {
+	err := plugin.RegisterMetrics(
+		&impl, "Systemd",
+		"systemd.unit.get", "Returns the bulked info, usage: systemd.unit.get[unit,<interface>].",
+		"systemd.unit.discovery", "Returns JSON array of discovered units, usage: systemd.unit.discovery[<type>].",
+		"systemd.unit.info", "Returns the unit info, usage: systemd.unit.info[unit,<parameter>,<interface>].",
+	)
+	if err != nil {
+		panic(errs.Wrap(err, "failed to register metrics"))
+	}
 }
 
 func (p *Plugin) getConnection() (*dbus.Conn, error) {
@@ -162,7 +180,10 @@ func (p *Plugin) get(params []string, conn *dbus.Conn) (interface{}, error) {
 		unitType = params[1]
 	}
 
-	obj := conn.Object("org.freedesktop.systemd1", dbus.ObjectPath("/org/freedesktop/systemd1/unit/"+getName(params[0])))
+	obj := conn.Object(
+		"org.freedesktop.systemd1",
+		dbus.ObjectPath("/org/freedesktop/systemd1/unit/"+getName(params[0])),
+	)
 	err := obj.Call("org.freedesktop.DBus.Properties.GetAll", 0, "org.freedesktop.systemd1."+unitType).Store(&values)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot get unit property: %s", err)
@@ -207,6 +228,11 @@ func (p *Plugin) discovery(params []string, conn *dbus.Conn) (interface{}, error
 		return nil, fmt.Errorf("Cannot retrieve list of units: %s", err)
 	}
 
+	var unitFiles []unitFile
+	if err = obj.Call("org.freedesktop.systemd1.Manager.ListUnitFiles", 0).Store(&unitFiles); err != nil {
+		return nil, fmt.Errorf("Cannot retrieve list of unit files: %s", err)
+	}
+
 	var array []unitJson
 	for _, u := range units {
 		if len(ext) != 0 && ext != filepath.Ext(u.Name) {
@@ -228,9 +254,32 @@ func (p *Plugin) discovery(params []string, conn *dbus.Conn) (interface{}, error
 			continue
 		}
 
-		array = append(array, unitJson{u.Name, u.Description, u.LoadState, u.ActiveState,
+		array = append(array, unitJson{
+			u.Name, u.Description, u.LoadState, u.ActiveState,
 			u.SubState, u.Followed, u.Path, u.JobID, u.JobType, u.JobPath, state,
 		})
+	}
+
+	for _, f := range unitFiles {
+		unitFileExt := filepath.Ext(f.Name)
+		basePath := filepath.Base(f.Name)
+		if f.EnablementState != "disabled" || (len(ext) != 0 && ext != unitFileExt) ||
+			strings.HasSuffix(strings.TrimSuffix(f.Name, unitFileExt), "@") || /* skip unit templates */
+			isEnabledUnit(array, basePath) {
+			continue
+		}
+
+		unitPath := "/org/freedesktop/systemd1/unit/" + getName(basePath)
+
+		var details map[string]interface{}
+		obj = conn.Object("org.freedesktop.systemd1", dbus.ObjectPath(unitPath))
+		err = obj.Call("org.freedesktop.DBus.Properties.GetAll", 0, "org.freedesktop.systemd1.Unit").Store(&details)
+		if err != nil {
+			p.Debugf("Cannot get unit properties for disabled unit %s, err:", basePath, err.Error())
+			continue
+		}
+
+		array = append(array, unitJson{basePath, "", "", "inactive", "", "", unitPath, 0, "", "", f.EnablementState})
 	}
 
 	jsonArray, err := json.Marshal(array)
@@ -265,8 +314,12 @@ func (p *Plugin) info(params []string, conn *dbus.Conn) (interface{}, error) {
 		unitType = params[2]
 	}
 
-	obj := conn.Object("org.freedesktop.systemd1", dbus.ObjectPath("/org/freedesktop/systemd1/unit/"+getName(params[0])))
-	err := obj.Call("org.freedesktop.DBus.Properties.Get", 0, "org.freedesktop.systemd1."+unitType, property).Store(&value)
+	obj := conn.Object(
+		"org.freedesktop.systemd1",
+		dbus.ObjectPath("/org/freedesktop/systemd1/unit/"+getName(params[0])),
+	)
+	err := obj.Call("org.freedesktop.DBus.Properties.Get", 0, "org.freedesktop.systemd1."+unitType, property).
+		Store(&value)
 	if nil != err {
 		return nil, fmt.Errorf("Cannot get unit property: %s", err)
 	}
@@ -311,7 +364,20 @@ func (p *Plugin) setUnitStates(v map[string]interface{}) {
 	mappings := []stateMapping{
 		{"LoadState", []string{"loaded", "error", "masked"}},
 		{"ActiveState", []string{"active", "reloading", "inactive", "failed", "activating", "deactivating"}},
-		{"UnitFileState", []string{"enabled", "enabled-runtime", "linked", "linked-runtime", "masked", "masked-runtime", "static", "disabled", "invalid"}},
+		{
+			"UnitFileState",
+			[]string{
+				"enabled",
+				"enabled-runtime",
+				"linked",
+				"linked-runtime",
+				"masked",
+				"masked-runtime",
+				"static",
+				"disabled",
+				"invalid",
+			},
+		},
 	}
 
 	for _, mapping := range mappings {
@@ -332,13 +398,13 @@ func (p *Plugin) createStateMapping(v map[string]interface{}, key string, names 
 	} else {
 		p.Debugf("cannot create mapping for '%s' unit state: unit state with information type string not found", key)
 	}
-
 }
 
-func init() {
-	plugin.RegisterMetrics(&impl, "Systemd",
-		"systemd.unit.get", "Returns the bulked info, usage: systemd.unit.get[unit,<interface>].",
-		"systemd.unit.discovery", "Returns JSON array of discovered units, usage: systemd.unit.discovery[<type>].",
-		"systemd.unit.info", "Returns the unit info, usage: systemd.unit.info[unit,<parameter>,<interface>].",
-	)
+func isEnabledUnit(units []unitJson, p string) bool {
+	for _, u := range units {
+		if u.Name == p {
+			return true
+		}
+	}
+	return false
 }

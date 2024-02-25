@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,7 +48,7 @@ class CControllerUsergroupCreate extends CController {
 						->getUrl()
 					);
 					$response->setFormData($this->getInputAll());
-					$response->setMessageError(_('Cannot add user group'));
+					CMessageHelper::setErrorTitle(_('Cannot add user group'));
 					$this->setResponse($response);
 					break;
 
@@ -62,15 +62,16 @@ class CControllerUsergroupCreate extends CController {
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() == USER_TYPE_SUPER_ADMIN);
+		return $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_USER_GROUPS);
 	}
 
 	protected function doAction() {
 		$user_group = [
+			'users' => zbx_toObject($this->getInput('userids', []), 'userid'),
 			'rights' => []
 		];
 
-		$this->getInputs($user_group, ['name', 'users_status', 'gui_access', 'debug_mode', 'userids', 'tag_filters']);
+		$this->getInputs($user_group, ['name', 'users_status', 'gui_access', 'debug_mode', 'tag_filters']);
 
 		$group_rights = applyHostGroupRights($this->getInput('group_rights', []));
 
@@ -91,13 +92,13 @@ class CControllerUsergroupCreate extends CController {
 				->setArgument('page', CPagerHelper::loadPage('usergroup.list', null))
 			);
 			$response->setFormData(['uncheck' => '1']);
-			$response->setMessageOk(_('User group added'));
+			CMessageHelper::setSuccessTitle(_('User group added'));
 		}
 		else {
 			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))
 				->setArgument('action', 'usergroup.edit')
 			);
-			$response->setMessageError(_('Cannot add user group'));
+			CMessageHelper::setErrorTitle(_('Cannot add user group'));
 			$response->setFormData($this->getInputAll());
 		}
 

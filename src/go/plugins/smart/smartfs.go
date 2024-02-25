@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	"zabbix.com/pkg/zbxerr"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 )
 
 const (
@@ -52,6 +52,11 @@ const (
 
 	deviceFieldName = "device"
 	typeFieldName   = "type"
+)
+
+const (
+	parseError = 1 << iota
+	openError
 )
 
 var (
@@ -264,7 +269,7 @@ func (p *Plugin) executeSingle(path string) (device []byte, err error) {
 	return
 }
 
-//executeBase executed runners for basic devices retrieved from smartctl.
+// executeBase executed runners for basic devices retrieved from smartctl.
 func (r *runner) executeBase(basicDev []deviceInfo, jsonRunner bool) error {
 	r.startBasicRunners(jsonRunner)
 
@@ -277,7 +282,7 @@ func (r *runner) executeBase(basicDev []deviceInfo, jsonRunner bool) error {
 	return r.waitForExecution()
 }
 
-//executeRaids executes runners for raid devices (except megaraid) retrieved from smartctl
+// executeRaids executes runners for raid devices (except megaraid) retrieved from smartctl
 func (r *runner) executeRaids(raids []deviceInfo, jsonRunner bool) {
 	raidTypes := []string{"3ware", "areca", "cciss", "sat"}
 
@@ -296,7 +301,7 @@ func (r *runner) executeRaids(raids []deviceInfo, jsonRunner bool) {
 	r.waitForRaidExecution(r.raidDone)
 }
 
-//executeMegaRaids executes runners for megaraid devices retrieved from smartctl
+// executeMegaRaids executes runners for megaraid devices retrieved from smartctl
 func (r *runner) executeMegaRaids(megaraids []deviceInfo, jsonRunner bool) {
 	r.megaraids = make(chan raidParameters, len(megaraids))
 
@@ -443,6 +448,13 @@ func (r *runner) getBasicDevices(jsonRunner bool) {
 	defer r.wg.Done()
 
 	for name := range r.names {
+		err := clearString(name)
+		if err != nil {
+			r.err <- zbxerr.ErrorCannotFetchData.Wrap(err)
+
+			return
+		}
+
 		devices, err := r.plugin.executeSmartctl(fmt.Sprintf("-a %s -j", name), false)
 		if err != nil {
 			r.err <- fmt.Errorf("Failed to execute smartctl: %s.", err.Error())
@@ -503,6 +515,16 @@ runner:
 				name = fmt.Sprintf("%s -d %s", raid.name, raid.rType)
 			} else {
 				name = fmt.Sprintf("%s -d %s,%d", raid.name, raid.rType, i)
+			}
+
+			err := clearString(name)
+			if err != nil {
+				r.plugin.Tracef(
+					"stopped looking for RAID devices of %s type, err: %s",
+					raid.rType, fmt.Errorf("failed to parse RAID disk data from smartctl: %s", err.Error()),
+				)
+
+				continue runner
 			}
 
 			device, err := r.plugin.executeSmartctl(fmt.Sprintf("-a %s -j ", name), false)
@@ -575,6 +597,16 @@ func (r *runner) getMegaRaidDevices(jsonRunner bool) {
 		}
 
 		name := fmt.Sprintf("%s -d %s", raid.name, raid.rType)
+
+		err := clearString(name)
+		if err != nil {
+			r.plugin.Tracef(
+				"stopped looking for RAID devices of %s type, err: %s",
+				raid.rType, fmt.Errorf("failed to parse RAID disk data from smartctl: %s", err.Error()),
+			)
+
+			continue
+		}
 
 		device, err := r.plugin.executeSmartctl(fmt.Sprintf("-a %s -j ", name), false)
 		if err != nil {
@@ -680,7 +712,7 @@ func (r *runner) parseOutput(jsonRunner bool) {
 }
 
 func (dp *deviceParser) checkErr() (err error) {
-	if dp.Smartctl.ExitStatus != 2 {
+	if (parseError|openError)&dp.Smartctl.ExitStatus == 0 {
 		return
 	}
 

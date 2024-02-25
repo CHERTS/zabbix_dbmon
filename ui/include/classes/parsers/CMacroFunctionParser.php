@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,17 +34,18 @@ class CMacroFunctionParser extends CParser {
 	/**
 	 * Parser for trigger functions.
 	 *
-	 * @var CFunctionParser
+	 * @var C10FunctionParser
 	 */
 	private $function_parser;
 
 	/**
-	 * @param array $macros   The list of macros, for example ['{ITEM.VALUE}', '{ITEM.LASTVALUE}'].
-	 * @param array $options
+	 * @param array      $options             Parser options.
+	 * @param array|bool $options['macros']   The list of macros, for example ['{ITEM.VALUE}', '{ITEM.LASTVALUE}']
+	 * @param int        $options['ref_type'] Reference options.
 	 */
-	public function __construct(array $macros, array $options = []) {
-		$this->macro_parser = new CMacroParser($macros, $options);
-		$this->function_parser = new CFunctionParser();
+	public function __construct(array $options) {
+		$this->macro_parser = new CMacroParser($options);
+		$this->function_parser = new C10FunctionParser();
 	}
 
 	/**

@@ -47,6 +47,7 @@ parse_item_key_LDADD = \
 	$(top_srcdir)/src/libs/zbxsysinfo/libzbxserversysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
 	$(top_srcdir)/src/libs/zbxlog/libzbxlog.a \
+	$(top_srcdir)/src/libs/zbxprof/libzbxprof.a \
 	$(top_srcdir)/src/libs/zbxserver/libzbxserver.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/libzbxserversysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo.a \
@@ -59,11 +60,11 @@ parse_item_key_LDADD = \
 	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
 	$(top_srcdir)/src/libs/zbxself/libzbxself.a \
 	$(top_srcdir)/src/libs/zbxnix/libzbxnix.a \
-	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxsys/libzbxsys.a \
 	$(top_srcdir)/src/libs/zbxconf/libzbxconf.a \
 	$(top_srcdir)/src/libs/zbxmedia/libzbxmedia.a \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
+	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 	$(top_srcdir)/src/libs/zbxcomms/libzbxcomms.a \
@@ -81,7 +82,6 @@ parse_item_key_LDADD = \
 	$(top_srcdir)/src/libs/zbxmodules/libzbxmodules.a \
 	$(top_srcdir)/src/libs/zbxtasks/libzbxtasks.a \
 	$(top_srcdir)/src/zabbix_server/libzbxserver.a \
-	$(top_srcdir)/src/libs/zbxxml/libzbxxml.a \
 	$(top_srcdir)/tests/libzbxmocktest.a \
 	$(top_srcdir)/tests/libzbxmockdata.a
 
@@ -95,21 +95,23 @@ endif
 if AGENT
 COMMON_LIB_FILES = \
 	$(top_srcdir)/src/libs/zbxsysinfo/libzbxagentsysinfo.a \
-	$(top_srcdir)/src/libs/zbxsysinfo/$(ARCH)/libspecsysinfo.a \
+	$(top_srcdir)/src/libs/zbxsysinfo/$(ARCH)/libfunclistsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/$(ARCH)/libspechostnamesysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/agent/libagentsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/simple/libsimplesysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo_httpmetrics.a \
 	$(top_srcdir)/src/libs/zbxlog/libzbxlog.a \
+	$(top_srcdir)/src/libs/zbxprof/libzbxprof.a \
+	$(top_srcdir)/src/libs/zbxsysinfo/$(ARCH)/libspecsysinfo.a \
 	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
-	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxsys/libzbxsys.a \
 	$(top_srcdir)/src/libs/zbxnix/libzbxnix.a \
 	$(top_srcdir)/src/libs/zbxcomms/libzbxcomms.a \
 	$(top_srcdir)/src/libs/zbxcompress/libzbxcompress.a \
 	$(top_srcdir)/src/libs/zbxconf/libzbxconf.a \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
+	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 	$(top_srcdir)/src/libs/zbxexec/libzbxexec.a \
@@ -144,9 +146,9 @@ process_WRAP_FUNCS = \
 
 process_LDADD += @AGENT_LIBS@
 
-process_LDFLAGS = @AGENT_LDFLAGS@
+process_LDFLAGS = @AGENT_LDFLAGS@ $(process_WRAP_FUNCS)
 
-process_CFLAGS = $(process_WRAP_FUNCS) -DZABBIX_DAEMON -I@top_srcdir@/tests
+process_CFLAGS = -DZABBIX_DAEMON -I@top_srcdir@/tests
 
 # process_http
 
@@ -175,6 +177,7 @@ check_key_access_rules_SOURCES = \
 
 check_key_access_rules_LDADD = $(COMMON_LIB_FILES) \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
+	$(top_srcdir)/src/libs/zbxalgo/libzbxalgo.a \
 	$(top_srcdir)/src/libs/zbxsysinfo/common/libcommonsysinfo_http.a \
 	$(top_srcdir)/src/libs/zbxhttp/libzbxhttp.a
 

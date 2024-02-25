@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,29 +23,29 @@ class CControllerProxyUpdate extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'proxyid' =>		'fatal|required|db       hosts.hostid',
-			'host' =>			'db       hosts.host',
-			'status' =>			'db       hosts.status     |in '.HOST_STATUS_PROXY_ACTIVE.','.HOST_STATUS_PROXY_PASSIVE,
-			'interfaceid' =>    'db       interface.interfaceid',
-			'dns' =>			'db       interface.dns',
-			'ip' =>				'db       interface.ip',
-			'useip' =>			'db       interface.useip  |in 0,1',
-			'port' =>			'db       interface.port',
-			'proxy_address' =>	'db       hosts.proxy_address',
-			'description' =>	'db       hosts.description',
-			'tls_connect' => 	'db       hosts.tls_connect    |in '.HOST_ENCRYPTION_NONE.','.HOST_ENCRYPTION_PSK.','.
+			'proxyid' =>			'fatal|required|db hosts.hostid',
+			'host' =>				'db hosts.host',
+			'status' =>				'db hosts.status|in '.HOST_STATUS_PROXY_ACTIVE.','.HOST_STATUS_PROXY_PASSIVE,
+			'dns' =>				'db interface.dns',
+			'ip' =>					'db interface.ip',
+			'useip' =>				'db interface.useip|in 0,1',
+			'port' =>				'db interface.port',
+			'proxy_address' =>		'db hosts.proxy_address',
+			'description' =>		'db hosts.description',
+			'tls_connect' =>		'db hosts.tls_connect|in '.HOST_ENCRYPTION_NONE.','.HOST_ENCRYPTION_PSK.','.
 				HOST_ENCRYPTION_CERTIFICATE,
-			'tls_accept' => 	'db       hosts.tls_accept     |in 0,'.HOST_ENCRYPTION_NONE.','.HOST_ENCRYPTION_PSK.','.
+			'tls_accept' =>			'db hosts.tls_accept|in 0,'.HOST_ENCRYPTION_NONE.','.HOST_ENCRYPTION_PSK.','.
 				(HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_PSK).','.
 				HOST_ENCRYPTION_CERTIFICATE.','.
 				(HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_CERTIFICATE).','.
 				(HOST_ENCRYPTION_PSK | HOST_ENCRYPTION_CERTIFICATE).','.
 				(HOST_ENCRYPTION_NONE | HOST_ENCRYPTION_PSK | HOST_ENCRYPTION_CERTIFICATE),
-			'tls_issuer' => 	'db       hosts.tls_issuer',
-			'tls_psk' =>		'db       hosts.tls_psk',
-			'tls_psk_identity'=>'db       hosts.tls_psk_identity',
-			'tls_subject' => 	'db       hosts.tls_subject',
-			'form_refresh' =>	'int32'
+			'tls_psk_identity' =>	'db hosts.tls_psk_identity',
+			'tls_psk' =>			'db hosts.tls_psk',
+			'psk_edit_mode' =>		'in 0,1',
+			'tls_issuer' =>			'db hosts.tls_issuer',
+			'tls_subject' =>		'db hosts.tls_subject',
+			'form_refresh' =>		'int32'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -55,7 +55,7 @@ class CControllerProxyUpdate extends CController {
 				case self::VALIDATION_ERROR:
 					$response = new CControllerResponseRedirect('zabbix.php?action=proxy.edit');
 					$response->setFormData($this->getInputAll());
-					$response->setMessageError(_('Cannot update proxy'));
+					CMessageHelper::setErrorTitle(_('Cannot update proxy'));
 					$this->setResponse($response);
 					break;
 				case self::VALIDATION_FATAL_ERROR:
@@ -68,7 +68,7 @@ class CControllerProxyUpdate extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_PROXIES)) {
 			return false;
 		}
 
@@ -88,7 +88,7 @@ class CControllerProxyUpdate extends CController {
 
 		if ($this->getInput('status', HOST_STATUS_PROXY_ACTIVE) == HOST_STATUS_PROXY_PASSIVE) {
 			$proxy['interface'] = [];
-			$this->getInputs($proxy['interface'], ['interfaceid', 'dns', 'ip', 'useip', 'port']);
+			$this->getInputs($proxy['interface'], ['dns', 'ip', 'useip', 'port']);
 		}
 		else {
 			$proxy['proxy_address'] = $this->getInput('proxy_address', '');
@@ -98,12 +98,6 @@ class CControllerProxyUpdate extends CController {
 
 		$result = API::Proxy()->update($proxy);
 
-		if ($result) {
-			add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_PROXY,
-				'['.$this->getInput('host', '').'] ['.reset($result['proxyids']).']'
-			);
-		}
-
 		$result = DBend($result);
 
 		if ($result) {
@@ -112,7 +106,7 @@ class CControllerProxyUpdate extends CController {
 				->setArgument('page', CPagerHelper::loadPage('proxy.list', null))
 			);
 			$response->setFormData(['uncheck' => '1']);
-			$response->setMessageOk(_('Proxy updated'));
+			CMessageHelper::setSuccessTitle(_('Proxy updated'));
 		}
 		else {
 			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))
@@ -120,7 +114,7 @@ class CControllerProxyUpdate extends CController {
 				->setArgument('proxyid', $this->getInput('proxyid'))
 			);
 			$response->setFormData($this->getInputAll());
-			$response->setMessageError(_('Cannot update proxy'));
+			CMessageHelper::setErrorTitle(_('Cannot update proxy'));
 		}
 		$this->setResponse($response);
 	}

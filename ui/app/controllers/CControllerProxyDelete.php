@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ class CControllerProxyDelete extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'proxyids' =>	'array_db hosts.hostid|required'
+			'proxyids' => 'array_db hosts.hostid|required'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -36,7 +36,7 @@ class CControllerProxyDelete extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_PROXIES)) {
 			return false;
 		}
 
@@ -63,10 +63,10 @@ class CControllerProxyDelete extends CController {
 
 		if ($result) {
 			$response->setFormData(['uncheck' => '1']);
-			$response->setMessageOk(_n('Proxy deleted', 'Proxies deleted', $deleted));
+			CMessageHelper::setSuccessTitle(_n('Proxy deleted', 'Proxies deleted', $deleted));
 		}
 		else {
-			$response->setMessageError(_n('Cannot delete proxy', 'Cannot delete proxies', $deleted));
+			CMessageHelper::setErrorTitle(_n('Cannot delete proxy', 'Cannot delete proxies', $deleted));
 		}
 		$this->setResponse($response);
 	}

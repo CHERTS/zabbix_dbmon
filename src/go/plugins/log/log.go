@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,17 +25,20 @@ import (
 	"time"
 	"unsafe"
 
+	"git.zabbix.com/ap/plugin-support/conf"
+	"git.zabbix.com/ap/plugin-support/errs"
+	"git.zabbix.com/ap/plugin-support/plugin"
 	"zabbix.com/internal/agent"
-	"zabbix.com/pkg/conf"
 	"zabbix.com/pkg/glexpr"
 	"zabbix.com/pkg/itemutil"
-	"zabbix.com/pkg/plugin"
 	"zabbix.com/pkg/zbxlib"
 )
 
+var impl Plugin
+
 type Options struct {
-	MaxLinesPerSecond int `conf:"range=1:1000,default=20"`
-	Capacity          int `conf:"optional,range=1:100"`
+	plugin.SystemOptions `conf:"optional"`
+	MaxLinesPerSecond    int `conf:"range=1:1000,default=20"`
 }
 
 // Plugin -
@@ -49,6 +52,19 @@ type metadata struct {
 	params    []string
 	blob      unsafe.Pointer
 	lastcheck time.Time
+}
+
+func init() {
+	err := plugin.RegisterMetrics(
+		&impl, "Log",
+		"log", "Log file monitoring.",
+		"logrt", "Log file monitoring with log rotation support.",
+		"log.count", "Count of matched lines in log file monitoring.",
+		"logrt.count", "Count of matched lines in log file monitoring with log rotation support.",
+	)
+	if err != nil {
+		panic(errs.Wrap(err, "failed to register metrics"))
+	}
 }
 
 func (p *Plugin) Configure(global *plugin.GlobalOptions, options interface{}) {
@@ -97,15 +113,10 @@ func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider)
 	// with flexible checks there are no guaranteed refresh time,
 	// so using number of seconds elapsed since last check
 	now := time.Now()
-	var refresh int
-	if data.lastcheck.IsZero() {
-		refresh = 1
-	} else {
-		refresh = int((now.Sub(data.lastcheck) + time.Second/2) / time.Second)
-	}
+	refresh := zbxlib.GetCheckIntervalSeconds(ctx.ItemID(), ctx.Delay(), now, data.lastcheck)
 	logitem := zbxlib.LogItem{Results: make([]*zbxlib.LogResult, 0), Output: ctx.Output()}
 	grxp := ctx.GlobalRegexp().(*glexpr.Bundle)
-	zbxlib.ProcessLogCheck(data.blob, &logitem, refresh, grxp.Cblob)
+	zbxlib.ProcessLogCheck(data.blob, &logitem, refresh, grxp.Cblob, ctx.ItemID())
 	data.lastcheck = now
 
 	if len(logitem.Results) != 0 {
@@ -122,14 +133,4 @@ func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider)
 		return results, nil
 	}
 	return nil, nil
-}
-
-var impl Plugin
-
-func init() {
-	plugin.RegisterMetrics(&impl, "Log",
-		"log", "Log file monitoring.",
-		"logrt", "Log file monitoring with log rotation support.",
-		"log.count", "Count of matched lines in log file monitoring.",
-		"logrt.count", "Count of matched lines in log file monitoring with log rotation support.")
 }

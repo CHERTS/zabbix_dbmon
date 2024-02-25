@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,17 +28,17 @@ require_once dirname(__FILE__).'/../../include/helpers/CDataHelper.php';
  */
 class testFormPreprocessingItemPrototype extends testFormPreprocessing {
 
-	public $link = 'disc_prototypes.php?parent_discoveryid='.self::DISCOVERY_RULEID;
-	public $ready_link = 'disc_prototypes.php?form=update&parent_discoveryid='.self::DISCOVERY_RULEID.'&itemid=';
+	public $link = 'disc_prototypes.php?context=host&parent_discoveryid='.self::DISCOVERY_RULEID;
+	public $ready_link = 'disc_prototypes.php?form=update&context=host&parent_discoveryid='.self::DISCOVERY_RULEID.'&itemid=';
 	public $button = 'Create item prototype';
 	public $success_message = 'Item prototype added';
 	public $fail_message = 'Cannot add item prototype';
 
-	const DISCOVERY_RULEID			= 33800;	// 'Simple form test host' => 'testFormDiscoveryRule'
+	const DISCOVERY_RULEID			= 133800;	// 'Simple form test host' => 'testFormDiscoveryRule'
 	const TEMPL_INHERITANCE_RULEID	= 15011;	//'testInheritanceDiscoveryRule'
 	const HOST_INHERITANCE_RULEID	= 15016;	// 'Template inheritance test host' -> 'testInheritanceDiscoveryRule'
 	const INHERITED_ITEM_PROTOTYPE	= 15096;	// 'testInheritanceDiscoveryRule' -> 'testInheritanceItemPrototypePreprocessing'
-	const CLONE_RULEID				= 33800;	// 'Host for triggers filtering' -> 'Discovery rule for triggers filtering'
+	const CLONE_RULEID				= 133800;	// 'Host for triggers filtering' -> 'Discovery rule for triggers filtering'
 	const CLONE_ITEM_PROTOTYPEID	= 23804;	// 'Discovery rule for triggers filtering' -> 'Discovered item {#TEST}'
 
 	public function getItemPrototypePrometheusData() {
@@ -51,7 +51,11 @@ class testFormPreprocessingItemPrototype extends testFormPreprocessing {
 						'Key' => 'parameters-macro-1'
 					],
 					'preprocessing' => [
-						['type' => 'Prometheus pattern', 'parameter_1' => '{#METRICNAME}==1', 'parameter_2' => '{#LABELNAME}']
+						[
+							'type' => 'Prometheus pattern',
+							'parameter_1' => '{#METRICNAME}==1',
+							'parameter_2' => 'label',
+							'parameter_3' => '{#LABELNAME}']
 					]
 				]
 			],
@@ -63,7 +67,11 @@ class testFormPreprocessingItemPrototype extends testFormPreprocessing {
 						'Key' => 'parameters-macro-2'
 					],
 					'preprocessing' => [
-						['type' => 'Prometheus pattern', 'parameter_1' => '{__name__="{#METRICNAME}"}', 'parameter_2' => '{#LABELNAME}']
+						[
+							'type' => 'Prometheus pattern',
+							'parameter_1' => '{__name__="{#METRICNAME}"}',
+							'parameter_2' => 'label',
+							'parameter_3' => '{#LABELNAME}']
 					]
 				]
 			],
@@ -125,13 +133,13 @@ class testFormPreprocessingItemPrototype extends testFormPreprocessing {
 	 * @onBefore prepareCloneItemPrototypePreprocessing
 	 */
 	public function testFormPreprocessingItemPrototype_CloneItemPrototype() {
-		$link = 'disc_prototypes.php?form=update&parent_discoveryid='.self::CLONE_RULEID.
+		$link = 'disc_prototypes.php?form=update&context=host&parent_discoveryid='.self::CLONE_RULEID.
 				'&itemid='.self::CLONE_ITEM_PROTOTYPEID;
 		$this->checkCloneItem($link, 'Item prototype');
 	}
 
 	public function testFormPreprocessingItemPrototype_CloneTemplatedItemPrototype() {
-		$link = 'disc_prototypes.php?form=update&parent_discoveryid='.self::HOST_INHERITANCE_RULEID.
+		$link = 'disc_prototypes.php?form=update&context=host&parent_discoveryid='.self::HOST_INHERITANCE_RULEID.
 				'&itemid='.self::INHERITED_ITEM_PROTOTYPE;
 		$this->checkCloneItem($link, 'Item prototype', $templated = true);
 	}
@@ -147,8 +155,8 @@ class testFormPreprocessingItemPrototype extends testFormPreprocessing {
 	 * @dataProvider getItemInheritancePreprocessing
 	 */
 	public function testFormPreprocessingItemPrototype_PreprocessingInheritanceFromTemplate($data) {
-		$this->link = 'disc_prototypes.php?parent_discoveryid='.self::TEMPL_INHERITANCE_RULEID;
-		$host_link = 'disc_prototypes.php?parent_discoveryid='.self::HOST_INHERITANCE_RULEID;
+		$this->link = 'disc_prototypes.php?context=template&parent_discoveryid='.self::TEMPL_INHERITANCE_RULEID;
+		$host_link = 'disc_prototypes.php?context=host&parent_discoveryid='.self::HOST_INHERITANCE_RULEID;
 
 		$this->checkPreprocessingInheritance($data, $host_link);
 	}

@@ -1,6 +1,6 @@
 # iTop webhook
 
-This guide describes how to integrate Zabbix 5.0 installation with iTop using the Zabbix webhook feature. This guide provides instructions on setting up a media type, a user and an action in Zabbix.<br>
+This guide describes how to integrate Zabbix 6.0 installation with iTop using the Zabbix webhook feature. This guide provides instructions on setting up a media type, a user and an action in Zabbix.<br>
 Please note that recovery and update operations are supported only for trigger-based events.
 
 ## Setting up iTop
@@ -10,7 +10,7 @@ Please note that recovery and update operations are supported only for trigger-b
 
 
 ## Setting up the webhook in Zabbix
-1\. In the *Administration > Media types* section, import [media_itop.xml](media_itop.xml).
+1\. In the *Administration > Media types* section, import [media_itop.yaml](media_itop.yaml).
 
 2\. Open the newly added **iTop** media type and replace all *&lt;PLACEHOLDERS&gt;* with your values.<br>
 The following parameters are required:<br>
@@ -26,7 +26,7 @@ The following parameters are required:<br>
 Though a "Send to" field is not used in iTop webhook, it cannot be empty. To comply with frontend requirements, you can put any symbol there.
 Make sure this user has access to all hosts, for which you would like problem notifications to be converted into iTop tasks.
 
-For more information see [Zabbix](https://www.zabbix.com/documentation/5.0/manual/config/notifications) and [iTop](https://www.itophub.io/wiki/page) documentations.
+For more information see [Zabbix](https://www.zabbix.com/documentation/6.0/manual/config/notifications) and [iTop](https://www.itophub.io/wiki/page) documentations.
 
 ## Supported versions
-Zabbix 5.0 and higher
+Zabbix 6.0 and higher

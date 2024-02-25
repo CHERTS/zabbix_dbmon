@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ class testFormTagsTriggerPrototype extends testFormTags {
 
 	public $update_name = 'Trigger prototype with tags for updating';
 	public $clone_name = 'Trigger prototype with tags for cloning';
+	public $remove_name = 'Trigger prototype for removing tags';
 	public $link;
 	public $saved_link;
 	public $host = 'Host for tags testing';
@@ -42,7 +43,7 @@ class testFormTagsTriggerPrototype extends testFormTags {
 		$discoveryruleid = CDataHelper::get('EntitiesTags.discoveryruleids.Host for tags testing:trap_discovery');
 		$this->link = 'trigger_prototypes.php?parent_discoveryid='.$discoveryruleid.'&context=host';
 		$this->saved_link = 'trigger_prototypes.php?form=update&context=host&parent_discoveryid='.$discoveryruleid.'&triggerid=';
-		$expression = '{Host for tags testing:itemprototype_trap[{#KEY}].last()}=0';
+		$expression = 'last(/Host for tags testing/itemprototype_trap[{#KEY}])=0';
 		$this->checkTagsCreate($data, 'trigger prototype', $expression);
 	}
 
@@ -74,7 +75,7 @@ class testFormTagsTriggerPrototype extends testFormTags {
 		$this->host = 'Host with tags for cloning';
 		$discoveryruleid = CDataHelper::get('EntitiesTags.discoveryruleids.'.$this->host.':trap_discovery');
 		$this->link = 'trigger_prototypes.php?parent_discoveryid='.$discoveryruleid.'&context=host';
-		$this->executeFullCloning('trigger prototype', 'Host');
+		$this->executeCloningByParent('trigger prototype', 'Host');
 	}
 
 	/**
@@ -84,7 +85,7 @@ class testFormTagsTriggerPrototype extends testFormTags {
 		$discoveryruleid = CDataHelper::get('EntitiesTags.discoveryruleids.'.$this->template.':template_trap_discovery');
 		$this->link = 'trigger_prototypes.php?parent_discoveryid='.$discoveryruleid.'&context=template';
 		$this->clone_name = 'Template trigger prototype with tags for full cloning';
-		$this->executeFullCloning('trigger prototype', 'Template');
+		$this->executeCloningByParent('trigger prototype', 'Template');
 	}
 
 	/**
@@ -96,7 +97,7 @@ class testFormTagsTriggerPrototype extends testFormTags {
 		$discoveryruleid = CDataHelper::get('EntitiesTags.discoveryruleids.'.$this->host.':trap_discovery');
 		$this->link = 'trigger_prototypes.php?parent_discoveryid='.$discoveryruleid.'&context=host';
 		$this->saved_link = 'trigger_prototypes.php?form=update&context=host&parent_discoveryid='.$discoveryruleid.'&triggerid=';
-		$expression = '{Host for tags testing:itemprototype_trap[{#KEY}].last()}=0';
+		$expression = 'last(/Host for tags testing/itemprototype_trap[{#KEY}])=0';
 		$this->checkInheritedTags($data, 'trigger prototype', 'Host', $expression);
 	}
 
@@ -110,7 +111,7 @@ class testFormTagsTriggerPrototype extends testFormTags {
 //		$discoveryruleid = CDataHelper::get('EntitiesTags.discoveryruleids.'.$this->template.':template_trap_discovery');
 //		$this->link = 'trigger_prototypes.php?parent_discoveryid='.$discoveryruleid.'&context=template';
 //		$this->saved_link = 'trigger_prototypes.php?form=update&context=host&parent_discoveryid='.$discoveryruleid.'&triggerid=';
-//		$expression = '{Template for tags testing:template.itemprototype_trap[{#KEY}].last()}=0';
+//		$expression = 'last(/Template for tags testing/template.itemprototype_trap[{#KEY}])=0';
 //		$this->checkInheritedTags($data, 'trigger prototype', 'Template', $expression);
 //	}
 
@@ -120,7 +121,7 @@ class testFormTagsTriggerPrototype extends testFormTags {
 	 * @dataProvider getTagsInheritanceData
 	 */
 	public function testFormTagsTriggerPrototype_InheritedElementTags($data) {
-		$expression = '{Template for tags testing:template.itemprototype_trap[{#KEY}].last()}=0';
+		$expression = 'last(/Template for tags testing/template.itemprototype_trap[{#KEY}])=0';
 		$hostid = CDataHelper::get('EntitiesTags.hostids.'.$this->host);
 		$discoveryruleid = CDataHelper::get('EntitiesTags.discoveryruleids.'.$this->template.':template_trap_discovery');
 		$this->link = 'trigger_prototypes.php?parent_discoveryid='.$discoveryruleid.'&context=template';
@@ -128,5 +129,15 @@ class testFormTagsTriggerPrototype extends testFormTags {
 		$host_link = 'host_discovery.php?filter_set=1&filter_hostids[0]='.$hostid.'&context=host';
 
 		$this->checkInheritedElementTags($data, 'trigger prototype', $host_link, $expression);
+	}
+
+	/**
+	 * Test removing tags from Trigger prototype.
+	 */
+	public function testFormTagsTriggerPrototype_RemoveTags() {
+		$discoveryruleid = CDataHelper::get('EntitiesTags.discoveryruleids.Host for tags testing:trap_discovery');
+		$this->link = 'trigger_prototypes.php?parent_discoveryid='.$discoveryruleid.'&context=host';
+		$this->saved_link = 'trigger_prototypes.php?form=update&context=host&parent_discoveryid='.$discoveryruleid.'&triggerid=';
+		$this->clearTags('trigger prototype');
 	}
 }

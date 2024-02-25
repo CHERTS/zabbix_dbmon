@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -239,14 +239,16 @@ class PostgresqlDbBackend extends DbBackend {
 	 * @return bool
 	 */
 	public function init() {
+		global $DB;
+
 		$schema_set = DBexecute('SET search_path='.zbx_dbstr($this->schema));
 
-		if(!$schema_set) {
-			$this->setError(pg_last_error());
+		if (!$schema_set) {
+			$this->setError(pg_last_error($DB['DB']));
 			return false;
 		}
 
-		$pgsql_version = pg_parameter_status('server_version');
+		$pgsql_version = pg_parameter_status($DB['DB'], 'server_version');
 
 		if ($pgsql_version !== false && (int) $pgsql_version >= 9) {
 			// change the output format for values of type bytea from hex (the default) to escape
@@ -266,9 +268,7 @@ class PostgresqlDbBackend extends DbBackend {
 	 * @return bool
 	 */
 	public static function isCompressed(array $tables): bool {
-		// Compression is available for TimescaleDB 1.5 and greater.
-		$config = select_config();
-		if ($config['db_extension'] != ZBX_DB_EXTENSION_TIMESCALEDB || $config['compression_availability'] != 1) {
+		if (CHousekeepingHelper::get(CHousekeepingHelper::DB_EXTENSION) != ZBX_DB_EXTENSION_TIMESCALEDB) {
 			return false;
 		}
 
@@ -286,7 +286,7 @@ class PostgresqlDbBackend extends DbBackend {
 				' WHERE number_compressed_chunks != 0 AND '.dbConditionString('hypertable_name::text', $tables)
 			));
 
-			return (bool) $result['chunks'];
+			return $result && $result['chunks'];
 		}
 
 		$query = implode(' UNION ', array_map(function ($table) {
@@ -297,6 +297,23 @@ class PostgresqlDbBackend extends DbBackend {
 
 		$result = DBfetch(DBselect($query));
 
-		return (bool) $result['chunks'];
+		return $result && $result['chunks'];
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function dbFieldExists(string $table_name, string $field_name): bool {
+		global $DB;
+
+		$schema = $DB['SCHEMA'] ? $DB['SCHEMA'] : 'public';
+
+		return (bool) DBFetch(DBselect(
+			'SELECT 1'.
+			' FROM information_schema.columns'.
+			' WHERE table_name='.zbx_dbstr($table_name).
+				' AND column_name='.zbx_dbstr($field_name).
+				' AND table_schema='.zbx_dbstr($schema)
+		));
 	}
 }

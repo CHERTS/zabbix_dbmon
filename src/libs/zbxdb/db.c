@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,14 +18,17 @@
 **/
 
 #include "common.h"
+#include "log.h"
 
 #include "zbxdb.h"
+#include "zbx_dbversion_constants.h"
 
 #if defined(HAVE_MYSQL)
 #	include "mysql.h"
 #	include "errmsg.h"
 #	include "mysqld_error.h"
 #elif defined(HAVE_ORACLE)
+#	include "dbschema.h"
 #	include "oci.h"
 #elif defined(HAVE_POSTGRESQL)
 #	include <libpq-fe.h>
@@ -33,8 +36,6 @@
 #	include <sqlite3.h>
 #endif
 
-#include "dbschema.h"
-#include "log.h"
 #if defined(HAVE_SQLITE3)
 #	include "mutexs.h"
 #endif
@@ -45,7 +46,7 @@ struct zbx_db_result
 	MYSQL_RES	*result;
 #elif defined(HAVE_ORACLE)
 	OCIStmt		*stmthp;	/* the statement handle for select operations */
-	int 		ncolumn;
+	int		ncolumn;
 	DB_ROW		values;
 	ub4		*values_alloc;
 	OCILobLocator	**clobs;
@@ -64,18 +65,22 @@ struct zbx_db_result
 #endif
 };
 
-static int	txn_level = 0;	/* transaction level, nested transactions are not supported */
-static int	txn_error = ZBX_DB_OK;	/* failed transaction */
-static int	txn_end_error = ZBX_DB_OK;	/* transaction result */
+static int		txn_level = 0;	/* transaction level, nested transactions are not supported */
+static int		txn_error = ZBX_DB_OK;	/* failed transaction */
+static int		txn_end_error = ZBX_DB_OK;	/* transaction result */
 
-static char	*last_db_strerror = NULL;	/* last database error message */
+static char		*last_db_strerror = NULL;	/* last database error message */
 
-extern int	CONFIG_LOG_SLOW_QUERIES;
+extern int		CONFIG_LOG_SLOW_QUERIES;
 
-static int	db_auto_increment;
+static int		db_auto_increment;
 
 #if defined(HAVE_MYSQL)
 static MYSQL			*conn = NULL;
+static int			mysql_err_cnt = 0;
+static zbx_uint32_t		ZBX_MYSQL_SVERSION = ZBX_DBVERSION_UNDEFINED;
+static int			ZBX_MARIADB_SFORK = OFF;
+static int			txn_begin = 0;	/* transaction begin statement is executed */
 #elif defined(HAVE_ORACLE)
 #include "zbxalgo.h"
 
@@ -90,27 +95,42 @@ typedef struct
 }
 zbx_oracle_db_handle_t;
 
+static zbx_uint32_t		ZBX_ORACLE_SVERSION = ZBX_DBVERSION_UNDEFINED;
+
 static zbx_oracle_db_handle_t	oracle;
 
 static ub4	OCI_DBserver_status(void);
 
+#define ORA_ERR_UNIQ_CONSTRAINT	-1
+
 #elif defined(HAVE_POSTGRESQL)
+#define ZBX_PG_READ_ONLY	"25006"
+#define ZBX_PG_UNIQUE_VIOLATION	"23505"
+#define ZBX_PG_DEADLOCK		"40P01"
+
 static PGconn			*conn = NULL;
 static unsigned int		ZBX_PG_BYTEAOID = 0;
-static int			ZBX_PG_SVERSION = 0, ZBX_TSDB_VERSION = -1;
+int			ZBX_TSDB_VERSION = -1;
+static zbx_uint32_t		ZBX_PG_SVERSION = ZBX_DBVERSION_UNDEFINED;
 char				ZBX_PG_ESCAPE_BACKSLASH = 1;
+static int 			ZBX_TIMESCALE_COMPRESSION_AVAILABLE = OFF;
 #elif defined(HAVE_SQLITE3)
 static sqlite3			*conn = NULL;
 static zbx_mutex_t		sqlite_access = ZBX_MUTEX_NULL;
 #endif
 
 #if defined(HAVE_ORACLE)
+static void	OCI_DBclean_result_handle(DB_RESULT result);
 static void	OCI_DBclean_result(DB_RESULT result);
 #endif
+
+static zbx_err_codes_t last_db_errcode;
 
 static void	zbx_db_errlog(zbx_err_codes_t zbx_errno, int db_errno, const char *db_error, const char *context)
 {
 	char	*s;
+
+	last_db_errcode = zbx_errno;
 
 	if (NULL != db_error)
 		last_db_strerror = zbx_strdup(last_db_strerror, db_error);
@@ -142,6 +162,14 @@ static void	zbx_db_errlog(zbx_err_codes_t zbx_errno, int db_errno, const char *d
 		case ERR_Z3007:
 			s = zbx_dsprintf(NULL, "query failed: [%d] %s", db_errno, last_db_strerror);
 			break;
+		case ERR_Z3008:
+			s = zbx_dsprintf(NULL, "query failed due to primary key constraint: [%d] %s", db_errno,
+					last_db_strerror);
+			break;
+		case ERR_Z3009:
+			s = zbx_dsprintf(NULL, "query failed due to read-only transaction: [%d] %s", db_errno,
+					last_db_strerror);
+			break;
 		default:
 			s = zbx_strdup(NULL, "unknown error");
 	}
@@ -153,17 +181,26 @@ static void	zbx_db_errlog(zbx_err_codes_t zbx_errno, int db_errno, const char *d
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_db_last_strerr                                               *
- *                                                                            *
  * Purpose: get last error set by database                                    *
  *                                                                            *
  * Return value: last database error message                                  *
  *                                                                            *
  ******************************************************************************/
-
 const char	*zbx_db_last_strerr(void)
 {
 	return last_db_strerror;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Purpose: get last error code returned by database                          *
+ *                                                                            *
+ * Return value: last database error code                                     *
+ *                                                                            *
+ ******************************************************************************/
+zbx_err_codes_t	zbx_db_last_errcode(void)
+{
+	return last_db_errcode;
 }
 
 #if defined(HAVE_ORACLE)
@@ -210,8 +247,6 @@ static const char	*zbx_oci_error(sword status, sb4 *err)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: OCI_handle_sql_error                                             *
  *                                                                            *
  * Purpose: handles Oracle prepare/bind/execute/select operation error        *
  *                                                                            *
@@ -313,11 +348,35 @@ static int	is_recoverable_mysql_error(int err_no)
 		case ER_UNKNOWN_COM_ERROR:
 		case ER_LOCK_DEADLOCK:
 		case ER_LOCK_WAIT_TIMEOUT:
+#ifdef ER_CLIENT_INTERACTION_TIMEOUT
+		case ER_CLIENT_INTERACTION_TIMEOUT:
+#endif
 #ifdef CR_SSL_CONNECTION_ERROR
 		case CR_SSL_CONNECTION_ERROR:
 #endif
 #ifdef ER_CONNECTION_KILLED
 		case ER_CONNECTION_KILLED:
+#endif
+			return SUCCEED;
+	}
+
+	return FAIL;
+}
+
+static int	is_inhibited_mysql_error(int err_no)
+{
+	if (1 < mysql_err_cnt)
+		return FAIL;
+
+	if (0 < txn_level && 0 == txn_begin)
+		return FAIL;
+
+	switch (err_no)
+	{
+		case CR_SERVER_GONE_ERROR:
+		case CR_SERVER_LOST:
+#ifdef ER_CLIENT_INTERACTION_TIMEOUT
+		case ER_CLIENT_INTERACTION_TIMEOUT:
 #endif
 			return SUCCEED;
 	}
@@ -330,7 +389,10 @@ static int	is_recoverable_postgresql_error(const PGconn *pg_conn, const PGresult
 	if (CONNECTION_OK != PQstatus(pg_conn))
 		return SUCCEED;
 
-	if (0 == zbx_strcmp_null(PQresultErrorField(pg_result, PG_DIAG_SQLSTATE), "40P01"))
+	if (0 == zbx_strcmp_null(PQresultErrorField(pg_result, PG_DIAG_SQLSTATE), ZBX_PG_DEADLOCK))
+		return SUCCEED;
+
+	if (0 == zbx_strcmp_null(PQresultErrorField(pg_result, PG_DIAG_SQLSTATE), ZBX_PG_READ_ONLY))
 		return SUCCEED;
 
 	return FAIL;
@@ -338,8 +400,6 @@ static int	is_recoverable_postgresql_error(const PGconn *pg_conn, const PGresult
 #endif
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_db_init_autoincrement_options                                *
  *                                                                            *
  * Purpose: specify the autoincrement options during db connect               *
  *                                                                            *
@@ -350,8 +410,6 @@ void	zbx_db_init_autoincrement_options(void)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_db_connect                                                   *
  *                                                                            *
  * Purpose: connect to the database                                           *
  *                                                                            *
@@ -365,11 +423,6 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 {
 	int		ret = ZBX_DB_OK, last_txn_error, last_txn_level;
 #if defined(HAVE_MYSQL)
-#if LIBMYSQL_VERSION_ID >= 80000	/* my_bool type is removed in MySQL 8.0 */
-	bool		mysql_reconnect = 1;
-#else
-	my_bool		mysql_reconnect = 1;
-#endif
 	int		err_no = 0;
 #elif defined(HAVE_ORACLE)
 	char		*connect = NULL;
@@ -549,21 +602,13 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 		ret = ZBX_DB_FAIL;
 	}
 
-	/* The RECONNECT option setting is placed here, AFTER the connection	*/
-	/* is made, due to a bug in MySQL versions prior to 5.1.6 where it	*/
-	/* reset the options value to the default, regardless of what it was	*/
-	/* set to prior to the connection. MySQL allows changing connection	*/
-	/* options on an open connection, so setting it here is safe.		*/
-
-	if (ZBX_DB_OK == ret && 0 != mysql_options(conn, MYSQL_OPT_RECONNECT, &mysql_reconnect))
-		zabbix_log(LOG_LEVEL_WARNING, "Cannot set MySQL reconnect option.");
-
 	if (ZBX_DB_OK == ret)
 	{
-		/* in contrast to "set names utf8" results of this call will survive auto-reconnects     */
-		/* utf8mb3 and utf8 are currently aliases but one of them might be missing, attempt both */
-		if (0 != mysql_set_character_set(conn, ZBX_SUPPORTED_DB_CHARACTER_SET_UTF8MB3) &&
-				0 != mysql_set_character_set(conn, ZBX_SUPPORTED_DB_CHARACTER_SET_UTF8))
+		/* in contrast to "set names utf8" results of this call will survive auto-reconnects */
+		/* utf8mb3 is deprecated and it's superset utf8mb4 should be used instead if available */
+		if (0 != mysql_set_character_set(conn, ZBX_SUPPORTED_DB_CHARACTER_SET_UTF8MB4) &&
+				0 != mysql_set_character_set(conn, ZBX_SUPPORTED_DB_CHARACTER_SET_UTF8) &&
+				0 != mysql_set_character_set(conn, ZBX_SUPPORTED_DB_CHARACTER_SET_UTF8MB3))
 		{
 			zabbix_log(LOG_LEVEL_WARNING, "cannot set MySQL character set");
 		}
@@ -586,6 +631,7 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 	if (ZBX_DB_FAIL == ret && SUCCEED == is_recoverable_mysql_error(err_no))
 		ret = ZBX_DB_DOWN;
 
+	mysql_err_cnt = ZBX_DB_OK == ret ? 0 : mysql_err_cnt + 1;
 #elif defined(HAVE_ORACLE)
 	ZBX_UNUSED(dbschema);
 	ZBX_UNUSED(tls_connect);
@@ -603,14 +649,18 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 
 	if ('\0' != *host)
 	{
+		/* Easy Connect method */
 		connect = zbx_strdcatf(connect, "//%s", host);
 		if (0 != port)
 			connect = zbx_strdcatf(connect, ":%d", port);
-		if (NULL != dbname && '\0' != *dbname)
+		if ('\0' != *dbname)
 			connect = zbx_strdcatf(connect, "/%s", dbname);
 	}
 	else
-		ret = ZBX_DB_FAIL;
+	{
+		/* Net Service Name method */
+		connect = zbx_strdup(connect, dbname);
+	}
 
 	while (ZBX_DB_OK == ret)
 	{
@@ -796,9 +846,6 @@ int	zbx_db_connect(char *host, char *user, char *password, char *dbname, char *d
 		ZBX_PG_BYTEAOID = atoi(row[0]);
 	DBfree_result(result);
 
-	ZBX_PG_SVERSION = PQserverVersion(conn);
-	zabbix_log(LOG_LEVEL_DEBUG, "PostgreSQL Server version: %d", ZBX_PG_SVERSION);
-
 	/* disable "nonstandard use of \' in a string literal" warning */
 	if (0 < (ret = zbx_db_execute("set escape_string_warning to off")))
 		ret = ZBX_DB_OK;
@@ -859,6 +906,12 @@ out:
 	sqlite3_busy_timeout(conn, SEC_PER_MIN * 1000);
 
 	if (0 < (ret = zbx_db_execute("pragma synchronous=0")))
+		ret = ZBX_DB_OK;
+
+	if (ZBX_DB_OK != ret)
+		goto out;
+
+	if (0 < (ret = zbx_db_execute("pragma foreign_keys=on")))
 		ret = ZBX_DB_OK;
 
 	if (ZBX_DB_OK != ret)
@@ -952,7 +1005,7 @@ void	zbx_db_close(void)
 		for (i = 0; i < oracle.db_results.values_num; i++)
 		{
 			/* deallocate all handles before environment is deallocated */
-			OCI_DBclean_result(oracle.db_results.values[i]);
+			OCI_DBclean_result_handle(oracle.db_results.values[i]);
 		}
 	}
 
@@ -1006,8 +1059,6 @@ void	zbx_db_close(void)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_db_begin                                                     *
- *                                                                            *
  * Purpose: start transaction                                                 *
  *                                                                            *
  * Comments: do nothing if DB does not support transactions                   *
@@ -1022,7 +1073,9 @@ int	zbx_db_begin(void)
 		zabbix_log(LOG_LEVEL_CRIT, "ERROR: nested transaction detected. Please report it to Zabbix Team.");
 		assert(0);
 	}
-
+#if defined(HAVE_MYSQL)
+	txn_begin = 1;
+#endif
 	txn_level++;
 
 #if defined(HAVE_MYSQL) || defined(HAVE_POSTGRESQL)
@@ -1034,13 +1087,13 @@ int	zbx_db_begin(void)
 
 	if (ZBX_DB_DOWN == rc)
 		txn_level--;
-
+#if defined(HAVE_MYSQL)
+	txn_begin = 0;
+#endif
 	return rc;
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_db_commit                                                    *
  *                                                                            *
  * Purpose: commit transaction                                                *
  *                                                                            *
@@ -1087,8 +1140,6 @@ int	zbx_db_commit(void)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_db_rollback                                                  *
  *                                                                            *
  * Purpose: rollback transaction                                              *
  *                                                                            *
@@ -1205,8 +1256,6 @@ int	zbx_db_statement_prepare(const char *sql)
 
 /******************************************************************************
  *                                                                            *
- * Function: db_bind_dynamic_cb                                               *
- *                                                                            *
  * Purpose: callback function used by dynamic parameter binding               *
  *                                                                            *
  ******************************************************************************/
@@ -1244,6 +1293,7 @@ static sb4 db_bind_dynamic_cb(dvoid *ctxp, OCIBind *bindp, ub4 iter, ub4 index, 
 		case ZBX_TYPE_TEXT:
 		case ZBX_TYPE_SHORTTEXT:
 		case ZBX_TYPE_LONGTEXT:
+		case ZBX_TYPE_CUID:
 			*bufpp = context->rows[iter][context->position].str;
 			*alenp = ((size_t *)context->data)[iter];
 			break;
@@ -1258,8 +1308,6 @@ static sb4 db_bind_dynamic_cb(dvoid *ctxp, OCIBind *bindp, ub4 iter, ub4 index, 
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_db_bind_parameter_dyn                                        *
  *                                                                            *
  * Purpose: performs dynamic parameter binding, converting value if necessary *
  *                                                                            *
@@ -1320,6 +1368,7 @@ int	zbx_db_bind_parameter_dyn(zbx_db_bind_context_t *context, int position, unsi
 		case ZBX_TYPE_TEXT:
 		case ZBX_TYPE_SHORTTEXT:
 		case ZBX_TYPE_LONGTEXT:
+		case ZBX_TYPE_CUID:
 			sizes = (size_t *)zbx_malloc(NULL, sizeof(size_t) * rows_num);
 			context->size_max = 0;
 
@@ -1395,7 +1444,7 @@ int	zbx_db_statement_execute(int iters)
 	}
 
 	if (OCI_SUCCESS != (err = zbx_oracle_statement_execute(iters, &nrows)))
-		ret = OCI_handle_sql_error(ERR_Z3007, err, NULL);
+		ret = OCI_handle_sql_error((ORA_ERR_UNIQ_CONSTRAINT == err ? ERR_Z3008 : ERR_Z3007), err, NULL);
 	else
 		ret = (int)nrows;
 
@@ -1412,8 +1461,6 @@ out:
 #endif
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_db_vexecute                                                  *
  *                                                                            *
  * Purpose: Execute SQL statement. For non-select statements only.            *
  *                                                                            *
@@ -1463,12 +1510,17 @@ int	zbx_db_vexecute(const char *fmt, va_list args)
 	}
 	else
 	{
-		int	err_no;
+		zbx_err_codes_t	errcode;
+		int		err_no;
 
 		if (0 != mysql_query(conn, sql))
 		{
 			err_no = (int)mysql_errno(conn);
-			zbx_db_errlog(ERR_Z3005, err_no, mysql_error(conn), sql);
+			errcode = (ER_DUP_ENTRY == err_no ? ERR_Z3008 : ERR_Z3005);
+			mysql_err_cnt++;
+
+			if (FAIL == is_inhibited_mysql_error(err_no))
+				zbx_db_errlog(errcode, err_no, mysql_error(conn), sql);
 
 			ret = (SUCCEED == is_recoverable_mysql_error(err_no) ? ZBX_DB_DOWN : ZBX_DB_FAIL);
 		}
@@ -1490,7 +1542,12 @@ int	zbx_db_vexecute(const char *fmt, va_list args)
 				if (0 < (status = mysql_next_result(conn)))
 				{
 					err_no = (int)mysql_errno(conn);
-					zbx_db_errlog(ERR_Z3005, err_no, mysql_error(conn), sql);
+					errcode = (ER_DUP_ENTRY == err_no ? ERR_Z3008 : ERR_Z3005);
+					mysql_err_cnt++;
+
+					if (FAIL == is_inhibited_mysql_error(err_no))
+						zbx_db_errlog(errcode, err_no, mysql_error(conn), sql);
+
 					ret = (SUCCEED == is_recoverable_mysql_error(err_no) ? ZBX_DB_DOWN : ZBX_DB_FAIL);
 				}
 			}
@@ -1507,7 +1564,7 @@ int	zbx_db_vexecute(const char *fmt, va_list args)
 	}
 
 	if (OCI_SUCCESS != err)
-		ret = OCI_handle_sql_error(ERR_Z3005, err, sql);
+		ret = OCI_handle_sql_error((err == ORA_ERR_UNIQ_CONSTRAINT ? ERR_Z3008 : ERR_Z3005), err, sql);
 
 #elif defined(HAVE_POSTGRESQL)
 	result = PQexec(conn,sql);
@@ -1519,8 +1576,18 @@ int	zbx_db_vexecute(const char *fmt, va_list args)
 	}
 	else if (PGRES_COMMAND_OK != PQresultStatus(result))
 	{
+		zbx_err_codes_t	errcode;
+
 		zbx_postgresql_error(&error, result);
-		zbx_db_errlog(ERR_Z3005, 0, error, sql);
+
+		if (0 == zbx_strcmp_null(PQresultErrorField(result, PG_DIAG_SQLSTATE), ZBX_PG_UNIQUE_VIOLATION))
+			errcode = ERR_Z3008;
+		else if (0 == zbx_strcmp_null(PQresultErrorField(result, PG_DIAG_SQLSTATE), ZBX_PG_READ_ONLY))
+			errcode = ERR_Z3009;
+		else
+			errcode = ERR_Z3005;
+
+		zbx_db_errlog(errcode, 0, error, sql);
 		zbx_free(error);
 
 		ret = (SUCCEED == is_recoverable_postgresql_error(conn, result) ? ZBX_DB_DOWN : ZBX_DB_FAIL);
@@ -1586,8 +1653,6 @@ clean:
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_db_vselect                                                   *
- *                                                                            *
  * Purpose: execute a select statement                                        *
  *                                                                            *
  * Return value: data, NULL (on error) or (DB_RESULT)ZBX_DB_DOWN              *
@@ -1638,10 +1703,12 @@ DB_RESULT	zbx_db_vselect(const char *fmt, va_list args)
 	{
 		if (0 != mysql_query(conn, sql) || NULL == (result->result = mysql_store_result(conn)))
 		{
-			int err_no;
+			int err_no = (int)mysql_errno(conn);
 
-			err_no = (int)mysql_errno(conn);
-			zbx_db_errlog(ERR_Z3005, err_no, mysql_error(conn), sql);
+			mysql_err_cnt++;
+
+			if (FAIL == is_inhibited_mysql_error(err_no))
+				zbx_db_errlog(ERR_Z3005, err_no, mysql_error(conn), sql);
 
 			DBfree_result(result);
 			result = (SUCCEED == is_recoverable_mysql_error(err_no) ? (DB_RESULT)ZBX_DB_DOWN : NULL);
@@ -1761,9 +1828,16 @@ DB_RESULT	zbx_db_vselect(const char *fmt, va_list args)
 					}
 					else
 					{
+#define ZBX_MIN_OCI_NUMBER_WIDTH	22
 						/* retrieve the column width in bytes */
 						err = OCIAttrGet((void *)parmdp, (ub4)OCI_DTYPE_PARAM, (void *)&col_width,
 								(ub4 *)NULL, (ub4)OCI_ATTR_DATA_SIZE, (OCIError *)oracle.errhp);
+
+						if (ZBX_MIN_OCI_NUMBER_WIDTH > col_width && SQLT_NUM == data_type)
+						{
+							col_width = ZBX_MIN_OCI_NUMBER_WIDTH;
+						}
+#undef ZBX_MIN_OCI_NUMBER_WIDTH
 					}
 				}
 				col_width++;	/* add 1 byte for terminating '\0' */
@@ -1894,8 +1968,6 @@ DB_RESULT	zbx_db_select_n(const char *query, int n)
 
 #ifdef HAVE_POSTGRESQL
 /******************************************************************************
- *                                                                            *
- * Function: zbx_db_bytea_unescape                                            *
  *                                                                            *
  * Purpose: converts the null terminated string into binary buffer            *
  *                                                                            *
@@ -2110,19 +2182,14 @@ int	zbx_db_is_null(const char *field)
 }
 
 #ifdef HAVE_ORACLE
-static void	OCI_DBclean_result(DB_RESULT result)
+static void	OCI_DBclean_result_handle(DB_RESULT result)
 {
-	if (NULL == result)
-		return;
-
 	if (NULL != result->values)
 	{
 		int	i;
 
 		for (i = 0; i < result->ncolumn; i++)
 		{
-			zbx_free(result->values[i]);
-
 			/* deallocate the lob locator variable */
 			if (NULL != result->clobs[i])
 			{
@@ -2130,16 +2197,31 @@ static void	OCI_DBclean_result(DB_RESULT result)
 				result->clobs[i] = NULL;
 			}
 		}
-
-		zbx_free(result->values);
-		zbx_free(result->clobs);
-		zbx_free(result->values_alloc);
 	}
 
 	if (result->stmthp)
 	{
 		OCIHandleFree((dvoid *)result->stmthp, OCI_HTYPE_STMT);
 		result->stmthp = NULL;
+	}
+}
+static void	OCI_DBclean_result(DB_RESULT result)
+{
+	if (NULL == result)
+		return;
+
+	OCI_DBclean_result_handle(result);
+
+	if (NULL != result->values)
+	{
+		int	i;
+
+		for (i = 0; i < result->ncolumn; i++)
+			zbx_free(result->values[i]);
+
+		zbx_free(result->values);
+		zbx_free(result->clobs);
+		zbx_free(result->values_alloc);
 	}
 }
 #endif
@@ -2229,8 +2311,6 @@ static int	zbx_db_is_escape_sequence(char c)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_db_escape_string                                             *
- *                                                                            *
  * Return value: escaped string                                               *
  *                                                                            *
  * Comments: sync changes with 'zbx_db_get_escape_string_len'                 *
@@ -2269,8 +2349,6 @@ static void	zbx_db_escape_string(const char *src, char *dst, size_t len, zbx_esc
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_db_get_escape_string_len                                     *
  *                                                                            *
  * Purpose: to calculate escaped string length limited by bytes or characters *
  *          whichever is reached first.                                       *
@@ -2317,8 +2395,6 @@ static size_t	zbx_db_get_escape_string_len(const char *s, size_t max_bytes, size
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_db_dyn_escape_string                                         *
- *                                                                            *
  * Purpose: to escape string limited by bytes or characters, whichever limit  *
  *          is reached first.                                                 *
  *                                                                            *
@@ -2346,8 +2422,6 @@ char	*zbx_db_dyn_escape_string(const char *src, size_t max_bytes, size_t max_cha
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_db_get_escape_like_pattern_len                               *
- *                                                                            *
  * Return value: return length of escaped LIKE pattern with terminating '\0'  *
  *                                                                            *
  * Comments: sync changes with 'zbx_db_escape_like_pattern'                   *
@@ -2372,8 +2446,6 @@ static int	zbx_db_get_escape_like_pattern_len(const char *src)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_db_escape_like_pattern                                       *
  *                                                                            *
  * Return value: escaped string to be used as pattern in LIKE                 *
  *                                                                            *
@@ -2430,8 +2502,6 @@ static void	zbx_db_escape_like_pattern(const char *src, char *dst, int len)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_db_dyn_escape_like_pattern                                   *
- *                                                                            *
  * Return value: escaped string to be used as pattern in LIKE                 *
  *                                                                            *
  ******************************************************************************/
@@ -2451,42 +2521,449 @@ char	*zbx_db_dyn_escape_like_pattern(const char *src)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_db_strlen_n                                                  *
- *                                                                            *
  * Purpose: return the string length to fit into a database field of the      *
  *          specified size                                                    *
  *                                                                            *
  * Return value: the string length in bytes                                   *
  *                                                                            *
  ******************************************************************************/
-int	zbx_db_strlen_n(const char *text, size_t maxlen)
+int	zbx_db_strlen_n(const char *text_loc, size_t maxlen)
 {
-	return zbx_strlen_utf8_nchars(text, maxlen);
+	return zbx_strlen_utf8_nchars(text_loc, maxlen);
 }
 
-#if defined(HAVE_POSTGRESQL)
+/*********************************************************************************
+ *                                                                               *
+ * Purpose: determine if a vendor database(MySQL, MariaDB, PostgreSQL,           *
+ *          Oracle, ElasticDB) version satisfies Zabbix requirements             *
+ *                                                                               *
+ * Parameters: database                - [IN] database name                      *
+ *             current_version         - [IN] detected numeric version           *
+ *             min_version             - [IN] minimum required numeric version   *
+ *             max_version             - [IN] maximum required numeric version   *
+ *             min_supported_version   - [IN] minimum supported numeric version  *
+ *                                                                               *
+ * Return value: resulting status flag                                           *
+ *                                                                               *
+ *********************************************************************************/
+int	zbx_db_version_check(const char *database, zbx_uint32_t current_version, zbx_uint32_t min_version,
+		zbx_uint32_t max_version, zbx_uint32_t min_supported_version)
+{
+	int	flag;
+
+	if (ZBX_DBVERSION_UNDEFINED == current_version)
+	{
+		flag = DB_VERSION_FAILED_TO_RETRIEVE;
+		zabbix_log(LOG_LEVEL_WARNING, "Failed to retrieve %s version", database);
+	}
+	else if (min_version > current_version && ZBX_DBVERSION_UNDEFINED != min_version)
+	{
+		flag = DB_VERSION_LOWER_THAN_MINIMUM;
+		zabbix_log(LOG_LEVEL_WARNING, "Unsupported DB! %s version %lu is older than minimum required %lu",
+				database, (unsigned long)current_version, (unsigned long)min_version);
+	}
+	else if (max_version < current_version && ZBX_DBVERSION_UNDEFINED != max_version)
+	{
+		flag = DB_VERSION_HIGHER_THAN_MAXIMUM;
+		zabbix_log(LOG_LEVEL_WARNING, "Unsupported DB! %s version %lu is newer than maximum allowed %lu",
+				database, (unsigned long)current_version, (unsigned long)max_version);
+	}
+	else if (min_supported_version > current_version && ZBX_DBVERSION_UNDEFINED != min_supported_version)
+	{
+		flag = DB_VERSION_NOT_SUPPORTED_ERROR;
+		/* log message must be handled by server or proxy */
+	}
+	else
+		flag = DB_VERSION_SUPPORTED;
+
+	return flag;
+}
+
 /******************************************************************************
  *                                                                            *
- * Function: zbx_dbms_get_version                                             *
+ * Purpose: prepare json for front-end with the DB current, minimum and       *
+ *          maximum versions and a flag that indicates if the version         *
+ *          satisfies the requirements, and other information as well as      *
+ *          information about DB extension in a similar way                   *
  *                                                                            *
- * Purpose: returns DBMS version as integer: MMmmuu                           *
+ * Parameters:  json                     - [IN/OUT] json data                 *
+ *              info                     - [IN] info to serialize             *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_db_version_json_create(struct zbx_json *json, struct zbx_db_version_info_t *info)
+{
+	zbx_json_addobject(json, NULL);
+	zbx_json_addstring(json, "database", info->database, ZBX_JSON_TYPE_STRING);
+
+	if (DB_VERSION_FAILED_TO_RETRIEVE != info->flag)
+		zbx_json_addstring(json, "current_version", info->friendly_current_version, ZBX_JSON_TYPE_STRING);
+
+	zbx_json_addstring(json, "min_version", info->friendly_min_version, ZBX_JSON_TYPE_STRING);
+	zbx_json_addstring(json, "max_version", info->friendly_max_version, ZBX_JSON_TYPE_STRING);
+	zbx_json_addint64(json, "history_pk", info->history_pk);
+
+	if (NULL != info->friendly_min_supported_version)
+	{
+		zbx_json_addstring(json, "min_supported_version", info->friendly_min_supported_version,
+				ZBX_JSON_TYPE_STRING);
+	}
+
+	zbx_json_addint64(json, "flag", info->flag);
+#ifdef HAVE_ORACLE
+	if (0 != info->tables_json.buffer_offset)
+	{
+		zbx_json_addobject(json, "schema_diff");
+		if (0 != strcmp(info->tables_json.buffer, "{}"))
+			zbx_json_addraw(json, "tables", info->tables_json.buffer);
+		zbx_json_close(json);
+	}
+#endif
+	zbx_json_close(json);
+
+	if (NULL != info->extension)
+	{
+		zbx_json_addobject(json, NULL);
+		zbx_json_addstring(json, "database", info->extension, ZBX_JSON_TYPE_STRING);
+
+		if (DB_VERSION_FAILED_TO_RETRIEVE != info->ext_flag)
+		{
+			zbx_json_addstring(json, "current_version",
+					info->ext_friendly_current_version, ZBX_JSON_TYPE_STRING);
+		}
+
+		zbx_json_addstring(json, "min_version", info->ext_friendly_min_version, ZBX_JSON_TYPE_STRING);
+		zbx_json_addstring(json, "max_version", info->ext_friendly_max_version, ZBX_JSON_TYPE_STRING);
+		zbx_json_addstring(json, "min_supported_version", info->ext_friendly_min_supported_version,
+				ZBX_JSON_TYPE_STRING);
+
+		zbx_json_addint64(json, "flag", info->ext_flag);
+		zbx_json_addint64(json, "extension_err_code", info->ext_err_code);
+#ifdef HAVE_POSTGRESQL
+		if (0 == zbx_strcmp_null(info->extension, ZBX_DB_EXTENSION_TIMESCALEDB))
+		{
+			if (ON == zbx_tsdb_get_compression_availability())
+			{
+				zbx_json_addstring(json, "compression_availability", "true", ZBX_JSON_TYPE_INT);
+			}
+			else
+			{
+				zbx_json_addstring(json, "compression_availability", "false", ZBX_JSON_TYPE_INT);
+			}
+
+			zbx_json_addint64(json, ZBX_TIMESCALE_COMPRESSED_CHUNKS_HISTORY, info->history_compressed_chunks);
+			zbx_json_addint64(json, ZBX_TIMESCALE_COMPRESSED_CHUNKS_TRENDS, info->trends_compressed_chunks);
+		}
+#endif
+		zbx_json_close(json);
+	}
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Purpose: For PostgreSQL, MySQL and MariaDB:                                *
+ *          returns DBMS version as integer: MMmmuu                           *
  *          M = major version part                                            *
  *          m = minor version part                                            *
  *          u = patch version part                                            *
  *                                                                            *
- * Example: 1.2.34 version will be returned as 10234                          *
+ * Example: if the original DB version was 1.2.34 then 10234 gets returned    *
  *                                                                            *
- * Return value: DBMS version or 0 if unknown                                 *
+ * Purpose: For OracleDB:                                                     *
+ *          returns DBMS version as integer: MRruRRivUU                       *
+ *          MR = major release version part                                   *
+ *          ru = release update version part                                  *
+ *          RR = release update version revision part                         *
+ *          iv = increment version part                                       *
+ *          UU = unused, reserved for future use                              *
+ *                                                                            *
+ * Example: if the OracleDB version was 18.1.0.0.7 then 1801000007 gets       *
+ *          returned                                                          *
+ *                                                                            *
+ * Return value: DBMS version or DBVERSION_UNDEFINED if unknown               *
  *                                                                            *
  ******************************************************************************/
-int	zbx_dbms_get_version(void)
+zbx_uint32_t	zbx_dbms_version_get(void)
 {
+#if defined(HAVE_MYSQL)
+	return ZBX_MYSQL_SVERSION;
+#elif defined(HAVE_POSTGRESQL)
 	return ZBX_PG_SVERSION;
+#elif defined(HAVE_ORACLE)
+	return ZBX_ORACLE_SVERSION;
+#else
+	return ZBX_DBVERSION_UNDEFINED;
+#endif
+}
+
+#ifdef HAVE_MYSQL
+/******************************************************************************
+ *                                                                            *
+ * Purpose: returns flag if the mariadb was detected                          *
+ *                                                                            *
+ * Return value: ON  - mariadb detected                                       *
+ *               OFF - otherwise (it is unforked mysql)                       *
+ ******************************************************************************/
+int	zbx_dbms_mariadb_used(void)
+{
+	return ZBX_MARIADB_SFORK;
+}
+#endif
+
+/***************************************************************************************************************
+ *                                                                                                             *
+ * Purpose: retrieves the DB version info, including numeric version value                                     *
+ *                                                                                                             *
+ *          For PostgreSQL:                                                                                    *
+ *          numeric version is available from the API                                                          *
+ *                                                                                                             *
+ *          For MySQL and MariaDB:                                                                             *
+ *          numeric version is available from the API, but also the additional processing is required          *
+ *          to determine if it is a MySQL or MariaDB and save this result as well                              *
+ *                                                                                                             *
+ *          For Oracle:                                                                                        *
+ *          numeric version needs to be manually parsed from the string result                                 *
+ *          Oracle DB format is like 18.1.2.3.0 where                                                          *
+ *            18 - major release version                                                                       *
+ *            1 - release update version                                                                       *
+ *            2 - release update version revision                                                              *
+ *            3 - increment version                                                                            *
+ *            0 - unused, reserved for future use                                                              *
+ *                                                                                                             *
+ *          Oracle Examples:                                                                                   *
+ *          For "Oracle Database 18c Express Edition Release 1.0.0.0.0 - Production"    => 100000000           *
+ *          For "Oracle Database 18c Express Edition Release 18.2.0.0.7 - Production"   => 1802000007          *
+ *          For "Oracle Database 18c Express Edition Release 0.0.34.123.7 - Production" => DBVERSION_UNDEFINED *
+ *          For "Oracle Database 18c Express Edition Release 1.0.3.x.7 - Production"    => DBVERISON_UNDEFINED *
+ *          For "<anything else>"                                                       => DBVERSION_UNDEFINED *
+ *                                                                                                             *
+ **************************************************************************************************************/
+void	zbx_dbms_version_info_extract(struct zbx_db_version_info_t *version_info)
+{
+#define RIGHT2(x)	((int)((zbx_uint32_t)(x) - ((zbx_uint32_t)((x)/100))*100))
+#if defined(HAVE_MYSQL)
+	int		client_major_version, client_minor_version, client_release_version, server_major_version,
+			server_minor_version, server_release_version;
+	const char	*info;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
+
+	if (NULL != (info = mysql_get_server_info(conn)) && NULL != strstr(info, "MariaDB"))
+	{
+		zabbix_log(LOG_LEVEL_DEBUG, "MariaDB fork detected");
+		ZBX_MARIADB_SFORK = ON;
+	}
+
+	if (ON == ZBX_MARIADB_SFORK && 6 == sscanf(info, "%d.%d.%d-%d.%d.%d-MariaDB", &client_major_version,
+			&client_minor_version, &client_release_version, &server_major_version,
+			&server_minor_version, &server_release_version))
+	{
+		ZBX_MYSQL_SVERSION = server_major_version * 10000 + server_minor_version * 100 +
+				server_release_version;
+		zabbix_log(LOG_LEVEL_DEBUG, "MariaDB subversion detected");
+	}
+	else
+		ZBX_MYSQL_SVERSION = (zbx_uint32_t)mysql_get_server_version(conn);
+
+	version_info->current_version = ZBX_MYSQL_SVERSION;
+	version_info->friendly_current_version = zbx_dsprintf(NULL, "%d.%.2d.%.2d", RIGHT2(ZBX_MYSQL_SVERSION/10000),
+			RIGHT2(ZBX_MYSQL_SVERSION/100), RIGHT2(ZBX_MYSQL_SVERSION));
+
+	if (ON == ZBX_MARIADB_SFORK)
+	{
+		version_info->database = "MariaDB";
+
+		version_info->min_version = ZBX_MARIADB_MIN_VERSION;
+		version_info->max_version = ZBX_MARIADB_MAX_VERSION;
+		version_info->min_supported_version = ZBX_MARIADB_MIN_SUPPORTED_VERSION;
+
+		version_info->friendly_min_version = ZBX_MARIADB_MIN_VERSION_STR;
+		version_info->friendly_max_version = ZBX_MARIADB_MAX_VERSION_STR;
+		version_info->friendly_min_supported_version = ZBX_MARIADB_MIN_SUPPORTED_VERSION_STR;
+	}
+	else
+	{
+		version_info->database = "MySQL";
+
+		version_info->min_version = ZBX_MYSQL_MIN_VERSION;
+		version_info->max_version = ZBX_MYSQL_MAX_VERSION;
+		version_info->min_supported_version = ZBX_MYSQL_MIN_SUPPORTED_VERSION;
+
+		version_info->friendly_min_version = ZBX_MYSQL_MIN_VERSION_STR;
+		version_info->friendly_max_version = ZBX_MYSQL_MAX_VERSION_STR;
+		version_info->friendly_min_supported_version = ZBX_MYSQL_MIN_SUPPORTED_VERSION_STR;
+	}
+
+	version_info->flag = zbx_db_version_check(version_info->database, version_info->current_version,
+			version_info->min_version, version_info->max_version, version_info->min_supported_version);
+
+#elif defined(HAVE_POSTGRESQL)
+	zbx_uint32_t major;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
+	ZBX_PG_SVERSION = (zbx_uint32_t)PQserverVersion(conn);
+
+	major = ZBX_PG_SVERSION/10000;
+
+	version_info->database = "PostgreSQL";
+
+	version_info->current_version = ZBX_PG_SVERSION;
+	version_info->min_version = ZBX_POSTGRESQL_MIN_VERSION;
+	version_info->max_version = ZBX_POSTGRESQL_MAX_VERSION;
+	version_info->min_supported_version = ZBX_POSTGRESQL_MIN_SUPPORTED_VERSION;
+
+	if (10 > major)
+	{
+		version_info->friendly_current_version = zbx_dsprintf(NULL, "%" PRIu32 ".%d.%d", major,
+				RIGHT2(ZBX_PG_SVERSION/100), RIGHT2(ZBX_PG_SVERSION));
+	}
+	else
+	{
+		version_info->friendly_current_version = zbx_dsprintf(NULL, "%" PRIu32 ".%d", major,
+				RIGHT2(ZBX_PG_SVERSION));
+	}
+
+	version_info->friendly_min_version = ZBX_POSTGRESQL_MIN_VERSION_STR;
+	version_info->friendly_max_version = ZBX_POSTGRESQL_MAX_VERSION_STR;
+	version_info->friendly_min_supported_version = ZBX_POSTGRESQL_MIN_SUPPORTED_VERSION_STR;
+
+	version_info->flag = zbx_db_version_check(version_info->database, version_info->current_version,
+			version_info->min_version, version_info->max_version, version_info->min_supported_version);
+
+#elif defined(HAVE_ORACLE)
+#	ifdef HAVE_OCI_SERVER_RELEASE2
+	char	*version_str = "Version ";
+	ub4	oci_ver = 0;
+#	endif
+	char	*start, *release_str = "Release ";
+	char	version_friendly[MAX_STRING_LEN / 8];
+	int	major_release_version, release_update_version, release_update_version_revision,
+			increment_version, reserved_for_future_use, overall_status = SUCCEED;
+
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
+#	ifdef HAVE_OCI_SERVER_RELEASE2
+	if (OCI_SUCCESS != OCIServerRelease2(oracle.svchp, oracle.errhp, (OraText *) version_friendly,
+			(ub4)sizeof(version_friendly), OCI_HTYPE_SVCCTX, &oci_ver, OCI_DEFAULT))
+#	else
+	if (OCI_SUCCESS != OCIServerVersion(oracle.svchp, oracle.errhp, (OraText *) version_friendly,
+			(ub4)sizeof(version_friendly), OCI_HTYPE_SVCCTX))
+#	endif
+	{
+		overall_status = FAIL;
+		goto out;
+	}
+
+	zabbix_log(LOG_LEVEL_DEBUG, "OracleDB version retrieved unparsed: %s", version_friendly);
+
+	if (
+#	ifdef HAVE_OCI_SERVER_RELEASE2
+			NULL != (start = strstr(version_friendly, version_str)) ||
+#	endif
+			NULL != (start = strstr(version_friendly, release_str)))
+	{
+		size_t	next_start_index;
+
+		next_start_index = start - version_friendly + strlen(release_str); /* same length for version_str */
+
+		if (5 != sscanf(version_friendly + next_start_index, "%d.%d.%d.%d.%d", &major_release_version,
+				&release_update_version, &release_update_version_revision, &increment_version,
+				&reserved_for_future_use) || major_release_version >= 100 ||
+				major_release_version <= 0 || release_update_version >= 100 ||
+				release_update_version < 0 || release_update_version_revision >= 100 ||
+				release_update_version_revision < 0 || increment_version >= 100 ||
+				increment_version < 0)
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "Unexpected Oracle DB version format: %s", version_friendly);
+			overall_status = FAIL;
+		}
+	}
+	else
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "Cannot find Release keyword in Oracle DB version.");
+		overall_status = FAIL;
+	}
+out:
+	if (FAIL == overall_status)
+	{
+		zabbix_log(LOG_LEVEL_WARNING, "Failed to detect OracleDB version");
+		ZBX_ORACLE_SVERSION = ZBX_DBVERSION_UNDEFINED;
+	}
+	else
+	{
+		ZBX_ORACLE_SVERSION = major_release_version * 100000000 + release_update_version * 1000000 +
+				release_update_version_revision * 10000 + increment_version * 100 +
+				reserved_for_future_use;
+#	ifndef HAVE_OCI_SERVER_RELEASE2
+		if (18 <= major_release_version)
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "Unable to determine the accurate Oracle DB version "
+					"(possibly there is a DB driver - DB version mismatch, "
+					"only the major Oracle DB version can be established): %s", version_friendly);
+		}
+#	endif
+	}
+
+	version_info->database = "Oracle";
+
+	version_info->current_version = ZBX_ORACLE_SVERSION;
+	version_info->min_version = ZBX_ORACLE_MIN_VERSION;
+	version_info->max_version = ZBX_ORACLE_MAX_VERSION;
+	version_info->min_supported_version = ZBX_ORACLE_MIN_SUPPORTED_VERSION;
+
+	version_info->friendly_current_version = zbx_strdup(NULL, version_friendly);
+	version_info->friendly_min_version = ZBX_ORACLE_MIN_VERSION_STR;
+	version_info->friendly_max_version = ZBX_ORACLE_MAX_VERSION_STR;
+	version_info->friendly_min_supported_version = ZBX_ORACLE_MIN_SUPPORTED_VERSION_STR;
+
+	version_info->flag = zbx_db_version_check(version_info->database, version_info->current_version,
+			version_info->min_version, version_info->max_version, version_info->min_supported_version);
+
+#else
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
+	version_info->flag = DB_VERSION_SUPPORTED;
+	version_info->friendly_current_version = NULL;
+#endif
+	zabbix_log(LOG_LEVEL_DEBUG, "End of %s() version:%lu", __func__, (unsigned long)zbx_dbms_version_get());
+}
+
+#ifdef HAVE_POSTGRESQL
+/***************************************************************************************************************
+ *                                                                                                             *
+ * Purpose: retrieves TimescaleDB extension info, including license string and numeric version value           *
+ *                                                                                                             *
+ **************************************************************************************************************/
+void	zbx_tsdb_info_extract(struct zbx_db_version_info_t *version_info)
+{
+	int	tsdb_ver;
+
+	if (0 != zbx_strcmp_null(version_info->extension, ZBX_DB_EXTENSION_TIMESCALEDB))
+		return;
+
+	tsdb_ver = zbx_tsdb_get_version();
+
+	version_info->ext_current_version = (zbx_uint32_t)tsdb_ver;
+	version_info->ext_min_version = ZBX_TIMESCALE_MIN_VERSION;
+	version_info->ext_max_version = ZBX_TIMESCALE_MAX_VERSION;
+	version_info->ext_min_supported_version = ZBX_TIMESCALE_MIN_SUPPORTED_VERSION;
+
+	version_info->ext_friendly_current_version = zbx_dsprintf(NULL, "%d.%d.%d", RIGHT2(tsdb_ver/10000),
+			RIGHT2(tsdb_ver/100), RIGHT2(tsdb_ver));
+
+	version_info->ext_friendly_min_version = ZBX_TIMESCALE_MIN_VERSION_STR;
+	version_info->ext_friendly_max_version = ZBX_TIMESCALE_MAX_VERSION_STR;
+	version_info->ext_friendly_min_supported_version = ZBX_TIMESCALE_MIN_SUPPORTED_VERSION_STR;
+
+	version_info->ext_flag = zbx_db_version_check(version_info->extension, version_info->ext_current_version,
+			version_info->ext_min_version, version_info->ext_max_version,
+			version_info->ext_min_supported_version);
+
+	if (ZBX_TIMESCALE_MIN_VERSION_WITH_LICENSE_PARAM_SUPPORT <= tsdb_ver)
+		version_info->ext_lic = zbx_tsdb_get_license();
+
+	zabbix_log(LOG_LEVEL_DEBUG, "TimescaleDB version: [%d], license: [%s]", tsdb_ver,
+		ZBX_NULL2EMPTY_STR(version_info->ext_lic));
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_tsdb_get_version                                             *
  *                                                                            *
  * Purpose: returns TimescaleDB (TSDB) version as integer: MMmmuu             *
  *          M = major version part                                            *
@@ -2548,4 +3025,60 @@ out:
 	return ver;
 }
 
+/******************************************************************************
+ *                                                                            *
+ * Purpose: retrievs TimescaleDB (TSDB) license information                   *
+ *                                                                            *
+ * Return value: license information from datase as string                    *
+ *               "apache"    for TimescaleDB Apache 2 Edition                 *
+ *               "timescale" for TimescaleDB Community Edition                *
+ *                                                                            *
+ * Comments: returns a pointer to allocated memory                            *
+ *                                                                            *
+ ******************************************************************************/
+char	*zbx_tsdb_get_license(void)
+{
+	DB_RESULT	result;
+	DB_ROW		row;
+	char		*tsdb_lic = NULL;
+
+	result = zbx_db_select("show timescaledb.license");
+
+	if ((DB_RESULT)ZBX_DB_DOWN != result && NULL != result && NULL != (row = zbx_db_fetch(result)))
+	{
+		tsdb_lic = zbx_strdup(NULL, row[0]);
+	}
+
+	DBfree_result(result);
+
+	return tsdb_lic;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Purpose: sets TimescaleDB (TSDB) compression availability                  *
+ *                                                                            *
+ * Parameters:  compression_availabile - [IN] compression availability        *
+ *              0 (OFF): compression is not available                         *
+ *              1 (ON): compression is available                              *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_tsdb_set_compression_availability(int compression_availabile)
+{
+	ZBX_TIMESCALE_COMPRESSION_AVAILABLE = compression_availabile;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Purpose: retrievs TimescaleDB (TSDB) compression availability              *
+ *                                                                            *
+ * Return value: compression availability as as integer                       *
+ *               0 (OFF): compression is not available                        *
+ *               1 (ON): compression is available                             *
+ *                                                                            *
+ ******************************************************************************/
+int	zbx_tsdb_get_compression_availability(void)
+{
+	return ZBX_TIMESCALE_COMPRESSION_AVAILABLE;
+}
 #endif

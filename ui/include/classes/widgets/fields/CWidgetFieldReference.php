@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,22 +36,6 @@ class CWidgetFieldReference extends CWidgetField {
 		parent::__construct(self::FIELD_NAME, null);
 
 		$this->setSaveType(ZBX_WIDGET_FIELD_TYPE_STR);
-	}
-
-	/**
-	 * JS script, that will call reference generation, if reference is not yet created.
-	 *
-	 * @param string $form_selector  jQuery context selector for the configuration form (with # or . character)
-	 *
-	 * @return string
-	 */
-	public function getJavascript($form_selector) {
-		return
-			'var reference_field = jQuery("input[name=\"'.$this->getName().'\"]", "'.$form_selector.'");'.
-			'if (!reference_field.val().length) {'.
-				'var reference = jQuery(".dashbrd-grid-container").dashboardGrid("makeReference");'.
-				'reference_field.val(reference);'.
-			'}';
 	}
 
 	/**

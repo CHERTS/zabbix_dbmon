@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@
 /**
  * @var CView $this
  */
+
+$this->includeJsFile('inventory.host.view.js.php');
 
 // Overview tab.
 $overviewFormList = new CFormList();
@@ -71,7 +73,7 @@ foreach ($data['host']['interfaces'] as $interface) {
 
 $header_is_set = false;
 
-foreach ([INTERFACE_TYPE_AGENT, INTERFACE_TYPE_SNMP, INTERFACE_TYPE_JMX, INTERFACE_TYPE_IPMI] as $type) {
+foreach (CItem::INTERFACE_TYPES_BY_PRIORITY as $type) {
 	if ($interfaces[$type]) {
 		$ifTab = (new CTable());
 
@@ -132,75 +134,82 @@ if ($data['host']['description'] !== '') {
 // latest data
 $overviewFormList->addRow(_('Monitoring'),
 	new CHorList([
-		new CLink(_('Web'), (new CUrl('zabbix.php'))
-			->setArgument('action', 'web.view')
-			->setArgument('filter_hostids[]', $data['host']['hostid'])
-			->setArgument('filter_set', '1')
-		),
-		new CLink(_('Latest data'),
-			(new CUrl('zabbix.php'))
+		$data['allowed_ui_hosts']
+			? new CLink(_('Web'), (new CUrl('zabbix.php'))
+				->setArgument('action', 'web.view')
+				->setArgument('filter_hostids[]', $data['host']['hostid'])
+				->setArgument('filter_set', '1')
+			)
+			: _('Web'),
+		$data['allowed_ui_latest_data']
+			? new CLink(_('Latest data'), (new CUrl('zabbix.php'))
 				->setArgument('action', 'latest.view')
-				->setArgument('filter_hostids[]', $data['host']['hostid'])
-				->setArgument('filter_show_details', '1')
+				->setArgument('hostids[]', $data['host']['hostid'])
+				->setArgument('show_details', '1')
 				->setArgument('filter_set', '1')
-		),
-		new CLink(_('Problems'),
-			(new CUrl('zabbix.php'))
+			)
+			: _('Latest data'),
+		$data['allowed_ui_problems']
+			? new CLink(_('Problems'), (new CUrl('zabbix.php'))
 				->setArgument('action', 'problem.view')
-				->setArgument('filter_hostids[]', $data['host']['hostid'])
+				->setArgument('hostids', [$data['host']['hostid']])
 				->setArgument('filter_set', '1')
-		),
-		new CLink(_('Graphs'), (new CUrl('zabbix.php'))
-				->setArgument('action', 'charts.view')
-				->setArgument('filter_set', '1')
-				->setArgument('view_as', HISTORY_GRAPH)
-				->setArgument('filter_search_type', ZBX_SEARCH_TYPE_STRICT)
-				->setArgument('filter_hostids', [$data['host']['hostid']])
-		),
-		new CLink(_('Screens'), (new CUrl('host_screen.php'))->setArgument('hostid', $data['host']['hostid']))
+			)
+			: _('Problems'),
+		$data['allowed_ui_hosts']
+			? new CLink(_('Graphs'),
+				(new CUrl('zabbix.php'))
+					->setArgument('action', 'charts.view')
+					->setArgument('filter_hostids', [$data['host']['hostid']])
+					->setArgument('filter_set', '1')
+		)
+			: _('Graphs'),
+		$data['allowed_ui_hosts']
+			? new CLink(_('Dashboards'), (new CUrl('zabbix.php'))
+				->setArgument('action', 'host.dashboard.view')
+				->setArgument('hostid', $data['host']['hostid'])
+			)
+			: _('Dashboards')
 	])
 );
 
 // configuration
-if ($data['rwHost']) {
-	$hostLink = new CLink(_('Host'), (new CUrl('hosts.php'))
-		->setArgument('form', 'update')
-		->setArgument('hostid', $data['host']['hostid'])
-	);
-	$applicationsLink = new CLink(_('Applications'),
-		(new CUrl('applications.php'))
-			->setArgument('filter_set', '1')
-			->setArgument('filter_hostids', [$data['host']['hostid']])
-	);
-
+if ($data['allowed_ui_conf_hosts'] && $data['rwHost']) {
+	$hostLink = (new CLink(_('Host')))
+		->onClick('view.editHost({hostid:\''.$data['host']['hostid'].'\'})');
 	$itemsLink = new CLink(_('Items'),
 		(new CUrl('items.php'))
 			->setArgument('filter_set', '1')
 			->setArgument('filter_hostids', [$data['host']['hostid']])
+			->setArgument('context', 'host')
 	);
 	$triggersLink = new CLink(_('Triggers'),
 		(new CUrl('triggers.php'))
 			->setArgument('filter_set', '1')
 			->setArgument('filter_hostids', [$data['host']['hostid']])
+			->setArgument('context', 'host')
 	);
 	$graphsLink = new CLink(_('Graphs'),
 		(new CUrl('graphs.php'))
 			->setArgument('filter_set', '1')
 			->setArgument('filter_hostids', [$data['host']['hostid']])
+			->setArgument('context', 'host')
 	);
 	$discoveryLink = new CLink(_('Discovery'),
 		(new CUrl('host_discovery.php'))
 			->setArgument('filter_set', '1')
 			->setArgument('filter_hostids', [$data['host']['hostid']])
+			->setArgument('context', 'host')
 	);
-	$webLink = new CLink(_('Web'), (new CUrl('httpconf.php'))
+	$webLink = new CLink(_('Web'),
+		(new CUrl('httpconf.php'))
 			->setArgument('filter_set', '1')
 			->setArgument('filter_hostids', [$data['host']['hostid']])
+			->setArgument('context', 'host')
 	);
 }
 else {
 	$hostLink = _('Host');
-	$applicationsLink = _('Application');
 	$itemsLink = _('Items');
 	$triggersLink = _('Triggers');
 	$graphsLink = _('Graphs');
@@ -211,7 +220,6 @@ else {
 $overviewFormList->addRow(_('Configuration'),
 	new CHorList([
 		$hostLink,
-		(new CSpan([$applicationsLink, CViewHelper::showNum($data['host']['applications'])])),
 		(new CSpan([$itemsLink, CViewHelper::showNum($data['host']['items'])])),
 		(new CSpan([$triggersLink, CViewHelper::showNum($data['host']['triggers'])])),
 		(new CSpan([$graphsLink, CViewHelper::showNum($data['host']['graphs'])])),
@@ -249,13 +257,10 @@ $hostInventoriesTab->addTab('detailsTab', _('Details'), $detailsFormList);
 // append tabs and form
 $hostInventoriesTab->setFooter(makeFormFooter(null, [new CButtonCancel()]));
 
-$web_layout_mode = CViewHelper::loadLayoutMode();
-
 (new CWidget())
 	->setTitle(_('Host inventory'))
-	->setWebLayoutMode($web_layout_mode)
-	->setControls((new CList())->addItem(get_icon('kioskmode', ['mode' => $web_layout_mode])))
 	->addItem((new CForm())
+		->cleanItems()
 		->setAttribute('aria-labelledby', ZBX_STYLE_PAGE_TITLE)
 		->addItem($hostInventoriesTab)
 	)

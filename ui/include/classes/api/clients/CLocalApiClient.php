@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -98,6 +98,14 @@ class CLocalApiClient extends CApiClient {
 			// authenticate
 			if ($requiresAuthentication) {
 				$this->authenticate($auth);
+
+				// check permissions
+				if (APP::getMode() === APP::EXEC_MODE_API && !$this->isAllowedMethod($api, $method)) {
+					$response->errorCode = ZBX_API_ERROR_PARAMETERS;
+					$response->errorMessage = _s('No permissions to call "%1$s.%2$s".', $requestApi, $requestMethod);
+
+					return $response;
+				}
 			}
 
 			// the nopermission parameter must not be available for external API calls.
@@ -153,11 +161,15 @@ class CLocalApiClient extends CApiClient {
 	 */
 	protected function authenticate($auth) {
 		if (zbx_empty($auth)) {
-			throw new APIException(ZBX_API_ERROR_NO_AUTH, _('Not authorised.'));
+			throw new APIException(ZBX_API_ERROR_NO_AUTH, _('Not authorized.'));
 		}
 
-		$user = $this->serviceFactory->getObject('user')->checkAuthentication(['sessionid' => $auth]);
-		$this->debug = $user['debug_mode'];
+		$auth_data = strlen($auth) == 64 ? ['token' => $auth] : ['sessionid' => $auth];
+
+		$user = $this->serviceFactory->getObject('user')->checkAuthentication($auth_data);
+		if (array_key_exists('debug_mode', $user)) {
+			$this->debug = $user['debug_mode'];
+		}
 	}
 
 	/**
@@ -179,17 +191,10 @@ class CLocalApiClient extends CApiClient {
 	 *
 	 * @return bool
 	 */
-	protected function isValidMethod($api, $method) {
-		$apiService = $this->serviceFactory->getObject($api);
+	protected function isValidMethod(string $api, string $method): bool {
+		$api_service = $this->serviceFactory->getObject($api);
 
-		// validate the method
-		$availableMethods = [];
-		foreach (get_class_methods($apiService) as $serviceMethod) {
-			// the comparison must be case insensitive
-			$availableMethods[strtolower($serviceMethod)] = true;
-		}
-
-		return isset($availableMethods[$method]);
+		return array_key_exists($method, $api_service::ACCESS_RULES);
 	}
 
 	/**
@@ -203,6 +208,103 @@ class CLocalApiClient extends CApiClient {
 	protected function requiresAuthentication($api, $method) {
 		return !(($api === 'user' && $method === 'login')
 			|| ($api === 'user' && $method === 'checkauthentication')
-			|| ($api === 'apiinfo' && $method === 'version'));
+			|| ($api === 'apiinfo' && $method === 'version')
+			|| ($api === 'settings' && $method === 'getglobal'));
+	}
+
+	/**
+	 * Returns true if the current user is permitted to call the given API method, and false otherwise.
+	 *
+	 * @param string $api
+	 * @param string $method
+	 *
+	 * @return bool
+	 */
+	protected function isAllowedMethod(string $api, string $method): bool {
+		$api_service = $this->serviceFactory->getObject($api);
+		$user_data = $api_service::$userData;
+		$method_rules = $api_service::ACCESS_RULES[$method];
+
+		if (!array_key_exists('min_user_type', $method_rules)
+				|| !in_array($user_data['type'], [USER_TYPE_ZABBIX_USER, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN])
+				|| $user_data['type'] < $method_rules['min_user_type']) {
+			return false;
+		}
+
+		$exists_action_rule = array_key_exists('action', $method_rules);
+
+		$name_conditions = 'name LIKE '.zbx_dbstr('api%');
+		if ($exists_action_rule) {
+			$name_conditions = '('.
+				$name_conditions.
+				' OR name='.zbx_dbstr($method_rules['action']).
+				' OR name='.zbx_dbstr('actions.default_access').
+			')';
+		}
+
+		$db_rules = DBselect(
+			'SELECT type,name,value_str,value_int'.
+			' FROM role_rule'.
+			' WHERE roleid='.zbx_dbstr($user_data['roleid']).
+				' AND '.$name_conditions.
+			' ORDER by name'
+		);
+
+		$api_access_mode = false;
+		$api_methods = [];
+		$actions_default_access = true;
+		$is_action_allowed = null;
+
+		while ($db_rule = DBfetch($db_rules)) {
+			$rule_value = $db_rule[CRole::RULE_TYPE_FIELDS[$db_rule['type']]];
+
+			switch ($db_rule['name']) {
+				case 'api.access':
+					if ($rule_value == 0) {
+						return false;
+					}
+					break;
+
+				case 'api.mode':
+					$api_access_mode = (bool) $rule_value;
+					break;
+
+				case 'actions.default_access':
+					$actions_default_access = (bool) $rule_value;
+					break;
+
+				default:
+					if (strpos($db_rule['name'], 'api.method.') === 0) {
+						$api_methods[] = $rule_value;
+					}
+					elseif ($exists_action_rule && $db_rule['name'] === $method_rules['action']) {
+						$is_action_allowed = (bool) $rule_value;
+					}
+			}
+		}
+
+		if ($exists_action_rule) {
+			$is_action_allowed = ($is_action_allowed !== null) ? $is_action_allowed : $actions_default_access;
+
+			if (!$is_action_allowed) {
+				return false;
+			}
+		}
+
+		if (!$api_methods) {
+			return true;
+		}
+
+		$api_method_masks = [
+			ZBX_ROLE_RULE_API_WILDCARD, ZBX_ROLE_RULE_API_WILDCARD_ALIAS, CRoleHelper::API_ANY_SERVICE.$method,
+			$api.CRoleHelper::API_ANY_METHOD
+		];
+		foreach ($api_methods as $api_method) {
+			if ($api_method === $api.'.'.$method || in_array($api_method, $api_method_masks)) {
+				return $api_access_mode;
+			}
+		}
+
+		return !$api_access_mode;
 	}
 }

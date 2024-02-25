@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,10 @@
 
 /**
  * @var CView $this
+ * @var array $data
  */
+
+$this->includeJsFile('administration.proxy.list.js.php');
 
 if ($data['uncheck']) {
 	uncheckTableRows('proxy');
@@ -35,7 +38,8 @@ $widget = (new CWidget())
 		))
 			->setAttribute('aria-label', _('Content controls'))
 	)
-	->addItem((new CFilter((new CUrl('zabbix.php'))->setArgument('action', 'proxy.list')))
+	->addItem((new CFilter())
+		->setResetUrl((new CUrl('zabbix.php'))->setArgument('action', 'proxy.list'))
 		->setProfile($data['profileIdx'])
 		->setActiveTab($data['active_tab'])
 		->addFilterTab(_('Filter'), [
@@ -86,7 +90,7 @@ foreach ($data['proxies'] as $proxy) {
 
 	foreach ($proxy['hosts'] as $host) {
 		if (++$i > $data['config']['max_in_table']) {
-			$hosts[] = ' &hellip;';
+			$hosts[] = [' ', HELLIP()];
 
 			break;
 		}
@@ -106,10 +110,20 @@ foreach ($data['proxies'] as $proxy) {
 			$hosts[] = ', ';
 		}
 
-		$hosts[] = (new CLink($host['name'], 'hosts.php?form=update&hostid='.$host['hostid']))->addClass($style);
+		$hosts[] = $data['allowed_ui_conf_hosts']
+			? (new CLink($host['name'], (new CUrl('zabbix.php'))
+				->setArgument('action', 'host.edit')
+				->setArgument('hostid', $host['hostid'])
+			))
+				->addClass($style)
+				->onClick('view.editHost(event, '.json_encode($host['hostid']).')')
+			: (new CSpan($host['name']))->addClass($style);
 	}
 
-	$name = new CLink($proxy['host'], 'zabbix.php?action=proxy.edit&proxyid='.$proxy['proxyid']);
+	$name = (new CLink($proxy['host'], (new CUrl('zabbix.php'))
+		->setArgument('action', 'proxy.edit')
+		->setArgument('proxyid', $proxy['proxyid'])
+	));
 
 	// encryption
 	$in_encryption = '';

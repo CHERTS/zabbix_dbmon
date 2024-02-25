@@ -1,7 +1,7 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,10 +79,10 @@ class CLink extends CTag {
 		if ($this->use_sid) {
 			if (array_key_exists(ZBX_SESSION_NAME, $_COOKIE)) {
 				$url .= (strpos($url, '&') !== false || strpos($url, '?') !== false) ? '&' : '?';
-				$url .= 'sid='.substr($_COOKIE[ZBX_SESSION_NAME], 16, 16);
+				$url .= 'sid='.substr(CSessionHelper::getId(), 16, 16);
 			}
 			$confirm_script = ($this->confirm_message !== '')
-				? 'Confirm('.CHtml::encode(json_encode($this->confirm_message)).') && '
+				? 'Confirm('.json_encode($this->confirm_message).') && '
 				: '';
 			$this->onClick("javascript: return ".$confirm_script."redirect('".$url."', 'post', 'sid', true)");
 			$this->setAttribute('href', 'javascript:void(0)');

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ class API {
 	/**
 	 * Sets the API wrapper.
 	 *
-	 * @param CApiWrapper $wrapper
+	 * @param CApiWrapper|null $wrapper
 	 */
 	public static function setWrapper(CApiWrapper $wrapper = null) {
 		self::$wrapper = $wrapper;
@@ -56,7 +56,7 @@ class API {
 	/**
 	 * Returns the API wrapper.
 	 *
-	 * @return CApiWrapper
+	 * @return CApiWrapper|null
 	 */
 	public static function getWrapper() {
 		return self::$wrapper;
@@ -116,17 +116,17 @@ class API {
 	}
 
 	/**
-	 * @return CApplication
-	 */
-	public static function Application() {
-		return self::getApi('application');
-	}
-
-	/**
 	 * @return CAuditLog
 	 */
 	public static function AuditLog() {
 		return self::getApi('auditlog');
+	}
+
+	/**
+	 * @return CAuthentication
+	 */
+	public static function Authentication() {
+		return self::getApi('authentication');
 	}
 
 	/**
@@ -221,6 +221,13 @@ class API {
 	}
 
 	/**
+	 * @return CHaNode
+	 */
+	public static function HaNode() {
+		return self::getApi('hanode');
+	}
+
+	/**
 	 * @return CHistory
 	 */
 	public static function History() {
@@ -253,6 +260,13 @@ class API {
 	 */
 	public static function HostInterface() {
 		return self::getApi('hostinterface');
+	}
+
+	/**
+	 * @return CHousekeeping
+	 */
+	public static function Housekeeping() {
+		return self::getApi('housekeeping');
 	}
 
 	/**
@@ -326,24 +340,24 @@ class API {
 	}
 
 	/**
-	 * @return CService
+	 * @return CReport
 	 */
-	public static function Service() {
-		return self::getApi('service');
+	public static function Report() {
+		return self::getApi('report');
 	}
 
 	/**
-	 * @return CScreen
+	 * @return CRegexp
 	 */
-	public static function Screen() {
-		return self::getApi('screen');
+	public static function Regexp() {
+		return self::getApi('regexp');
 	}
 
 	/**
-	 * @return CScreenItem
+	 * @return CRole
 	 */
-	public static function ScreenItem() {
-		return self::getApi('screenitem');
+	public static function Role() {
+		return self::getApi('role');
 	}
 
 	/**
@@ -351,6 +365,27 @@ class API {
 	 */
 	public static function Script() {
 		return self::getApi('script');
+	}
+
+	/**
+	 * @return CService
+	 */
+	public static function Service() {
+		return self::getApi('service');
+	}
+
+	/**
+	 * @return CSla
+	 */
+	public static function Sla() {
+		return self::getApi('sla');
+	}
+
+	/**
+	 * @return CSettings
+	 */
+	public static function Settings() {
+		return self::getApi('settings');
 	}
 
 	/**
@@ -368,17 +403,17 @@ class API {
 	}
 
 	/**
-	 * @return CTemplateScreen
+	 * @return CTemplateDashboard
 	 */
-	public static function TemplateScreen() {
-		return self::getApi('templatescreen');
+	public static function TemplateDashboard() {
+		return self::getApi('templatedashboard');
 	}
 
 	/**
-	 * @return CTemplateScreenItem
+	 * @return CToken
 	 */
-	public static function TemplateScreenItem() {
-		return self::getApi('templatescreenitem');
+	public static function Token() {
+		return self::getApi('token');
 	}
 
 	/**

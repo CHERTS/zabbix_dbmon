@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -128,31 +128,20 @@ if ($trigger['opdata'] !== '') {
 			'events' => true,
 			'html' => true
 		]
-	)))
-		->addClass('opdata')
-		->addClass(ZBX_STYLE_WORDWRAP);
+	)))->addClass('opdata');
 }
 else {
 	$db_items = API::Item()->get([
-		'output' => ['itemid', 'hostid', 'name', 'key_', 'value_type', 'units', 'valuemapid'],
+		'output' => ['itemid', 'name', 'value_type', 'units'],
+		'selectValueMap' => ['mappings'],
 		'triggerids' => $event['objectid']
 	]);
-	$db_items = CMacrosResolverHelper::resolveItemNames($db_items);
 	$event['opdata'] = (new CCol(CScreenProblem::getLatestValues($db_items)))->addClass('latest-values');
 }
 
-$config = select_config();
-$severity_config = [
-	'severity_name_0' => $config['severity_name_0'],
-	'severity_name_1' => $config['severity_name_1'],
-	'severity_name_2' => $config['severity_name_2'],
-	'severity_name_3' => $config['severity_name_3'],
-	'severity_name_4' => $config['severity_name_4'],
-	'severity_name_5' => $config['severity_name_5']
-];
 $actions = getEventDetailsActions($event);
 $users = API::User()->get([
-	'output' => ['alias', 'name', 'surname'],
+	'output' => ['username', 'name', 'surname'],
 	'userids' => array_keys($actions['userids']),
 	'preservekeys' => true
 ]);
@@ -162,38 +151,43 @@ $mediatypes = API::Mediatype()->get([
 	'preservekeys' => true
 ]);
 
+$allowed = [
+	'ui_correlation' => CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_EVENT_CORRELATION),
+	'add_comments' => CWebUser::checkAccess(CRoleHelper::ACTIONS_ADD_PROBLEM_COMMENTS),
+	'change_severity' => CWebUser::checkAccess(CRoleHelper::ACTIONS_CHANGE_SEVERITY),
+	'acknowledge' => CWebUser::checkAccess(CRoleHelper::ACTIONS_ACKNOWLEDGE_PROBLEMS),
+	'close' => ($trigger['manual_close'] == ZBX_TRIGGER_MANUAL_CLOSE_ALLOWED
+			&& CWebUser::checkAccess(CRoleHelper::ACTIONS_CLOSE_PROBLEMS)
+	)
+];
+
 /*
  * Display
  */
+require_once dirname(__FILE__).'/include/views/js/tr_events.js.php';
+
 $event_tab = (new CDiv([
 	new CDiv([
 		(new CUiWidget(WIDGET_HAT_TRIGGERDETAILS, make_trigger_details($trigger, $event['eventid'])))
 			->setHeader(_('Trigger details')),
-		(new CUiWidget(WIDGET_HAT_EVENTDETAILS, make_event_details($event)))
+		(new CUiWidget(WIDGET_HAT_EVENTDETAILS, make_event_details($event, $allowed)))
 			->setHeader(_('Event details'))
 	]),
 	new CDiv([
 		(new CCollapsibleUiWidget(WIDGET_HAT_EVENTACTIONS,
-			makeEventDetailsActionsTable($actions, $users, $mediatypes, $severity_config)
+			makeEventDetailsActionsTable($actions, $users, $mediatypes)
 		))
 			->setExpanded((bool) CProfile::get('web.tr_events.hats.'.WIDGET_HAT_EVENTACTIONS.'.state', true))
 			->setHeader(_('Actions'), [], 'web.tr_events.hats.'.WIDGET_HAT_EVENTACTIONS.'.state')
-			->addClass(ZBX_STYLE_DASHBRD_WIDGET_FLUID),
-		(new CCollapsibleUiWidget(WIDGET_HAT_EVENTLIST, make_small_eventlist($event)))
+			->addClass(ZBX_STYLE_DASHBOARD_WIDGET_FLUID),
+		(new CCollapsibleUiWidget(WIDGET_HAT_EVENTLIST, make_small_eventlist($event, $allowed)))
 			->setExpanded((bool) CProfile::get('web.tr_events.hats.'.WIDGET_HAT_EVENTLIST.'.state', true))
 			->setHeader(_('Event list [previous 20]'), [], 'web.tr_events.hats.'.WIDGET_HAT_EVENTLIST.'.state')
-			->addClass(ZBX_STYLE_DASHBRD_WIDGET_FLUID)
+			->addClass(ZBX_STYLE_DASHBOARD_WIDGET_FLUID)
 	])
 ]))
 	->addClass(ZBX_STYLE_COLUMNS)
 	->addClass(ZBX_STYLE_COLUMNS_2);
-
-$script = (new CScriptTag(
-	'$.subscribe("acknowledge.create", function(event, response, overlay) {'.
-		'postMessageOk(response.message);'.
-		'location.href = location.href;'.
-	'});'
-))->setOnDocumentReady();
 
 (new CWidget())
 	->setTitle(_('Event details'))
@@ -205,7 +199,10 @@ $script = (new CScriptTag(
 		->setAttribute('aria-label', _('Content controls'))
 	)
 	->addItem($event_tab)
-	->addItem($script)
+	->show();
+
+(new CScriptTag('view.init();'))
+	->setOnDocumentReady()
 	->show();
 
 require_once dirname(__FILE__).'/include/page_footer.php';

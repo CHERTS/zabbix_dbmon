@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ class CControllerUsergroupDelete extends CController {
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() == USER_TYPE_SUPER_ADMIN);
+		return $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_USER_GROUPS);
 	}
 
 	protected function doAction() {
@@ -53,10 +53,10 @@ class CControllerUsergroupDelete extends CController {
 
 		if ($result) {
 			$response->setFormData(['uncheck' => '1']);
-			$response->setMessageOk(_n('User group deleted', 'User groups deleted', $deleted));
+			CMessageHelper::setSuccessTitle(_n('User group deleted', 'User groups deleted', $deleted));
 		}
 		else {
-			$response->setMessageError(_n('Cannot delete user group', 'Cannot delete user groups', $deleted));
+			CMessageHelper::setErrorTitle(_n('Cannot delete user group', 'Cannot delete user groups', $deleted));
 		}
 
 		$this->setResponse($response);

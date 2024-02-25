@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,7 +46,8 @@ $filterColumn->addRow(new CLabel(_('Recipients'), 'filter_userids__ms'), [
 ]);
 
 $auditWidget->addItem(
-	(new CFilter(new CUrl('auditacts.php')))
+	(new CFilter())
+		->setResetUrl(new CUrl('auditacts.php'))
 		->setProfile($data['timeline']['profileIdx'])
 		->setActiveTab($data['active_tab'])
 		->addTimeSelector($data['timeline']['from'], $data['timeline']['to'])
@@ -54,7 +55,9 @@ $auditWidget->addItem(
 );
 
 // create form
-$auditForm = (new CForm('get'))->setName('auditForm');
+$auditForm = (new CForm('get'))
+	->cleanItems()
+	->setName('auditForm');
 
 // create table
 $auditTable = (new CTableInfo())
@@ -91,17 +94,17 @@ foreach ($this->data['alerts'] as $alert) {
 		? [
 			bold(_('Subject').':'),
 			BR(),
-			$alert['subject'],
+			(new CDiv($alert['subject']))->addClass(ZBX_STYLE_WORDBREAK),
 			BR(),
 			BR(),
 			bold(_('Message').':'),
 			BR(),
-			zbx_nl2br($alert['message'])
+			(new CDiv(zbx_nl2br($alert['message'])))->addClass(ZBX_STYLE_WORDBREAK)
 		]
 		: [
 			bold(_('Command').':'),
 			BR(),
-			zbx_nl2br($alert['message'])
+			(new CDiv(zbx_nl2br($alert['message'])))->addClass(ZBX_STYLE_WORDBREAK)
 		];
 
 	$info_icons = [];
@@ -133,8 +136,7 @@ $objData = [
 	'domid' => 'events',
 	'loadSBox' => 0,
 	'loadImage' => 0,
-	'dynamic' => 0,
-	'mainObject' => 1
+	'dynamic' => 0
 ];
 zbx_add_post_js('timeControl.addObject("events", '.zbx_jsvalue($data['timeline']).', '.zbx_jsvalue($objData).');');
 zbx_add_post_js('timeControl.processObjects();');

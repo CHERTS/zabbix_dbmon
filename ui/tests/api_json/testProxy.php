@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -65,11 +65,11 @@ class testProxy extends CAPITest {
 			// Check if proxy used in host.
 			[
 				'proxy' => ['99004'],
-				'expected_error' => 'Host "API Host monitored with proxy" is monitored with proxy "Api active proxy with host".'
+				'expected_error' => 'Host "API Host monitored with proxy" is monitored by proxy "Api active proxy with host".'
 			],
 			[
 				'proxy' => ['99000', '99004'],
-				'expected_error' => 'Host "API Host monitored with proxy" is monitored with proxy "Api active proxy with host".'
+				'expected_error' => 'Host "API Host monitored with proxy" is monitored by proxy "Api active proxy with host".'
 			],
 			// Check if proxy used in discovery rule.
 			[

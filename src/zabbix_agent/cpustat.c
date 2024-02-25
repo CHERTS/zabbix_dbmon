@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,9 +17,10 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+#include "cpustat.h"
+
 #include "common.h"
 #include "stats.h"
-#include "cpustat.h"
 #ifdef _WINDOWS
 #	include "perfstat.h"
 /* defined in sysinfo lib */
@@ -126,6 +127,7 @@ int	init_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus)
 	char				*error = NULL;
 	int				idx, ret = FAIL;
 #ifdef _WINDOWS
+	int	cpu_groups;
 	wchar_t				cpu[16]; /* 16 is enough to store instance name string (group and index) */
 	char				counterPath[PDH_MAX_COUNTER_PATH];
 	PDH_COUNTER_PATH_ELEMENTS	cpe;
@@ -149,8 +151,20 @@ int	init_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus)
 	/* the group. So, for 72-thread system there will be two groups with 36 threads each and Windows will  */
 	/* report counters "\Processor Information(0, n)" with 0 <= n <= 31 and "\Processor Information(1,n)". */
 
-	if (pcpus->count <= 64)
+	/* Microsoft documentation clearly says that, systems with fewer than 64 logical processors always     */
+	/* have a single processor group, Group 0. However, Zabbix users reported a rare bug, when there are   */
+	/* two processor groups on systems with 64 or less logical CPUs. This resulted in having the           */
+	/* "\Processor(n)" counters for only one processor group out of two. The actual root cause of this bug */
+	/* is not known. However, a similar case was described at stackoverflow.com, and the root cause there  */
+	/* was in interoperation between BIOS and Windows:                                                     */
+	/* https://stackoverflow.com/questions/28098082/unable-to-use-more-than-one-processor-group-for-my-threads-in-a-c-sharp-app */
+
+	cpu_groups = get_cpu_group_num_win32();
+
+	if (64 >= pcpus->count && 1 == cpu_groups)
 	{
+		zabbix_log(LOG_LEVEL_DEBUG, "%d CPUs and 1 processor group, using \"Processor\" counter", pcpus->count);
+
 		for (idx = 0; idx <= pcpus->count; idx++)
 		{
 			if (0 == idx)
@@ -161,7 +175,7 @@ int	init_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus)
 			if (ERROR_SUCCESS != zbx_PdhMakeCounterPath(__func__, &cpe, counterPath))
 				goto clean;
 
-			if (NULL == (pcpus->cpu_counter[idx] = add_perf_counter(NULL, counterPath, MAX_COLLECTOR_PERIOD,
+			if (NULL == (pcpus->cpu_counter[idx] = zbx_add_perf_counter(NULL, counterPath, MAX_COLLECTOR_PERIOD,
 					PERF_COUNTER_LANG_DEFAULT, &error)))
 			{
 				goto clean;
@@ -170,9 +184,11 @@ int	init_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus)
 	}
 	else
 	{
-		int	gidx, cpu_groups, cpus_per_group, numa_nodes;
+		int	gidx, cpus_per_group, numa_nodes;
 
-		zabbix_log(LOG_LEVEL_DEBUG, "more than 64 CPUs, using \"Processor Information\" counter");
+		zabbix_log(LOG_LEVEL_DEBUG, "%d CPUs and %d processor groups, using \"Processor Information\" counter",
+				pcpus->count, cpu_groups);
+
 
 		cpe.szObjectName = get_builtin_object_name(PCI_INFORMATION_PROCESSOR_TIME);
 		cpe.szCounterName = get_builtin_counter_name(PCI_INFORMATION_PROCESSOR_TIME);
@@ -182,7 +198,7 @@ int	init_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus)
 		/* processor group on non-NUMA systems or NUMA node number when NUMA is available. There may be more */
 		/* NUMA nodes than processor groups. */
 		numa_nodes = get_numa_node_num_win32();
-		cpu_groups = numa_nodes == 1 ? get_cpu_group_num_win32() : numa_nodes;
+		cpu_groups = numa_nodes == 1 ? cpu_groups : numa_nodes;
 		cpus_per_group = pcpus->count / cpu_groups;
 
 		zabbix_log(LOG_LEVEL_DEBUG, "cpu_groups = %d, cpus_per_group = %d, cpus = %d", cpu_groups,
@@ -207,7 +223,7 @@ int	init_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus)
 					goto clean;
 
 				if (NULL == (pcpus->cpu_counter[gidx * cpus_per_group + idx] =
-						add_perf_counter(NULL, counterPath, MAX_COLLECTOR_PERIOD,
+						zbx_add_perf_counter(NULL, counterPath, MAX_COLLECTOR_PERIOD,
 								PERF_COUNTER_LANG_DEFAULT, &error)))
 				{
 					goto clean;
@@ -223,7 +239,7 @@ int	init_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus)
 	if (ERROR_SUCCESS != zbx_PdhMakeCounterPath(__func__, &cpe, counterPath))
 		goto clean;
 
-	if (NULL == (pcpus->queue_counter = add_perf_counter(NULL, counterPath, MAX_COLLECTOR_PERIOD,
+	if (NULL == (pcpus->queue_counter = zbx_add_perf_counter(NULL, counterPath, MAX_COLLECTOR_PERIOD,
 			PERF_COUNTER_LANG_DEFAULT, &error)))
 	{
 		goto clean;
@@ -292,12 +308,12 @@ void	free_cpu_collector(ZBX_CPUS_STAT_DATA *pcpus)
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
 
 #ifdef _WINDOWS
-	remove_perf_counter(pcpus->queue_counter);
+	zbx_remove_perf_counter(pcpus->queue_counter);
 	pcpus->queue_counter = NULL;
 
 	for (idx = 0; idx <= pcpus->count; idx++)
 	{
-		remove_perf_counter(pcpus->cpu_counter[idx]);
+		zbx_remove_perf_counter(pcpus->cpu_counter[idx]);
 		pcpus->cpu_counter[idx] = NULL;
 	}
 #else
@@ -317,7 +333,7 @@ int	get_cpu_perf_counter_value(int cpu_num, int interval, double *value, char **
 {
 	int	idx;
 
-	/* For Windows we identify CPU by it's index in cpus array, which is CPU ID + 1. */
+	/* For Windows we identify CPU by its index in cpus array, which is CPU ID + 1. */
 	/* At index 0 we keep information about all CPUs. */
 
 	if (ZBX_CPUNUM_ALL == cpu_num)
@@ -1307,8 +1323,6 @@ static int	get_cpu_status(int pc_status)
 #endif	/* _WINDOWS */
 
 /******************************************************************************
- *                                                                            *
- * Function: get_cpus                                                         *
  *                                                                            *
  * Purpose: Retrieve list of available CPUs in the collector                  *
  *                                                                            *

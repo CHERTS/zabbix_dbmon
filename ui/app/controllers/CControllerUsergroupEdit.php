@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ class CControllerUsergroupEdit extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_USER_GROUPS)) {
 			return false;
 		}
 
@@ -92,7 +92,7 @@ class CControllerUsergroupEdit extends CController {
 			'form_refresh' => 0
 		];
 
-		// get values from the dabatase
+		// get values from the database
 		if ($this->hasInput('usrgrpid')) {
 			$data['usrgrpid'] = $this->user_group['usrgrpid'];
 			$data['name'] = $this->user_group['name'];
@@ -184,7 +184,7 @@ class CControllerUsergroupEdit extends CController {
 	 */
 	private function getUsersMs() {
 		$options = [
-			'output' => ['userid', 'alias', 'name', 'surname']
+			'output' => ['userid', 'username', 'name', 'surname']
 		];
 
 		if ($this->hasInput('usrgrpid') && !$this->hasInput('form_refresh')) {

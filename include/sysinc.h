@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -157,10 +157,6 @@
 #	include <fcntl.h>
 #endif
 
-#ifdef HAVE_KNLIST_H
-#	include <knlist.h>
-#endif
-
 #ifdef HAVE_KSTAT_H
 #	include <kstat.h>
 #endif
@@ -182,10 +178,6 @@
 
 #ifdef HAVE_MACH_MACH_HOST_H
 #	include <mach/mach_host.h>
-#endif
-
-#ifdef HAVE_MTENT_H
-#	include <mtent.h>
 #endif
 
 #ifdef HAVE_NETDB_H
@@ -355,6 +347,11 @@
 #	include <pcre.h>
 #endif
 
+#ifdef HAVE_PCRE2_H
+#	define PCRE2_CODE_UNIT_WIDTH 8
+#	include <pcre2.h>
+#endif
+
 #ifdef HAVE_VM_VM_PARAM_H
 #	include <vm/vm_param.h>
 #endif
@@ -395,6 +392,15 @@
 #		define ZBX_CURLOPT_ACCEPT_ENCODING	CURLOPT_ACCEPT_ENCODING
 #	else
 #		define ZBX_CURLOPT_ACCEPT_ENCODING	CURLOPT_ENCODING
+#	endif
+#	if 0x073700 <= LIBCURL_VERSION_NUM	/* version 7.55.0 */
+#		define ZBX_CURLINFO_SPEED_DOWNLOAD	CURLINFO_SPEED_DOWNLOAD_T
+#		define ZBX_CURLINFO_SPEED_DOWNLOAD_TYPE	curl_off_t
+#		define ZBX_CURLINFO_SPEED_DOWNLOAD_FMT	"%" CURL_FORMAT_CURL_OFF_T
+#	else
+#		define ZBX_CURLINFO_SPEED_DOWNLOAD	CURLINFO_SPEED_DOWNLOAD
+#		define ZBX_CURLINFO_SPEED_DOWNLOAD_TYPE	double
+#		define ZBX_CURLINFO_SPEED_DOWNLOAD_FMT	ZBX_FS_DBL
 #	endif
 #	define ZBX_CURLOPT_MAXREDIRS	10L
 #endif

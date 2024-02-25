@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -109,6 +109,7 @@ class CXmlConstantName {
 	const BASIC = 'BASIC';
 	const NTLM = 'NTLM';
 	const KERBEROS = 'KERBEROS';
+	const DIGEST = 'DIGEST';
 
 	const ALIAS = 'ALIAS';
 	const ASSET_TAG = 'ASSET_TAG';
@@ -197,10 +198,20 @@ class CXmlConstantName {
 
 
 	// const MD5 = 'MD5'; // Duplicate.
-	const SHA = 'SHA';
+	const SHA = 'SHA'; // Used before version 5.4 as interface "authprotocol" invariant.
+	const SHA1 = 'SHA1';
+	const SHA224 = 'SHA224';
+	const SHA256 = 'SHA256';
+	const SHA384 = 'SHA384';
+	const SHA512 = 'SHA512';
 
 	const DES = 'DES';
-	const AES = 'AES';
+	const AES = 'AES'; // Used in version 5.2 as interface "privprotocol" invariant.
+	const AES128 = 'AES128';
+	const AES192 = 'AES192';
+	const AES256 = 'AES256';
+	const AES192C = 'AES192C';
+	const AES256C = 'AES256C';
 
 	const NOAUTHNOPRIV = 'NOAUTHNOPRIV';
 	const AUTHNOPRIV = 'AUTHNOPRIV';
@@ -253,9 +264,12 @@ class CXmlConstantName {
 	const IN_RANGE = 'IN_RANGE';
 	const MATCHES_REGEX = 'MATCHES_REGEX';
 	const NOT_MATCHES_REGEX = 'NOT_MATCHES_REGEX';
+	const EXISTS = 'EXISTS';
+	const NOT_EXISTS = 'NOT_EXISTS';
 	const CHECK_JSON_ERROR = 'CHECK_JSON_ERROR';
 	const CHECK_XML_ERROR = 'CHECK_XML_ERROR';
 	const CHECK_REGEX_ERROR = 'CHECK_REGEX_ERROR';
+	const CHECK_NOT_SUPPORTED = 'CHECK_NOT_SUPPORTED';
 	const DISCARD_UNCHANGED = 'DISCARD_UNCHANGED';
 	const DISCARD_UNCHANGED_HEARTBEAT = 'DISCARD_UNCHANGED_HEARTBEAT';
 	const JAVASCRIPT = 'JAVASCRIPT';
@@ -263,6 +277,7 @@ class CXmlConstantName {
 	const PROMETHEUS_TO_JSON = 'PROMETHEUS_TO_JSON';
 	const CSV_TO_JSON = 'CSV_TO_JSON';
 	const STR_REPLACE = 'STR_REPLACE';
+	const XML_TO_JSON = 'XML_TO_JSON';
 
 	const AND_OR = 'AND_OR';
 	const XML_AND = 'AND';
@@ -291,6 +306,7 @@ class CXmlConstantName {
 	const DISCOVERY = 'DISCOVERY';
 	const AUTOREGISTRATION = 'AUTOREGISTRATION';
 	// const INTERNAL = 'INTERNAL'; // Duplicate.
+	const SERVICE = 'SERVICE';
 
 	const PROBLEM = 'PROBLEM';
 	const RECOVERY = 'RECOVERY';
@@ -298,6 +314,7 @@ class CXmlConstantName {
 
 	const MACRO_TYPE_TEXT = 'TEXT';
 	const MACRO_TYPE_SECRET = 'SECRET_TEXT';
+	const MACRO_TYPE_VAULT = 'VAULT';
 
 	// Constants for low-level discovery rule overrides.
 	const LLD_OVERRIDE_STOP_NO = 'NO_STOP';
@@ -314,4 +331,29 @@ class CXmlConstantName {
 	const CONDITION_OPERATOR_NOT_REGEXP = 'NOT_REGEXP';
 	const DISCOVER = 'DISCOVER';
 	const NO_DISCOVER = 'NO_DISCOVER';
+
+	// Constants for widget types.
+	const DASHBOARD_WIDGET_TYPE_CLOCK = 'CLOCK';
+	const DASHBOARD_WIDGET_TYPE_GRAPH_CLASSIC = 'GRAPH_CLASSIC';
+	const DASHBOARD_WIDGET_TYPE_GRAPH_PROTOTYPE = 'GRAPH_PROTOTYPE';
+	const DASHBOARD_WIDGET_TYPE_ITEM = 'ITEM';
+	const DASHBOARD_WIDGET_TYPE_PLAIN_TEXT = 'PLAIN_TEXT';
+	const DASHBOARD_WIDGET_TYPE_URL = 'URL';
+
+	// Constants for widget field types.
+	const DASHBOARD_WIDGET_FIELD_TYPE_INTEGER = 'INTEGER';
+	const DASHBOARD_WIDGET_FIELD_TYPE_STRING = 'STRING';
+	const DASHBOARD_WIDGET_FIELD_TYPE_HOST = 'HOST';
+	const DASHBOARD_WIDGET_FIELD_TYPE_ITEM = 'ITEM';
+	const DASHBOARD_WIDGET_FIELD_TYPE_ITEM_PROTOTYPE = 'ITEM_PROTOTYPE';
+	const DASHBOARD_WIDGET_FIELD_TYPE_GRAPH = 'GRAPH';
+	const DASHBOARD_WIDGET_FIELD_TYPE_GRAPH_PROTOTYPE = 'GRAPH_PROTOTYPE';
+
+	// Constants for value map mapping type.
+	const MAPPING_EQUAL = 'EQUAL';
+	const MAPPING_GREATER_EQUAL = 'GREATER_OR_EQUAL';
+	const MAPPING_LESS_EQUAL = 'LESS_OR_EQUAL';
+	const MAPPING_IN_RANGE = 'IN_RANGE';
+	const MAPPING_REGEXP = 'REGEXP';
+	const MAPPING_DEFAULT = 'DEFAULT';
 }

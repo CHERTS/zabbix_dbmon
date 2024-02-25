@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 #ifndef ZABBIX_COMMS_H
 #define ZABBIX_COMMS_H
 
-#include "zbxtypes.h"
+#include "zbxalgo.h"
 
 #ifdef _WINDOWS
 #	define ZBX_TCP_WRITE(s, b, bl)		((ssize_t)send((s), (b), (int)(bl), 0))
@@ -110,6 +110,7 @@ void	zbx_getip_by_host(const char *host, char *ip, size_t iplen);
 
 int	zbx_tcp_connect(zbx_socket_t *s, const char *source_ip, const char *ip, unsigned short port, int timeout,
 		unsigned int tls_connect, const char *tls_arg1, const char *tls_arg2);
+void	zbx_socket_timeout_set(zbx_socket_t *s, int timeout);
 
 #define ZBX_TCP_PROTOCOL		0x01
 #define ZBX_TCP_COMPRESS		0x02
@@ -139,6 +140,7 @@ int	get_address_family(const char *addr, int *family, char *error, int max_error
 #endif
 
 int	zbx_tcp_listen(zbx_socket_t *s, const char *listen_ip, unsigned short listen_port);
+void	zbx_tcp_unlisten(zbx_socket_t *s);
 
 int	zbx_tcp_accept(zbx_socket_t *s, unsigned int tls_accept);
 void	zbx_tcp_unaccept(zbx_socket_t *s);
@@ -154,8 +156,10 @@ ssize_t		zbx_tcp_recv_ext(zbx_socket_t *s, int timeout, unsigned char flags);
 ssize_t		zbx_tcp_recv_raw_ext(zbx_socket_t *s, int timeout);
 const char	*zbx_tcp_recv_line(zbx_socket_t *s);
 
+int	zbx_ip_cmp(unsigned int prefix_size, const struct addrinfo *current_ai, ZBX_SOCKADDR name, int ipv6v4_mode);
 int	zbx_validate_peer_list(const char *peer_list, char **error);
 int	zbx_tcp_check_allowed_peers(const zbx_socket_t *s, const char *peer_list);
+int	validate_cidr(const char *ip, const char *cidr, void *value);
 
 int	zbx_udp_connect(zbx_socket_t *s, const char *source_ip, const char *ip, unsigned short port, int timeout);
 int	zbx_udp_send(zbx_socket_t *s, const char *data, size_t data_len, int timeout);
@@ -194,6 +198,12 @@ int	zbx_send_response_ext(zbx_socket_t *sock, int result, const char *info, cons
 		zbx_send_response_ext(sock, result, info, ZABBIX_VERSION, ZBX_TCP_PROTOCOL | ZBX_TCP_COMPRESS, timeout)
 
 int	zbx_recv_response(zbx_socket_t *sock, int timeout, char **error);
+int	connect_to_server(zbx_socket_t *sock, const char *source_ip, zbx_vector_ptr_t *addrs, int timeout,
+		int connect_timeout, unsigned int tls_connect, int retry_interval, int level);
+void	disconnect_server(zbx_socket_t *sock);
+
+int	get_data_from_server(zbx_socket_t *sock, char **buffer, size_t buffer_size, size_t reserved, char **error);
+int	put_data_to_server(zbx_socket_t *sock, char **buffer, size_t buffer_size, size_t reserved, char **error);
 
 #ifdef HAVE_IPV6
 #	define zbx_getnameinfo(sa, host, hostlen, serv, servlen, flags)		\

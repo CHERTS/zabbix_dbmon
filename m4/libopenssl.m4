@@ -1,8 +1,6 @@
 # OpenSSL LIBOPENSSL_CHECK_CONFIG ([DEFAULT-ACTION])
 # ----------------------------------------------------------
-# Derived from libssh2.m4 written by
-#    Alexander Vladishev                      Oct-26-2009
-#    Dmitry Borovikov                         Feb-13-2010
+# Derived from libssh2.m4
 #
 # Checks for OpenSSL library libssl.  DEFAULT-ACTION is the string yes or
 # no to specify whether to default to --with-openssl or --without-openssl.
@@ -21,35 +19,29 @@
 
 AC_DEFUN([LIBOPENSSL_TRY_LINK],
 [
-AC_TRY_LINK(
-[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
-],
-[
+]], [[
 	/* check that both libssl and libcrypto are available */
 
 	SSL	*ssl = NULL;
 
 	SSL_connect(ssl);	/* a function from libssl, present in both OpenSSL 1.0.1 and 1.1.0 */
 	BIO_new(BIO_s_mem());	/* a function from libcrypto */
-],
-found_openssl="yes",)
+]])],[found_openssl="yes"],[])
 ])dnl
 
 AC_DEFUN([LIBOPENSSL_TRY_LINK_PSK],
 [
-AC_TRY_LINK(
-[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <openssl/ssl.h>
-],
-[
+]], [[
 	/* check if OPENSSL_NO_PSK is defined */
 #ifdef OPENSSL_NO_PSK
 #	error "OPENSSL_NO_PSK is defined. PSK support will not be available."
 #endif
-],
-found_openssl_with_psk="yes",)
+]])],[found_openssl_with_psk="yes"],[])
 ])dnl
 
 AC_DEFUN([LIBOPENSSL_ACCEPT_VERSION],
@@ -88,7 +80,7 @@ AC_DEFUN([LIBOPENSSL_CHECK_CONFIG],
 [
   AC_ARG_WITH(openssl,[
 If you want to use encryption provided by OpenSSL library:
-AC_HELP_STRING([--with-openssl@<:@=DIR@:>@],[use OpenSSL package @<:@default=no@:>@, DIR is the libssl and libcrypto install directory.])],
+AS_HELP_STRING([--with-openssl@<:@=DIR@:>@],[use OpenSSL package @<:@default=no@:>@, DIR is the libssl and libcrypto install directory.])],
     [
 	if test "$withval" = "no"; then
 	    want_openssl="no"
@@ -110,8 +102,10 @@ AC_HELP_STRING([--with-openssl@<:@=DIR@:>@],[use OpenSSL package @<:@default=no@
     if test "x$enable_static_libs" = "xyes"; then
         test "x$static_linking_support" = "xno" -a -z "$_libopenssl_dir_lib" && AC_MSG_ERROR(["OpenSSL: Compiler not support statically linked libs from default folders"])
         AC_REQUIRE([PKG_PROG_PKG_CONFIG])
-        PKG_PROG_PKG_CONFIG()
+        m4_ifdef([PKG_PROG_PKG_CONFIG], [PKG_PROG_PKG_CONFIG()], [:])
         test -z "$PKG_CONFIG" -a -z "$_libopenssl_dir_lib" && AC_MSG_ERROR([Not found pkg-config library])
+        _libopenssl_dir_lib_64="$_libopenssl_dir_lib/64"
+        test -d "$_libopenssl_dir_lib_64" && _libopenssl_dir_lib="$_libopenssl_dir_lib_64"
         m4_pattern_allow([^PKG_CONFIG_LIBDIR$])
     fi
 
@@ -139,6 +133,8 @@ AC_HELP_STRING([--with-openssl@<:@=DIR@:>@],[use OpenSSL package @<:@default=no@
 
          if test -d $_libopenssl_dir/lib64; then
            OPENSSL_LDFLAGS=-L$_libopenssl_dir/lib64
+         elif test -d $_libopenssl_dir/lib/64; then
+           OPENSSL_LDFLAGS=-L$_libopenssl_dir/lib/64
          else
            OPENSSL_LDFLAGS=-L$_libopenssl_dir/lib
          fi
@@ -162,13 +158,16 @@ AC_HELP_STRING([--with-openssl@<:@=DIR@:>@],[use OpenSSL package @<:@default=no@
       OPENSSL_LIBS="$_libopenssl_dir_lib/libssl.a $_libopenssl_dir_lib/libcrypto.a"
     elif test "x$enable_static_libs" = "xyes"; then
       if test -z "$_libopenssl_dir_lib"; then
-        PKG_CHECK_EXISTS(openssl,[
-          OPENSSL_LIBS=`$PKG_CONFIG --static --libs openssl`
-        ],[
-          AC_MSG_ERROR([Not found openssl package])
-        ])
+        m4_ifdef([PKG_CHECK_EXISTS], [
+          PKG_CHECK_EXISTS(openssl,[
+            OPENSSL_LIBS=`$PKG_CONFIG --static --libs openssl`
+          ],[
+            AC_MSG_ERROR([Not found openssl package])
+          ])
+        ], [:])
       else
-        AC_RUN_LOG([PKG_CONFIG_LIBDIR="$_libopenssl_dir_lib/pkgconfig" $PKG_CONFIG --exists --print-errors openssl]) || AC_MSG_ERROR(["Not found openssl package in $_libopenssl_dir/lib/pkgconfig"])
+        AC_RUN_LOG([PKG_CONFIG_LIBDIR="$_libopenssl_dir_lib/pkgconfig" $PKG_CONFIG --exists --print-errors openssl]) ||
+          AC_MSG_ERROR(["Not found openssl package in $_libopenssl_dir_lib/pkgconfig"])
         OPENSSL_LIBS=`PKG_CONFIG_LIBDIR="$_libopenssl_dir_lib/pkgconfig" $PKG_CONFIG --static --libs openssl`
         test -z "$OPENSSL_LIBS" && OPENSSL_LIBS=`PKG_CONFIG_LIBDIR="$_libopenssl_dir_lib/pkgconfig" $PKG_CONFIG --libs openssl`
       fi

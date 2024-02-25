@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,14 +22,25 @@
 require_once dirname(__FILE__).'/../include/CWebTest.php';
 require_once dirname(__FILE__).'/../include/helpers/CDataHelper.php';
 
+/**
+ * @dataSource LoginUsers
+ */
 class testFormLogin extends CWebTest {
 
 	public static function getLoginLogoutData() {
 		return [
 			[
 				[
+					'login' => 'LDAP user',
+					'password' => 'zabbix12345',
+					'expected' => TEST_BAD,
+					'error_message' => 'Cannot bind anonymously to LDAP server.'
+				]
+			],
+			[
+				[
 					'login' => 'disabled-user',
-					'password' => 'zabbix',
+					'password' => 'zabbix12345',
 					'expected' => TEST_BAD,
 					'error_message' => 'No permissions for system access.'
 				]
@@ -37,7 +48,7 @@ class testFormLogin extends CWebTest {
 			[
 				[
 					'login' => 'no-access-to-the-frontend',
-					'password' => 'zabbix',
+					'password' => 'zabbix12345',
 					'expected' => TEST_BAD,
 					'error_message' => 'GUI access disabled.'
 				]
@@ -99,15 +110,15 @@ class testFormLogin extends CWebTest {
 	 * user permissions. When expected view is opened with the user, function is logging out of system.
 	 * Additionally function checks if database is gathering correct data.
 	 *
-	 * @onBefore removeGuestFromDisabledGroup
-	 * @onAfter addGuestToDisabledGroup
+	 * @onBeforeOnce removeGuestFromDisabledGroup
+	 * @onAfterOnce addGuestToDisabledGroup
 	 *
 	 * @dataProvider getLoginLogoutData
 	 **/
 	public function testFormLogin_LoginLogout($data) {
 		$this->page->userLogin($data['login'], $data['password']);
 
-		if($data['expected'] === TEST_BAD) {
+		if ($data['expected'] === TEST_BAD) {
 			$this->assertEquals($data['error_message'], $this->query('class:red')->waitUntilVisible()->one()->getText());
 		}
 		else {
@@ -117,9 +128,9 @@ class testFormLogin extends CWebTest {
 		}
 
 		if (CTestArrayHelper::get($data, 'dbCheck', false)) {
-			$this->assertEquals(1, CDBHelper::getCount('SELECT NULL FROM users WHERE attempt_failed>0 AND alias='.zbx_dbstr($data['login'])));
-			$this->assertEquals(1, CDBHelper::getCount('SELECT NULL FROM users WHERE attempt_clock>0 AND alias='.zbx_dbstr($data['login'])));
-			$this->assertEquals(1, CDBHelper::getCount("SELECT NULL FROM users WHERE attempt_ip<>'' AND alias=".zbx_dbstr($data['login'])));
+			$this->assertEquals(1, CDBHelper::getCount('SELECT NULL FROM users WHERE attempt_failed>0 AND username='.zbx_dbstr($data['login'])));
+			$this->assertEquals(1, CDBHelper::getCount('SELECT NULL FROM users WHERE attempt_clock>0 AND username='.zbx_dbstr($data['login'])));
+			$this->assertEquals(1, CDBHelper::getCount("SELECT NULL FROM users WHERE attempt_ip<>'' AND username=".zbx_dbstr($data['login'])));
 		}
 	}
 
@@ -127,48 +138,51 @@ class testFormLogin extends CWebTest {
 	 * Function is creating failed authentication in order to block account, afterwards by halting it's work for
 	 * 30 seconds, function checks if correctly inserted authentication data for account gives access to view
 	 * and properly returns message stating how many times failed attempts have been made to login into account.
-	 */
+	 **/
 	public function testFormLogin_BlockAccountAndRecoverAfter30Seconds() {
 		$user = 'user-for-blocking';
 
 		$this->page->open('index.php');
 		for ($i = 1; $i < 5; $i++) {
 			$this->page->userLogin($user, '!@$#%$&^*(\"\'\\*;:');
-			$this->assertEquals('Incorrect user name or password or account is temporarily blocked.', $this->query('class:red')
-					->waitUntilVisible()->one()->getText());
-			$this->assertEquals($i, CDBHelper::getValue('SELECT attempt_failed FROM users WHERE alias='.zbx_dbstr($user)));
-			$this->assertEquals(1, CDBHelper::getCount('SELECT NULL FROM users WHERE alias='.zbx_dbstr($user).' AND attempt_clock>0'));
-			$this->assertEquals(1, CDBHelper::getCount("SELECT NULL FROM users WHERE alias=".zbx_dbstr($user)." AND attempt_ip<>''"));
+			$this->assertEquals('Incorrect user name or password or account is temporarily blocked.',
+					$this->query('class:red')->waitUntilVisible()->one()->getText()
+			);
+			$this->assertEquals($i, CDBHelper::getValue('SELECT attempt_failed FROM users WHERE username='.zbx_dbstr($user)));
+			$this->assertEquals(1, CDBHelper::getCount('SELECT NULL FROM users WHERE username='.zbx_dbstr($user).' AND attempt_clock>0'));
+			$this->assertEquals(1, CDBHelper::getCount("SELECT NULL FROM users WHERE username=".zbx_dbstr($user)." AND attempt_ip<>''"));
 		}
 
 		$this->page->userLogin($user, '!@$#%$&^*(\"\'\\*;:');
-		$this->assertEquals('Incorrect user name or password or account is temporarily blocked.', $this->query('class:red')
-				->waitUntilVisible()->one()->getText());
+		$this->assertEquals('Incorrect user name or password or account is temporarily blocked.',
+				$this->query('class:red')->waitUntilVisible()->one()->getText()
+		);
 
 		// Account is blocked, waiting 30 sec and trying to login.
 		sleep(30);
-		$this->page->userLogin($user, 'zabbix');
+		$this->page->userLogin($user, 'zabbix12345');
 		$this->page->assertHeader('Global view');
-		$this->assertStringContainsString('5 failed login attempts logged.', $this->query('class:msg-bad')
-				->waitUntilVisible()->one()->getText());
+		$this->assertStringContainsString('5 failed login attempts logged.',
+				$this->query('class:msg-bad')->waitUntilVisible()->one()->getText()
+		);
 	}
 
 	/**
 	 * Function makes two authentifications with different data to different Zabbix views, separately clicking on
 	 * sign in button and checking by views header, if correct url is opened.
-	 */
+	 **/
 	public function testFormLogin_LoginWithRequest() {
-		foreach (['index.php?request=hosts.php', 'index.php?request=zabbix.php%3Faction%3Dproxy.list'] as $url) {
+		foreach (['index.php?request=zabbix.php%3Faction%3Dhost.list', 'index.php?request=zabbix.php%3Faction%3Dproxy.list'] as $url) {
 			$this->page->userLogin('Admin', 'zabbix', $url);
-			$header = ($url === 'index.php?request=hosts.php') ? 'Hosts' : 'Proxies';
+			$header = ($url === 'index.php?request=zabbix.php%3Faction%3Dhost.list') ? 'Hosts' : 'Proxies';
 			$this->page->assertHeader($header);
 		}
 	}
 
 	/**
 	 * Guest user needs to be out of "Disabled" group to have access to frontend.
-	 */
-	public static function removeGuestFromDisabledGroup() {
+	 **/
+	public function removeGuestFromDisabledGroup() {
 		CDataHelper::call('user.update', [
 			[
 				'userid' => '2',
@@ -179,7 +193,7 @@ class testFormLogin extends CWebTest {
 		]);
 	}
 
-	public function addGuestToDisabledGroup() {
+	public static function addGuestToDisabledGroup() {
 		CDataHelper::call('user.update', [
 			[
 				'userid' => '2',

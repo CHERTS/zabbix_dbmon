@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,13 +54,15 @@ $fields = [
 	'ymax_itemid' =>		[T_ZBX_INT, O_OPT, null,		DB_ID,			'(isset({add}) || isset({update})) && isset({ymax_type}) && {ymax_type} == '.GRAPH_YAXIS_TYPE_ITEM_VALUE],
 	'percent_left' =>		[T_ZBX_DBL, O_OPT, null,		BETWEEN_DBL(0, 100, 4), null, _('Percentile line (left)')],
 	'percent_right' =>		[T_ZBX_DBL, O_OPT, null,		BETWEEN_DBL(0, 100, 4), null, _('Percentile line (right)')],
-	'visible' =>			[T_ZBX_INT, O_OPT, null,		BETWEEN(0, 1),	null],
-	'items' =>				[T_ZBX_STR, O_OPT, null,		null,			null],
+	'visible' =>			[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	BETWEEN(0, 1),	null],
+	'items' =>				[T_ZBX_STR, O_OPT, P_ONLY_TD_ARRAY,	null,			null],
 	'discover' =>			[T_ZBX_INT, O_OPT, null,		IN([ZBX_PROTOTYPE_DISCOVER, ZBX_PROTOTYPE_NO_DISCOVER]), null],
 	'show_work_period' =>	[T_ZBX_INT, O_OPT, null,		IN('1'),		null],
 	'show_triggers' =>		[T_ZBX_INT, O_OPT, null,		IN('1'),		null],
-	'group_graphid' =>		[T_ZBX_INT, O_OPT, null,		DB_ID,			null],
-	'copy_targetids' =>		[T_ZBX_INT, O_OPT, null,		DB_ID,			null],
+	'group_graphid' =>		[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	DB_ID,		null],
+	'copy_targetids' =>		[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	DB_ID,		null],
+	'context' =>			[T_ZBX_STR, O_MAND, P_SYS,		IN('"host", "template"'),	null],
+	'readonly' =>			[T_ZBX_INT, O_OPT, null,		IN('1'),		null],
 	// actions
 	'action' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, IN('"graph.masscopyto","graph.massdelete","graph.updatediscover"'),	null],
 	'add' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,			null],
@@ -70,14 +72,14 @@ $fields = [
 	'delete' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,			null],
 	'cancel' =>				[T_ZBX_STR, O_OPT, P_SYS,		null,			null],
 	'form' =>				[T_ZBX_STR, O_OPT, P_SYS,		null,			null],
-	'form_refresh' =>		[T_ZBX_INT, O_OPT, null,		null,			null],
+	'form_refresh' =>		[T_ZBX_INT, O_OPT, P_SYS,		null,			null],
 	// filter
-	'filter_set' =>			[T_ZBX_STR, O_OPT, P_SYS,		null,	null],
-	'filter_rst' =>			[T_ZBX_STR, O_OPT, P_SYS,		null,	null],
-	'filter_groups' =>		[T_ZBX_INT, O_OPT, null,		DB_ID,	null],
-	'filter_hostids' =>		[T_ZBX_INT, O_OPT, null,		DB_ID,	null],
+	'filter_set' =>			[T_ZBX_STR, O_OPT, P_SYS,			null,	null],
+	'filter_rst' =>			[T_ZBX_STR, O_OPT, P_SYS,			null,	null],
+	'filter_groupids' =>	[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	DB_ID,	null],
+	'filter_hostids' =>		[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	DB_ID,	null],
 	// sort and sortorder
-	'sort' =>				[T_ZBX_STR, O_OPT, P_SYS, IN('"graphtype","name","discover"'),					null],
+	'sort' =>				[T_ZBX_STR, O_OPT, P_SYS, IN('"graphtype","name","discover"'),			null],
 	'sortorder' =>			[T_ZBX_STR, O_OPT, P_SYS, IN('"'.ZBX_SORT_DOWN.'","'.ZBX_SORT_UP.'"'),	null]
 ];
 $percentVisible = getRequest('visible', []);
@@ -96,9 +98,7 @@ if (isset($_REQUEST['yaxismax']) && zbx_empty($_REQUEST['yaxismax'])) {
 check_fields($fields);
 
 $gitems = [];
-foreach (getRequest('items', []) as $item) {
-	$gitem = json_decode($item, true);
-
+foreach (getRequest('items', []) as $gitem) {
 	if ((array_key_exists('itemid', $gitem) && ctype_digit($gitem['itemid']))
 			&& (array_key_exists('type', $gitem) && ctype_digit($gitem['type']))
 			&& (array_key_exists('drawtype', $gitem) && ctype_digit($gitem['drawtype']))) {
@@ -106,7 +106,6 @@ foreach (getRequest('items', []) as $item) {
 	}
 }
 
-$_REQUEST['items'] = $gitems;
 $_REQUEST['show_3d'] = getRequest('show_3d', 0);
 $_REQUEST['show_legend'] = getRequest('show_legend', 0);
 
@@ -258,15 +257,6 @@ elseif (hasRequest('add') || hasRequest('update')) {
 	}
 
 	if ($result) {
-		if (hasRequest('graphid')) {
-			add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_GRAPH,
-				'Graph ID ['.$graph['graphid'].'] Graph ['.getRequest('name').']'
-			);
-		}
-		else {
-			add_audit(AUDIT_ACTION_ADD, AUDIT_RESOURCE_GRAPH, 'Graph ['.getRequest('name').']');
-		}
-
 		unset($_REQUEST['form']);
 	}
 
@@ -307,7 +297,7 @@ elseif (getRequest('graphid', '') && getRequest('action', '') === 'graph.updated
 		'discover' => getRequest('discover', DB::getDefault('graphs', 'discover'))
 	]);
 
-	show_messages($result, _('Graph updated'), _('Cannot update graph'));
+	show_messages($result, _('Graph prototype updated'), _('Cannot update graph prototype'));
 }
 elseif (hasRequest('action') && getRequest('action') === 'graph.massdelete' && hasRequest('group_graphid')) {
 	$graphIds = getRequest('group_graphid');
@@ -388,7 +378,9 @@ elseif (hasRequest('action') && getRequest('action') === 'graph.masscopyto' && h
 		DBstart();
 		foreach (getRequest('group_graphid') as $graphid) {
 			foreach ($dbHosts as $host) {
-				$result &= (bool) copyGraphToHost($graphid, $host['hostid']);
+				if (!copyGraphToHost($graphid, $host['hostid'])) {
+					$result = false;
+				}
 			}
 		}
 		$result = DBend($result);
@@ -412,25 +404,27 @@ elseif (hasRequest('action') && getRequest('action') === 'graph.masscopyto' && h
 	show_messages();
 }
 
+$prefix = (getRequest('context') === 'host') ? 'web.hosts.' : 'web.templates.';
+
 /**
  * Update profile keys.
  */
-$sort_field = getRequest('sort', CProfile::get('web.'.$page['file'].'.sort', 'name'));
-$sort_order = getRequest('sortorder', CProfile::get('web.'.$page['file'].'.sortorder', ZBX_SORT_UP));
+$sort_field = getRequest('sort', CProfile::get($prefix.$page['file'].'.sort', 'name'));
+$sort_order = getRequest('sortorder', CProfile::get($prefix.$page['file'].'.sortorder', ZBX_SORT_UP));
 
-CProfile::update('web.'.$page['file'].'.sort', $sort_field, PROFILE_TYPE_STR);
-CProfile::update('web.'.$page['file'].'.sortorder', $sort_order, PROFILE_TYPE_STR);
+CProfile::update($prefix.$page['file'].'.sort', $sort_field, PROFILE_TYPE_STR);
+CProfile::update($prefix.$page['file'].'.sortorder', $sort_order, PROFILE_TYPE_STR);
 
 if (hasRequest('filter_set')) {
-	CProfile::updateArray('web.graphs.filter_groups', getRequest('filter_groups', []), PROFILE_TYPE_ID);
-	CProfile::updateArray('web.graphs.filter_hostids', getRequest('filter_hostids', []), PROFILE_TYPE_ID);
+	CProfile::updateArray($prefix.'graphs.filter_groupids', getRequest('filter_groupids', []), PROFILE_TYPE_ID);
+	CProfile::updateArray($prefix.'graphs.filter_hostids', getRequest('filter_hostids', []), PROFILE_TYPE_ID);
 }
 elseif (hasRequest('filter_rst')) {
-	CProfile::deleteIdx('web.graphs.filter_groups');
+	CProfile::deleteIdx($prefix.'graphs.filter_groupids');
 
-	$filter_hostids = getRequest('filter_hostids', CProfile::getArray('web.graphs.filter_hostids', []));
+	$filter_hostids = getRequest('filter_hostids', CProfile::getArray($prefix.'graphs.filter_hostids', []));
 	if (count($filter_hostids) != 1) {
-		CProfile::deleteIdx('web.graphs.filter_hostids');
+		CProfile::deleteIdx($prefix.'graphs.filter_hostids');
 	}
 }
 
@@ -446,8 +440,8 @@ if (hasRequest('parent_discoveryid')) {
 }
 else {
 	$filter = [
-		'groups' => CProfile::getArray('web.graphs.filter_groups', null),
-		'hosts' => CProfile::getArray('web.graphs.filter_hostids', null)
+		'groups' => CProfile::getArray($prefix.'graphs.filter_groupids', null),
+		'hosts' => CProfile::getArray($prefix.'graphs.filter_hostids', null)
 	];
 }
 
@@ -456,7 +450,6 @@ $filter['groups'] = $filter['groups']
 	? CArrayHelper::renameObjectsKeys(API::HostGroup()->get([
 		'output' => ['groupid', 'name'],
 		'groupids' => $filter['groups'],
-		'editable' => true,
 		'preservekeys' => true
 	]), ['groupid' => 'id'])
 	: [];
@@ -467,15 +460,26 @@ if ($filter_groupids) {
 }
 
 // Get hosts.
-$filter['hosts'] = $filter['hosts']
-	? CArrayHelper::renameObjectsKeys(API::Host()->get([
-		'output' => ['hostid', 'name'],
-		'hostids' => $filter['hosts'],
-		'templated_hosts' => true,
-		'editable' => true,
-		'preservekeys' => true
-	]), ['hostid' => 'id'])
-	: [];
+if (getRequest('context') === 'host') {
+	$filter['hosts'] = $filter['hosts']
+		? CArrayHelper::renameObjectsKeys(API::Host()->get([
+			'output' => ['hostid', 'name'],
+			'hostids' => $filter['hosts'],
+			'editable' => true,
+			'preservekeys' => true
+		]), ['hostid' => 'id'])
+		: [];
+}
+else {
+	$filter['hosts'] = $filter['hosts']
+		? CArrayHelper::renameObjectsKeys(API::Template()->get([
+			'output' => ['templateid', 'name'],
+			'templateids' => $filter['hosts'],
+			'editable' => true,
+			'preservekeys' => true
+		]), ['templateid' => 'id'])
+		: [];
+}
 
 // Get hostid.
 if ($hostid == 0 && count($filter['hosts']) == 1) {
@@ -497,10 +501,12 @@ elseif (isset($_REQUEST['form'])) {
 		'parent_discoveryid' => getRequest('parent_discoveryid'),
 		'group_gid' => getRequest('group_gid', []),
 		'hostid' => $hostid,
-		'normal_only' => getRequest('normal_only')
+		'normal_only' => getRequest('normal_only'),
+		'context' => getRequest('context'),
+		'readonly' => getRequest('readonly', 0)
 	];
 
-	if (!empty($data['graphid']) && !isset($_REQUEST['form_refresh'])) {
+	if ($data['graphid'] != 0 && ($data['readonly'] || !$data['form_refresh'])) {
 		$options = [
 			'output' => API_OUTPUT_EXTEND,
 			'selectHosts' => ['hostid'],
@@ -557,7 +563,7 @@ elseif (isset($_REQUEST['form'])) {
 		// templates
 		$flag = ($data['parent_discoveryid'] === null) ? ZBX_FLAG_DISCOVERY_NORMAL : ZBX_FLAG_DISCOVERY_PROTOTYPE;
 		$data['templates'] = makeGraphTemplatesHtml($graph['graphid'], getGraphParentTemplates([$graph], $flag),
-			$flag
+			$flag, CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_TEMPLATES)
 		);
 
 		// items
@@ -607,7 +613,7 @@ elseif (isset($_REQUEST['form'])) {
 		}
 	}
 
-	if (empty($data['graphid']) && !isset($_REQUEST['form_refresh'])) {
+	if ($data['graphid'] == 0 && !$data['form_refresh']) {
 		$data['show_legend'] = $_REQUEST['show_legend'] = 1;
 		$data['show_work_period'] = $_REQUEST['show_work_period'] = 1;
 		$data['show_triggers'] = $_REQUEST['show_triggers'] = 1;
@@ -628,7 +634,7 @@ elseif (isset($_REQUEST['form'])) {
 			$items = $items + API::ItemPrototype()->get($options);
 		}
 
-		$data['yaxis_items'] = CMacrosResolverHelper::resolveItemNames($items);
+		$data['yaxis_items'] = $items;
 
 		unset($items);
 	}
@@ -636,7 +642,7 @@ elseif (isset($_REQUEST['form'])) {
 	// items
 	if ($data['items']) {
 		$items = API::Item()->get([
-			'output' => ['itemid', 'hostid', 'name', 'key_', 'flags'],
+			'output' => ['itemid', 'hostid', 'name', 'flags'],
 			'selectHosts' => ['hostid', 'name'],
 			'itemids' => array_column($data['items'], 'itemid'),
 			'filter' => [
@@ -653,12 +659,36 @@ elseif (isset($_REQUEST['form'])) {
 				$item['host'] = $host['name'];
 				$item['hostid'] = $items[$item['itemid']]['hostid'];
 				$item['name'] = $items[$item['itemid']]['name'];
-				$item['key_'] = $items[$item['itemid']]['key_'];
 				$item['flags'] = $items[$item['itemid']]['flags'];
 			}
 			unset($item);
+		}
+	}
 
-			$data['items'] = CMacrosResolverHelper::resolveItemNames($data['items']);
+	// Set ymin_item_name.
+	$data['ymin_item_name'] = '';
+	$data['ymax_item_name'] = '';
+
+	if ($data['ymin_itemid'] != 0 || $data['ymax_itemid'] != 0) {
+		$items = API::Item()->get([
+			'output' => ['itemid', 'name'],
+			'selectHosts' => ['name'],
+			'itemids' => array_filter([$data['ymin_itemid'], $data['ymax_itemid']]),
+			'filter' => [
+				'flags' => [ZBX_FLAG_DISCOVERY_NORMAL, ZBX_FLAG_DISCOVERY_PROTOTYPE, ZBX_FLAG_DISCOVERY_CREATED]
+			],
+			'webitems' => true,
+			'preservekeys' => true
+		]);
+
+		if ($data['ymin_itemid'] != 0 && array_key_exists($data['ymin_itemid'], $items)) {
+			$item = $items[$data['ymin_itemid']];
+			$data['ymin_item_name'] = $item['hosts'][0]['name'].NAME_DELIMITER.$item['name'];
+		}
+
+		if ($data['ymax_itemid'] != 0 && array_key_exists($data['ymax_itemid'], $items)) {
+			$item = $items[$data['ymax_itemid']];
+			$data['ymax_item_name'] = $item['hosts'][0]['name'].NAME_DELIMITER.$item['name'];
 		}
 	}
 
@@ -691,8 +721,6 @@ elseif (isset($_REQUEST['form'])) {
 	echo (new CView('configuration.graph.edit', $data))->getOutput();
 }
 else {
-	$config = select_config();
-
 	$data = [
 		'filter' => $filter,
 		'hostid' => $hostid,
@@ -700,8 +728,9 @@ else {
 		'graphs' => [],
 		'sort' => $sort_field,
 		'sortorder' => $sort_order,
-		'profileIdx' => 'web.graphs.filter',
-		'active_tab' => CProfile::get('web.graphs.filter.active', 1)
+		'profileIdx' => $prefix.'graphs.filter',
+		'active_tab' => CProfile::get($prefix.'graphs.filter.active', 1),
+		'context' => getRequest('context')
 	];
 
 	// Select graphs.
@@ -710,8 +739,9 @@ else {
 		'hostids' => $filter['hosts'] ? array_keys($filter['hosts']) : null,
 		'groupids' => $filter_groupids,
 		'discoveryids' => hasRequest('parent_discoveryid') ? $discoveryRule['itemid'] : null,
+		'templated' => ($data['context'] === 'template'),
 		'editable' => true,
-		'limit' => $config['search_limit'] + 1
+		'limit' => CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT) + 1
 	];
 
 	$data['graphs'] = hasRequest('parent_discoveryid')
@@ -739,7 +769,13 @@ else {
 
 	CPagerHelper::savePage($page['file'], $page_num);
 
-	$data['paging'] = CPagerHelper::paginate($page_num, $data['graphs'], $sort_order, new CUrl('graphs.php'));
+	$url = (new CUrl('graphs.php'))->setArgument('context', $data['context']);
+
+	if (hasRequest('parent_discoveryid')) {
+		$url->setArgument('parent_discoveryid', $data['parent_discoveryid']);
+	}
+
+	$data['paging'] = CPagerHelper::paginate($page_num, $data['graphs'], $sort_order, $url);
 
 	// Get graphs after paging.
 	$options = [
@@ -799,6 +835,8 @@ else {
 		? ZBX_FLAG_DISCOVERY_NORMAL
 		: ZBX_FLAG_DISCOVERY_PROTOTYPE
 	);
+
+	$data['allowed_ui_conf_templates'] = CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_TEMPLATES);
 
 	// render view
 	echo (new CView('configuration.graph.list', $data))->getOutput();

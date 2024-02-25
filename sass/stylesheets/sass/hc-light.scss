@@ -40,6 +40,7 @@ $font-selected-color: #ffffff;
 $font-alt-color: #333333;
 $body-bg-color: #ffffff;
 $overlay-bg-color: #000000;
+$overlay-border-color: #383838;
 
 // Main menu
 $menu-main-color: #ffffff;
@@ -61,23 +62,53 @@ $menu-main-submenu-selected-color: #000000;
 $menu-main-submenu-selected-bg-color: #f3f3f3;
 $menu-main-submenu-selected-border-color: #949494;
 
+$menu-main-submenu-next-level-bg: #000000 !default;
+$menu-main-submenu-next-level-shadow: transparent !default;
+
 $menu-main-icons-opacity: 1;
 
 $menu-user-color: #cedae1;
 $menu-user-hover-color: #ffffff;
 $menu-user-disabled-color: #9f9f9f;
 
+$menu-user-submenu-color: #f4f4f4;
+$menu-user-submenu-bg-color: #333333;
+$menu-user-submenu-border-color: #0d0d0d;
+$menu-user-submenu-hover-color: #000000;
+$menu-user-submenu-hover-bg-color: #e6e6e6;
+$menu-user-submenu-hover-border-color: transparent;
+$menu-user-submenu-selected-color: #000000;
+$menu-user-submenu-selected-bg-color: #f3f3f3;
+$menu-user-submenu-selected-border-color: #949494;
+
+$menu-user-submenu-next-level-bg: #000000 !default;
+$menu-user-submenu-next-level-shadow: transparent !default;
+
+$menu-user-arrow-bg-position: -606px -434px;
+$menu-user-arrow-hover-bg-position: -606px -434px;
+$menu-user-selected-arrow-bg-position: -579px -434px;
+
 // Sidebar
 $sidebar-server-name-color: #9f9f9f;
 
 $menu-main-icons: (
-		dashboard: -570px -664px,
-		problems: -570px -688px,
-		monitoring: -570px -712px,
-		inventory: -570px -736px,
-		reports: -570px -760px,
-		configuration: -570px -784px,
-		administration: -570px -808px
+	dashboard: -570px -664px,
+	problems: -570px -688px,
+	monitoring: -570px -712px,
+	services: -570px -832px,
+	inventory: -570px -736px,
+	reports: -570px -760px,
+	configuration: -570px -784px,
+	administration: -570px -808px
+);
+
+$menu-user-expanded-icons: (
+	support: -247px -84px,
+	integrations: -168px -84px,
+	help: -168px -48px,
+	guest: -247px -192px,
+	profile: -168px -120px,
+	signout: -168px -156px
 );
 
 // UI
@@ -112,6 +143,9 @@ $scrollbar-track-color: #999999;
 $scrollbar-thumb-color: #f9f9f9;
 $scrollbar-thumb-color-darken: 30%;
 
+$input-placeholder-color: #777777;
+$input-disabled-placeholder-color: #c8c8c8;
+
 // Search form
 $form-search-bg-color: #000000;
 $form-search-border-color: #ffffff;
@@ -124,10 +158,9 @@ $form-search-focused-icon-bg-position: -600px -616px;
 $form-search-icon-focused-bg-position: -570px -616px;
 $form-search-focused-icon-hover-bg-position: $form-search-focused-icon-bg-position;
 
-$input-placeholder-color: #777777;
-
 // Error messages
 $msg-bad-color: $red;
+$msg-btn-text-color: #990000;
 $msg-good-color: $green;
 $msg-warning-color: #b37e12;
 $msg-warning-border-color: #ffb319;
@@ -136,6 +169,7 @@ $msg-warning-border-color: #ffb319;
 $btn-font-color: #ffffff;
 $btn-bg-color: #555555;
 $btn-border-color: #333333;
+$btn-border-focus-color: #000000;
 
 $btn-alt-font-color: #000000;
 $btn-alt-bg-color: transparent;
@@ -187,6 +221,21 @@ $ok-ack-fg-color: #009900;
 // Multiselect
 $multiselect-selected-bg-color: #777777;
 
+// Dashboard list table.
+$dashboard-shared-bg-color: #555555;
+$dashboard-my-bg-color: #555555;
+
+// Import compare.
+$toc-title-color: #ffffff;
+$toc-title-bg-color: #333333;
+$diff-added-bg-color: transparent;
+$diff-removed-bg-color: transparent;
+
+// Change indicators.
+$arrow-fill-up: #000000;
+$arrow-fill-down: #000000;
+$arrow-fill-up-down: #000000;
+
 // Important! @import string should come after variables
 @import 'screen.scss';
 
@@ -226,8 +275,9 @@ $multiselect-selected-bg-color: #777777;
 
 // components/menu-main
 .menu-main {
-	& > li.has-submenu {
+	li.has-submenu {
 		&.is-expanded > a,
+		.is-selected > a,
 		& > a:hover,
 		& > a:focus {
 			&::before {
@@ -263,44 +313,63 @@ $multiselect-selected-bg-color: #777777;
 	}
 }
 
+.dashboard-navigation-tabs {
+	.csortable-list {
+		& > .csortable-item:focus:not(:active) {
+			& > div {
+				box-shadow: 0 0 0 2px $blue;
+			}
+		}
+	}
+
+	& .csortable > .csortable-item > div,
+	& .csortable-list > .csortable-item > div:hover {
+		border: 1px solid darken($action-hover-color, 40%);
+	}
+
+	& .csortable > .csortable-item > div.selected-tab,
+	& .csortable-list > .csortable-item > div.selected-tab {
+		span {
+			color: $white;
+		}
+	}
+}
+
 // Dashboard, widgets and iterators.
 // To maintain code clarity:
 //   - Do not mix rules for dashboard view mode and dashboard edit mode.
 //   - Do not mix rules for widgets and iterators.
-.dashbrd-grid-new-widget-placeholder {
-	.dashbrd-grid-widget-new-box,
-	.dashbrd-grid-widget-set-position,
-	.dashbrd-grid-widget-set-size {
+
+.dashboard-widget-placeholder {
+	.dashboard-widget-placeholder-box {
 		box-shadow: none;
 		border-color: $font-color;
 		background-color: transparent;
 	}
 
-	.dashbrd-grid-widget-set-size {
-		border: 2px dashed $font-color;
-		box-shadow: none;
-	}
-
-	.dashbrd-grid-new-widget-label {
+	.dashboard-widget-placeholder-label {
 		&::before {
 			background: url($sprite-path) no-repeat -213px -888px;
 		}
 	}
-}
 
-.dashbrd-grid-widget-set-size {
-	.dashbrd-grid-new-widget-label {
-		&::before {
-			background: url($sprite-path) no-repeat -401px -888px;
+	.dashboard-widget-placeholder-resizing {
+		border: 2px dashed $font-color;
+		box-shadow: none;
+
+		.dashboard-widget-placeholder-label {
+			&::before {
+				background: url($sprite-path) no-repeat -401px -888px;
+			}
 		}
 	}
 }
 
-.dashbrd-grid-container.dashbrd-mode-edit {
-	.dashbrd-grid-iterator {
+.dashboard.dashboard-is-edit-mode {
+	.dashboard-grid-iterator {
 		&.ui-resizable-resizing,
 		&.ui-draggable-dragging {
-			.dashbrd-grid-iterator-mask {
+			.dashboard-grid-iterator-mask {
 				border: 0;
 			}
 		}
@@ -329,24 +398,25 @@ $var-icons: (
 
 $form-icon-btn: (
 	cal: url($sprite-path) no-repeat -201px -834px,
-	wzrd-action: url($sprite-path) no-repeat -168px -617px
+	wizard-action: url($sprite-path) no-repeat -168px -617px
 );
 
 // Dynamically generated classes:
 //  .icon-cal
-//  .icon-wzrd-action
+//  .icon-wizard-action
 @each $form-icon-btn, $bgimage in $form-icon-btn {
 	.icon-#{$form-icon-btn} {
 		background: $transparent $bgimage;
 		@extend %form-icon-btn;
 
-		@if $form-icon-btn == 'wzrd-action' {
+		@if $form-icon-btn == 'wizard-action' {
 			margin-top: -16px;
 		}
 	}
 }
 
 $icon-widget-btn: (
+	dashboard-page-properties: url($sprite-path) no-repeat -318px -618px,
 	iterator-page-previous: url($sprite-path) no-repeat -244px -657px,
 	iterator-page-next: url($sprite-path) no-repeat -242px -623px,
 	widget-action: url($sprite-path) no-repeat -165px -618px,
@@ -361,6 +431,7 @@ $icon-widget-btn: (
 );
 
 // Dynamically generated classes:
+//  .btn-dashboard-page-properties
 //  .btn-iterator-page-previous
 //  .btn-iterator-page-next
 //  .btn-widget-action
@@ -379,7 +450,7 @@ $icon-widget-btn: (
 	}
 }
 
-.btn-dashbrd-conf {
+.btn-dashboard-conf {
 	background: url($sprite-path) no-repeat -201px -619px !important;
 }
 
@@ -408,10 +479,6 @@ $icon-widget-btn: (
 }
 
 .menu-popup {
-	.menu-popup-item-disabled {
-		color: $form-disabled-font-color;
-	}
-
 	.menu-popup-item {
 		&:hover,
 		&:focus,
@@ -436,19 +503,24 @@ $icon-widget-btn: (
 				background: url($sprite-path) no-repeat -164px -835px;
 			}
 		}
+
+		&.disabled {
+			background-color: transparent;
+			color: $form-disabled-font-color;
+		}
 	}
 }
 
-.add-child-btn {
-	background: url($sprite-path) no-repeat -206px -551px !important;
+.btn-add {
+	background: url($sprite-path) no-repeat -204px -550px !important;
 }
 
-.edit-item-btn {
-	background: url($sprite-path) no-repeat -206px -478px !important;
+.btn-edit {
+	background: url($sprite-path) no-repeat -204px -477px !important;
 }
 
-.import-items-btn {
-	background: url($sprite-path) no-repeat -206px -515px !important;
+.btn-import {
+	background: url($sprite-path) no-repeat -204px -514px !important;
 }
 
 .drag-icon {
@@ -470,6 +542,7 @@ button {
 }
 
 .radio-list-control {
+	.normal-bg,
 	.average-bg,
 	.disaster-bg,
 	.high-bg,
@@ -569,7 +642,7 @@ a.link-action {
 	}
 }
 
-.filter-breadcrumb {
+.header-navigation {
 	li,
 	> li:first-child {
 		> span a:focus {
@@ -620,6 +693,14 @@ a.link-action {
 .filter-trigger {
 	.arrow-down {
 		border-top-color: #ffffff !important;
+	}
+}
+
+.tag {
+	&.green-bg,
+	&.yellow-bg {
+		background-color: $ui-bg-selected-color;
+		color: $white;
 	}
 }
 
@@ -685,7 +766,7 @@ a.link-action {
 	color: darken($dark-yellow, 10%);
 }
 
-.dashbrd-widget-graph-link {
+.dashboard-widget-graph-link {
 	&:focus {
 		&::after {
 			background: $blue;
@@ -747,11 +828,11 @@ a.link-action {
 				background-position: -208px -767px;
 			}
 
-			.icon-wzrd-action {
+			.icon-wizard-action {
 				background: transparent url($sprite-path) no-repeat -318px -624px;
 			}
 
-			.icon-wzrd-action {
+			.icon-wizard-action {
 				background: transparent url($sprite-path) no-repeat -165px -624px;
 			}
 		}
@@ -901,7 +982,7 @@ td.log-info-bg,
 td.log-warning-bg,
 td.log-high-bg,
 td.log-disaster-bg {
-	padding-left: 42px;
+	padding-left: 42px !important;
 	color: $font-color;
 }
 
@@ -924,10 +1005,6 @@ td.log-disaster-bg {
 	width: 34px;
 	height: 27px;
 	position: relative;
-	margin: 0 0 0 -42px;
-}
-
-.notif-indic-container {
 	margin: 0 0 0 -42px;
 }
 
@@ -1161,6 +1238,25 @@ td.inactive-bg {
 	}
 }
 
+.icon-user {
+	&::before {
+		background-position: -419px -46px;
+	}
+}
+
+.icon-user-group {
+	&::before {
+		background-position: -419px -8px;
+	}
+}
+
+.problem-icon-link {
+	&:focus {
+		box-shadow: 0 0 0 2px $blue;
+	}
+}
+
+.problem-icon-link,
 .problem-icon-list {
 	.problem-icon-list-item {
 		background: transparent;
@@ -1262,4 +1358,42 @@ td.inactive-bg {
 
 .btn-undo.is-focused {
 	box-shadow: 0 1px 0px $blue, 0 -1px 0px $blue;
+}
+
+// Tabfilter
+
+.filter-container.tabfilter-container {
+	.tabfilter-item-label {
+		&.focused {
+			box-shadow: 0 0 0 2px $blue;
+		}
+	}
+}
+
+.breadcrumbs {
+	&>::after {
+		content: " /";
+	}
+
+	&>:last-child::after {
+		content: "";
+	}
+}
+
+// HOST INTERFACES
+
+.interfaces {
+	.interface-row {
+		&[data-type="2"] {
+			.interface-btn-toggle {
+				background-position: -165px -690px;
+			}
+
+			&.list-accordion-item-opened {
+				.interface-btn-toggle {
+					background-position: -165px -655px;
+				}
+			}
+		}
+	}
 }

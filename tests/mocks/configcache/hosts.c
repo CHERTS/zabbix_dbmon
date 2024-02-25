@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,12 +27,13 @@
 #include "zbxalgo.h"
 #include "dbcache.h"
 #include "mutexs.h"
-#define ZBX_DBCONFIG_IMPL
 #include "dbconfig.h"
-
 #include "configcache.h"
+#include "configcache_mock.h"
 
 extern zbx_mock_config_t	mock_config;
+
+void	mock_config_free_hosts(void);
 
 void	mock_config_load_hosts(const char *path)
 {
@@ -79,7 +80,7 @@ void	mock_config_load_hosts(const char *path)
 	mock_config.initialized |= ZBX_MOCK_CONFIG_HOSTS;
 }
 
-void	mock_config_free_hosts()
+void	mock_config_free_hosts(void)
 {
 	int	i;
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
 <script type="text/javascript">
 	jQuery(function($) {
 		$('form[name="user_form"]').submit(function() {
-			$(this).trimValues(['#password1', '#password2', '#autologout', '#refresh', '#url']);
+			$(this).trimValues(['#autologout', '#refresh', '#url']);
 		});
 
 		$('#messages_enabled').on('change', function() {

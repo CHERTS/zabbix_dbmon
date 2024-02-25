@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,7 +22,9 @@
 class CScreenBase {
 
 	/**
-	 * @see CScreenBuilder::isFlickerfree
+	 * Switch on/off flicker-free screens auto refresh.
+	 *
+	 * @var boolean
 	 */
 	public $isFlickerfree;
 
@@ -34,12 +36,14 @@ class CScreenBase {
 	public $pageFile;
 
 	/**
-	 * @see CScreenBuilder::mode
+	 * Display mode
+	 *
+	 * @var int
 	 */
 	public $mode;
 
 	/**
-	 * @see CScreenBuilder::timestamp
+	 * @see Request timestamp
 	 */
 	public $timestamp;
 
@@ -49,13 +53,6 @@ class CScreenBase {
 	 * @var int
 	 */
 	public $resourcetype;
-
-	/**
-	 * Is templated screen
-	 *
-	 * @var bool
-	 */
-	public $isTemplatedScreen;
 
 	/**
 	 * Screen id
@@ -99,13 +96,18 @@ class CScreenBase {
 	 */
 	public $timeline;
 
+
 	/**
-	 * @see CScreenBuilder::profileIdx
+	 * Profile table entity name #1
+	 *
+	 * @var string
 	 */
 	public $profileIdx;
 
 	/**
-	 * @see CScreenBuilder::profileIdx2
+	 * Profile table record id belongs to #1
+	 *
+	 * @var int
 	 */
 	public $profileIdx2;
 
@@ -146,7 +148,6 @@ class CScreenBase {
 	 * @param int		$options['mode']
 	 * @param int		$options['timestamp']
 	 * @param int		$options['resourcetype']
-	 * @param bool		$options['isTemplatedScreen']
 	 * @param int		$options['screenid']
 	 * @param array		$options['screenitem']
 	 * @param string	$options['action']
@@ -165,7 +166,6 @@ class CScreenBase {
 			'mode'				=> SCREEN_MODE_SLIDESHOW,
 			'timestamp'			=> time(),
 			'resourcetype'		=> null,
-			'isTemplatedScreen'	=> false,
 			'screenid'			=> null,
 			'action'			=> null,
 			'groupid'			=> null,
@@ -191,7 +191,6 @@ class CScreenBase {
 		switch ($this->resourcetype) {
 			case SCREEN_RESOURCE_HTTPTEST_DETAILS:
 				$this->required_parameters += [
-					'isTemplatedScreen'	=> false,
 					'screenid'			=> false,
 					'action'			=> false,
 					'groupid'			=> false,
@@ -206,7 +205,6 @@ class CScreenBase {
 
 			case SCREEN_RESOURCE_DISCOVERY:
 				$this->required_parameters += [
-					'isTemplatedScreen'	=> false,
 					'screenid'			=> false,
 					'action'			=> false,
 					'groupid'			=> false,
@@ -221,7 +219,6 @@ class CScreenBase {
 
 			case SCREEN_RESOURCE_HTTPTEST:
 				$this->required_parameters += [
-					'isTemplatedScreen'	=> false,
 					'screenid'			=> false,
 					'action'			=> false,
 					'groupid'			=> true,
@@ -236,7 +233,6 @@ class CScreenBase {
 
 			case SCREEN_RESOURCE_PROBLEM:
 				$this->required_parameters += [
-					'isTemplatedScreen'	=> false,
 					'screenid'			=> false,
 					'action'			=> false,
 					'groupid'			=> false,
@@ -251,7 +247,6 @@ class CScreenBase {
 
 			case SCREEN_RESOURCE_HISTORY:
 				$this->required_parameters += [
-					'isTemplatedScreen'	=> true,
 					'screenid'			=> true,
 					'action'			=> true,
 					'groupid'			=> false,
@@ -266,7 +261,6 @@ class CScreenBase {
 
 			default:
 				$this->required_parameters += [
-					'isTemplatedScreen'	=> true,
 					'screenid'			=> true,
 					'action'			=> true,
 					'groupid'			=> true,
@@ -283,30 +277,6 @@ class CScreenBase {
 		$this->screenitem = [];
 		if (array_key_exists('screenitem', $options) && is_array($options['screenitem'])) {
 			$this->screenitem = $options['screenitem'];
-		}
-		elseif (array_key_exists('screenitemid', $options) && $options['screenitemid'] > 0) {
-			$screenitem_output = ['screenitemid', 'screenid', 'resourcetype', 'resourceid', 'width', 'height',
-				'elements', 'halign', 'valign', 'style', 'url', 'dynamic', 'sort_triggers', 'application',
-				'max_columns'
-			];
-
-			if ($this->hostid != 0) {
-				$this->screenitem = API::TemplateScreenItem()->get([
-					'output' => $screenitem_output,
-					'screenitemids' => $options['screenitemid'],
-					'hostids' => $this->hostid
-				]);
-			}
-			else {
-				$this->screenitem = API::ScreenItem()->get([
-					'output' => $screenitem_output,
-					'screenitemids' => $options['screenitemid']
-				]);
-			}
-
-			if ($this->screenitem) {
-				$this->screenitem = reset($this->screenitem);
-			}
 		}
 
 		// Get resourcetype.
@@ -339,12 +309,6 @@ class CScreenBase {
 		// Get screenid.
 		if ($this->required_parameters['screenid'] && $this->screenid === null && $this->screenitem) {
 			$this->screenid = $this->screenitem['screenid'];
-		}
-
-		// Create action URL.
-		if ($this->required_parameters['action'] && $this->action === null && $this->screenitem) {
-			$this->action = 'screenedit.php?form=update&screenid='.$this->screenid.'&screenitemid='.
-				$this->screenitem['screenitemid'];
 		}
 	}
 
@@ -416,7 +380,7 @@ class CScreenBase {
 		$parameters = $this->parameters;
 
 		// unset redundant parameters
-		unset($parameters['isTemplatedScreen'], $parameters['action'], $parameters['dataId']);
+		unset($parameters['action'], $parameters['dataId']);
 
 		foreach ($parameters as $pname => $default_value) {
 			if ($this->required_parameters[$pname]) {

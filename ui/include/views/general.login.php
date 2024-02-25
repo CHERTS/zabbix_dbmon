@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -38,7 +38,8 @@ if ($data['error']) {
 }
 
 $guest = $data['guest_login_url']
-	? (new CListItem(['or ', new CLink('sign in as guest', $data['guest_login_url'])]))->addClass(ZBX_STYLE_SIGN_IN_TXT)
+	? (new CListItem([_('or'), ' ', new CLink(_('sign in as guest'), $data['guest_login_url'])]))
+		->addClass(ZBX_STYLE_SIGN_IN_TXT)
 	: null;
 
 $http_login_link = $data['http_login_url']
@@ -87,10 +88,10 @@ global $ZBX_SERVER_NAME;
 				->setTarget('_blank')
 				->addClass(ZBX_STYLE_GREY)
 				->addClass(ZBX_STYLE_LINK_ALT),
-			CBrandHelper::isRebranded() ? null : '&nbsp;&nbsp;•&nbsp;&nbsp;',
+			CBrandHelper::isRebranded() ? null : [NBSP(), NBSP(), BULLET(), NBSP(), NBSP()],
 			CBrandHelper::isRebranded()
 				? null
-				: (new CLink(_('Support'), getSupportUrl()))
+				: (new CLink(_('Support'), getSupportUrl(CWebUser::getLang())))
 					->setTarget('_blank')
 					->addClass(ZBX_STYLE_GREY)
 					->addClass(ZBX_STYLE_LINK_ALT)

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -55,6 +55,15 @@ $form_list = (new CFormList())->addRow(new CLabel(_('Message type'), 'label-mess
 		->addOption((new CSelectOption(CMediatypeHelper::MSG_TYPE_UPDATE, _('Problem update')))
 			->setDisabled(in_array(CMediatypeHelper::MSG_TYPE_UPDATE, $data['params']['message_types']))
 		)
+		->addOption((new CSelectOption(CMediatypeHelper::MSG_TYPE_SERVICE, _('Service')))
+			->setDisabled(in_array(CMediatypeHelper::MSG_TYPE_SERVICE, $data['params']['message_types']))
+		)
+		->addOption((new CSelectOption(CMediatypeHelper::MSG_TYPE_SERVICE_RECOVERY, _('Service recovery')))
+			->setDisabled(in_array(CMediatypeHelper::MSG_TYPE_SERVICE_RECOVERY, $data['params']['message_types']))
+		)
+		->addOption((new CSelectOption(CMediatypeHelper::MSG_TYPE_SERVICE_UPDATE, _('Service update')))
+			->setDisabled(in_array(CMediatypeHelper::MSG_TYPE_SERVICE_UPDATE, $data['params']['message_types']))
+		)
 		->addOption((new CSelectOption(CMediatypeHelper::MSG_TYPE_DISCOVERY, _('Discovery')))
 			->setDisabled(in_array(CMediatypeHelper::MSG_TYPE_DISCOVERY, $data['params']['message_types']))
 		)
@@ -83,9 +92,10 @@ $form_list->addRow(_('Message'),
 		->setAttribute('maxlength', DB::getFieldLength('media_type_message', 'message'))
 );
 
-$form
-	->addItem($form_list)
-	->addItem((new CInput('submit', 'submit'))->addStyle('display: none;'));
+$form->addItem($form_list);
+
+// Enable form submitting on Enter.
+$form->addItem((new CSubmitButton(null))->addClass(ZBX_STYLE_FORM_SUBMIT_HIDDEN));
 
 $output = [
 	'header' => $data['title'],

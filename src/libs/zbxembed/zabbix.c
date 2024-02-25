@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,34 +17,29 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+#include "zabbix.h"
+
 #include "common.h"
 #include "log.h"
 #include "zbxjson.h"
-#include "zbxembed.h"
 #include "embed.h"
 #include "duktape.h"
-#include "zabbix.h"
-
-#define ZBX_ES_LOG_MEMORY_LIMIT	(ZBX_MEBIBYTE * 8)
 
 /******************************************************************************
  *                                                                            *
- * Function: es_zabbix_dtor                                              *
- *                                                                            *
- * Purpose: Curlzabbix destructor                                        *
+ * Purpose: Zabbix destructor                                                 *
  *                                                                            *
  ******************************************************************************/
 static duk_ret_t	es_zabbix_dtor(duk_context *ctx)
 {
 	ZBX_UNUSED(ctx);
+
 	return 0;
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: es_zabbix_ctor                                              *
- *                                                                            *
- * Purpose: Curlzabbix constructor                                       *
+ * Purpose: Zabbix constructor                                                *
  *                                                                            *
  ******************************************************************************/
 static duk_ret_t	es_zabbix_ctor(duk_context *ctx)
@@ -56,14 +51,13 @@ static duk_ret_t	es_zabbix_ctor(duk_context *ctx)
 
 	duk_push_c_function(ctx, es_zabbix_dtor, 1);
 	duk_set_finalizer(ctx, -2);
+
 	return 0;
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: es_zabbix_status                                                 *
- *                                                                            *
- * Purpose: Curlzabbix.Status method                                          *
+ * Purpose: Zabbix.Status method                                              *
  *                                                                            *
  ******************************************************************************/
 static duk_ret_t	es_zabbix_log(duk_context *ctx)
@@ -75,16 +69,23 @@ static duk_ret_t	es_zabbix_log(duk_context *ctx)
 
 	level = duk_to_int(ctx, 0);
 
-	if (SUCCEED != zbx_cesu8_to_utf8(duk_to_string(ctx, 1), &message))
+	if (SUCCEED != es_duktape_string_decode(duk_to_string(ctx, 1), &message))
 	{
 		message = zbx_strdup(message, duk_to_string(ctx, 1));
 		zbx_replace_invalid_utf8(message);
 	}
 
-	zabbix_log(level, "%s", message);
-
 	duk_get_memory_functions(ctx, &out_funcs);
 	env = (zbx_es_env_t *)out_funcs.udata;
+
+	if (ZBX_ES_LOG_MSG_LIMIT <= env->logged_msgs)
+	{
+		err_index = duk_push_error_object(ctx, DUK_RET_EVAL_ERROR,
+				"maximum count of logged messages was reached");
+		goto out;
+	}
+
+	zabbix_log(level, "%s", message);
 
 	if (NULL == env->json)
 		goto out;
@@ -102,6 +103,7 @@ static duk_ret_t	es_zabbix_log(duk_context *ctx)
 	zbx_json_addstring(env->json, "message", message, ZBX_JSON_TYPE_STRING);
 	zbx_json_close(env->json);
 out:
+	env->logged_msgs++;
 	zbx_free(message);
 
 	if (-1 != err_index)
@@ -111,8 +113,6 @@ out:
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: es_zabbix_sleep                                                  *
  *                                                                            *
  * Purpose: sleep for given duration in milliseconds                          *
  *                                                                            *
@@ -182,8 +182,9 @@ static duk_ret_t	es_zabbix_sleep(duk_context *ctx)
 }
 
 static const duk_function_list_entry	zabbix_methods[] = {
-	{"Log",			es_zabbix_log,		2},
-	{"sleep",		es_zabbix_sleep,	1},
+	{"Log",		es_zabbix_log,		2},
+	{"log",		es_zabbix_log, 		2},
+	{"sleep",	es_zabbix_sleep,	1},
 	{NULL, NULL, 0}
 };
 

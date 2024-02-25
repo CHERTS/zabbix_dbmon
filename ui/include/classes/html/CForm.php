@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,10 +28,7 @@ class CForm extends CTag {
 		$this->setEnctype($enctype);
 		$this->setAttribute('accept-charset', 'utf-8');
 
-		if (array_key_exists(ZBX_SESSION_NAME, $_COOKIE)) {
-			$this->addVar('sid', substr($_COOKIE[ZBX_SESSION_NAME], 16, 16));
-		}
-		$this->addVar('form_refresh', getRequest('form_refresh', 0) + 1);
+		$this->addItem((new CVar('sid', substr(CSessionHelper::getId(), 16, 16)))->removeId());
 	}
 
 	public function setMethod($value = 'post') {

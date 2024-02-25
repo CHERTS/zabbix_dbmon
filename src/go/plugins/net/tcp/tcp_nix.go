@@ -3,7 +3,7 @@
 
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,16 +25,23 @@ package tcpudp
 import (
 	"errors"
 
-	"zabbix.com/pkg/plugin"
+	"git.zabbix.com/ap/plugin-support/errs"
+	"git.zabbix.com/ap/plugin-support/plugin"
 )
+
+func init() {
+	err := plugin.RegisterMetrics(
+		&impl, "TCP",
+		"net.tcp.port", "Checks if it is possible to make TCP connection to specified port.",
+		"net.tcp.service", "Checks if service is running and accepting TCP connections.",
+		"net.tcp.service.perf", "Checks performance of TCP service.",
+		"net.tcp.socket.count", "Returns number of TCP sockets that match parameters.",
+	)
+	if err != nil {
+		panic(errs.Wrap(err, "failed to register metrics"))
+	}
+}
 
 func exportSystemTcpListen(port uint16) (result interface{}, err error) {
 	return nil, errors.New("Not supported.")
-}
-
-func init() {
-	plugin.RegisterMetrics(&impl, "TCP",
-		"net.tcp.port", "Checks if it is possible to make TCP connection to specified port.",
-		"net.tcp.service", "Checks if service is running and accepting TCP connections.",
-		"net.tcp.service.perf", "Checks performance of TCP service.")
 }

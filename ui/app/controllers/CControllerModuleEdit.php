@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ class CControllerModuleEdit extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_GENERAL)) {
 			return false;
 		}
 
@@ -79,6 +79,7 @@ class CControllerModuleEdit extends CController {
 
 		if ($manifest) {
 			$data = [
+				'form_refresh' => $this->getInput('form_refresh', 0),
 				'moduleid' => $this->getInput('moduleid'),
 				'name' => $manifest['name'],
 				'version' => $manifest['version'],
@@ -88,9 +89,7 @@ class CControllerModuleEdit extends CController {
 				'namespace' => $manifest['namespace'],
 				'url' => array_key_exists('url', $manifest) ? $manifest['url'] : null,
 				'status' => $this->hasInput('form_refresh')
-					? $this->hasInput('status')
-						? MODULE_STATUS_ENABLED
-						: MODULE_STATUS_DISABLED
+					? ($this->hasInput('status') ? MODULE_STATUS_ENABLED : MODULE_STATUS_DISABLED)
 					: $this->module['status']
 			];
 
@@ -103,7 +102,7 @@ class CControllerModuleEdit extends CController {
 				->setArgument('action', 'module.list')
 				->setArgument('page', CPagerHelper::loadPage('module.list', null))
 			);
-			$response->setMessageError(_s('Cannot load module at: %1$s.', $this->module['relative_path']));
+			CMessageHelper::setErrorTitle(_s('Cannot load module at: %1$s.', $this->module['relative_path']));
 			$this->setResponse($response);
 		}
 	}

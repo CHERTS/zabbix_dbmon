@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,12 +35,10 @@ class CControllerWidgetProblemsView extends CControllerWidget {
 	protected function doAction() {
 		$fields = $this->getForm()->getFieldsData();
 
-		$config = select_config();
-
 		$data = CScreenProblem::getData([
 			'show' => $fields['show'],
-			'groupids' => getSubGroups($fields['groupids']),
-			'exclude_groupids' => getSubGroups($fields['exclude_groupids']),
+			'groupids' => $fields['groupids'],
+			'exclude_groupids' => $fields['exclude_groupids'],
 			'hostids' => $fields['hostids'],
 			'name' => $fields['problem'],
 			'severities' => $fields['severities'],
@@ -49,15 +47,15 @@ class CControllerWidgetProblemsView extends CControllerWidget {
 			'show_suppressed' => $fields['show_suppressed'],
 			'unacknowledged' => $fields['unacknowledged'],
 			'show_opdata' => $fields['show_opdata']
-		], $config);
+		]);
 		list($sortfield, $sortorder) = self::getSorting($fields['sort_triggers']);
-		$data = CScreenProblem::sortData($data, $config, $sortfield, $sortorder);
+		$data = CScreenProblem::sortData($data, $sortfield, $sortorder);
 
 		if (count($data['problems']) > $fields['show_lines']) {
 			$info = _n('%1$d of %3$d%2$s problem is shown', '%1$d of %3$d%2$s problems are shown',
 				min($fields['show_lines'], count($data['problems'])),
-				(count($data['problems']) > $config['search_limit']) ? '+' : '',
-				min($config['search_limit'], count($data['problems']))
+				(count($data['problems']) > CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT)) ? '+' : '',
+				min(CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT), count($data['problems']))
 			);
 		}
 		else {
@@ -72,7 +70,7 @@ class CControllerWidgetProblemsView extends CControllerWidget {
 		]);
 
 		if ($fields['show_tags']) {
-			$data['tags'] = makeTags($data['problems'], true, 'eventid', $fields['show_tags'], $fields['tags'],
+			$data['tags'] = makeTags($data['problems'], true, 'eventid', $fields['show_tags'], $fields['tags'], null,
 				$fields['tag_name_format'], $fields['tag_priority']
 			);
 		}
@@ -82,7 +80,7 @@ class CControllerWidgetProblemsView extends CControllerWidget {
 		}
 
 		$this->setResponse(new CControllerResponseData([
-			'name' => $this->getInput('name', $this->getDefaultHeader()),
+			'name' => $this->getInput('name', $this->getDefaultName()),
 			'initial_load' => (bool) $this->getInput('initial_load', 0),
 			'fields' => [
 				'show' => $fields['show'],
@@ -94,24 +92,23 @@ class CControllerWidgetProblemsView extends CControllerWidget {
 				'tag_priority' => $fields['tag_priority'],
 				'show_opdata' => $fields['show_opdata']
 			],
-			'config' => [
-				'problem_unack_style' => $config['problem_unack_style'],
-				'problem_ack_style' => $config['problem_ack_style'],
-				'blink_period' => timeUnitToSeconds($config['blink_period']),
-				'severity_name_0' => $config['severity_name_0'],
-				'severity_name_1' => $config['severity_name_1'],
-				'severity_name_2' => $config['severity_name_2'],
-				'severity_name_3' => $config['severity_name_3'],
-				'severity_name_4' => $config['severity_name_4'],
-				'severity_name_5' => $config['severity_name_5']
-			],
 			'data' => $data,
 			'info' => $info,
 			'sortfield' => $sortfield,
 			'sortorder' => $sortorder,
 			'user' => [
 				'debug_mode' => $this->getDebugMode()
-			]
+			],
+			'config' => [
+				'problem_ack_style' => CSettingsHelper::get(CSettingsHelper::PROBLEM_ACK_STYLE),
+				'problem_unack_style' => CSettingsHelper::get(CSettingsHelper::PROBLEM_UNACK_STYLE),
+				'blink_period' => CSettingsHelper::get(CSettingsHelper::BLINK_PERIOD)
+			],
+			'allowed_ui_problems' => $this->checkAccess(CRoleHelper::UI_MONITORING_PROBLEMS),
+			'allowed_add_comments' => $this->checkAccess(CRoleHelper::ACTIONS_ADD_PROBLEM_COMMENTS),
+			'allowed_change_severity' => $this->checkAccess(CRoleHelper::ACTIONS_CHANGE_SEVERITY),
+			'allowed_acknowledge' => $this->checkAccess(CRoleHelper::ACTIONS_ACKNOWLEDGE_PROBLEMS),
+			'allowed_close' => $this->checkAccess(CRoleHelper::ACTIONS_CLOSE_PROBLEMS)
 		]));
 	}
 

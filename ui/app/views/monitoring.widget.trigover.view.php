@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,20 +31,9 @@ else {
 }
 
 $output = [
-	'header' => $data['name'],
+	'name' => $data['name'],
 	'body' => $table
 ];
-
-if ($data['initial_load']) {
-	$output['script_inline'] =
-		'if (typeof refreshTrigOverViewWidget !== typeof(Function)) {'.
-			'function refreshTrigOverViewWidget(event, response, overlay) {'.
-				'refreshWidgetOnAcknowledgeCreate("trigover", response, overlay);'.
-			'}'.
-
-			'$.subscribe("acknowledge.create", refreshTrigOverViewWidget);'.
-		'}';
-}
 
 if (($messages = getMessages()) !== null) {
 	$output['messages'] = $messages->toString();

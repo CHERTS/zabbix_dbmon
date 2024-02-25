@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,11 @@
  * Class containing methods for operations with histories.
  */
 class CHistory extends CApiService {
+
+	public const ACCESS_RULES = [
+		'get' => ['min_user_type' => USER_TYPE_ZABBIX_USER],
+		'clear' => ['min_user_type' => USER_TYPE_ZABBIX_ADMIN]
+	];
 
 	protected $tableName;
 	protected $tableAlias = 'h';
@@ -83,9 +88,6 @@ class CHistory extends CApiService {
 		$value_types = [ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG, ITEM_VALUE_TYPE_UINT64,
 			ITEM_VALUE_TYPE_TEXT
 		];
-		$common_value_types = [ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_UINT64,
-			ITEM_VALUE_TYPE_TEXT
-		];
 
 		$api_input_rules = ['type' => API_OBJECT, 'fields' => [
 			// filter
@@ -95,42 +97,14 @@ class CHistory extends CApiService {
 			'time_from' =>				['type' => API_INT32, 'flags' => API_ALLOW_NULL, 'default' => null],
 			'time_till' =>				['type' => API_INT32, 'flags' => API_ALLOW_NULL, 'default' => null],
 			'filter' =>					['type' => API_MULTIPLE, 'default' => null, 'rules' => [
-											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_LOG])], 'type' => API_OBJECT, 'flags' => API_ALLOW_NULL, 'fields' => [
-					'itemid' =>					['type' => API_IDS, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'clock' =>					['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'timestamp' =>				['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'source' =>					['type' => API_STRINGS_UTF8, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'severity' =>				['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'logeventid' =>				['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'ns' =>						['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE]
-				]],
-											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_TEXT])], 'type' => API_OBJECT, 'flags' => API_ALLOW_NULL, 'fields' => [
-					'itemid' =>					['type' => API_IDS, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'clock' =>					['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'ns' =>						['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE]
-				]],
-											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_UINT64])], 'type' => API_OBJECT, 'flags' => API_ALLOW_NULL, 'fields' => [
-					'itemid' =>					['type' => API_IDS, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'clock' =>					['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'ns' =>						['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'value' =>					['type' => API_UINTS64, 'flags' => API_ALLOW_NULL | API_NORMALIZE]
-				]],
-											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_FLOAT])], 'type' => API_OBJECT, 'flags' => API_ALLOW_NULL, 'fields' => [
-					'itemid' =>					['type' => API_IDS, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'clock' =>					['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'ns' =>						['type' => API_INTS32, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'value' =>					['type' => API_FLOATS, 'flags' => API_ALLOW_NULL | API_NORMALIZE]
-				]]
+											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_LOG])], 'type' => API_FILTER, 'flags' => API_ALLOW_NULL, 'fields' => ['itemid', 'clock', 'timestamp', 'source', 'severity', 'logeventid', 'ns']],
+											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_TEXT])], 'type' => API_FILTER, 'flags' => API_ALLOW_NULL, 'fields' => ['itemid', 'clock', 'ns']],
+											['else' => true, 'type' => API_FILTER, 'flags' => API_ALLOW_NULL, 'fields' => ['itemid', 'clock', 'ns', 'value']]
 			]],
 			'search' =>					['type' => API_MULTIPLE, 'default' => null, 'rules' => [
-											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_LOG])], 'type' => API_OBJECT, 'flags' => API_ALLOW_NULL, 'fields' => [
-					'source' =>					['type' => API_STRINGS_UTF8, 'flags' => API_ALLOW_NULL | API_NORMALIZE],
-					'value' =>					['type' => API_STRINGS_UTF8, 'flags' => API_ALLOW_NULL | API_NORMALIZE]
-				]],
-											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_TEXT])], 'type' => API_OBJECT, 'flags' => API_ALLOW_NULL, 'fields' => [
-					'value' =>					['type' => API_STRINGS_UTF8, 'flags' => API_ALLOW_NULL | API_NORMALIZE]
-				]],
-											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_FLOAT, ITEM_VALUE_TYPE_UINT64])], 'type' => API_OBJECT, 'flags' => API_ALLOW_NULL, 'fields' => []]
+											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_LOG])], 'type' => API_FILTER, 'flags' => API_ALLOW_NULL, 'fields' => ['source', 'value']],
+											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_TEXT])], 'type' => API_FILTER, 'flags' => API_ALLOW_NULL, 'fields' => ['value']],
+											['else' => true, 'type' => API_FILTER, 'flags' => API_ALLOW_NULL, 'fields' => []]
 			]],
 			'searchByAny' =>			['type' => API_BOOLEAN, 'default' => false],
 			'startSearch' =>			['type' => API_FLAG, 'default' => false],
@@ -139,7 +113,7 @@ class CHistory extends CApiService {
 			// output
 			'output' =>					['type' => API_MULTIPLE, 'default' => API_OUTPUT_EXTEND, 'rules' => [
 											['if' => ['field' => 'history', 'in' => implode(',', [ITEM_VALUE_TYPE_LOG])], 'type' => API_OUTPUT, 'in' => implode(',', ['itemid', 'clock', 'timestamp', 'source', 'severity', 'value', 'logeventid', 'ns'])],
-											['if' => ['field' => 'history', 'in' => implode(',', $common_value_types)], 'type' => API_OUTPUT, 'in' => implode(',', ['itemid', 'clock', 'value', 'ns'])]
+											['else' => true, 'type' => API_OUTPUT, 'in' => implode(',', ['itemid', 'clock', 'value', 'ns'])]
 			]],
 			'countOutput' =>			['type' => API_FLAG, 'default' => false],
 			// sort and limit
@@ -173,6 +147,11 @@ class CHistory extends CApiService {
 				return $this->getFromElasticsearch($options);
 
 			default:
+				if (CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL) == 1) {
+					$hk_history = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY));
+					$options['time_from'] = max($options['time_from'], time() - $hk_history + 1);
+				}
+
 				return $this->getFromSql($options);
 		}
 	}
@@ -307,5 +286,76 @@ class CHistory extends CApiService {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Clear item history. Support web scenario history cleanup.
+	 *
+	 * @param array $itemids
+	 *
+	 * @return array
+	 */
+	public function clear(array $itemids): array {
+		self::validateClear($itemids, $db_items);
+
+		Manager::History()->deleteHistory(array_column($db_items, 'value_type', 'itemid'));
+
+		self::addAuditLog(CAudit::ACTION_HISTORY_CLEAR, CAudit::RESOURCE_ITEM, $db_items);
+
+		return ['itemids' => $itemids];
+	}
+
+	/**
+	 * Validates the input parameters for the clear() method.
+	 *
+	 * @static
+	 *
+	 * @param array      $itemids
+	 * @param array|null $db_items
+	 *
+	 * @throws APIException if the input is invalid
+	 * @throws APIException if comperesion is enabled
+	 */
+	private static function validateClear(array $itemids, array &$db_items = null): void {
+		global $DB;
+
+		$api_input_rules = ['type' => API_IDS, 'flags' => API_NOT_EMPTY, 'uniq' => true];
+
+		if (!CApiInputValidator::validate($api_input_rules, $itemids, '/', $error)) {
+			self::exception(ZBX_API_ERROR_PARAMETERS, $error);
+		}
+
+		if ($DB['TYPE'] == ZBX_DB_POSTGRESQL && CHousekeepingHelper::get(CHousekeepingHelper::COMPRESSION_STATUS)
+				&& self::checkCompressionAvailability() === true) {
+			self::exception(ZBX_API_ERROR_INTERNAL, _('History cleanup is not supported if compression is enabled'));
+		}
+
+		$db_items = API::Item()->get([
+			'output' => ['itemid', 'value_type', 'name'],
+			'itemids' => $itemids,
+			'templated' => false,
+			'webitems' => true,
+			'editable' => true
+		]);
+
+		if (count($db_items) != count($itemids)) {
+			self::exception(ZBX_API_ERROR_PERMISSIONS, _('No permissions to referred object or it does not exist!'));
+		}
+	}
+
+	/**
+	 * Returns true if database supports data compression. False otherwise.
+	 */
+	private static function checkCompressionAvailability(): bool {
+		$dbversion_status = CSettingsHelper::getDbVersionStatus();
+
+		foreach ($dbversion_status as $dbversion) {
+			if ($dbversion['database'] === ZBX_DB_EXTENSION_TIMESCALEDB) {
+				return array_key_exists('compression_availability', $dbversion)
+					&& (bool) $dbversion['compression_availability'];
+			}
+		}
+
+		return false;
 	}
 }

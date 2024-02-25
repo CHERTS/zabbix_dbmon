@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+require_once dirname(__FILE__).'/behaviors/CMacrosBehavior.php';
+require_once dirname(__FILE__).'/behaviors/CMessageBehavior.php';
 require_once dirname(__FILE__).'/common/testFormMacros.php';
 
 /**
@@ -25,7 +27,17 @@ require_once dirname(__FILE__).'/common/testFormMacros.php';
  */
 class testFormMacrosHost extends testFormMacros {
 
-	use MacrosTrait;
+	/**
+	 * Attach MacrosBehavior to the test.
+	 *
+	 * @return array
+	 */
+	public function getBehaviors() {
+		return [
+			CMacrosBehavior::class,
+			CMessageBehavior::class
+		];
+	}
 
 	/**
 	 * The name of the host for updating macros, id=20006.
@@ -47,6 +59,18 @@ class testFormMacrosHost extends testFormMacros {
 	 * @var integer
 	 */
 	protected static $hostid_remove_inherited;
+
+	public $macro_resolve = '{$X_SECRET_HOST_MACRO_2_RESOLVE}';
+	public $macro_resolve_hostid = 99135;
+
+	public $vault_object = 'host';
+	public $vault_error_field = '/1/macros/6/value';
+	public $update_vault_macro = '{$VAULT_HOST_MACRO3_CHANGED}';
+	public $vault_macro_index = 2;
+
+	public $revert_macro_1 = '{$SECRET_HOST_MACRO_REVERT}';
+	public $revert_macro_2 = '{$SECRET_HOST_MACRO_2_TEXT_REVERT}';
+	public $revert_macro_object = 'host';
 
 	/**
 	 * @dataProvider getCreateMacrosData
@@ -130,7 +154,9 @@ class testFormMacrosHost extends testFormMacros {
 	 * @onBeforeOnce prepareHostRemoveMacrosData
 	 */
 	public function testFormMacrosHost_RemoveInheritedMacro($data) {
-		$this->checkRemoveInheritedMacros($data, self::$hostid_remove_inherited, 'host');
+		$this->checkRemoveInheritedMacros($data, 'host', self::$hostid_remove_inherited, false, null,
+				'Host for Inherited macros removing'
+		);
 	}
 
 	public function getSecretMacrosLayoutData() {
@@ -175,7 +201,7 @@ class testFormMacrosHost extends testFormMacros {
 	 * @dataProvider getSecretMacrosLayoutData
 	 */
 	public function testFormMacrosHost_CheckSecretMacrosLayout($data) {
-		$this->checkSecretMacrosLayout($data, 'hosts.php?form=update&hostid=99011', 'hosts');
+		$this->checkSecretMacrosLayout($data, 'zabbix.php?action=host.view', 'hosts', 'Host for suppression');
 	}
 
 	public function getCreateSecretMacrosData() {
@@ -227,36 +253,14 @@ class testFormMacrosHost extends testFormMacros {
 	 * @dataProvider getCreateSecretMacrosData
 	 */
 	public function testFormMacrosHost_CreateSecretMacros($data) {
-		$this->createSecretMacros($data, 'hosts.php?form=update&hostid=99134', 'hosts');
-	}
-
-	public function getRevertSecretMacrosData() {
-		return [
-			[
-				[
-					'macro_fields' => [
-						'macro' => '{$SECRET_HOST_MACRO_REVERT}',
-						'value' => 'Secret host value'
-					]
-				]
-			],
-			[
-				[
-					'macro_fields' => [
-						'macro' => '{$SECRET_HOST_MACRO_2_TEXT_REVERT}',
-						'value' => 'Secret host value 2'
-					],
-					'set_to_text' => true
-				]
-			]
-		];
+		$this->createSecretMacros($data, 'zabbix.php?action=host.view', 'hosts', 'Available host');
 	}
 
 	/**
 	 * @dataProvider getRevertSecretMacrosData
 	 */
 	public function testFormMacrosHost_RevertSecretMacroChanges($data) {
-		$this->revertSecretMacroChanges($data, 'hosts.php?form=update&hostid=99135', 'hosts');
+		$this->revertSecretMacroChanges($data, 'zabbix.php?action=host.view', 'hosts', 'Available host in maintenance');
 	}
 
 	public function getUpdateSecretMacrosData() {
@@ -300,14 +304,31 @@ class testFormMacrosHost extends testFormMacros {
 	 * @dataProvider getUpdateSecretMacrosData
 	 */
 	public function testFormMacrosHost_UpdateSecretMacros($data) {
-		$this->updateSecretMacros($data, 'hosts.php?form=update&hostid=99135', 'hosts');
+		$this->updateSecretMacros($data, 'zabbix.php?action=host.view', 'hosts', 'Available host in maintenance');
 	}
 
-	public function testFormMacrosHost_ResolveSecretMacro() {
-		$macro = [
-			'macro' => '{$X_SECRET_HOST_MACRO_2_RESOLVE}',
-			'value' => 'Value 2 B resolved'
-		];
-		$this->resolveSecretMacro($macro, 'hosts.php?form=update&hostid=99135', 'hosts', 'host');
+	/**
+	 * Test opens the list of items of "Available host in maintenance" and "Latest data"
+	 * and checks macro resolution in item fields.
+	 *
+	 * @dataProvider getResolveSecretMacroData
+	 */
+	public function testFormMacrosHost_ResolveSecretMacro($data) {
+		$this->resolveSecretMacro($data, 'host');
+	}
+
+	/**
+	 * @dataProvider getCreateVaultMacrosData
+	 *
+	 */
+	public function testFormMacrosHost_CreateVaultMacros($data) {
+		$this->createVaultMacros($data, 'zabbix.php?action=host.view', 'hosts', 'Available host');
+	}
+
+	/**
+	 * @dataProvider getUpdateVaultMacrosData
+	 */
+	public function testFormMacrosHost_UpdateVaultMacros($data) {
+		$this->updateVaultMacros($data, 'zabbix.php?action=host.view', 'hosts', 'Host for suppression');
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ class CBrandHelper {
 	}
 
 	/**
-	 * Get value by key from configuration (load configuration if need).
+	 * Get value by key from configuration (load configuration if needed).
 	 *
 	 * @param string $key      configuration key
 	 * @param mixed  $default  default value
@@ -118,7 +118,7 @@ class CBrandHelper {
 			'BRAND_FOOTER',
 			[
 				$with_version ? 'Zabbix '.ZABBIX_VERSION.'. ' : null,
-				'&copy; '.ZABBIX_COPYRIGHT_FROM.'&ndash;'.ZABBIX_COPYRIGHT_TO.', ',
+				COPYR(), ' '.ZABBIX_COPYRIGHT_FROM, NDASH(), ZABBIX_COPYRIGHT_TO.', ',
 				(new CLink('Zabbix SIA', 'https://www.zabbix.com/'))
 					->addClass(ZBX_STYLE_GREY)
 					->addClass(ZBX_STYLE_LINK_ALT)

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@ $this->includeJsFile('administration.usergroup.edit.js.php');
 $widget = (new CWidget())->setTitle(_('User groups'));
 
 $form = (new CForm())
+	->addItem((new CVar('form_refresh', $data['form_refresh'] + 1))->removeId())
+	->setId('user-group-form')
 	->setName('user_group_form')
 	->setAttribute('aria-labelledby', ZBX_STYLE_PAGE_TITLE);
 
@@ -203,8 +205,8 @@ $tag_filter_form_list->addRow(null,
 
 $tabs = (new CTabView())
 	->addTab('user_group_tab', _('User group'), $form_list)
-	->addTab('permissions_tab', _('Permissions'), $permissions_form_list)
-	->addTab('tag_filter_tab', _('Tag filter'), $tag_filter_form_list);
+	->addTab('permissions_tab', _('Permissions'), $permissions_form_list, TAB_INDICATOR_PERMISSIONS)
+	->addTab('tag_filter_tab', _('Tag filter'), $tag_filter_form_list, TAB_INDICATOR_TAG_FILTER);
 if (!$data['form_refresh']) {
 	$tabs->setSelected(0);
 }
@@ -240,5 +242,3 @@ else {
 $form->addItem($tabs);
 $widget->addItem($form);
 $widget->show();
-
-$this->addJsFile('multiselect.js');

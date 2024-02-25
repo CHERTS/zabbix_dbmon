@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
 #include "log.h"
+
 #include "mutexs.h"
 #include "threads.h"
 #include "cfg.h"
@@ -364,6 +364,8 @@ void	zabbix_close_log(void)
 	{
 		zbx_mutex_destroy(&log_access);
 	}
+
+	log_type = LOG_TYPE_UNDEFINED;
 }
 
 void	__zbx_zabbix_log(int level, const char *fmt, ...)
@@ -678,3 +680,93 @@ char	*strerror_from_module(unsigned long error, const wchar_t *module)
 	return utf8_string;
 }
 #endif	/* _WINDOWS */
+
+/******************************************************************************
+ *                                                                            *
+ * Purpose: log the message optionally appending to a string buffer           *
+ *                                                                            *
+ * Parameters: level      - [IN] the log level                                *
+ *             out        - [OUT] the output buffer (optional)                *
+ *             out_alloc  - [OUT] the output buffer size                      *
+ *             out_offset - [OUT] the output buffer offset                    *
+ *             format     - [IN] the format string                            *
+ *                                                                            *
+ * Return value: SUCCEED - the socket was successfully opened                 *
+ *               FAIL    - otherwise                                          *
+ *                                                                            *
+ ******************************************************************************/
+void	zbx_strlog_alloc(int level, char **out, size_t *out_alloc, size_t *out_offset, const char *format, ...)
+{
+	va_list	args;
+	size_t	len;
+	char	*buf;
+
+	if (SUCCEED != ZBX_CHECK_LOG_LEVEL(level) && NULL == out)
+		return;
+
+#if defined(__hpux)
+	if (SUCCEED != zbx_hpux_vsnprintf_is_c99())
+	{
+#define INITIAL_ALLOC_LEN	128
+
+		len = INITIAL_ALLOC_LEN;
+		buf = (char *)zbx_malloc(NULL, len);
+
+		while (1)
+		{
+			/* try printing and extending buffer until the buffer is large enough to */
+			/* store all data and 2 free bytes remain for adding '\n\0' */
+			int	bytes_written;
+
+			va_start(args, format);
+			bytes_written = vsnprintf(buf, len, format, args);
+			va_end(args);
+
+			if (0 <= bytes_written && 2 <= len - (size_t)bytes_written)
+			{
+				len = bytes_written;
+				goto finish;
+			}
+
+			if (-1 == bytes_written || (0 <= bytes_written && 2 > len - bytes_written))
+			{
+				len *= 2;
+				buf = (char *)zbx_realloc(buf, len);
+				continue;
+			}
+
+			zabbix_log(LOG_LEVEL_CRIT, "vsnprintf() returned %d", bytes_written);
+			THIS_SHOULD_NEVER_HAPPEN;
+			exit(EXIT_FAILURE);
+#undef INITIAL_ALLOC_LEN
+		}
+	}
+	/* HP-UX vsnprintf() looks C99-compliant, proceed with common implementation */
+#endif
+	va_start(args, format);
+	len = (size_t)vsnprintf(NULL, 0, format, args) + 2;
+	va_end(args);
+
+	buf = (char *)zbx_malloc(NULL, len);
+
+	va_start(args, format);
+	len = (size_t)vsnprintf(buf, len, format, args);
+	va_end(args);
+
+#if defined(__hpux)
+finish:
+#endif
+	if (SUCCEED == ZBX_CHECK_LOG_LEVEL(level))
+		zabbix_log(level, "%s", buf);
+
+	if (NULL != out)
+	{
+		buf[0] = (char)toupper((unsigned char)buf[0]);
+		buf[len++] = '\n';
+		buf[len] = '\0';
+
+		zbx_strcpy_alloc(out, out_alloc, out_offset, buf);
+	}
+
+	zbx_free(buf);
+}

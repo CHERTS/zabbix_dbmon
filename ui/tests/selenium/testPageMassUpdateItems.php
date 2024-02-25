@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -39,8 +39,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'type' => 0,
 				'value_type' => 0,
 				'interfaceid' => self::AGENT_INTERFACE_ID,
-				'delay' => '1m',
-				'applications' => [5000, 5001]
+				'delay' => '1m'
 			],
 			[
 				'hostid' => self::HOSTID,
@@ -49,8 +48,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'type' => 0,
 				'value_type' => 1,
 				'interfaceid' => self::AGENT_INTERFACE_ID,
-				'delay' => '2m',
-				'applications' => [5000, 5001]
+				'delay' => '2m'
 			],
 			[
 				'hostid' => self::HOSTID,
@@ -59,8 +57,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'type' => 17,
 				'value_type' => 0,
 				'interfaceid' => self::SNMP2_INTERFACE_ID,
-				'delay' => '3m',
-				'applications' => [5002, 5003]
+				'delay' => '3m'
 			],
 			[
 				'hostid' => self::HOSTID,
@@ -69,28 +66,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'type' => 17,
 				'value_type' => 1,
 				'interfaceid' => self::SNMP2_INTERFACE_ID,
-				'delay' => '4m',
-				'applications' => [5002, 5003]
-			],
-			[
-				'hostid' => self::HOSTID,
-				'name' => '5_Aggregate',
-				'key_' => 'grpavg["host group","key",avg,last]',
-				'type' => 8,
-				'value_type' => 0,
-				'interfaceid' => self::SNMP2_INTERFACE_ID,
-				'delay' => '9m',
-				'applications' => [5004, 5005]
-			],
-			[
-				'hostid' => self::HOSTID,
-				'name' => '6_Aggregate',
-				'key_' => 'grpmin["host group","key",avg,min]',
-				'type' => 8,
-				'value_type' => 3,
-				'interfaceid' => self::SNMP2_INTERFACE_ID,
-				'delay' => '30s',
-				'applications' => [5004, 5005]
+				'delay' => '4m'
 			],
 			[
 				'hostid' => self::HOSTID,
@@ -100,8 +76,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'value_type' => 0,
 				'interfaceid' => self::IPMI_INTERFACE_ID,
 				'delay' => '10m',
-				'ipmi_sensor' => 'temp',
-				'applications' => [5002, 5003]
+				'ipmi_sensor' => 'temp'
 			],
 			[
 				'hostid' => self::HOSTID,
@@ -111,8 +86,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'value_type' => 3,
 				'interfaceid' => self::IPMI_INTERFACE_ID,
 				'delay' => '11s',
-				'ipmi_sensor' => 'temp',
-				'applications' => [5002, 5003]
+				'ipmi_sensor' => 'temp'
 			],
 			[
 				'hostid' => self::HOSTID,
@@ -122,8 +96,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'value_type' => 4,
 				'interfaceid' => self::SNMP2_INTERFACE_ID,
 				'delay' => '9m',
-				'snmp_oid' => '.1.3.6.1.2.1.1.1.0',
-				'applications' => [5004, 5005]
+				'snmp_oid' => '.1.3.6.1.2.1.1.1.0'
 			],
 			[
 				'hostid' => self::HOSTID,
@@ -133,8 +106,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'value_type' => 4,
 				'interfaceid' => self::SNMP2_INTERFACE_ID,
 				'delay' => '101s',
-				'snmp_oid' => '.1.3.8.1.2.1.1.1.0',
-				'applications' => [5004, 5005]
+				'snmp_oid' => '.1.3.8.1.2.1.1.1.0'
 			],
 			[
 				'hostid' => self::HOSTID,
@@ -166,7 +138,6 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'key_' => 'db.odbc.select',
 				'type' => 11,
 				'value_type' => 0,
-				'interfaceid' => self::AGENT_INTERFACE_ID,
 				'delay' => '10s',
 				'username' => 'test_username',
 				'password' => 'test_password',
@@ -186,7 +157,6 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'key_' => 'db.odbc.select',
 				'type' => 11,
 				'value_type' => 0,
-				'interfaceid' => self::AGENT_INTERFACE_ID,
 				'delay' => '90s',
 				'params' => 'SELECT * FROM items',
 				'preprocessing' => [
@@ -204,9 +174,14 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'key_' => 'calculated1',
 				'type' => 15,
 				'value_type' => 0,
-				'interfaceid' => self::AGENT_INTERFACE_ID,
 				'delay' => '50s',
-				'params' => 'avg("Zabbix Server:zabbix[wcache,values]",600)'
+				'params' => 'avg("Zabbix Server:zabbix[wcache,values]",600)',
+				'tags' => [
+					[
+						'tag' => 'Item_tag_name',
+						'value' => 'Item_tag_value'
+					]
+				]
 			],
 			[
 				'hostid' => self::HOSTID,
@@ -214,9 +189,38 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 				'key_' => 'calculated2',
 				'type' => 15,
 				'value_type' => 0,
-				'interfaceid' => self::AGENT_INTERFACE_ID,
 				'delay' => '30s',
-				'params' => 'sum("Zabbix Server:zabbix[wcache,values]",900)'
+				'params' => 'sum("Zabbix Server:zabbix[wcache,values]",900)',
+				'tags' => [
+					[
+						'tag' => 'Item_tag_name_1',
+						'value' => 'Item_tag_value_1'
+					],
+					[
+						'tag' => 'Item_tag_name_2',
+						'value' => 'Item_tag_value_2'
+					]
+				]
+			],
+			[
+				'hostid' => self::HOSTID,
+				'name' => '17_Script',
+				'key_' => 'script1',
+				'type' => 21,
+				'value_type' => 0,
+				'delay' => '15s',
+				'timeout' => '13s',
+				'params' => 'test Script 1'
+			],
+			[
+				'hostid' => self::HOSTID,
+				'name' => '18_Script',
+				'key_' => 'script2',
+				'type' => 21,
+				'value_type' => 0,
+				'delay' => '14s',
+				'timeout' => '13s',
+				'params' => 'test Script 2'
 			]
 		]);
 	}
@@ -234,7 +238,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 					],
 					'change' => [
 						'Type' => ['id' => 'type', 'value' => 'Zabbix agent'],
-						'Host interface' => ['id' => 'interface-select', 'value' => '127.0.5.1 : 10051'],
+						'Host interface' => ['id' => 'interface-select', 'value' => '127.0.5.1:10051'],
 						'Status' => ['id' => 'status', 'value' => 'Disabled']
 					]
 				]
@@ -247,7 +251,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 					],
 					'change' => [
 						'Type' => ['id' => 'type', 'value' => 'Zabbix agent'],
-						'Host interface' => ['id' => 'interface-select', 'value' => '127.0.5.1 : 10051'],
+						'Host interface' => ['id' => 'interface-select', 'value' => '127.0.5.1:10051'],
 						'Status' => ['id' => 'status', 'value' => 'Enabled']
 					]
 				]
@@ -268,16 +272,22 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 	/**
 	 * Add items with preprocessing for mass updating.
 	 */
-	public function prepareItemPreprocessingData() {
+	public function prepareItemTagsPreprocessingData() {
 		CDataHelper::call('item.create', [
 			[
 				'hostid' => self::HOSTID,
-				'name' => '1_Item_Preprocessing',
+				'name' => '1_Item_Tags_Preprocessing',
 				'key_' => '1agent.preproc',
 				'type' => 0,
 				'value_type' => 0,
 				'interfaceid' => self::AGENT_INTERFACE_ID,
 				'delay' => '1m',
+				'tags' => [
+					[
+						'tag' => 'old_tag_1',
+						'value' => 'old_value_1'
+					]
+				],
 				'preprocessing' => [
 					[
 						'type' => '4',
@@ -295,13 +305,22 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 			],
 			[
 				'hostid' => self::HOSTID,
-				'name' => '2_Item_Preprocessing',
+				'name' => '2_Item_Tags_Preprocessing',
 				'key_' => '2agent.preproc',
 				'type' => 0,
 				'value_type' => 1,
 				'interfaceid' => self::AGENT_INTERFACE_ID,
 				'delay' => '2m',
-				'applications' => [5000, 5001],
+				'tags' => [
+					[
+						'tag' => 'old_tag_2',
+						'value' => 'old_value_2'
+					],
+					[
+						'tag' => 'old_tag_3',
+						'value' => 'old_value_3'
+					]
+				],
 				'preprocessing' => [
 					[
 						'type' => '5',
@@ -319,7 +338,7 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 			],
 			[
 				'hostid' => self::HOSTID,
-				'name' => '1_Item_No_Preprocessing',
+				'name' => '1_Item_No_Tags_Preprocessing',
 				'key_' => '1agent.no.preproc',
 				'type' => 0,
 				'value_type' => 0,
@@ -328,23 +347,114 @@ class testPageMassUpdateItems extends testMassUpdateItems {
 			],
 			[
 				'hostid' => self::HOSTID,
-				'name' => '2_Item_No_Preprocessing',
+				'name' => '2_Item_No_Tags_Preprocessing',
 				'key_' => '2agent.no.preproc',
 				'type' => 0,
 				'value_type' => 1,
 				'interfaceid' => self::AGENT_INTERFACE_ID,
 				'delay' => '2m'
+			],
+			[
+				'hostid' => self::HOSTID,
+				'name' => '1_Item_Tags_replace',
+				'key_' => '1agent.tags.replace',
+				'type' => 0,
+				'value_type' => 1,
+				'interfaceid' => self::AGENT_INTERFACE_ID,
+				'delay' => '2m',
+				'tags' => [
+					[
+						'tag' => 'Replace_tag_1',
+						'value' => 'replace_value_1'
+					],
+					[
+						'tag' => 'Replace_tag_2',
+						'value' => 'Replace_value_2'
+					]
+				]
+			],
+			[
+				'hostid' => self::HOSTID,
+				'name' => '2_Item_Tags_replace',
+				'key_' => '2agent.tags.replace',
+				'type' => 0,
+				'value_type' => 1,
+				'interfaceid' => self::AGENT_INTERFACE_ID,
+				'delay' => '2m',
+				'tags' => [
+					[
+						'tag' => 'Replace_tag_3',
+						'value' => 'Replace_value_3'
+					]
+				]
+			],
+			[
+				'hostid' => self::HOSTID,
+				'name' => '1_Item_Tags_remove',
+				'key_' => '1agent.tags.remove',
+				'type' => 0,
+				'value_type' => 1,
+				'interfaceid' => self::AGENT_INTERFACE_ID,
+				'delay' => '2m',
+				'tags' => [
+					[
+						'tag' => 'remove_tag_1',
+						'value' => 'remove_value_1'
+					],
+					[
+						'tag' => 'remove_tag_2',
+						'value' => 'remove_value_2'
+					]
+				]
+			],
+			[
+				'hostid' => self::HOSTID,
+				'name' => '2_Item_Tags_remove',
+				'key_' => '2agent.tags.remove',
+				'type' => 0,
+				'value_type' => 1,
+				'interfaceid' => self::AGENT_INTERFACE_ID,
+				'delay' => '2m',
+				'tags' => [
+					[
+						'tag' => 'remove_tag_2',
+						'value' => 'remove_value_2'
+					]
+				]
+			],
+			[
+				'hostid' => self::HOSTID,
+				'name' => '3_Item_Tags_remove',
+				'key_' => '3agent.tags.remove',
+				'type' => 0,
+				'value_type' => 1,
+				'interfaceid' => self::AGENT_INTERFACE_ID,
+				'delay' => '2m',
+				'tags' => [
+					[
+						'tag' => 'remove_tag_3',
+						'value' => 'remove_value_3'
+					]
+				]
 			]
 		]);
 	}
 
 	/**
-	 * @onBeforeOnce prepareItemPreprocessingData
+	 * @onBeforeOnce prepareItemTagsPreprocessingData
 	 */
 	public function testPageMassUpdateItems_Cancel() {
 		$this->executeMassUpdateCancel();
 	}
 
+	/**
+	 * @dataProvider getCommonTagsChangeData
+	 *
+	 * @depends testPageMassUpdateItems_Cancel
+	 */
+	public function testPageMassUpdateItems_ChangeTags($data) {
+		$this->executeItemsTagsMassUpdate($data);
+	}
 
 	/**
 	 * @dataProvider getCommonPreprocessingChangeData

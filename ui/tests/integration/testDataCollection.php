@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -160,17 +160,26 @@ class testDataCollection extends CIntegrationTest {
 	 */
 	public function testDataCollection_checkHostAvailability() {
 		self::waitForLogLineToBePresent(self::COMPONENT_SERVER,
-			'temporarily disabling Zabbix agent checks on host "agent": host unavailable'
+			'temporarily disabling Zabbix agent checks on host "agent": interface unavailable'
 		);
+		self::waitForLogLineToBePresent(self::COMPONENT_SERVER, 'update interface set');
+		self::waitForLogLineToBePresent(self::COMPONENT_SERVER, 'commit;');
 
-		$data = $this->call('host.get', [
-			'hostids'	=> self::$hostids['agent'],
-			'output'	=> ['available']
+		$this->reloadConfigurationCache();
+		sleep(5);
+
+		$data = $this->call('hostinterface.get', [
+			'output' => ['available'],
+			'hostids' => self::$hostids['agent'],
+			'filter' => [
+				'type' => 1,
+				'main' => 1
+			]
 		]);
 
 		$this->assertTrue(is_array($data['result']));
 		$this->assertEquals(1, count($data['result']));
-		$this->assertEquals(HOST_AVAILABLE_FALSE, $data['result'][0]['available']);
+		$this->assertEquals(INTERFACE_AVAILABLE_FALSE, $data['result'][0]['available']);
 	}
 
 	/**
@@ -182,7 +191,7 @@ class testDataCollection extends CIntegrationTest {
 	 */
 	public function testDataCollection_checkAgentData() {
 		self::waitForLogLineToBePresent(self::COMPONENT_SERVER, [
-			'enabling Zabbix agent checks on host "agent": host became available',
+			'enabling Zabbix agent checks on host "agent": interface became available',
 			'resuming Zabbix agent checks on host "agent": connection restored'
 		]);
 
@@ -286,8 +295,9 @@ class testDataCollection extends CIntegrationTest {
 				'UnreachablePeriod' => 5,
 				'UnavailableDelay' => 5,
 				'UnreachableDelay' => 1,
+				'DebugLevel' => 4,
 				'Hostname' => 'proxy',
-				'ServerPort' => self::getConfigurationValue(self::COMPONENT_SERVER, 'ListenPort')
+				'Server' => '127.0.0.1:'.self::getConfigurationValue(self::COMPONENT_SERVER, 'ListenPort')
 			],
 			self::COMPONENT_AGENT => [
 				'Hostname' => 'proxy_agent',
@@ -307,8 +317,8 @@ class testDataCollection extends CIntegrationTest {
 		self::waitForLogLineToBePresent(self::COMPONENT_SERVER, 'sending configuration data to proxy "proxy"');
 		self::waitForLogLineToBePresent(self::COMPONENT_PROXY, 'received configuration data from server');
 		self::waitForLogLineToBePresent(self::COMPONENT_PROXY, [
-				'enabling Zabbix agent checks on host "proxy_agent": host became available',
-				'resuming Zabbix agent checks on host "proxy_agent": connection restored'
+			'enabling Zabbix agent checks on host "proxy_agent": interface became available',
+			'resuming Zabbix agent checks on host "proxy_agent": connection restored'
 		]);
 
 		$passive_data = $this->call('history.get', [

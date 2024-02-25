@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,8 @@ $widget = (new CWidget())
 			)
 		))->setAttribute('aria-label', _('Content controls'))
 	)
-	->addItem((new CFilter((new CUrl('zabbix.php'))->setArgument('action', 'usergroup.list')))
+	->addItem((new CFilter())
+		->setResetUrl((new CUrl('zabbix.php'))->setArgument('action', 'usergroup.list'))
 		->addVar('action', 'usergroup.list')
 		->setProfile($data['profileIdx'])
 		->setActiveTab($data['active_tab'])
@@ -163,17 +164,20 @@ foreach ($this->data['usergroups'] as $usergroup) {
 			&& $user['users_status'] != GROUP_STATUS_DISABLED
 		);
 
-		$users[] = (new CLink(getUserFullname($user), (new CUrl('zabbix.php'))
-			->setArgument('action', 'user.edit')
-			->setArgument('userid', $user['userid'])
-			->getUrl()
-		))
-			->addClass(ZBX_STYLE_LINK_ALT)
-			->addClass($user_has_access ? ZBX_STYLE_GREEN : ZBX_STYLE_RED);
+		$user = $data['allowed_ui_users']
+			? (new CLink(getUserFullname($user), (new CUrl('zabbix.php'))
+				->setArgument('action', 'user.edit')
+				->setArgument('userid', $user['userid'])
+				->getUrl()
+			))
+				->addClass(ZBX_STYLE_LINK_ALT)
+			: new CSpan(getUserFullname($user));
+
+		$users[] = $user->addClass($user_has_access ? ZBX_STYLE_GREEN : ZBX_STYLE_RED);
 	}
 
 	if (count($usergroup['users']) != $usergroup['user_cnt']) {
-		$users[] = ' &hellip;';
+		$users[] = [' ', HELLIP()];
 	}
 
 	$name = new CLink($usergroup['name'], (new CUrl('zabbix.php'))
@@ -185,11 +189,16 @@ foreach ($this->data['usergroups'] as $usergroup) {
 	$table->addRow([
 		new CCheckBox('usrgrpids['.$usergroup['usrgrpid'].']', $usergroup['usrgrpid']),
 		(new CCol($name))->addClass(ZBX_STYLE_NOWRAP),
-		[new CLink(_('Users'), (new CUrl('zabbix.php'))
-			->setArgument('action', 'user.list')
-			->setArgument('filter_usrgrpid', $usergroup['usrgrpid'])
-			->getUrl()
-		), CViewHelper::showNum($usergroup['user_cnt'])],
+		[
+			$data['allowed_ui_users']
+				? new CLink(_('Users'), (new CUrl('zabbix.php'))
+					->setArgument('action', 'user.list')
+					->setArgument('filter_usrgrpid', $usergroup['usrgrpid'])
+					->getUrl()
+				)
+				: _('Users'),
+			CViewHelper::showNum($usergroup['user_cnt'])
+		],
 		$users,
 		$gui_access,
 		$debug_mode,

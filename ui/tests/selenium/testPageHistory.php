@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,19 +53,22 @@ class testPageHistory extends CLegacyWebTest {
 		}
 		$this->zbxTestTextPresent($table_titles);
 
-		$this->zbxTestDropdownSelectWait('action', '500 latest values');
+		$view_as = $this->query('id:filter-view-as')->asDropdown()->one();
+		$view_as->select('500 latest values');
 		$this->zbxTestCheckTitle('History [refreshed every 30 sec.]');
 		$this->zbxTestCheckHeader('testPageHistory_CheckLayout: '.$item['name']);
 
 		$this->zbxTestClickWait('plaintext');
+		$this->page->waitUntilReady();
 		$this->zbxTestTextPresent('testPageHistory_CheckLayout: '.$item['name']);
 
 		$this->zbxTestOpen('history.php?action=showvalues&itemids[]='.$item['itemid']);
 		$this->zbxTestCheckTitle('History [refreshed every 30 sec.]');
-		$this->zbxTestDropdownSelectWait('action', 'Values');
+		$view_as->select('Values');
 		$this->zbxTestCheckHeader('testPageHistory_CheckLayout: '.$item['name']);
 
 		$this->zbxTestClickWait('plaintext');
+		$this->page->waitUntilReady();
 		$this->zbxTestTextPresent('testPageHistory_CheckLayout: '.$item['name']);
 	}
 }

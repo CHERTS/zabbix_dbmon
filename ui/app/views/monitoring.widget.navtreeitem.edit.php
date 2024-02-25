@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,13 +21,32 @@
 
 /**
  * @var CView $this
+ * @var $data
  */
 
 $form = (new CForm('post'))
 	->cleanItems()
-	->setId('widget_dialogue_form')
-	->setName('widget_dialogue_form')
-	->addItem((new CInput('submit', 'submit'))->addStyle('display: none;'));
+	->setId('widget-dialogue-form')
+	->setName('widget_dialogue_form');
+
+// Enable form submitting on Enter.
+$form->addItem((new CSubmitButton(null))->addClass(ZBX_STYLE_FORM_SUBMIT_HIDDEN));
+
+$multiselect = (new CMultiSelect([
+	'name' => 'sysmapid',
+	'object_name' => 'sysmaps',
+	'multiple' => false,
+	'data' => $data['sysmap'] ? [$data['sysmap']] : [],
+	'add_post_js' => false,
+	'popup' => [
+		'parameters' => [
+			'srctbl' => 'sysmaps',
+			'srcfld1' => 'sysmapid',
+			'dstfrm' => $form->getName(),
+			'dstfld1' => 'sysmapid'
+		]
+	]
+]))->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH);
 
 $form_list = (new CFormList())
 	->addRow(
@@ -37,27 +56,10 @@ $form_list = (new CFormList())
 			->setAttribute('autofocus', 'autofocus')
 			->setAriaRequired()
 	)
-	->addRow(_('Linked map'), [
-		new CVar('sysmapid', $data['sysmap']['sysmapid']),
-		(new CTextBox('sysmapname', $data['sysmap']['name'], true))
-			->setAttribute('onChange',
-				'javascript: if(jQuery("#'.$form->getName().' input[type=text]:first").val() === ""){'.
-					'jQuery("#widget_dialogue_form input[type=text]:first").val(this.value);}')
-			->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH),
-		(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-		(new CButton('select', _('Select')))
-			->addClass(ZBX_STYLE_BTN_GREY)
-			->onClick('return PopUp("popup.generic",'.
-				json_encode([
-					'srctbl' => 'sysmaps',
-					'srcfld1' => 'sysmapid',
-					'srcfld2' => 'name',
-					'dstfrm' => $form->getName(),
-					'dstfld1' => 'sysmapid',
-					'dstfld2' => 'sysmapname'
-				]).', null, this);'
-			)
-	]);
+	->addRow(
+		new CLabel(_('Linked map'), 'sysmapid_ms'),
+		$multiselect
+	);
 
 if ($data['depth'] >= WIDGET_NAVIGATION_TREE_MAX_DEPTH) {
 	$form_list->addRow(null, _('Cannot add submaps. Max depth reached.'));
@@ -69,10 +71,16 @@ else {
 	]);
 }
 
-$form->addItem($form_list);
+$form
+	->addItem($form_list)
+	->addItem(
+		(new CScriptTag('navtreeitem_edit_popup.init();'))->setOnDocumentReady()
+	);
 
 $output = [
-	'body' => $form->toString()
+	'body' => $form->toString(),
+	'script_inline' => $multiselect->getPostJs().
+		$this->readJsFile('monitoring.navtreeitem.edit.js.php')
 ];
 
 if (($messages = getMessages()) !== null) {

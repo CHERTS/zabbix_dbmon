@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,8 +26,10 @@ $fields = $data['dialogue']['fields'];
 
 $form = CWidgetHelper::createForm();
 
+$rf_rate_field = ($data['templateid'] === null) ? $fields['rf_rate'] : null;
+
 $form_list = CWidgetHelper::createFormList($data['dialogue']['name'], $data['dialogue']['type'],
-	$data['dialogue']['view_mode'], $data['known_widget_types'], $fields['rf_rate']
+	$data['dialogue']['view_mode'], $data['known_widget_types'], $rf_rate_field
 );
 
 $scripts = [];
@@ -35,10 +37,6 @@ $scripts = [];
 // Map widget reference.
 $field = $fields[CWidgetFieldReference::FIELD_NAME];
 $form->addItem((new CVar($field->getName(), $field->getValue()))->removeId());
-
-if ($field->getValue() === '') {
-	$scripts[] = $field->getJavascript('#'.$form->getAttribute('id'));
-}
 
 // Add dynamically created fields navtree.name.<N>, navtree.parent.<N>, navtree.order.<N> and navtree.sysmapid.<N>.
 $field = $fields['navtree'];

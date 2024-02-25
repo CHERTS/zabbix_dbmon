@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,15 +23,20 @@
  * Controller to update dashboard
  */
 class CControllerDashboardShareUpdate extends CController {
-	const EMPTY_USER = 'empty_user';
-	const EMPTY_GROUP = 'empty_group';
+
+	public const EMPTY_USER = 'empty_user';
+	public const EMPTY_GROUP = 'empty_group';
+
+	protected function init() {
+		$this->setPostContentType(self::POST_CONTENT_TYPE_JSON);
+	}
 
 	protected function checkInput() {
 		$fields = [
-			'dashboardid' => 'required|db dashboard.dashboardid',
-			'private' => 'db dashboard.private|in 0,1',
-			'users' => 'array',
-			'userGroups' => 'array'
+			'dashboardid' =>	'required|db dashboard.dashboardid',
+			'private' =>		'db dashboard.private|in 0,1',
+			'users' =>			'array',
+			'userGroups' =>		'array'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -46,13 +51,14 @@ class CControllerDashboardShareUpdate extends CController {
 	}
 
 	protected function checkPermissions() {
-		return true;
+		return $this->checkAccess(CRoleHelper::UI_MONITORING_DASHBOARD)
+				&& $this->checkAccess(CRoleHelper::ACTIONS_EDIT_DASHBOARDS);
 	}
 
 	protected function doAction() {
 		$editable_dashboard = (bool) API::Dashboard()->get([
 			'output' => [],
-			'dashboardids' => $this->getInput('dashboardid'),
+			'dashboardids' => [$this->getInput('dashboardid')],
 			'editable' => true
 		]);
 
@@ -93,9 +99,7 @@ class CControllerDashboardShareUpdate extends CController {
 			$result = false;
 		}
 
-		$response = [
-			'result' => $result
-		];
+		$response = [];
 
 		if (($messages = getMessages($result, $msg_box_title)) !== null) {
 			$response[$result ? 'messages' : 'errors'] = $messages->toString();

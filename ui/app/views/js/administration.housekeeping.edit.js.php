@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,55 +22,67 @@
 /**
  * @var CView $this
  */
-
-$schema = DB::getSchema('config');
 ?>
 
 <script type="text/javascript">
-	jQuery(function($) {
-		var $form = $('form#housekeeping');
+	$(document).ready(function() {
+		const $form = jQuery('#housekeeping-form');
 
-		$form.on('submit', function() {
-			$form.trimValues(['#hk_events_trigger', '#hk_events_internal', '#hk_events_discovery', '#hk_events_autoreg',
-				'#hk_services', '#hk_audit', '#hk_sessions', '#hk_history', '#hk_trends'
+		$form.on('submit', () => {
+			$form.trimValues(['#hk_events_trigger', '#hk_events_service', '#hk_events_internal', '#hk_events_discovery',
+				'#hk_events_autoreg', '#hk_services', '#hk_sessions', '#hk_history', '#hk_trends'
 			]);
 		});
 
-		jQuery('#hk_events_mode').change(function() {
-			jQuery('#hk_events_trigger').prop('disabled', !this.checked);
-			jQuery('#hk_events_internal').prop('disabled', !this.checked);
-			jQuery('#hk_events_discovery').prop('disabled', !this.checked);
-			jQuery('#hk_events_autoreg').prop('disabled', !this.checked);
+		$('#hk_events_mode').change(function() {
+			$('#hk_events_trigger').prop('disabled', !this.checked);
+			$('#hk_events_service').prop('disabled', !this.checked);
+			$('#hk_events_internal').prop('disabled', !this.checked);
+			$('#hk_events_discovery').prop('disabled', !this.checked);
+			$('#hk_events_autoreg').prop('disabled', !this.checked);
 		});
 
-		jQuery('#hk_services_mode').change(function() {
-			jQuery('#hk_services').prop('disabled', !this.checked);
+		$('#hk_services_mode').change(function() {
+			$('#hk_services').prop('disabled', !this.checked);
 		});
 
-		jQuery('#hk_audit_mode').change(function() {
-			jQuery('#hk_audit').prop('disabled', !this.checked);
+		$('#hk_sessions_mode').change(function() {
+			$('#hk_sessions').prop('disabled', !this.checked);
 		});
 
-		jQuery('#hk_sessions_mode').change(function() {
-			jQuery('#hk_sessions').prop('disabled', !this.checked);
+		$('#hk_history_global').change(function() {
+			$('#hk_history').prop('disabled', !this.checked);
 		});
 
-		jQuery('#hk_history_global').change(function() {
-			jQuery('#hk_history').prop('disabled', !this.checked);
+		$('#hk_trends_global').change(function() {
+			$('#hk_trends').prop('disabled', !this.checked);
 		});
 
-		jQuery('#hk_trends_global').change(function() {
-			jQuery('#hk_trends').prop('disabled', !this.checked);
+		$('#compression_status').change(function() {
+			$('#compress_older').prop('disabled', !this.checked);
 		});
 
-		jQuery('#compression_status').change(function() {
-			jQuery('#compress_older').prop('disabled', !this.checked);
-		});
+		$('#hk_history_mode, #hk_history_global')
+			.change(function() {
+				$('.js-hk-history-warning').toggle(document.getElementById('hk_history_mode').checked
+					&& !document.getElementById('hk_history_global').checked
+				)
+			})
+			.trigger('change');
 
-		jQuery("#resetDefaults").click(function() {
+		$('#hk_trends_mode, #hk_trends_global')
+			.change(function() {
+				$('.js-hk-trends-warning').toggle(document.getElementById('hk_trends_mode').checked
+					&& !document.getElementById('hk_trends_global').checked
+				)
+			})
+			.trigger('change');
+
+		$("#resetDefaults").click(function() {
 			overlayDialogue({
 				'title': <?= json_encode(_('Reset confirmation')) ?>,
-				'content': jQuery('<span>').text(<?= json_encode(_('Reset all fields to default values?')) ?>),
+				'class': 'position-middle',
+				'content': $('<span>').text(<?= json_encode(_('Reset all fields to default values?')) ?>),
 				'buttons': [
 					{
 						'title': <?= json_encode(_('Cancel')) ?>,
@@ -82,74 +94,65 @@ $schema = DB::getSchema('config');
 						'title': <?= json_encode(_('Reset defaults')) ?>,
 						'focused': true,
 						'action': function() {
+							$('main')
+								.prev('.msg-bad')
+								.remove();
+
 							// events and alerts
-							jQuery('#hk_events_mode')
+							$('#hk_events_mode')
 								.prop('checked',
-									<?= ($schema['fields']['hk_events_mode']['default'] == 1) ? 'true' : 'false' ?>
+									<?= (DB::getDefault('config', 'hk_events_mode') == 1) ? 'true' : 'false' ?>
 								)
 								.change();
-							jQuery('#hk_events_trigger')
-								.val("<?= $schema['fields']['hk_events_trigger']['default'] ?>");
-							jQuery('#hk_events_internal')
-								.val("<?= $schema['fields']['hk_events_internal']['default'] ?>");
-							jQuery('#hk_events_discovery')
-								.val("<?= $schema['fields']['hk_events_discovery']['default'] ?>");
-							jQuery('#hk_events_autoreg')
-								.val("<?= $schema['fields']['hk_events_autoreg']['default'] ?>");
-
-							// Services
-							jQuery('#hk_services_mode')
+							$('#hk_events_trigger').val("<?= DB::getDefault('config', 'hk_events_trigger') ?>");
+							$('#hk_events_service').val("<?= DB::getDefault('config', 'hk_events_service') ?>");
+							$('#hk_events_internal').val("<?= DB::getDefault('config', 'hk_events_internal') ?>");
+							$('#hk_events_discovery').val("<?= DB::getDefault('config', 'hk_events_discovery') ?>");
+							$('#hk_events_autoreg').val("<?= DB::getDefault('config', 'hk_events_autoreg') ?>");
+							$('#hk_services_mode')
 								.prop('checked',
-									<?= ($schema['fields']['hk_services_mode']['default'] == 1) ? 'true' : 'false' ?>
+									<?= (DB::getDefault('config', 'hk_services_mode') == 1) ? 'true' : 'false' ?>
 								)
 								.change();
-							jQuery('#hk_services').val("<?= $schema['fields']['hk_services']['default'] ?>");
-
-							// audit
-							jQuery('#hk_audit_mode')
-								.prop('checked',
-									<?= ($schema['fields']['hk_audit_mode']['default'] == 1) ? 'true' : 'false' ?>
-								)
-								.change();
-							jQuery('#hk_audit').val("<?= $schema['fields']['hk_audit']['default'] ?>");
+							$('#hk_services').val("<?= DB::getDefault('config', 'hk_services') ?>");
 
 							// user sessions
-							jQuery('#hk_sessions_mode')
+							$('#hk_sessions_mode')
 								.prop('checked',
-									<?= ($schema['fields']['hk_sessions_mode']['default'] == 1) ? 'true' : 'false' ?>
+									<?= (DB::getDefault('config', 'hk_sessions_mode') == 1) ? 'true' : 'false' ?>
 								)
 								.change();
-							jQuery('#hk_sessions').val("<?= $schema['fields']['hk_sessions']['default'] ?>");
+							$('#hk_sessions').val("<?= DB::getDefault('config', 'hk_sessions') ?>");
 
 							// history
-							jQuery('#hk_history_mode').prop('checked',
-								<?= ($schema['fields']['hk_history_mode']['default'] == 1) ? 'true' : 'false' ?>
+							$('#hk_history_mode').prop('checked',
+								<?= (DB::getDefault('config', 'hk_history_mode') == 1) ? 'true' : 'false' ?>
 							);
-							jQuery('#hk_history_global')
+							$('#hk_history_global')
 								.prop('checked',
-									<?= ($schema['fields']['hk_history_global']['default'] == 1) ? 'true' : 'false' ?>
+									<?= (DB::getDefault('config', 'hk_history_global') == 1) ? 'true' : 'false' ?>
 								)
 								.change();
-							jQuery('#hk_history').val("<?= $schema['fields']['hk_history']['default'] ?>");
+							$('#hk_history').val("<?= DB::getDefault('config', 'hk_history') ?>");
 
 							// trends
-							jQuery('#hk_trends_mode').prop('checked',
-								<?= ($schema['fields']['hk_trends_mode']['default'] == 1) ? 'true' : 'false' ?>
+							$('#hk_trends_mode').prop('checked',
+								<?= (DB::getDefault('config', 'hk_trends_mode') == 1) ? 'true' : 'false' ?>
 							);
-							jQuery('#hk_trends_global')
+							$('#hk_trends_global')
 								.prop('checked',
-									<?= ($schema['fields']['hk_trends_global']['default'] == 1) ? 'true' : 'false' ?>
+									<?= (DB::getDefault('config', 'hk_trends_global') == 1) ? 'true' : 'false' ?>
 								)
 								.change();
-							jQuery('#hk_trends').val("<?= $schema['fields']['hk_trends']['default'] ?>");
+							$('#hk_trends').val("<?= DB::getDefault('config', 'hk_trends') ?>");
 
 							// history and trends compression
-							jQuery('#compression_status')
+							$('#compression_status')
 								.prop('checked',
-									<?= ($schema['fields']['compression_status']['default'] == 1) ? 'true' : 'false' ?>
+									<?= (DB::getDefault('config', 'compression_status') == 1) ? 'true' : 'false' ?>
 								)
 								.change();
-							jQuery('#compress_older').val("<?= $schema['fields']['compress_older']['default'] ?>");
+							$('#compress_older').val("<?= DB::getDefault('config', 'compress_older') ?>");
 						}
 					}
 				]

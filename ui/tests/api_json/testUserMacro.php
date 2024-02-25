@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ class testUserMacro extends CAPITest {
 				'hostmacro' => [
 					'macro' => '{$ADD_1}',
 					'value' => 'test',
+					'type' => '0',
 					'hostid' => '90020',
 					'description' => 'text'
 				],
@@ -40,9 +41,51 @@ class testUserMacro extends CAPITest {
 			],
 			[
 				'hostmacro' => [
+					[
+						'macro' => '{$MACRO}',
+						'value' => '',
+						'hostid' => 90020
+					],
+					[
+						'macro' => '{$MACRO}',
+						'value' => '',
+						'hostid' => 90020
+					]
+				],
+				'expected_error' => 'Invalid parameter "/2": value (hostid, macro)=(90020, {$MACRO}) already exists.'
+			],
+			[
+				'hostmacro' => [
+					[
+						'macro' => '{$MACRO: /var}',
+						'value' => '',
+						'hostid' => 90020
+					],
+					[
+						'macro' => '{$MACRO: /var}',
+						'value' => '',
+						'hostid' => 90021
+					],
+					[
+						'macro' => '{$MACRO: "/tmp"}',
+						'value' => '',
+						'hostid' => 90020
+					],
+					[
+						'macro' => '{$MACRO: "/var"}',
+						'value' => '',
+						'hostid' => 90020
+					]
+				],
+				'expected_error' => 'Invalid parameter "/4": value (hostid, macro)=(90020, {$MACRO: "/var"}) already exists.'
+			],
+			[
+				'hostmacro' => [
 					'macro' => '{$ADD_2}',
 					'value' => 'test',
-					'hostid' => '90020'
+					'type' => '0',
+					'hostid' => '90020',
+					'description' => ''
 				],
 				'expected_error' => null,
 				'expect_db_row' => [
@@ -52,6 +95,42 @@ class testUserMacro extends CAPITest {
 					'hostid' => '90020',
 					'description' => ''
 				]
+			],
+			[
+				'hostmacro' => [
+					'macro' => '{$VAULT}',
+					'value' => 'a/b:c',
+					'type' => '2',
+					'hostid' => '90020'
+				],
+				'expected_error' => null
+			],
+			[
+				'hostmacro' => [
+					'macro' => '{$VAULT: "context"}',
+					'value' => 'a/b:c',
+					'type' => '2',
+					'hostid' => '90020'
+				],
+				'expected_error' => null
+			],
+			[
+				'hostmacro' => [
+					'macro' => '{$VAULT: "empty"}',
+					'value' => '',
+					'type' => '2',
+					'hostid' => '90020'
+				],
+				'expected_error' => 'Invalid parameter "/1/value": cannot be empty.'
+			],
+			[
+				'hostmacro' => [
+					'macro' => '{$VAULT: "invalid"}',
+					'value' => '/',
+					'type' => '2',
+					'hostid' => '90020'
+				],
+				'expected_error' => 'Invalid parameter "/1/value": incorrect syntax near "/".'
 			]
 		];
 	}
@@ -68,6 +147,7 @@ class testUserMacro extends CAPITest {
 				$dbRow = DBFetch($dbResult);
 				$this->assertEquals($dbRow['macro'], $hostmacro['macro']);
 				$this->assertEquals($dbRow['value'], $hostmacro['value']);
+				$this->assertEquals($dbRow['type'], $hostmacro['type']);
 
 				if (array_key_exists('description', $hostmacro)) {
 					$this->assertEquals($dbRow['description'], $hostmacro['description']);
@@ -88,9 +168,9 @@ class testUserMacro extends CAPITest {
 				'globalmacro' => [
 					'macro' => '{$HOSTID}',
 					'value' => 'test',
-					'hostid ' => '100084'
+					'hostid' => '100084'
 				],
-				'expected_error' => 'Invalid parameter "/1": unexpected parameter "hostid ".'
+				'expected_error' => 'Invalid parameter "/1": unexpected parameter "hostid".'
 			],
 			// Check macro.
 			[
@@ -151,6 +231,16 @@ class testUserMacro extends CAPITest {
 					[
 						'macro' => '{$MACRO:"A"}',
 						'value' => 'test'
+					]
+				],
+				'expected_error' => null
+			],
+			[
+				'globalmacro' => [
+					[
+						'macro' => '{$VAULT}',
+						'value' => 'a/b:c',
+						'type' => '2'
 					]
 				],
 				'expected_error' => null
@@ -231,63 +321,63 @@ class testUserMacro extends CAPITest {
 					'macro' => 'test',
 					'value' => 'test'
 				],
-				'expected_error' => 'Invalid parameter "/1/macro": a user macro is expected.'
+				'expected_error' => 'Invalid parameter "/1/macro": incorrect syntax near "test".'
 			],
 			[
 				'globalmacro' => [
 					'macro' => '{$globalmacro}',
 					'value' => 'test'
 				],
-				'expected_error' => 'Invalid parameter "/1/macro": a user macro is expected.'
+				'expected_error' => 'Invalid parameter "/1/macro": incorrect syntax near "globalmacro}".'
 			],
 			[
 				'globalmacro' => [
 					'macro' => '☺',
 					'value' => 'test'
 				],
-				'expected_error' => 'Invalid parameter "/1/macro": a user macro is expected.'
+				'expected_error' => 'Invalid parameter "/1/macro": incorrect syntax near "☺".'
 			],
 			[
 				'globalmacro' => [
 					'macro' => '{GlOBALMACRO}',
 					'value' => 'test'
 				],
-				'expected_error' => 'Invalid parameter "/1/macro": a user macro is expected.'
+				'expected_error' => 'Invalid parameter "/1/macro": incorrect syntax near "GlOBALMACRO}".'
 			],
 			[
 				'globalmacro' => [
 					'macro' => '{$GlOBALMACRO',
 					'value' => 'test'
 				],
-				'expected_error' => 'Invalid parameter "/1/macro": a user macro is expected.'
+				'expected_error' => 'Invalid parameter "/1/macro": incorrect syntax near "lOBALMACRO".'
 			],
 			[
 				'globalmacro' => [
 					'macro' => '{$GlOBALMACRO}}',
 					'value' => 'test'
 				],
-				'expected_error' => 'Invalid parameter "/1/macro": a user macro is expected.'
+				'expected_error' => 'Invalid parameter "/1/macro": incorrect syntax near "lOBALMACRO}}".'
 			],
 			[
 				'globalmacro' => [
 					'macro' => '{{$GlOBALMACRO}}',
 					'value' => 'test'
 				],
-				'expected_error' => 'Invalid parameter "/1/macro": a user macro is expected.'
+				'expected_error' => 'Invalid parameter "/1/macro": incorrect syntax near "{$GlOBALMACRO}}".'
 			],
 			[
 				'globalmacro' => [
 					'macro' => '{$УТФ8}',
 					'value' => 'test'
 				],
-				'expected_error' => 'Invalid parameter "/1/macro": a user macro is expected.'
+				'expected_error' => 'Invalid parameter "/1/macro": incorrect syntax near "УТФ8}".'
 			],
 			[
 				'globalmacro' => [
 					'macro' => '{$!@#$%^&*()-=<>}',
 					'value' => 'test'
 				],
-				'expected_error' => 'Invalid parameter "/1/macro": a user macro is expected.'
+				'expected_error' => 'Invalid parameter "/1/macro": incorrect syntax near "!@#$%^&*()-=<>}".'
 			],
 			[
 				'globalmacro' => [
@@ -299,9 +389,39 @@ class testUserMacro extends CAPITest {
 			[
 				'globalmacro' => [
 					'macro' => '{$LONG_VALUE}',
-					'value' => 'Aliquam erat volutpat. Suspendisse lorem libero, efficitur a ornare non, interdum et nulla. Maecenas at massa at lacus aliquam pretium sit amet vel ligula. In ultricies dignissim sapien sit amet eleifend. Nullam consectetur sem eget arcu interdum, at so256'
+					'value' => str_repeat('a', 2049)
 				],
 				'expected_error' => 'Invalid parameter "/1/value": value is too long.'
+			],
+			[
+				'globalmacro' => [
+					'macro' => '{$GLOBALMACRO_WITH_LONG_2_BYTE_CHARACTER_VALUE}',
+					'value' => str_repeat('ö', 2049)
+				],
+				'expected_error' => 'Invalid parameter "/1/value": value is too long.'
+			],
+			[
+				'globalmacro' => [
+					'macro' => '{$GLOBALMACRO_WITH_LONG_3_BYTE_CHARACTER_VALUE}',
+					'value' => str_repeat('坏', 2049)
+				],
+				'expected_error' => 'Invalid parameter "/1/value": value is too long.'
+			],
+			[
+				'globalmacro' => [
+					'macro' => '{$VAULT: "empty"}',
+					'value' => '',
+					'type' => '2'
+				],
+				'expected_error' => 'Invalid parameter "/1/value": cannot be empty.'
+			],
+			[
+				'globalmacro' => [
+					'macro' => '{$VAULT: "cute"}',
+					'value' => ':)',
+					'type' => '2'
+				],
+				'expected_error' => 'Invalid parameter "/1/value": incorrect syntax near ":)".'
 			]
 		];
 	}
@@ -608,7 +728,7 @@ class testUserMacro extends CAPITest {
 					'macro' => '{$MACRO_ADMIN}',
 					'value' => 'admin'
 				],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "usermacro.createglobal".'
 			],
 			[
 				'method' => 'usermacro.updateglobal',
@@ -617,13 +737,13 @@ class testUserMacro extends CAPITest {
 					'globalmacroid' => '13',
 					'macro' => '{$MACRO_UPDATE_ADMIN}'
 				],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "usermacro.updateglobal".'
 			],
 			[
 				'method' => 'usermacro.deleteglobal',
 				'user' => ['user' => 'zabbix-admin', 'password' => 'zabbix'],
 				'globalmacro' => ['13'],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "usermacro.deleteglobal".'
 			],
 			// Check zabbix user permissions to create, update and delete global macro.
 			[
@@ -633,7 +753,7 @@ class testUserMacro extends CAPITest {
 					'macro' => '{$MACRO_USER}',
 					'value' => 'USER'
 				],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "usermacro.createglobal".'
 			],
 			[
 				'method' => 'usermacro.updateglobal',
@@ -642,13 +762,13 @@ class testUserMacro extends CAPITest {
 					'globalmacroid' => '14',
 					'macro' => '{$MACRO_UPDATE_USER}'
 				],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "usermacro.updateglobal".'
 			],
 			[
 				'method' => 'usermacro.deleteglobal',
 				'user' => ['user' => 'zabbix-user', 'password' => 'zabbix'],
 				'globalmacro' => ['14'],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "usermacro.deleteglobal".'
 			],
 			// Check guset permissions to create, update and delete global macro.
 			[
@@ -658,7 +778,7 @@ class testUserMacro extends CAPITest {
 					'macro' => '{$MACRO_GUEST}',
 					'value' => 'GUEST'
 				],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "usermacro.createglobal".'
 			],
 			[
 				'method' => 'usermacro.updateglobal',
@@ -667,13 +787,13 @@ class testUserMacro extends CAPITest {
 					'globalmacroid' => '14',
 					'macro' => '{$MACRO_UPDATE_GUEST}'
 				],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "usermacro.updateglobal".'
 			],
 			[
 				'method' => 'usermacro.deleteglobal',
 				'user' => ['user' => 'guest', 'password' => ''],
 				'globalmacro' => ['14'],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "usermacro.deleteglobal".'
 			]
 		];
 	}

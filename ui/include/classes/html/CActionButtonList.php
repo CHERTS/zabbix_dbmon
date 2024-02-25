@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,50 +62,56 @@ class CActionButtonList extends CObject {
 	 * @param string       $buttons_data[]['confirm']   Confirmation text (optional).
 	 * @param string       $buttons_data[]['redirect']  Redirect URL (optional).
 	 * @param bool         $buttons_data[]['disabled']  Set button state disabled (optional).
+	 * @param CTag         $buttons_data[]['content']   A HTML tag. For example a CButton wrapped in CList object.
 	 * @param string|null  $name_prefix                 Prefix for sessionStorage used for storing currently selected
 	 *                                                  checkboxes.
 	 */
 	function __construct($action_name, $checkboxes_name, array $buttons_data, $name_prefix = null) {
 		$this->checkboxes_name = $checkboxes_name;
-		$this->name_prefix = $name_prefix ? $name_prefix : null;
+		$this->name_prefix = $name_prefix;
 
 		foreach ($buttons_data as $action => $button_data) {
-			$button = (new CSubmit($action_name, $button_data['name']))
-				->addClass(ZBX_STYLE_BTN_ALT)
-				->removeAttribute('id');
-
-			if (array_key_exists('redirect', $button_data)) {
-				$button
-					// Removing parameters not to conflict with the redirecting URL.
-					->removeAttribute('name')
-					->removeAttribute('value')
-					->onClick('var $_form = jQuery(this).closest("form");'.
-						// Save the original form action.
-						'if (!$_form.data("action")) {'.
-							'$_form.data("action", $_form.attr("action"));'.
-						'}'.
-						'$_form.attr("action", '.json_encode($button_data['redirect']).');'
-					);
+			if (array_key_exists('content', $button_data)) {
+				$button = $button_data['content'];
 			}
 			else {
-				$button
-					->setAttribute('value', $action)
-					->onClick('var $_form = jQuery(this).closest("form");'.
-						// Restore the original form action, if previously saved.
-						'if ($_form.data("action")) {'.
-							'$_form.attr("action", $_form.data("action"));'.
-						'}'
-					);
-			}
+				$button = (new CSubmit($action_name, $button_data['name']))
+					->addClass(ZBX_STYLE_BTN_ALT)
+					->removeAttribute('id');
 
-			if (array_key_exists('disabled', $button_data)) {
-				$button
-					->setEnabled(!$button_data['disabled'])
-					->setAttribute('data-disabled', $button_data['disabled']);
-			}
+				if (array_key_exists('redirect', $button_data)) {
+					$button
+						// Removing parameters not to conflict with the redirecting URL.
+						->removeAttribute('name')
+						->removeAttribute('value')
+						->onClick('var $_form = jQuery(this).closest("form");'.
+							// Save the original form action.
+							'if (!$_form.data("action")) {'.
+								'$_form.data("action", $_form.attr("action"));'.
+							'}'.
+							'$_form.attr("action", '.json_encode($button_data['redirect']).');'
+						);
+				}
+				else {
+					$button
+						->setAttribute('value', $action)
+						->onClick('var $_form = jQuery(this).closest("form");'.
+							// Restore the original form action, if previously saved.
+							'if ($_form.data("action")) {'.
+								'$_form.attr("action", $_form.data("action"));'.
+							'}'
+						);
+				}
 
-			if (array_key_exists('confirm', $button_data)) {
-				$button->setAttribute('confirm', $button_data['confirm']);
+				if (array_key_exists('disabled', $button_data)) {
+					$button
+						->setEnabled(!$button_data['disabled'])
+						->setAttribute('data-disabled', $button_data['disabled']);
+				}
+
+				if (array_key_exists('confirm', $button_data)) {
+					$button->setAttribute('confirm', $button_data['confirm']);
+				}
 			}
 
 			$this->buttons[$action] = $button;

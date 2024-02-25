@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,8 +57,10 @@ int	zbx_default_int_compare_func(const void *d1, const void *d2);
 int	zbx_default_uint64_compare_func(const void *d1, const void *d2);
 int	zbx_default_uint64_ptr_compare_func(const void *d1, const void *d2);
 int	zbx_default_str_compare_func(const void *d1, const void *d2);
+int	zbx_natural_str_compare_func(const void *d1, const void *d2);
 int	zbx_default_ptr_compare_func(const void *d1, const void *d2);
 int	zbx_default_uint64_pair_compare_func(const void *d1, const void *d2);
+int	zbx_default_dbl_compare_func(const void *d1, const void *d2);
 
 #define ZBX_DEFAULT_INT_COMPARE_FUNC		zbx_default_int_compare_func
 #define ZBX_DEFAULT_UINT64_COMPARE_FUNC		zbx_default_uint64_compare_func
@@ -66,6 +68,7 @@ int	zbx_default_uint64_pair_compare_func(const void *d1, const void *d2);
 #define ZBX_DEFAULT_STR_COMPARE_FUNC		zbx_default_str_compare_func
 #define ZBX_DEFAULT_PTR_COMPARE_FUNC		zbx_default_ptr_compare_func
 #define ZBX_DEFAULT_UINT64_PAIR_COMPARE_FUNC	zbx_default_uint64_pair_compare_func
+#define ZBX_DEFAULT_DBL_COMPARE_FUNC		zbx_default_dbl_compare_func
 
 typedef void *(*zbx_mem_malloc_func_t)(void *old, size_t size);
 typedef void *(*zbx_mem_realloc_func_t)(void *old, size_t size);
@@ -87,6 +90,16 @@ typedef void (*zbx_clean_func_t)(void *data);
 		return -1;		\
 	if ((a) > (b))			\
 		return +1
+
+#define ZBX_RETURN_IF_DBL_NOT_EQUAL(a, b)	\
+						\
+	if (FAIL == zbx_double_compare(a, b))	\
+	{					\
+		if ((a) < (b))			\
+			return -1;		\
+		else				\
+			return +1;		\
+	}
 
 int	is_prime(int n);
 int	next_prime(int n);
@@ -330,6 +343,7 @@ ZBX_PTR_VECTOR_DECL(str, char *)
 ZBX_PTR_VECTOR_DECL(ptr, void *)
 ZBX_VECTOR_DECL(ptr_pair, zbx_ptr_pair_t)
 ZBX_VECTOR_DECL(uint64_pair, zbx_uint64_pair_t)
+ZBX_VECTOR_DECL(dbl, double)
 
 /* this function is only for use with zbx_vector_XXX_clear_ext() */
 /* and only if the vector does not contain nested allocations */
@@ -345,6 +359,8 @@ void	udiv128_64(zbx_uint128_t *result, const zbx_uint128_t *dividend, zbx_uint64
 void	umul64_64(zbx_uint128_t *result, zbx_uint64_t value, zbx_uint64_t factor);
 
 unsigned int	zbx_isqrt32(unsigned int value);
+
+char	*zbx_gen_uuid4(const char *seed);
 
 /* expression evaluation */
 
@@ -458,5 +474,6 @@ int	zbx_list_iterator_isset(const zbx_list_iterator_t *iterator);
 void	zbx_list_iterator_update(zbx_list_iterator_t *iterator);
 void	*zbx_list_iterator_remove_next(zbx_list_iterator_t *iterator);
 
+ZBX_PTR_VECTOR_DECL(tags, zbx_tag_t*)
 
 #endif

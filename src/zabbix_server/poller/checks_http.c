@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@
 #include "zbxhttp.h"
 #include "zbxjson.h"
 #include "log.h"
+#include "dbcache.h"
+
 #ifdef HAVE_LIBCURL
 
 #define HTTP_REQUEST_GET	0
@@ -30,14 +32,6 @@
 
 #define HTTP_STORE_RAW		0
 #define HTTP_STORE_JSON		1
-
-typedef struct
-{
-	char	*data;
-	size_t	allocated;
-	size_t	offset;
-}
-zbx_http_response_t;
 
 static const char	*zbx_request_string(int result)
 {
@@ -54,29 +48,6 @@ static const char	*zbx_request_string(int result)
 		default:
 			return "unknown";
 	}
-}
-
-static size_t	curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
-{
-	size_t			r_size = size * nmemb;
-	zbx_http_response_t	*response;
-
-	response = (zbx_http_response_t*)userdata;
-
-	if (ZBX_MAX_RECV_DATA_SIZE < response->offset + r_size)
-		return 0;
-
-	zbx_str_memcpy_alloc(&response->data, &response->allocated, &response->offset, (const char *)ptr, r_size);
-
-	return r_size;
-}
-
-static size_t	curl_ignore_cb(void *ptr, size_t size, size_t nmemb, void *userdata)
-{
-	ZBX_UNUSED(ptr);
-	ZBX_UNUSED(userdata);
-
-	return size * nmemb;
 }
 
 static int	http_prepare_request(CURL *easyhandle, const char *posts, unsigned char request_method, char **error)
@@ -170,7 +141,7 @@ static void	http_output_json(unsigned char retrieve_mode, char **buffer, zbx_htt
 	if (retrieve_mode != ZBX_RETRIEVE_MODE_CONTENT)
 		zbx_json_addobject(&json, "header");
 
-	while (NULL != (line = zbx_http_get_header(&headers)))
+	while (NULL != (line = zbx_http_parse_header(&headers)))
 	{
 		if (0 == json_content &&
 				0 == zbx_strncasecmp(line, "Content-Type:", ZBX_CONST_STRLEN("Content-Type:")) &&
@@ -220,7 +191,7 @@ int	get_value_http(const DC_ITEM *item, AGENT_RESULT *result)
 	struct curl_slist	*headers_slist = NULL;
 	struct zbx_json		json;
 	zbx_http_response_t	body = {0}, header = {0};
-	size_t			(*curl_body_cb)(void *ptr, size_t size, size_t nmemb, void *userdata);
+	zbx_curl_cb_t		curl_body_cb;
 	char			application_json[] = {"Content-Type: application/json"};
 	char			application_xml[] = {"Content-Type: application/xml"};
 
@@ -238,10 +209,10 @@ int	get_value_http(const DC_ITEM *item, AGENT_RESULT *result)
 	{
 		case ZBX_RETRIEVE_MODE_CONTENT:
 		case ZBX_RETRIEVE_MODE_BOTH:
-			curl_body_cb = curl_write_cb;
+			curl_body_cb = zbx_curl_write_cb;
 			break;
 		case ZBX_RETRIEVE_MODE_HEADERS:
-			curl_body_cb = curl_ignore_cb;
+			curl_body_cb = zbx_curl_ignore_cb;
 			break;
 		default:
 			THIS_SHOULD_NEVER_HAPPEN;
@@ -249,35 +220,10 @@ int	get_value_http(const DC_ITEM *item, AGENT_RESULT *result)
 			goto clean;
 	}
 
-	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, CURLOPT_HEADERFUNCTION, curl_write_cb)))
+	if (SUCCEED != zbx_http_prepare_callbacks(easyhandle, &header, &body, zbx_curl_write_cb, curl_body_cb, errbuf,
+			&error))
 	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot set header function: %s",
-				curl_easy_strerror(err)));
-		goto clean;
-	}
-
-	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, CURLOPT_HEADERDATA, &header)))
-	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot set header callback: %s",
-				curl_easy_strerror(err)));
-		goto clean;
-	}
-
-	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, CURLOPT_WRITEFUNCTION, curl_body_cb)))
-	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot set write function: %s", curl_easy_strerror(err)));
-		goto clean;
-	}
-
-	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, CURLOPT_WRITEDATA, &body)))
-	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot set write callback: %s", curl_easy_strerror(err)));
-		goto clean;
-	}
-
-	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, CURLOPT_ERRORBUFFER, errbuf)))
-	{
-		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot set error buffer: %s", curl_easy_strerror(err)));
+		SET_MSG_RESULT(result, error);
 		goto clean;
 	}
 
@@ -334,7 +280,7 @@ int	get_value_http(const DC_ITEM *item, AGENT_RESULT *result)
 	}
 
 	headers = item->headers;
-	while (NULL != (line = zbx_http_get_header(&headers)))
+	while (NULL != (line = zbx_http_parse_header(&headers)))
 	{
 		headers_slist = curl_slist_append(headers_slist, line);
 
@@ -360,7 +306,12 @@ int	get_value_http(const DC_ITEM *item, AGENT_RESULT *result)
 
 #if LIBCURL_VERSION_NUM >= 0x071304
 	/* CURLOPT_PROTOCOLS is supported starting with version 7.19.4 (0x071304) */
+	/* CURLOPT_PROTOCOLS was deprecated in favor of CURLOPT_PROTOCOLS_STR starting with version 7.85.0 (0x075500) */
+#	if LIBCURL_VERSION_NUM >= 0x075500
+	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, CURLOPT_PROTOCOLS_STR, "HTTP,HTTPS")))
+#	else
 	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS)))
+#	endif
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot set allowed protocols: %s", curl_easy_strerror(err)));
 		goto clean;
@@ -377,6 +328,13 @@ int	get_value_http(const DC_ITEM *item, AGENT_RESULT *result)
 	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, ZBX_CURLOPT_ACCEPT_ENCODING, "")))
 	{
 		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot set cURL encoding option: %s",
+				curl_easy_strerror(err)));
+		goto clean;
+	}
+
+	if (CURLE_OK != (err = curl_easy_setopt(easyhandle, CURLOPT_COOKIEFILE, "")))
+	{
+		SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Cannot enable cURL cookie engine: %s",
 				curl_easy_strerror(err)));
 		goto clean;
 	}
@@ -425,11 +383,7 @@ int	get_value_http(const DC_ITEM *item, AGENT_RESULT *result)
 				goto clean;
 			}
 
-			if (FAIL == zbx_is_utf8(body.data))
-			{
-				SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Server returned invalid UTF-8 sequence"));
-				goto clean;
-			}
+			zbx_http_convert_to_utf8(easyhandle, &body.data, &body.offset, &body.allocated);
 
 			if (HTTP_STORE_JSON == item->output_format)
 			{
@@ -443,18 +397,13 @@ int	get_value_http(const DC_ITEM *item, AGENT_RESULT *result)
 			}
 			break;
 		case ZBX_RETRIEVE_MODE_HEADERS:
-			if (FAIL == zbx_is_utf8(header.data))
-			{
-				SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Server returned invalid UTF-8 sequence"));
-				goto clean;
-			}
-
+			zbx_replace_invalid_utf8(header.data);
 			if (HTTP_STORE_JSON == item->output_format)
 			{
 				zbx_json_init(&json, ZBX_JSON_STAT_BUF_LEN);
 				zbx_json_addobject(&json, "header");
 				headers = header.data;
-				while (NULL != (line = zbx_http_get_header(&headers)))
+				while (NULL != (line = zbx_http_parse_header(&headers)))
 				{
 					http_add_json_header(&json, line);
 					zbx_free(line);
@@ -469,11 +418,15 @@ int	get_value_http(const DC_ITEM *item, AGENT_RESULT *result)
 			}
 			break;
 		case ZBX_RETRIEVE_MODE_BOTH:
-			if (FAIL == zbx_is_utf8(header.data) || (NULL != body.data && FAIL == zbx_is_utf8(body.data)))
+			zbx_replace_invalid_utf8(header.data);
+
+			if (NULL == body.data)
 			{
-				SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Server returned invalid UTF-8 sequence"));
+				SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Server returned empty content"));
 				goto clean;
 			}
+
+			zbx_http_convert_to_utf8(easyhandle, &body.data, &body.offset, &body.allocated);
 
 			if (HTTP_STORE_JSON == item->output_format)
 			{

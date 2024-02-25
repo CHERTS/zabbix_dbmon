@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ $show_inherited_tags = (array_key_exists('show_inherited_tags', $data) && $data[
 $tags_form_list = new CFormList('tagsFormList');
 
 $table = (new CTable())
-	->setId('tags-table')
+	->addClass('tags-table')
 	->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_CONTAINER)
 	->setHeader([
 		_('Name'),
@@ -41,6 +41,8 @@ $table = (new CTable())
 		_('Action'),
 		$show_inherited_tags ? _('Parent templates') : null
 	]);
+
+$allowed_ui_conf_templates = CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_TEMPLATES);
 
 // fields
 foreach ($data['tags'] as $i => $tag) {
@@ -79,7 +81,9 @@ foreach ($data['tags'] as $i => $tag) {
 				->addClass(ZBX_STYLE_BTN_LINK)
 				->addClass('element-table-remove')
 				->setEnabled(!$readonly)
-	))->addClass(ZBX_STYLE_NOWRAP);
+	))
+		->addClass(ZBX_STYLE_NOWRAP)
+		->addClass(ZBX_STYLE_TOP);
 
 	if ($show_inherited_tags) {
 		$template_list = [];
@@ -88,7 +92,7 @@ foreach ($data['tags'] as $i => $tag) {
 			CArrayHelper::sort($tag['parent_templates'], ['name']);
 
 			foreach ($tag['parent_templates'] as $templateid => $template) {
-				if ($template['permission'] == PERM_READ_WRITE) {
+				if ($allowed_ui_conf_templates && $template['permission'] == PERM_READ_WRITE) {
 					$template_list[] = (new CLink($template['name'],
 						(new CUrl('templates.php'))
 							->setArgument('form', 'update')
@@ -119,11 +123,29 @@ $table->setFooter(new CCol(
 		->setEnabled(!$data['readonly'])
 ));
 
-if ($data['source'] === 'trigger' || $data['source'] === 'trigger_prototype') {
+if (in_array($data['source'], ['trigger', 'trigger_prototype', 'item', 'httptest'])) {
+	switch ($data['source']) {
+		case 'trigger':
+		case 'trigger_prototype':
+			$btn_labels = [_('Trigger tags'), _('Inherited and trigger tags')];
+			$on_change = 'this.form.submit()';
+			break;
+
+		case 'httptest':
+			$btn_labels = [_('Scenario tags'), _('Inherited and scenario tags')];
+			$on_change = 'window.httpconf.$form.submit()';
+			break;
+
+		case 'item':
+			$btn_labels = [_('Item tags'), _('Inherited and item tags')];
+			$on_change = 'this.form.submit()';
+			break;
+	}
+
 	$tags_form_list->addRow(null,
 		(new CRadioButtonList('show_inherited_tags', (int) $data['show_inherited_tags']))
-			->addValue(_('Trigger tags'), 0, null, 'this.form.submit()')
-			->addValue(_('Inherited and trigger tags'), 1, null, 'this.form.submit()')
+			->addValue($btn_labels[0], 0, null, $on_change)
+			->addValue($btn_labels[1], 1, null, $on_change)
 			->setModern(true)
 	);
 }

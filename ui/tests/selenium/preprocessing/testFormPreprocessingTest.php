@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,17 +20,25 @@
 
 require_once dirname(__FILE__).'/../../include/CWebTest.php';
 require_once dirname(__FILE__).'/../../../include/items.inc.php';
-require_once dirname(__FILE__).'/../traits/PreprocessingTrait.php';
+require_once dirname(__FILE__).'/../behaviors/CPreprocessingBehavior.php';
 
 /**
- *
  * @backup items
  */
 class testFormPreprocessingTest extends CWebTest {
 
+	/**
+	 * Attach PreprocessingBehavior to the test.
+	 *
+	 * @return array
+	 */
+	public function getBehaviors() {
+		return [CPreprocessingBehavior::class];
+	}
+
 	const HOST_ID = 40001;		//'Simple form test host'
 
-	use PreprocessingTrait;
+	private static $key;
 
 	public $change_types = [
 		'Discard unchanged with heartbeat',
@@ -53,6 +61,7 @@ class testFormPreprocessingTest extends CWebTest {
 						['type' => 'XML XPath', 'parameter_1' => 'path'],
 						['type' => 'JSONPath', 'parameter_1' => 'path'],
 						['type' => 'CSV to JSON','parameter_1' => ' ', 'parameter_2' => '\\', 'parameter_3' => true],
+						['type' => 'XML to JSON'],
 						['type' => 'Custom multiplier', 'parameter_1' => '123'],
 						['type' => 'Simple change'],
 						['type' => 'Change per second'],
@@ -68,7 +77,8 @@ class testFormPreprocessingTest extends CWebTest {
 						['type' => 'Check for error using regular expression', 'parameter_1' => 'path', 'parameter_2' => 'output'],
 						['type' => 'Discard unchanged'],
 						['type' => 'Discard unchanged with heartbeat', 'parameter_1' => '1'],
-						['type' => 'Prometheus pattern', 'parameter_1' => 'cpu_usage_system', 'parameter_2' => 'label_name'],
+						['type' => 'Prometheus pattern', 'parameter_1' => 'cpu_usage_system', 'parameter_2' => 'label',
+								'parameter_3' => 'label_name'],
 						['type' => 'Prometheus to JSON', 'parameter_1' => '']
 					],
 					'action' => 'Test'
@@ -144,7 +154,7 @@ class testFormPreprocessingTest extends CWebTest {
 						['type' => 'Replace', 'parameter_1' => 'test', 'parameter_2' => ''],
 						['type' => 'In range', 'parameter_1' => '1', 'parameter_2' => ''],
 						['type' => 'In range', 'parameter_1' => '', 'parameter_2' => '2'],
-						['type' => 'Prometheus pattern', 'parameter_1' => 'cpu', 'parameter_2' => '']
+						['type' => 'Prometheus pattern', 'parameter_1' => 'cpu', 'parameter_2' => 'value']
 					],
 					'action' => 'Cancel'
 				]
@@ -168,7 +178,7 @@ class testFormPreprocessingTest extends CWebTest {
 						['type' => 'Check for error in XML', 'parameter_1' => ''],
 						['type' => 'Check for error using regular expression', 'parameter_1' => '', 'parameter_2' => ''],
 						['type' => 'Discard unchanged with heartbeat', 'parameter_1' => ''],
-						['type' => 'Prometheus pattern', 'parameter_1' => '', 'parameter_2' => '']
+						['type' => 'Prometheus pattern', 'parameter_1' => '', 'parameter_2' => 'value']
 					],
 					'error' => 'Incorrect value for field "params":'
 				]
@@ -178,7 +188,7 @@ class testFormPreprocessingTest extends CWebTest {
 					'expected' => TEST_BAD,
 					'preprocessing' => [
 						['type' => 'Regular expression', 'parameter_1' => '1', 'parameter_2' => ''],
-						['type' => 'Check for error using regular expression', 'parameter_1' => 'path', 'parameter_2' => '']
+						['type' => 'Check for error using regular expression', 'parameter_1' => 'path']
 
 					],
 					'error' => 'Incorrect value for field "params": second parameter is expected.'
@@ -190,7 +200,7 @@ class testFormPreprocessingTest extends CWebTest {
 					'preprocessing' => [
 						['type' => 'Replace', 'parameter_1' => '', 'parameter_2' => 'test'],
 						['type' => 'Regular expression', 'parameter_1' => '', 'parameter_2' => '1'],
-						['type' => 'Prometheus pattern', 'parameter_1' => '', 'parameter_2' => 'label']
+						['type' => 'Prometheus pattern', 'parameter_1' => '', 'parameter_2' => 'label', 'parameter_3' => 'label']
 					],
 					'error' => 'Incorrect value for field "params": first parameter is expected.'
 				]
@@ -230,6 +240,7 @@ class testFormPreprocessingTest extends CWebTest {
 						]
 					],
 					'preprocessing' => [
+						['type' => 'Check for not supported value'],
 						['type' => 'Regular expression', 'parameter_1' => '{$A}', 'parameter_2' => '{$1}'],
 						['type' => 'JSONPath', 'parameter_1' => '{$_}']
 					],
@@ -259,6 +270,7 @@ class testFormPreprocessingTest extends CWebTest {
 						]
 					],
 					'preprocessing' => [
+						['type' => 'Check for not supported value'],
 						['type' => 'Regular expression', 'parameter_1' => '{$A}', 'parameter_2' => '{$1}'],
 						['type' => 'JSONPath', 'parameter_1' => '{$_}']
 					],
@@ -302,7 +314,8 @@ class testFormPreprocessingTest extends CWebTest {
 					'preprocessing' => [
 						['type' => 'Discard unchanged with heartbeat', 'parameter_1' => '1'],
 						['type' => 'Change per second'],
-						['type' => 'CSV to JSON','parameter_1' => ',', 'parameter_2' => '"', 'parameter_3' => false]
+						['type' => 'CSV to JSON','parameter_1' => ',', 'parameter_2' => '"', 'parameter_3' => false],
+						['type' => 'XML to JSON']
 					],
 					'action' => 'Test'
 				]
@@ -342,7 +355,8 @@ class testFormPreprocessingTest extends CWebTest {
 				[
 					'expected' => TEST_BAD,
 					'preprocessing' => [
-						['type' => 'Prometheus pattern', 'parameter_1' => 'cpu_usage_system', 'parameter_2' => 'label_name'],
+						['type' => 'Prometheus pattern', 'parameter_1' => 'cpu_usage_system', 'parameter_2' => 'label',
+								'parameter_3' => 'label_name'],
 						['type' => 'Prometheus to JSON', 'parameter_1' => '']
 					],
 					'error' => 'Only one Prometheus step is allowed.'
@@ -367,7 +381,7 @@ class testFormPreprocessingTest extends CWebTest {
 						['type' => 'Check for error in XML', 'parameter_1' => ''],
 						['type' => 'Check for error using regular expression', 'parameter_1' => '', 'parameter_2' => ''],
 						['type' => 'Discard unchanged with heartbeat', 'parameter_1' => ''],
-						['type' => 'Prometheus pattern', 'parameter_1' => '', 'parameter_2' => '']
+						['type' => 'Prometheus pattern', 'parameter_1' => '', 'parameter_2' => 'value']
 					],
 					'error' => 'Incorrect value for field "params":'
 				]
@@ -418,12 +432,91 @@ class testFormPreprocessingTest extends CWebTest {
 		$this->checkTestOverlay($data, 'button:Test all steps', $prev_enabled);
 	}
 
-	private function openPreprocessing($data) {
-		$this->page->login()->open('items.php?form=create&hostid='.self::HOST_ID);
-		$form = $this->query('name:itemForm')->waitUntilPresent()->asForm()->one();
-		$key = CTestArrayHelper::get($data, 'Key', false) ? $data['Key'] : 'test.key';
-		$form->fill(['Key' => $key]);
+	public static function getSortingData() {
+		return [
+			[
+				[
+					'preprocessing' => [
+						['type' => 'Check for not supported value'],
+						['type' => 'Regular expression', 'parameter_1' => '{$A}', 'parameter_2' => '{$1}'],
+						['type' => 'Trim', 'parameter_1' => '1'],
+						['type' => 'JSONPath', 'parameter_1' => '{$_}']
+					]
+				]
+			],
+			[
+				[
+					'preprocessing' => [
+						['type' => 'Regular expression', 'parameter_1' => '{$A}', 'parameter_2' => '{$1}'],
+						['type' => 'Check for not supported value'],
+						['type' => 'Trim', 'parameter_1' => '1'],
+						['type' => 'JSONPath', 'parameter_1' => '{$_}']
+					]
+				]
+			],
+			[
+				[
+					'preprocessing' => [
+						['type' => 'Regular expression', 'parameter_1' => '{$A}', 'parameter_2' => '{$1}'],
+						['type' => 'Trim', 'parameter_1' => '1'],
+						['type' => 'JSONPath', 'parameter_1' => '{$_}'],
+						['type' => 'Check for not supported value']
+					]
+				]
+			]
+		];
+	}
+
+	/**
+	 * Test for checking that Not supported value step is always being tested and saved first.
+	 *
+	 * @dataProvider getSortingData
+	 */
+	public function testFormItemPreprocessingTest_Sorting($data) {
+		// Result order of steps.
+		$preprocessing = [
+			['type' => 'Check for not supported value'],
+			['type' => 'Regular expression', 'parameter_1' => '{$A}', 'parameter_2' => '{$1}'],
+			['type' => 'Trim', 'parameter_1' => '1'],
+			['type' => 'JSONPath', 'parameter_1' => '{$_}']
+		];
+
+		$form = $this->openPreprocessing($data);
+
+		foreach ($data['preprocessing'] as $step) {
+			$this->addPreprocessingSteps([$step]);
+		}
+
+		// Test all steps right away after adding.
+		$this->query('button:Test all steps')->waitUntilPresent()->one()->click();
+
+		$dialog = COverlayDialogElement::find()->one()->waitUntilReady();
+		$table = $dialog->query('id:preprocessing-steps')->asTable()->waitUntilPresent()->one();
+
+		foreach ($preprocessing as $i => $step) {
+			$this->assertEquals(($i+1).': '.$step['type'], $table->getRow($i)->getText());
+		}
+
+		$dialog->close();
+
+		$form->submit();
+
+		// Assert right steps order after item saving.
+		$id = CDBHelper::getValue('SELECT itemid FROM items WHERE key_='.zbx_dbstr(self::$key));
+		$this->page->open('items.php?form=update&context=host&hostid='.self::HOST_ID.'&itemid='.$id);
 		$form->selectTab('Preprocessing');
+		$this->assertPreprocessingSteps($preprocessing);
+	}
+
+	private function openPreprocessing($data) {
+		$this->page->login()->open('items.php?form=create&context=host&hostid='.self::HOST_ID);
+		$form = $this->query('name:itemForm')->waitUntilPresent()->asForm()->one();
+		self::$key = CTestArrayHelper::get($data, 'Key', false) ? $data['Key'] : 'test.key'.time();
+
+		$form->fill(['Name' => 'Test name', 'Key' => self::$key]);
+		$form->selectTab('Preprocessing');
+
+		return $form;
 	}
 
 	/**
@@ -440,7 +533,7 @@ class testFormPreprocessingTest extends CWebTest {
 
 		switch ($data['expected']) {
 			case TEST_BAD:
-				$message = $dialog->query('tag:output')->waitUntilPresent()->asMessage()->one();
+				$message = $dialog->query('tag:output')->asMessage()->waitUntilPresent()->one();
 				$this->assertTrue($message->isBad());
 
 				// Workaround for single step which has different message.
@@ -455,7 +548,7 @@ class testFormPreprocessingTest extends CWebTest {
 				break;
 
 			case TEST_GOOD:
-				$form = $this->query('id:preprocessing-test-form')->waitUntilPresent()->asForm()->one();
+				$form = $this->query('id:preprocessing-test-form')->asForm()->waitUntilPresent()->one();
 				$this->assertEquals('Test item', $dialog->getTitle());
 
 				$time = $dialog->query('id:time')->one();
@@ -467,7 +560,7 @@ class testFormPreprocessingTest extends CWebTest {
 				$this->assertTrue($prev_value->isEnabled($prev_enabled));
 				$this->assertTrue($prev_time->isEnabled($prev_enabled));
 
-				$radio = $form->getField('End of line sequence');
+				$radio = $form->query('id:eol')->one()->waitUntilPresent();
 				$this->assertTrue($radio->isEnabled());
 
 				$macros = [
@@ -478,7 +571,7 @@ class testFormPreprocessingTest extends CWebTest {
 				];
 
 				if ($macros['expected']) {
-					foreach ($form->getField('Macros')->asTable()->getRows() as $row) {
+					foreach ($form->query('class:textarea-flexible-container')->asTable()->one()->getRows() as $row) {
 						$columns = $row->getColumns()->asArray();
 						/*
 						 * Macro columns are represented in following way:
@@ -500,11 +593,15 @@ class testFormPreprocessingTest extends CWebTest {
 					$this->assertEquals($macros['expected'], $macros['actual']);
 				}
 
-				$table = $form->getField('Preprocessing steps')->asTable();
+				$table = $form->query('id:preprocessing-steps')->asTable()->waitUntilPresent()->one();
 
 				if ($id === null) {
 					foreach ($data['preprocessing'] as $i => $step) {
 						$this->assertEquals(($i+1).': '.$step['type'], $table->getRow($i)->getText());
+
+						$element = $table->query('id:preproc-test-step-'.$i.'-name')->one();
+						$this->assertEquals(1, $element->getCSSValue('opacity'));
+						$this->assertTrue($element->isEnabled());
 					}
 				}
 				else {
@@ -518,23 +615,23 @@ class testFormPreprocessingTest extends CWebTest {
 
 	private function chooseDialogActions($data) {
 		$dialog = COverlayDialogElement::find()->one()->waitUntilReady();
-		$form = $this->query('id:preprocessing-test-form')->waitUntilPresent()->asForm()->one();
+		$form = $this->query('id:preprocessing-test-form')->asForm()->waitUntilPresent()->one();
 		switch ($data['action']) {
 			case 'Test':
 				$value_string = '123';
 				$prev_value_string = '100';
 				$prev_time_string  = 'now-1s';
 
-				$form->getField('Value')->fill('$value_string');
-				$prev_value = $form->getField('Previous value');
-				$prev_time = $form->getField('Prev. time');
+				$form->query('id:value')->asMultiline()->waitUntilPresent()->one()->fill($value_string);
+				$prev_value = $form->query('id:prev_value')->asMultiline()->waitUntilPresent()->one();
+				$prev_time = $form->query('id:prev_time')->waitUntilPresent()->one();
 
 				if ($prev_value->isEnabled(true) && $prev_time->isEnabled(true)) {
 					$prev_value->fill($prev_value_string);
 					$prev_time->fill($prev_time_string);
 				}
-				$form->getField('End of line sequence')->fill('CRLF');
-				$form->submit();
+				$form->query('id:eol')->asSegmentedRadio()->waitUntilPresent()->one()->fill('CRLF');
+				$dialog->query('button:Test')->one()->waitUntilVisible()->click();
 
 				// Check Zabbix server down message.
 				$message = $form->getOverlayMessage();

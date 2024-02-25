@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ function ipmiAuthTypes($type = null) {
 		IPMI_AUTHTYPE_DEFAULT => _('Default'),
 		IPMI_AUTHTYPE_NONE => _('None'),
 		IPMI_AUTHTYPE_MD2 => _('MD2'),
-		IPMI_AUTHTYPE_MD5 => _('MD5'),
+		IPMI_AUTHTYPE_MD5 => 'MD5',
 		IPMI_AUTHTYPE_STRAIGHT => _('Straight'),
 		IPMI_AUTHTYPE_OEM => _('OEM'),
 		IPMI_AUTHTYPE_RMCP_PLUS => _('RMCP+')
@@ -477,16 +477,32 @@ function hostInterfaceTypeNumToName($type) {
 	return $name;
 }
 
-function get_hostgroup_by_groupid($groupid) {
-	$groups = DBfetch(DBselect('SELECT g.* FROM hstgrp g WHERE g.groupid='.zbx_dbstr($groupid)));
-
-	if ($groups) {
-		return $groups;
+/**
+ * Returns the host interface as a string of the host's IP address (or DNS name) and port number.
+ *
+ * @param array|null $interface
+ * @param int    $interface['useip']  Interface use IP or DNS. INTERFACE_USE_DNS or INTERFACE_USE_IP.
+ * @param string $interface['ip']     Interface IP.
+ * @param string $interface['dns']    Interface DNS.
+ * @param string $interface['port']   Interface port.
+ *
+ * @return string
+ */
+function getHostInterface(?array $interface): string {
+	if ($interface === null) {
+		return '';
 	}
 
-	error(_s('No host groups with groupid "%1$s".', $groupid));
+	if ($interface['useip'] == INTERFACE_USE_IP) {
+		$ip_or_dns = (filter_var($interface['ip'], FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false)
+			? '['.$interface['ip'].']'
+			: $interface['ip'];
+	}
+	else {
+		$ip_or_dns = $interface['dns'];
+	}
 
-	return false;
+	return $ip_or_dns.':'.$interface['port'];
 }
 
 function get_host_by_itemid($itemids) {
@@ -527,179 +543,10 @@ function get_host_by_hostid($hostid, $no_error_message = 0) {
 	}
 
 	if ($no_error_message == 0) {
-		error(_s('No host with hostid "%1$s".', $hostid));
+		error(_s('No host with host ID "%1$s".', $hostid));
 	}
 
 	return false;
-}
-
-/**
- * Get parent templates for each given application.
- *
- * @param array  $applications                     An array of applications.
- * @param string $applications[]['applicationid']  ID of an application.
- * @param array  $applications[]['templateids]     IDs of parent template applications.
- *
- * @return array
- */
-function getApplicationParentTemplates(array $applications) {
-	$parent_applicationids = [];
-	$data = [
-		'links' => [],
-		'templates' => []
-	];
-
-	foreach ($applications as $application) {
-		foreach ($application['templateids'] as $parent_applicationid) {
-			$parent_applicationids[$parent_applicationid] = true;
-			$data['links'][$application['applicationid']][] = ['applicationid' => $parent_applicationid];
-		}
-	}
-
-	if (!$parent_applicationids) {
-		return $data;
-	}
-
-	$all_parent_applicationids = [];
-	$hostids = [];
-
-	while ($parent_applicationids) {
-		$db_applications = API::Application()->get([
-			'output' => ['applicationid', 'hostid', 'templateids'],
-			'applicationids' => array_keys($parent_applicationids)
-		]);
-
-		$all_parent_applicationids += $parent_applicationids;
-		$parent_applicationids = [];
-
-		foreach ($db_applications as $db_application) {
-			$data['templates'][$db_application['hostid']] = [];
-			$hostids[$db_application['applicationid']] = $db_application['hostid'];
-
-			foreach ($db_application['templateids'] as $parent_applicationid) {
-				if (!array_key_exists($parent_applicationid, $all_parent_applicationids)) {
-					$parent_applicationids[$parent_applicationid] = true;
-				}
-			}
-
-			if (!array_key_exists($db_application['applicationid'], $data['links'])) {
-				foreach ($db_application['templateids'] as $parent_applicationid) {
-					$data['links'][$db_application['applicationid']][] = ['applicationid' => $parent_applicationid];
-				}
-			}
-		}
-	}
-
-	foreach ($data['links'] as $applicationid => &$parent_applications) {
-		foreach ($parent_applications as &$parent_application) {
-			$parent_application['hostid'] = array_key_exists($parent_application['applicationid'], $hostids)
-				? $hostids[$parent_application['applicationid']]
-				: 0;
-		}
-		unset($parent_application);
-	}
-	unset($parent_applications);
-
-	$db_templates = $data['templates']
-		? API::Template()->get([
-			'output' => ['name'],
-			'templateids' => array_keys($data['templates']),
-			'preservekeys' => true
-		])
-		: [];
-
-	$rw_templates = $db_templates
-		? API::Template()->get([
-			'output' => [],
-			'templateids' => array_keys($db_templates),
-			'editable' => true,
-			'preservekeys' => true
-		])
-		: [];
-
-	$data['templates'][0] = [];
-
-	foreach ($data['templates'] as $hostid => &$template) {
-		$template = array_key_exists($hostid, $db_templates)
-			? [
-				'hostid' => $hostid,
-				'name' => $db_templates[$hostid]['name'],
-				'permission' => array_key_exists($hostid, $rw_templates) ? PERM_READ_WRITE : PERM_READ
-			]
-			: [
-				'hostid' => $hostid,
-				'name' => _('Inaccessible template'),
-				'permission' => PERM_DENY
-			];
-	}
-	unset($template);
-
-	return $data;
-}
-
-/**
- * Auxiliary function for makeApplicationTemplatePrefix().
- *
- * @param string $applicationid
- * @param array  $parent_templates
- *
- * @return array
- */
-function getTopLevelTemplates($applicationid, array $parent_templates) {
-	$templates = [];
-
-	foreach ($parent_templates['links'][$applicationid] as $parent_application) {
-		if (!array_key_exists($parent_application['applicationid'], $parent_templates['links'])) {
-			$templates[] = $parent_templates['templates'][$parent_application['hostid']];
-		}
-		else {
-			$templates = array_merge($templates,
-				getTopLevelTemplates($parent_application['applicationid'], $parent_templates)
-			);
-		}
-	}
-
-	return $templates;
-}
-
-/**
- * Returns a template prefix for selected application.
- *
- * @param string $applicationid
- * @param array  $parent_templates  The list of the templates, prepared by getApplicationParentTemplates() function.
- *
- * @return array|null
- */
-function makeApplicationTemplatePrefix($applicationid, array $parent_templates) {
-	if (!array_key_exists($applicationid, $parent_templates['links'])) {
-		return null;
-	}
-
-	$templates = getTopLevelTemplates($applicationid, $parent_templates);
-	CArrayHelper::sort($templates, ['name']);
-
-	$list = [];
-
-	foreach ($templates as $template) {
-		if ($template['permission'] == PERM_READ_WRITE) {
-			$name = (new CLink(CHtml::encode($template['name']),
-				(new CUrl('applications.php'))
-					->setArgument('filter_set', '1')
-					->setArgument('filter_hostids', [$template['hostid']])
-			))->addClass(ZBX_STYLE_LINK_ALT);
-		}
-		else {
-			$name = new CSpan(CHtml::encode($template['name']));
-		}
-
-		$list[] = $name->addClass(ZBX_STYLE_GREY);
-		$list[] = ', ';
-	}
-
-	array_pop($list);
-	$list[] = NAME_DELIMITER;
-
-	return $list;
 }
 
 /**
@@ -813,10 +660,11 @@ function getHostPrototypeParentTemplates(array $host_prototypes) {
  *
  * @param string $host_prototypeid
  * @param array  $parent_templates  The list of the templates, prepared by getHostPrototypeParentTemplates() function.
+ * @param bool   $provide_links     If this parameter is false, prefix will not contain links.
  *
  * @return array|null
  */
-function makeHostPrototypeTemplatePrefix($host_prototypeid, array $parent_templates) {
+function makeHostPrototypeTemplatePrefix($host_prototypeid, array $parent_templates, bool $provide_links) {
 	if (!array_key_exists($host_prototypeid, $parent_templates['links'])) {
 		return null;
 	}
@@ -827,14 +675,15 @@ function makeHostPrototypeTemplatePrefix($host_prototypeid, array $parent_templa
 
 	$template = $parent_templates['templates'][$parent_templates['links'][$host_prototypeid]['parent_hostid']];
 
-	if ($template['permission'] == PERM_READ_WRITE) {
-		$name = (new CLink(CHtml::encode($template['name']),
+	if ($provide_links && $template['permission'] == PERM_READ_WRITE) {
+		$name = (new CLink($template['name'],
 			(new CUrl('host_prototypes.php'))
 				->setArgument('parent_discoveryid', $parent_templates['links'][$host_prototypeid]['lld_ruleid'])
+				->setArgument('context', 'template')
 		))->addClass(ZBX_STYLE_LINK_ALT);
 	}
 	else {
-		$name = new CSpan(CHtml::encode($template['name']));
+		$name = new CSpan($template['name']);
 	}
 
 	return [$name->addClass(ZBX_STYLE_GREY), NAME_DELIMITER];
@@ -845,28 +694,30 @@ function makeHostPrototypeTemplatePrefix($host_prototypeid, array $parent_templa
  *
  * @param string $host_prototypeid
  * @param array  $parent_templates  The list of the templates, prepared by getHostPrototypeParentTemplates() function.
+ * @param bool   $provide_links     If this parameter is false, prefix will not contain links.
  *
  * @return array
  */
-function makeHostPrototypeTemplatesHtml($host_prototypeid, array $parent_templates) {
+function makeHostPrototypeTemplatesHtml($host_prototypeid, array $parent_templates, bool $provide_links) {
 	$list = [];
 
 	while (array_key_exists($host_prototypeid, $parent_templates['links'])) {
 		$template = $parent_templates['templates'][$parent_templates['links'][$host_prototypeid]['parent_hostid']];
 
-		if ($template['permission'] == PERM_READ_WRITE) {
-			$name = new CLink(CHtml::encode($template['name']),
+		if ($provide_links && $template['permission'] == PERM_READ_WRITE) {
+			$name = new CLink($template['name'],
 				(new CUrl('host_prototypes.php'))
 					->setArgument('form', 'update')
 					->setArgument('parent_discoveryid', $parent_templates['links'][$host_prototypeid]['lld_ruleid'])
 					->setArgument('hostid', $parent_templates['links'][$host_prototypeid]['hostid'])
+					->setArgument('context', 'template')
 			);
 		}
 		else {
-			$name = (new CSpan(CHtml::encode($template['name'])))->addClass(ZBX_STYLE_GREY);
+			$name = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
 		}
 
-		array_unshift($list, $name, '&nbsp;&rArr;&nbsp;');
+		array_unshift($list, $name, [NBSP(), RARR(), NBSP()]);
 
 		$host_prototypeid = $parent_templates['links'][$host_prototypeid]['hostid'];
 	}
@@ -876,73 +727,6 @@ function makeHostPrototypeTemplatesHtml($host_prototypeid, array $parent_templat
 	}
 
 	return $list;
-}
-
-/**
- * Get host ids of hosts which $groupids can be unlinked from.
- * if $hostids is passed, function will check only these hosts.
- *
- * @param array $groupids
- * @param array $hostids
- *
- * @return array
- */
-function getUnlinkableHostIds(array $groupIds, array $hostIds) {
-	if (!$hostIds) {
-		return [];
-	}
-
-	$dbResult = DBselect(
-		'SELECT hg.hostid'.
-		' FROM hosts_groups hg'.
-		' WHERE '.dbConditionInt('hg.groupid', $groupIds, true).
-			' AND '.dbConditionInt('hg.hostid', $hostIds).
-		' GROUP BY hg.hostid'
-	);
-
-	$unlinkableHostIds = [];
-	while ($dbRow = DBfetch($dbResult)) {
-		$unlinkableHostIds[] = $dbRow['hostid'];
-	}
-
-	return $unlinkableHostIds;
-}
-
-function getDeletableHostGroupIds(array $groupIds) {
-	// selecting the list of hosts linked to the host groups
-	$dbResult = DBselect(
-		'SELECT hg.hostid'.
-		' FROM hosts_groups hg'.
-		' WHERE '.dbConditionInt('hg.groupid', $groupIds)
-	);
-
-	$linkedHostIds = [];
-	while ($dbRow = DBfetch($dbResult)) {
-		$linkedHostIds[] = $dbRow['hostid'];
-	}
-
-	// the list of hosts which can be unlinked from the host groups
-	$hostIds = getUnlinkableHostIds($groupIds, $linkedHostIds);
-
-	$dbResult = DBselect(
-		'SELECT g.groupid'.
-		' FROM hstgrp g'.
-		' WHERE g.internal='.ZBX_NOT_INTERNAL_GROUP.
-			' AND '.dbConditionInt('g.groupid', $groupIds).
-			' AND NOT EXISTS ('.
-				'SELECT NULL'.
-				' FROM hosts_groups hg'.
-				' WHERE g.groupid=hg.groupid'.
-					($hostIds ? ' AND '.dbConditionInt('hg.hostid', $hostIds, true) : '').
-			')'
-	);
-
-	$deletableGroupIds = [];
-	while ($dbRow = DBfetch($dbResult)) {
-		$deletableGroupIds[$dbRow['groupid']] = $dbRow['groupid'];
-	}
-
-	return $deletableGroupIds;
 }
 
 function isTemplate($hostId) {
@@ -993,7 +777,7 @@ function getInheritedMacros(array $hostids, ?int $parent_hostid = null): array {
 	foreach ($db_global_macros as $db_global_macro) {
 		$all_macros[$db_global_macro['macro']] = true;
 		$global_macros[$db_global_macro['macro']] = [
-			'value' => CMacrosResolverGeneral::getMacroValue($db_global_macro),
+			'value' => getMacroConfigValue($db_global_macro),
 			'description' => $db_global_macro['description'],
 			'type' => $db_global_macro['type']
 		];
@@ -1031,7 +815,7 @@ function getInheritedMacros(array $hostids, ?int $parent_hostid = null): array {
 			foreach ($db_template['macros'] as $dbMacro) {
 				if (array_key_exists($dbMacro['macro'], $all_macros)) {
 					$hosts[$hostid]['macros'][$dbMacro['macro']] = [
-						'value' => CMacrosResolverGeneral::getMacroValue($dbMacro),
+						'value' => getMacroConfigValue($dbMacro),
 						'description' => $dbMacro['description'],
 						'type' => $dbMacro['type']
 					];
@@ -1044,7 +828,7 @@ function getInheritedMacros(array $hostids, ?int $parent_hostid = null): array {
 
 					if ($tpl_context === null) {
 						$hosts[$hostid]['macros'][$dbMacro['macro']] = [
-							'value' => CMacrosResolverGeneral::getMacroValue($dbMacro),
+							'value' => getMacroConfigValue($dbMacro),
 							'description' => $dbMacro['description'],
 							'type' => $dbMacro['type']
 						];
@@ -1066,7 +850,7 @@ function getInheritedMacros(array $hostids, ?int $parent_hostid = null): array {
 								);
 
 								$hosts[$hostid]['macros'][$dbMacro['macro']] = [
-									'value' => CMacrosResolverGeneral::getMacroValue($dbMacro),
+									'value' => getMacroConfigValue($dbMacro),
 									'description' => $dbMacro['description'],
 									'type' => $dbMacro['type']
 								];
@@ -1079,7 +863,7 @@ function getInheritedMacros(array $hostids, ?int $parent_hostid = null): array {
 
 						if (!$match_found) {
 							$hosts[$hostid]['macros'][$dbMacro['macro']] = [
-								'value' => CMacrosResolverGeneral::getMacroValue($dbMacro),
+								'value' => getMacroConfigValue($dbMacro),
 								'description' => $dbMacro['description'],
 								'type' => $dbMacro['type']
 							];
@@ -1122,7 +906,7 @@ function getInheritedMacros(array $hostids, ?int $parent_hostid = null): array {
 
 		if (array_key_exists($macro, $parent_host_macros)) {
 			$inherited_macro['parent_host'] = [
-				'value' => CMacrosResolverGeneral::getMacroValue($parent_host_macros[$macro]),
+				'value' => getMacroConfigValue($parent_host_macros[$macro]),
 				'description' => $parent_host_macros[$macro]['description'],
 				'type' => $parent_host_macros[$macro]['type']
 			];
@@ -1453,4 +1237,207 @@ function renderInterfaceHeaders() {
 					)
 				])
 		);
+}
+
+function getHostDashboards(string $hostid, array $dashboard_fields = []): array {
+	$dashboard_fields = array_merge($dashboard_fields, ['dashboardid']);
+	$dashboard_fields = array_keys(array_flip($dashboard_fields));
+
+	$templateids = CApiHostHelper::getParentTemplates([$hostid])[1];
+
+	return API::TemplateDashboard()->get([
+		'output' => $dashboard_fields,
+		'templateids' => $templateids,
+		'preservekeys' => true
+	]);
+}
+
+/**
+ * Return macro value to display in the list of inherited macros.
+ *
+ * @param array $macro
+ *
+ * @return string
+ */
+function getMacroConfigValue(array $macro): string {
+	return ($macro['type'] == ZBX_MACRO_TYPE_SECRET) ? ZBX_SECRET_MASK : $macro['value'];
+}
+
+/**
+ * Format host prototype group links received via form for API input.
+ *
+ * @param array $group_links
+ *
+ * @return array
+ */
+function prepareHostPrototypeGroupLinks(array $group_links) {
+	foreach ($group_links as &$value) {
+		$value = ['groupid' => $value];
+	}
+	unset($value);
+
+	return $group_links;
+}
+
+/**
+ * Format host prototype group prototypes received via form for API input.
+ *
+ * @param array $group_prototypes
+ *
+ * @return array
+ */
+function prepareHostPrototypeGroupPrototypes(array $group_prototypes): array {
+	foreach ($group_prototypes as $i => &$group_prototype) {
+		if ($group_prototype['group_prototypeid'] === '') {
+			unset($group_prototype['group_prototypeid']);
+		}
+
+		if ($group_prototype['name'] === '') {
+			unset($group_prototypes[$i]);
+		}
+	}
+	unset($group_prototype);
+
+	return array_values($group_prototypes);
+}
+
+/**
+ * Format host prototype macros received via form for API input.
+ *
+ * @param array $macros
+ *
+ * @return array
+ */
+function prepareHostPrototypeMacros(array $macros): array {
+	foreach ($macros as &$macro) {
+		unset($macro['allow_revert']);
+	}
+	unset($macro);
+
+	return $macros;
+}
+
+/**
+ * Format host prototype tags received via form for API input.
+ *
+ * @param array $tags
+ *
+ * @return array
+ */
+function prepareHostPrototypeTags(array $tags): array {
+	foreach ($tags as $i => $tag) {
+		if ($tag['tag'] === '' && $tag['value'] === '') {
+			unset($tags[$i]);
+		}
+	}
+
+	return array_values($tags);
+}
+
+/**
+ * Format host prototype interfaces received via form for API input.
+ *
+ * @param array $interfaces
+ * @param array $main_interfaces
+ *
+ * @return array
+ */
+function prepareHostPrototypeInterfaces(array $interfaces, array $main_interfaces): array {
+	foreach ($interfaces as $i => &$interface) {
+		$interface['main'] = $i == $main_interfaces[$interface['type']] ? INTERFACE_PRIMARY : INTERFACE_SECONDARY;
+
+		if (array_key_exists('details', $interface)) {
+			$interface['details'] += ['bulk' => SNMP_BULK_DISABLED];
+		}
+	}
+	unset($interface);
+
+	return $interfaces;
+}
+
+/**
+ * Get sanitized host prototype fields of given input.
+ *
+ * Param array  $input
+ * Param string $input['templateid']
+ *
+ * @return array
+ */
+function getSanitizedHostPrototypeFields(array $input): array {
+	if ($input['templateid'] == 0) {
+		$field_names = ['host', 'name', 'custom_interfaces', 'status', 'discover', 'groupLinks',
+			'groupPrototypes', 'templates', 'tags' , 'macros', 'inventory_mode'
+		];
+
+		if ($input['custom_interfaces'] == HOST_PROT_INTERFACES_CUSTOM) {
+			$field_names[] = 'interfaces';
+
+			$input['interfaces'] = getSanitizedHostPrototypeInterfacesFields($input['interfaces']);
+		}
+	}
+	else {
+		$field_names = ['status', 'discover'];
+	}
+
+	return array_intersect_key($input, array_flip($field_names));
+}
+
+/**
+ * Get sanitized host prototype interface fields of given interfaces input.
+ *
+ * Param array  $interfaces
+ *
+ * @return array
+ */
+function getSanitizedHostPrototypeInterfacesFields(array $interfaces): array {
+	foreach ($interfaces as &$interface) {
+		$field_names = ['type', 'useip', 'ip', 'dns', 'port', 'main'];
+
+		if ($interface['type'] == INTERFACE_TYPE_SNMP) {
+			$field_names[] = 'details';
+
+			$interface['details'] = getSanitizedHostPrototypeInterfaceDetailsFields($interface['details']);
+		}
+
+		$interface = array_intersect_key($interface, array_flip($field_names));
+	}
+	unset($interface);
+
+	return $interfaces;
+}
+
+/**
+ * Get sanitized host prototype interface details fields of given details input.
+ *
+ * Param array  $details
+ *
+ * @return array
+ */
+function getSanitizedHostPrototypeInterfaceDetailsFields(array $details): array {
+	$field_names = ['version', 'bulk'];
+
+	switch ($details['version']) {
+		case SNMP_V1:
+		case SNMP_V2C:
+			$field_names[] = 'community';
+			break;
+
+		case SNMP_V3:
+			$field_names = array_merge($field_names, ['contextname', 'securityname', 'securitylevel']);
+
+			switch ($details['securitylevel']) {
+				case ITEM_SNMPV3_SECURITYLEVEL_AUTHNOPRIV:
+					$field_names = array_merge($field_names, ['authprotocol', 'authpassphrase']);
+					break;
+
+				case ITEM_SNMPV3_SECURITYLEVEL_AUTHPRIV:
+					$field_names = array_merge($field_names,
+						['authprotocol', 'authpassphrase', 'privprotocol', 'privpassphrase']
+					);
+					break;
+			}
+			break;
+	}
+
+	return array_intersect_key($details, array_flip($field_names));
 }

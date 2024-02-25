@@ -1,7 +1,7 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,6 +46,8 @@ class CInputSecret extends CInput {
 	 * @param bool   $add_post_js  Add initialization javascript, default true.
 	 */
 	public function __construct(string $name, string $value = null, $add_post_js = true) {
+		parent::__construct('text', $name, $value);
+
 		$this->add_post_js = $add_post_js;
 		$this->setAttribute('name', $name);
 		$this->setId(uniqid('input-secret-'));
@@ -69,18 +71,26 @@ class CInputSecret extends CInput {
 			->setId($this->getId())
 			->addClass(self::ZBX_STYLE_CLASS);
 		$name = $this->getAttribute('name');
+		$value = $this->getAttribute('value');
+		$maxlength = ($this->getAttribute('maxlength') === null) ? 255 : $this->getAttribute('maxlength');
 
-		if ($this->getAttribute('value') !== null) {
-			$node->addItem(new CPassBox($name, $this->getAttribute('value')));
-		}
-		else {
+		if ($value === null) {
 			$node->addItem([
-				(new CPassBox($name, ZBX_SECRET_MASK))->setAttribute('disabled', 'disabled'),
+				(new CPassBox($name, ZBX_SECRET_MASK, $maxlength))->setAttribute('disabled', 'disabled'),
 				(new CButton(null, _('Set new value')))
 					->setId(zbx_formatDomId($name.'[btn]'))
 					->setAttribute('disabled', $this->getAttribute('disabled'))
 					->addClass(self::ZBX_STYLE_BTN_CHANGE)
 			]);
+		}
+		else {
+			$pass_box = new CPassBox($name, $value, $maxlength);
+
+			if ($this->getAttribute('placeholder')) {
+				$pass_box->setAttribute('placeholder', $this->getAttribute('placeholder'));
+			}
+
+			$node->addItem($pass_box);
 		}
 
 		if ($this->add_post_js) {

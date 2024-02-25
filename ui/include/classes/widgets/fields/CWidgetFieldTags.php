@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ class CWidgetFieldTags extends CWidgetField {
 		$this->setSaveType(ZBX_WIDGET_FIELD_TYPE_STR);
 		$this->setValidationRules(['type' => API_OBJECTS, 'fields' => [
 			'tag'		=> ['type' => API_STRING_UTF8, 'flags' => API_REQUIRED, 'length' => 255],
-			'operator'	=> ['type' => API_INT32, 'flags' => API_REQUIRED, 'in' => implode(',', [TAG_OPERATOR_LIKE, TAG_OPERATOR_EQUAL])],
+			'operator'	=> ['type' => API_INT32, 'flags' => API_REQUIRED, 'in' => implode(',', [TAG_OPERATOR_LIKE, TAG_OPERATOR_EQUAL, TAG_OPERATOR_NOT_LIKE, TAG_OPERATOR_NOT_EQUAL, TAG_OPERATOR_EXISTS, TAG_OPERATOR_NOT_EXISTS])],
 			'value'		=> ['type' => API_STRING_UTF8, 'flags' => API_REQUIRED, 'length' => 255]
 		]]);
 		$this->setDefault([]);
@@ -69,8 +69,20 @@ class CWidgetFieldTags extends CWidgetField {
 	 */
 	public function getJavascript() {
 		return 'var tags_table = jQuery("#tags_table_'.$this->getName().'");'.
-			'tags_table.dynamicRows({template: "#tag-row-tmpl"});'.
-			'tags_table.parent().addClass("has-before");';
+
+			'tags_table'.
+				'.dynamicRows({template: "#tag-row-tmpl"})'.
+				'.on("afteradd.dynamicRows", function() {'.
+					'var rows = this.querySelectorAll(".form_row");'.
+					'new CTagFilterItem(rows[rows.length - 1]);'.
+				'});'.
+
+			'tags_table.parent().addClass("has-before");'.
+
+			// Init existing fields once loaded.
+			'document.querySelectorAll("#tags_table_'.$this->getName().' .form_row").forEach(row => {'.
+				'new CTagFilterItem(row);'.
+			'});';
 	}
 
 	/**

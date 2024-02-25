@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ require_once dirname(__FILE__).'/include/users.inc.php';
 
 $page['title'] = _('Action log');
 $page['file'] = 'auditacts.php';
-$page['scripts'] = ['class.calendar.js', 'gtlc.js', 'flickerfreescreen.js', 'multiselect.js'];
+$page['scripts'] = ['class.calendar.js', 'gtlc.js', 'flickerfreescreen.js'];
 $page['type'] = detect_page_type(PAGE_TYPE_HTML);
 
 require_once dirname(__FILE__).'/include/page_header.php';
@@ -36,7 +36,7 @@ $fields = [
 	// filter
 	'filter_rst' =>		[T_ZBX_STR,			O_OPT, P_SYS,	null,	null],
 	'filter_set' =>		[T_ZBX_STR,			O_OPT, P_SYS,	null,	null],
-	'filter_userids' =>	[T_ZBX_STR,			O_OPT, P_SYS,	null,	null],
+	'filter_userids' =>	[T_ZBX_STR,			O_OPT, P_SYS|P_ONLY_ARRAY,	null,	null],
 	'from' =>			[T_ZBX_RANGE_TIME,	O_OPT, P_SYS,	null,	null],
 	'to' =>				[T_ZBX_RANGE_TIME,	O_OPT, P_SYS,	null,	null]
 ];
@@ -84,7 +84,7 @@ $userids = [];
 
 if ($data['filter_userids']) {
 	$data['users'] = API::User()->get([
-		'output' => ['userid', 'alias', 'name', 'surname'],
+		'output' => ['userid', 'username', 'name', 'surname'],
 		'userids' => $data['filter_userids'],
 		'preservekeys' => true
 	]);
@@ -100,9 +100,8 @@ if ($data['filter_userids']) {
 }
 
 if (!$data['filter_userids'] || $data['users']) {
-	$config = select_config();
-
 	// Fetch alerts for different objects and sources and combine them in a single stream.
+	$limit = CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT) + 1;
 	foreach (eventSourceObjects() as $eventSource) {
 		$data['alerts'] = array_merge($data['alerts'], API::Alert()->get([
 			'output' => ['alertid', 'actionid', 'userid', 'clock', 'sendto', 'subject', 'message', 'status',
@@ -117,7 +116,7 @@ if (!$data['filter_userids'] || $data['users']) {
 			'eventobject' => $eventSource['object'],
 			'sortfield' => 'alertid',
 			'sortorder' => ZBX_SORT_DOWN,
-			'limit' => $config['search_limit'] + 1
+			'limit' => $limit
 		]));
 	}
 
@@ -125,7 +124,7 @@ if (!$data['filter_userids'] || $data['users']) {
 		['field' => 'alertid', 'order' => ZBX_SORT_DOWN]
 	]);
 
-	$data['alerts'] = array_slice($data['alerts'], 0, $config['search_limit'] + 1);
+	$data['alerts'] = array_slice($data['alerts'], 0, CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT) + 1);
 
 	$data['paging'] = CPagerHelper::paginate(getRequest('page', 1), $data['alerts'], ZBX_SORT_DOWN,
 		new CUrl('auditacts.php')
@@ -134,7 +133,7 @@ if (!$data['filter_userids'] || $data['users']) {
 	// Get users.
 	if (!$data['filter_userids']) {
 		$data['users'] = API::User()->get([
-			'output' => ['userid', 'alias', 'name', 'surname'],
+			'output' => ['userid', 'username', 'name', 'surname'],
 			'userids' => array_column($data['alerts'], 'userid'),
 			'preservekeys' => true
 		]);

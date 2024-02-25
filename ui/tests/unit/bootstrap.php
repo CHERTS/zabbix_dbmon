@@ -1,7 +1,7 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ require_once __DIR__.'/../../include/items.inc.php';
 require_once __DIR__.'/../../include/discovery.inc.php';
 require_once __DIR__.'/../../include/actions.inc.php';
 require_once __DIR__.'/../../include/validate.inc.php';
-require_once __DIR__.'/../../include/services.inc.php';
 require_once __DIR__.'/../../include/db.inc.php';
 
 // register autoloader
@@ -41,6 +40,7 @@ $autoloader->addNamespace('', [
 	__DIR__.'/../../include/classes/api/clients',
 	__DIR__.'/../../include/classes/api/helpers',
 	__DIR__.'/../../include/classes/api/wrappers',
+	__DIR__.'/../../include/classes/data',
 	__DIR__.'/../../include/classes/core',
 	__DIR__.'/../../include/classes/helpers',
 	__DIR__.'/../../include/classes/db',
@@ -64,6 +64,7 @@ $autoloader->addNamespace('', [
 	__DIR__.'/../../include/classes/html',
 	__DIR__.'/../../include/classes/html/interfaces',
 	__DIR__.'/../../include/classes/xml',
+	__DIR__.'/../../include/classes/macros',
 	__DIR__.'/include/classes/db',
 	__DIR__.'/include/classes/html',
 	__DIR__.'/include/classes/validators',

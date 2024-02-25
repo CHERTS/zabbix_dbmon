@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 
+#include "log.h"
 #include "comms.h"
 #include "zbxalgo.h"
 #include "zbxjson.h"
@@ -74,8 +75,7 @@
  *                                                                            *
  * This is zbx_snmp_walk() callback function prototype.                       *
  *                                                                            *
- * Parameters: arg   - [IN] an user argument passed to zbx_snmp_walk()        *
- *                          function                                          *
+ * Parameters: arg   - [IN] user argument passed to zbx_snmp_walk() function  *
  *             snmp_oid - [IN] the OID the walk function is looking for       *
  *             index    - [IN] the index of found OID                         *
  *             value    - [IN] the OID value                                  *
@@ -196,8 +196,6 @@ static char	*get_item_security_name(const DC_ITEM *item)
 
 /******************************************************************************
  *                                                                            *
- * Function: cache_get_snmp_index                                             *
- *                                                                            *
  * Purpose: retrieve index that matches value from the relevant index cache   *
  *                                                                            *
  * Parameters: item      - [IN] configuration of Zabbix item, contains        *
@@ -251,8 +249,6 @@ end:
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: cache_put_snmp_index                                             *
  *                                                                            *
  * Purpose: store the index-value pair in the relevant index cache            *
  *                                                                            *
@@ -319,8 +315,6 @@ static void	cache_put_snmp_index(const DC_ITEM *item, const char *snmp_oid, cons
 
 /******************************************************************************
  *                                                                            *
- * Function: cache_del_snmp_index_subtree                                     *
- *                                                                            *
  * Purpose: delete index-value mappings from the specified index cache        *
  *                                                                            *
  * Parameters: item      - [IN] configuration of Zabbix item, contains        *
@@ -356,6 +350,45 @@ end:
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
 }
 
+static int	zbx_snmpv3_set_auth_protocol(const DC_ITEM *item, struct snmp_session *session)
+{
+	int	ret = SUCCEED;
+
+	switch (item->snmpv3_authprotocol)
+	{
+		case ITEM_SNMPV3_AUTHPROTOCOL_MD5:
+			session->securityAuthProto = usmHMACMD5AuthProtocol;
+			session->securityAuthProtoLen = USM_AUTH_PROTO_MD5_LEN;
+			break;
+		case ITEM_SNMPV3_AUTHPROTOCOL_SHA1:
+			session->securityAuthProto = usmHMACSHA1AuthProtocol;
+			session->securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
+			break;
+#ifdef HAVE_NETSNMP_STRONG_AUTH
+		case ITEM_SNMPV3_AUTHPROTOCOL_SHA224:
+			session->securityAuthProto = usmHMAC128SHA224AuthProtocol;
+			session->securityAuthProtoLen = OID_LENGTH(usmHMAC128SHA224AuthProtocol);
+			break;
+		case ITEM_SNMPV3_AUTHPROTOCOL_SHA256:
+			session->securityAuthProto = usmHMAC192SHA256AuthProtocol;
+			session->securityAuthProtoLen = OID_LENGTH(usmHMAC192SHA256AuthProtocol);
+			break;
+		case ITEM_SNMPV3_AUTHPROTOCOL_SHA384:
+			session->securityAuthProto = usmHMAC256SHA384AuthProtocol;
+			session->securityAuthProtoLen = OID_LENGTH(usmHMAC256SHA384AuthProtocol);
+			break;
+		case ITEM_SNMPV3_AUTHPROTOCOL_SHA512:
+			session->securityAuthProto = usmHMAC384SHA512AuthProtocol;
+			session->securityAuthProtoLen = OID_LENGTH(usmHMAC384SHA512AuthProtocol);
+			break;
+#endif
+		default:
+			ret = FAIL;
+	}
+
+	return ret;
+}
+
 static char	*zbx_get_snmp_type_error(u_char type)
 {
 	switch (type)
@@ -387,16 +420,7 @@ static int	zbx_get_snmp_response_error(const struct snmp_session *ss, const DC_I
 		zbx_snprintf(error, max_error_len, "Cannot connect to \"%s:%hu\": %s.",
 				interface->addr, interface->port, snmp_api_errstring(ss->s_snmp_errno));
 
-		switch (ss->s_snmp_errno)
-		{
-			case SNMPERR_UNKNOWN_USER_NAME:
-			case SNMPERR_UNSUPPORTED_SEC_LEVEL:
-			case SNMPERR_AUTHENTICATION_FAILURE:
-				ret = NOTSUPPORTED;
-				break;
-			default:
-				ret = NETWORK_ERROR;
-		}
+		ret = NETWORK_ERROR;
 	}
 	else if (STAT_TIMEOUT == status)
 	{
@@ -501,23 +525,11 @@ static struct snmp_session	*zbx_snmp_open_session(const DC_ITEM *item, char *err
 			case ITEM_SNMPV3_SECURITYLEVEL_AUTHNOPRIV:
 				session.securityLevel = SNMP_SEC_LEVEL_AUTHNOPRIV;
 
-				switch (item->snmpv3_authprotocol)
+				if (FAIL == zbx_snmpv3_set_auth_protocol(item, &session))
 				{
-					case ITEM_SNMPV3_AUTHPROTOCOL_MD5:
-						/* set the authentication protocol to MD5 */
-						session.securityAuthProto = usmHMACMD5AuthProtocol;
-						session.securityAuthProtoLen = USM_AUTH_PROTO_MD5_LEN;
-						break;
-					case ITEM_SNMPV3_AUTHPROTOCOL_SHA:
-						/* set the authentication protocol to SHA */
-						session.securityAuthProto = usmHMACSHA1AuthProtocol;
-						session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
-						break;
-					default:
-						zbx_snprintf(error, max_error_len,
-								"Unsupported authentication protocol [%d]",
-								item->snmpv3_authprotocol);
-						goto end;
+					zbx_snprintf(error, max_error_len, "Unsupported authentication protocol [%d]",
+							item->snmpv3_authprotocol);
+					goto end;
 				}
 
 				session.securityAuthKeyLen = USM_AUTH_KU_LEN;
@@ -535,23 +547,11 @@ static struct snmp_session	*zbx_snmp_open_session(const DC_ITEM *item, char *err
 			case ITEM_SNMPV3_SECURITYLEVEL_AUTHPRIV:
 				session.securityLevel = SNMP_SEC_LEVEL_AUTHPRIV;
 
-				switch (item->snmpv3_authprotocol)
+				if (FAIL == zbx_snmpv3_set_auth_protocol(item, &session))
 				{
-					case ITEM_SNMPV3_AUTHPROTOCOL_MD5:
-						/* set the authentication protocol to MD5 */
-						session.securityAuthProto = usmHMACMD5AuthProtocol;
-						session.securityAuthProtoLen = USM_AUTH_PROTO_MD5_LEN;
-						break;
-					case ITEM_SNMPV3_AUTHPROTOCOL_SHA:
-						/* set the authentication protocol to SHA */
-						session.securityAuthProto = usmHMACSHA1AuthProtocol;
-						session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
-						break;
-					default:
-						zbx_snprintf(error, max_error_len,
-								"Unsupported authentication protocol [%d]",
-								item->snmpv3_authprotocol);
-						goto end;
+					zbx_snprintf(error, max_error_len, "Unsupported authentication protocol [%d]",
+							item->snmpv3_authprotocol);
+					goto end;
 				}
 
 				session.securityAuthKeyLen = USM_AUTH_KU_LEN;
@@ -575,11 +575,33 @@ static struct snmp_session	*zbx_snmp_open_session(const DC_ITEM *item, char *err
 						session.securityPrivProtoLen = USM_PRIV_PROTO_DES_LEN;
 						break;
 #endif
-					case ITEM_SNMPV3_PRIVPROTOCOL_AES:
-						/* set the privacy protocol to AES */
+					case ITEM_SNMPV3_PRIVPROTOCOL_AES128:
+						/* set the privacy protocol to AES128 */
 						session.securityPrivProto = usmAESPrivProtocol;
 						session.securityPrivProtoLen = USM_PRIV_PROTO_AES_LEN;
 						break;
+#ifdef HAVE_NETSNMP_STRONG_PRIV
+					case ITEM_SNMPV3_PRIVPROTOCOL_AES192:
+						/* set the privacy protocol to AES192 */
+						session.securityPrivProto = usmAES192PrivProtocol;
+						session.securityPrivProtoLen = OID_LENGTH(usmAES192PrivProtocol);
+						break;
+					case ITEM_SNMPV3_PRIVPROTOCOL_AES256:
+						/* set the privacy protocol to AES256 */
+						session.securityPrivProto = usmAES256PrivProtocol;
+						session.securityPrivProtoLen = OID_LENGTH(usmAES256PrivProtocol);
+						break;
+					case ITEM_SNMPV3_PRIVPROTOCOL_AES192C:
+						/* set the privacy protocol to AES192 (Cisco version) */
+						session.securityPrivProto = usmAES192CiscoPrivProtocol;
+						session.securityPrivProtoLen = OID_LENGTH(usmAES192CiscoPrivProtocol);
+						break;
+					case ITEM_SNMPV3_PRIVPROTOCOL_AES256C:
+						/* set the privacy protocol to AES256 (Cisco version) */
+						session.securityPrivProto = usmAES256CiscoPrivProtocol;
+						session.securityPrivProtoLen = OID_LENGTH(usmAES256CiscoPrivProtocol);
+						break;
+#endif
 					default:
 						zbx_snprintf(error, max_error_len,
 								"Unsupported privacy protocol [%d]",
@@ -772,6 +794,10 @@ static int	zbx_snmp_set_result(const struct variable_list *var, AGENT_RESULT *re
 				(unsigned int)var->val.string[2],
 				(unsigned int)var->val.string[3]));
 	}
+	else if (ASN_NULL == var->type)
+	{
+		SET_STR_RESULT(result, zbx_strdup(NULL, "NULL"));
+	}
 	else
 	{
 		SET_MSG_RESULT(result, zbx_get_snmp_type_error(var->type));
@@ -809,7 +835,7 @@ static int	zbx_snmp_print_oid(char *buffer, size_t buffer_len, const oid *objid,
 }
 
 static int	zbx_snmp_choose_index(char *buffer, size_t buffer_len, const oid *objid, size_t objid_len,
-		size_t root_string_len, size_t root_numeric_len)
+		size_t root_string_len, size_t root_numeric_len, char *root_oid)
 {
 	oid	parsed_oid[MAX_OID_LEN];
 	size_t	parsed_oid_len = MAX_OID_LEN;
@@ -880,7 +906,19 @@ static int	zbx_snmp_choose_index(char *buffer, size_t buffer_len, const oid *obj
 
 	if (NULL == strchr(printed_oid, '"') && NULL == strchr(printed_oid, '\''))
 	{
-		zbx_strlcpy(buffer, printed_oid + root_string_len + 1, buffer_len);
+		if (0 != strncmp(printed_oid, root_oid, strlen(root_oid)))
+		{
+			size_t	offset = 0;
+			char	*sep;
+
+			if (NULL != (sep = strstr(printed_oid, "::")))
+				offset = sep - printed_oid + 2;
+
+			zbx_strlcpy(buffer, printed_oid + offset, buffer_len);
+		}
+		else
+			zbx_strlcpy(buffer, printed_oid + root_string_len + 1, buffer_len);
+
 		return SUCCEED;
 	}
 
@@ -991,8 +1029,6 @@ static int	zbx_oid_is_new(zbx_hashset_t *hs, size_t root_len, const oid *p_oid, 
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_snmp_walk                                                    *
- *                                                                            *
  * Purpose: retrieve information by walking an OID tree                       *
  *                                                                            *
  * Parameters: ss            - [IN] SNMP session handle                       *
@@ -1013,8 +1049,6 @@ static int	zbx_oid_is_new(zbx_hashset_t *hs, size_t root_len, const oid *p_oid, 
  *               CONFIG_ERROR - item configuration error                      *
  *               SUCCEED - if function successfully completed                 *
  *                                                                            *
- * Author: Alexander Vladishev, Aleksandrs Saveljevs                          *
- *                                                                            *
  ******************************************************************************/
 static int	zbx_snmp_walk(struct snmp_session *ss, const DC_ITEM *item, const char *snmp_oid, char *error,
 		size_t max_error_len, int *max_succeed, int *min_fail, int max_vars, int bulk,
@@ -1023,7 +1057,7 @@ static int	zbx_snmp_walk(struct snmp_session *ss, const DC_ITEM *item, const cha
 	struct snmp_pdu		*pdu, *response;
 	oid			anOID[MAX_OID_LEN], rootOID[MAX_OID_LEN];
 	size_t			anOID_len = MAX_OID_LEN, rootOID_len = MAX_OID_LEN, root_string_len, root_numeric_len;
-	char			oid_index[MAX_STRING_LEN];
+	char			oid_index[MAX_STRING_LEN], root_oid[MAX_STRING_LEN];
 	struct variable_list	*var;
 	int			status, level, running, num_vars, check_oid_increase = 1, ret = SUCCEED;
 	AGENT_RESULT		snmp_result;
@@ -1061,6 +1095,8 @@ static int	zbx_snmp_walk(struct snmp_session *ss, const DC_ITEM *item, const cha
 	}
 
 	root_numeric_len = strlen(oid_index);
+
+	zbx_strlcpy(root_oid, oid_index, sizeof(root_oid));
 
 	/* copy rootOID to anOID */
 	memcpy(anOID, rootOID, rootOID_len * sizeof(oid));
@@ -1108,7 +1144,7 @@ static int	zbx_snmp_walk(struct snmp_session *ss, const DC_ITEM *item, const cha
 		{
 			/* The logic of iteratively reducing request size here is the same as in function */
 			/* zbx_snmp_get_values(). Please refer to the description there for explanation.  */
-
+reduce_max_vars:
 			if (*min_fail > max_vars)
 				*min_fail = max_vars;
 
@@ -1127,7 +1163,21 @@ static int	zbx_snmp_walk(struct snmp_session *ss, const DC_ITEM *item, const cha
 		}
 		else if (STAT_SUCCESS != status || SNMP_ERR_NOERROR != response->errstat)
 		{
+			if (1 >= level && 1 < max_vars)
+				goto reduce_max_vars;
+
 			ret = zbx_get_snmp_response_error(ss, &item->interface, status, response, error, max_error_len);
+			running = 0;
+			goto next;
+		}
+
+		if (NULL == response->variables)
+		{
+			if (1 >= level && 1 < max_vars)
+				goto reduce_max_vars;
+
+			zbx_strlcpy(error, "No values received.", max_error_len);
+			ret = NOTSUPPORTED;
 			running = 0;
 			goto next;
 		}
@@ -1187,8 +1237,9 @@ static int	zbx_snmp_walk(struct snmp_session *ss, const DC_ITEM *item, const cha
 					break;
 				}
 
+
 				if (SUCCEED != zbx_snmp_choose_index(oid_index, sizeof(oid_index), var->name,
-						var->name_length, root_string_len, root_numeric_len))
+						var->name_length, root_string_len, root_numeric_len, root_oid))
 				{
 					zbx_snprintf(error, max_error_len, "zbx_snmp_choose_index():"
 							" cannot choose appropriate index while walking for"
@@ -1515,7 +1566,12 @@ halve:
 		}
 	}
 	else
+	{
+		if (1 <= level)
+			goto halve;
+
 		ret = zbx_get_snmp_response_error(ss, &items[0].interface, status, response, error, max_error_len);
+	}
 exit:
 	if (NULL != response)
 		snmp_free_pdu(response);
@@ -1527,11 +1583,7 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_snmp_translate                                               *
- *                                                                            *
  * Purpose: translate well-known object identifiers into numeric form         *
- *                                                                            *
- * Author: Alexei Vladishev                                                   *
  *                                                                            *
  ******************************************************************************/
 static void	zbx_snmp_translate(char *oid_translated, const char *snmp_oid, size_t max_oid_len)
@@ -1638,8 +1690,6 @@ static int	zbx_snmp_dobject_compare(const void *d1, const void *d2)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_snmp_ddata_init                                              *
- *                                                                            *
  * Purpose: initializes snmp discovery data object                            *
  *                                                                            *
  * Parameters: data          - [IN] snmp discovery data object                *
@@ -1709,8 +1759,6 @@ out:
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_snmp_ddata_clean                                             *
  *                                                                            *
  * Purpose: releases data allocated by snmp discovery                         *
  *                                                                            *
@@ -2086,6 +2134,9 @@ static void	zbx_init_snmp(void)
 	sigaddset(&mask, SIGQUIT);
 	sigprocmask(SIG_BLOCK, &mask, &orig_mask);
 
+	netsnmp_ds_set_boolean(NETSNMP_DS_LIBRARY_ID, NETSNMP_DS_LIB_DISABLE_PERSISTENT_LOAD, 1);
+	netsnmp_ds_set_boolean(NETSNMP_DS_LIBRARY_ID, NETSNMP_DS_LIB_DISABLE_PERSISTENT_SAVE, 1);
+
 	init_snmp(progname);
 	zbx_snmp_init_done = 1;
 
@@ -2189,7 +2240,6 @@ void	zbx_clear_cache_snmp(unsigned char process_type, int process_num)
 	if (0 == zbx_snmp_init_done)
 		return;
 
-	netsnmp_ds_set_boolean(NETSNMP_DS_LIBRARY_ID, NETSNMP_DS_LIB_DONT_PERSIST_STATE, 1);
 	zbx_shutdown_snmp();
 }
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,8 +37,6 @@ class CControllerWidgetProblemsBySvView extends CControllerWidget {
 	protected function doAction() {
 		$fields = $this->getForm()->getFieldsData();
 
-		$config = select_config();
-
 		$filter = [
 			'groupids' => getSubGroups($fields['groupids']),
 			'exclude_groupids' => getSubGroups($fields['exclude_groupids']),
@@ -63,21 +61,14 @@ class CControllerWidgetProblemsBySvView extends CControllerWidget {
 		}
 
 		$this->setResponse(new CControllerResponseData([
-			'name' => $this->getInput('name', $this->getDefaultHeader()),
+			'name' => $this->getInput('name', $this->getDefaultName()),
 			'initial_load' => (bool) $this->getInput('initial_load', 0),
 			'data' => $data,
-			'severity_names' => [
-				'severity_name_0' => $config['severity_name_0'],
-				'severity_name_1' => $config['severity_name_1'],
-				'severity_name_2' => $config['severity_name_2'],
-				'severity_name_3' => $config['severity_name_3'],
-				'severity_name_4' => $config['severity_name_4'],
-				'severity_name_5' => $config['severity_name_5']
-			],
 			'filter' => $filter,
 			'user' => [
 				'debug_mode' => $this->getDebugMode()
-			]
+			],
+			'allowed' => $data['allowed']
 		]));
 	}
 }

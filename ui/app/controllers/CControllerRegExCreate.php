@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,16 +19,14 @@
 **/
 
 
-require_once dirname(__FILE__).'/../../include/regexp.inc.php';
-
 class CControllerRegExCreate extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'name'         => 'required | string | not_empty | db regexps.name',
-			'test_string'  => 'string | db regexps.test_string',
-			'expressions'  => 'required | array',
-			'form_refresh' => ''
+			'name'         => 'required|string|not_empty|db regexps.name',
+			'test_string'  => 'string|db regexps.test_string',
+			'expressions'  => 'required|array',
+			'form_refresh' => 'int32'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -40,7 +38,7 @@ class CControllerRegExCreate extends CController {
 
 					$response = new CControllerResponseRedirect($url);
 					$response->setFormData($this->getInputAll());
-					$response->setMessageError(_('Cannot add regular expression'));
+					CMessageHelper::setErrorTitle(_('Cannot add regular expression'));
 					$this->setResponse($response);
 					break;
 
@@ -54,40 +52,24 @@ class CControllerRegExCreate extends CController {
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() == USER_TYPE_SUPER_ADMIN);
+		return $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_GENERAL);
 	}
 
 	protected function doAction() {
-		/** @var array $expressions */
-		$expressions = $this->getInput('expressions', []);
-
-		foreach ($expressions as &$expression) {
-			if (!array_key_exists('case_sensitive', $expression)) {
-				$expression['case_sensitive'] = 0;
-			}
-		}
-		unset($expression);
-
-		DBstart();
-		$result = addRegexp([
-			'name'        => $this->getInput('name'),
-			'test_string' => $this->getInput('test_string')
-		], $expressions);
-
-		if ($result) {
-			add_audit(AUDIT_ACTION_ADD, AUDIT_RESOURCE_REGEXP, _('Name').NAME_DELIMITER.$this->getInput('name'));
-		}
-
-		$result = DBend($result);
+		$result = API::Regexp()->create([
+			'name' => $this->getInput('name'),
+			'test_string' => $this->getInput('test_string', ''),
+			'expressions' => $this->getInput('expressions')
+		]);
 
 		if ($result) {
 			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))->setArgument('action', 'regex.list'));
-			$response->setMessageOk(_('Regular expression added'));
+			CMessageHelper::setSuccessTitle(_('Regular expression added'));
 		}
 		else {
 			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))->setArgument('action', 'regex.edit'));
 			$response->setFormData($this->getInputAll());
-			$response->setMessageError(_('Cannot add regular expression'));
+			CMessageHelper::setErrorTitle(_('Cannot add regular expression'));
 		}
 
 		$this->setResponse($response);

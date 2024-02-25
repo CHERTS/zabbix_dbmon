@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,14 +21,29 @@
 
 class CControllerDashboardWidgetConfigure extends CController {
 
+	private $context;
+
+	protected function init() {
+		$this->setPostContentType(self::POST_CONTENT_TYPE_JSON);
+	}
+
 	protected function checkInput() {
 		$fields = [
-			'type' => 'in '.implode(',', array_keys(CWidgetConfig::getKnownWidgetTypes())),
-			'fields' => 'json',
-			'view_mode' => 'in '.implode(',', [ZBX_WIDGET_VIEW_MODE_NORMAL, ZBX_WIDGET_VIEW_MODE_HIDDEN_HEADER])
+			'templateid' =>	'db dashboard.templateid',
+			'type' =>		'required|string',
+			'fields' =>		'json',
+			'view_mode' =>	'required|in '.implode(',', [ZBX_WIDGET_VIEW_MODE_NORMAL, ZBX_WIDGET_VIEW_MODE_HIDDEN_HEADER])
 		];
 
 		$ret = $this->validateInput($fields);
+
+		if ($ret) {
+			$this->context = $this->hasInput('templateid')
+				? CWidgetConfig::CONTEXT_TEMPLATE_DASHBOARD
+				: CWidgetConfig::CONTEXT_DASHBOARD;
+
+			$ret = CWidgetConfig::isWidgetTypeSupportedInContext($this->getInput('type'), $this->context);
+		}
 
 		if (!$ret) {
 			$this->setResponse(new CControllerResponseFatal());
@@ -43,7 +58,9 @@ class CControllerDashboardWidgetConfigure extends CController {
 
 	protected function doAction() {
 		$type = $this->getInput('type');
-		$form = CWidgetConfig::getForm($type, $this->getInput('fields', '{}'));
+		$form = CWidgetConfig::getForm($type, $this->getInput('fields', '{}'),
+			($this->context === CWidgetConfig::CONTEXT_TEMPLATE_DASHBOARD) ? $this->getInput('templateid') : null
+		);
 		// Transforms corrupted data to default values.
 		$form->validate();
 

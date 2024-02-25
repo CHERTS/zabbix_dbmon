@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,13 +25,30 @@ require_once dirname(__FILE__).'/include/gettextwrapper.inc.php';
 
 setupLocale(array_key_exists('lang', $_GET) ? (string) $_GET['lang'] : 'en_GB');
 
-require_once dirname(__FILE__).'/include/translateDefines.inc.php';
 require_once dirname(__FILE__).'/include/js.inc.php';
 
 // available scripts 'scriptFileName' => 'path relative to js/'
-$availableJScripts = [
+$available_js = [
 	'common.js' => '',
-	'dashboard.grid.js' => '',
+	'class.dashboard.js' => '',
+	'class.dashboard.page.js' => '',
+	'class.dashboard.widget.placeholder.js' => '',
+	'class.widget.js' => 'widgets/',
+	'class.widget.iterator.js' => 'widgets/',
+	'class.widget.clock.js' => 'widgets/',
+	'class.widget.geomap.js' => 'widgets/',
+	'class.widget.graph.js' => 'widgets/',
+	'class.widget.graph-prototype.js' => 'widgets/',
+	'class.widget.item.js' => 'widgets/',
+	'class.widget.map.js' => 'widgets/',
+	'class.widget.navtree.js' => 'widgets/',
+	'class.widget.paste-placeholder.js' => 'widgets/',
+	'class.widget.problems.js' => 'widgets/',
+	'class.widget.problemsbysv.js' => 'widgets/',
+	'class.widget.svggraph.js' => 'widgets/',
+	'class.widget.trigerover.js' => 'widgets/',
+	'hostinterfacemanager.js' => '',
+	'hostmacrosmanager.js' => '',
 	'menupopup.js' => '',
 	'gtlc.js' => '',
 	'functions.js' => '',
@@ -43,7 +60,6 @@ $availableJScripts = [
 	'multiselect.js' => '',
 	'colorpicker.js' => '',
 	'chkbxrange.js' => '',
-	'csvggraphwidget.js' => '',
 	'layout.mode.js' => '',
 	'textareaflexible.js' => '',
 	'inputsecret.js' => '',
@@ -51,15 +67,18 @@ $availableJScripts = [
 	// vendors
 	'jquery.js' => 'vendors/',
 	'jquery-ui.js' => 'vendors/',
+	'leaflet.js' => 'vendors/Leaflet/Leaflet/',
+	'leaflet.markercluster.js' => 'vendors/Leaflet/Leaflet.markercluster/',
 	// classes
+	'component.z-bar-gauge.js' => '',
 	'component.z-select.js' => '',
 	'class.base-component.js' => '',
-	'class.bbcode.js' => '',
 	'class.calendar.js' => '',
-	'class.cclock.js' => '',
 	'class.cdate.js' => '',
 	'class.cdebug.js' => '',
 	'class.cmap.js' => '',
+	'class.expandable.subfilter.js' => '',
+	'class.geomaps.js' => '',
 	'class.localstorage.js' => '',
 	'class.menu.js' => '',
 	'class.menu-item.js' => '',
@@ -72,24 +91,25 @@ $availableJScripts = [
 	'class.cookie.js' => '',
 	'class.coverride.js' => '',
 	'class.crangecontrol.js' => '',
-	'class.cscreen.js' => '',
 	'class.csuggest.js' => '',
 	'class.csvggraph.js' => '',
-	'class.ctree.js' => '',
 	'class.curl.js' => '',
 	'class.overlaycollection.js' => '',
 	'class.overlay.js' => '',
 	'class.cverticalaccordion.js' => '',
-	'class.mapWidget.js' => '',
 	'class.scrollable.js' => '',
 	'class.sidebar.js' => '',
+	'class.sortable.js' => '',
 	'class.svg.canvas.js' => 'vector/',
 	'class.svg.map.js' => 'vector/',
 	'class.cviewswitcher.js' => '',
-	'class.pmaster.js' => '',
 	'class.rpc.js' => '',
+	'class.tabfilter.js' => '',
+	'class.tabfilteritem.js' => '',
+	'class.tagfilteritem.js' => '',
 	'class.template.js' => '',
 	'init.js' => '',
+	'class.tab-indicators.js' => '',
 	// templates
 	'sysmap.tpl.js' => 'templates/',
 	// page-specific scripts
@@ -97,43 +117,101 @@ $availableJScripts = [
 	'report2.js' => 'pages/',
 	'report4.js' => 'pages/',
 	'setup.js' => 'pages/',
-	'srv_status.js' => 'pages/',
-	'monitoring.overview.js' => 'pages/',
 	'popup.condition.common.js' => 'pages/',
 	'popup.operation.common.js' => 'pages/'
 ];
 
-$tranStrings = [
+$translate_strings = [
 	'gtlc.js' => [
 		'S_MINUTE_SHORT' => _x('m', 'minute short')
 	],
 	'class.overlay.js' => [
 		'Operation details' => _('Operation details')
 	],
-	'dashboard.grid.js' => [
-		'Edit widget' => _('Edit widget'),
-		'Add widget' => _('Add widget'),
-		'Paste widget' => _('Paste widget'),
-		'S_COPY' => _('Copy'),
-		'S_PASTE' => _('Paste'),
-		'Apply' => _('Apply'),
-		'Add' => _('Add'),
-		'Edit' => _('Edit'),
-		'Cancel' => _('Cancel'),
+	'class.dashboard.js' => [
+		'Actions' => _('Actions'),
+		'Cannot add dashboard page: maximum number of %1$d dashboard pages has been added.' => _('Cannot add dashboard page: maximum number of %1$d dashboard pages has been added.'),
+		'Cannot add widget: not enough free space on the dashboard.' => _('Cannot add widget: not enough free space on the dashboard.'),
+		'Copy' => _('Copy'),
 		'Delete' => _('Delete'),
-		'You have unsaved changes.' => _('You have unsaved changes.'),
-		'Are you sure, you want to leave this page?' => _('Are you sure, you want to leave this page?'),
-		'Cannot add widgets in kiosk mode' => _('Cannot add widgets in kiosk mode'),
-		'You do not have permissions to edit dashboard' => _('You do not have permissions to edit dashboard'),
+		'Failed to paste dashboard page.' => _('Failed to paste dashboard page.'),
+		'Failed to paste widget.' => _('Failed to paste widget.'),
+		'Failed to update dashboard page properties.' => _('Failed to update dashboard page properties.'),
+		'Failed to update dashboard properties.' => _('Failed to update dashboard properties.'),
+		'Failed to update widget properties.' => _('Failed to update widget properties.'),
+		'Page %1$d' => _('Page %1$d'),
+		'Paste widget' => _('Paste widget'),
+		'Properties' => _('Properties'),
+		'Start slideshow' => _('Start slideshow'),
+		'Stop slideshow' => _('Stop slideshow')
+	],
+	'class.dashboard.widget.placeholder.js' => [
 		'Add a new widget' => _('Add a new widget'),
-		'Release to create a widget.' => _('Release to create a widget.'),
 		'Click and drag to desired size.' => _('Click and drag to desired size.'),
-		'Previous page' => _('Previous page'),
-		'Next page' => _('Next page'),
+		'Release to create a widget.' => _('Release to create a widget.')
+	],
+	'class.geomaps.js' => [
+		'Severity filter' => _('Severity filter')
+	],
+	'class.widget.js' => [
+		'10 seconds' => _n('%1$s second', '%1$s seconds', 10),
+		'30 seconds' => _n('%1$s second', '%1$s seconds', 30),
+		'1 minute' => _n('%1$s minute', '%1$s minutes', 1),
+		'2 minutes' => _n('%1$s minute', '%1$s minutes', 2),
+		'10 minutes' => _n('%1$s minute', '%1$s minutes', 10),
+		'15 minutes' => _n('%1$s minute', '%1$s minutes', 15),
+		'Actions' => _s('Actions'),
+		'Copy' => _s('Copy'),
+		'Delete' => _s('Delete'),
+		'Edit' => _s('Edit'),
+		'No refresh' => _('No refresh'),
+		'Paste' => _s('Paste'),
+		'Refresh interval' => _s('Refresh interval')
+	],
+	'class.widget.geomap.js' => [
+		'Actions' => _('Actions'),
+		'Set this view as default' => _('Set this view as default'),
+		'Reset to initial view' => _('Reset to initial view'),
+		'No problems' => _('No problems'),
+		'Not classified' => _('Not classified'),
+		'Information' => _('Information'),
+		'Warning' => _('Warning'),
+		'Average' => _('Average'),
+		'High' => _('High'),
+		'Disaster' => _('Disaster'),
+		'Host' => _('Host'),
+		'D' => _x('D', 'abbreviation of severity level'),
+		'H' => _x('H', 'abbreviation of severity level'),
+		'A' => _x('A', 'abbreviation of severity level'),
+		'W' => _x('W', 'abbreviation of severity level'),
+		'I' => _x('I', 'abbreviation of severity level'),
+		'N' => _x('N', 'abbreviation of severity level'),
+		'Navigate to default view' => _('Navigate to default view'),
+		'Navigate to initial view' => _('Navigate to initial view')
+	],
+	'class.widget.iterator.js' => [
+		'Next page' => _s('Next page'),
+		'Previous page' => _s('Previous page'),
 		'Widget is too small for the specified number of columns and rows.' =>
-			_('Widget is too small for the specified number of columns and rows.'),
-		'Cannot add widget: not enough free space on the dashboard.' =>
-			_('Cannot add widget: not enough free space on the dashboard.')
+			_s('Widget is too small for the specified number of columns and rows.')
+	],
+	'class.widget.graph.js' => [
+		'Actions' => _s('Actions'),
+		'Download image' => _s('Download image')
+	],
+	'class.widget.navtree.js' => [
+		'Add' => _s('Add'),
+		'Add child element' => _s('Add child element'),
+		'Add multiple maps' => _s('Add multiple maps'),
+		'Apply' => _s('Apply'),
+		'Cancel' => _s('Cancel'),
+		'Edit' => _s('Edit'),
+		'Edit tree element' => _s('Edit tree element'),
+		'Remove' => _s('Remove')
+	],
+	'class.widget.svggraph.js' => [
+		'Actions' => _s('Actions'),
+		'Download image' => _s('Download image')
 	],
 	'functions.js' => [
 		'Cancel' => _('Cancel'),
@@ -149,6 +227,9 @@ $tranStrings = [
 		'Success message' => _('Success message'),
 		'Error message' => _('Error message'),
 		'Warning message' => _('Warning message')
+	],
+	'inputsecret.js' => [
+		'value' => _('value')
 	],
 	'class.calendar.js' => [
 		'S_CALENDAR' => _('Calendar'),
@@ -208,7 +289,7 @@ $tranStrings = [
 		'S_DELETE_LINKS_BETWEEN_SELECTED_ELEMENTS_Q' => _('Delete links between selected elements?'),
 		'S_MACRO_EXPAND_ERROR' => _('Cannot expand macros.'),
 		'S_NO_IMAGES' => 'You need to have at least one image uploaded to create map element. Images can be uploaded in Administration->General->Images section.',
-		'S_COLOR_IS_NOT_CORRECT' => _('Colour "%1$s" is not correct: expecting hexadecimal colour code (6 symbols).')
+		'S_COLOR_IS_NOT_CORRECT' => _('Color "%1$s" is not correct: expecting hexadecimal color code (6 symbols).')
 	],
 	'class.notifications.js' => [
 		'S_PROBLEM_ON' => _('Problem on'),
@@ -223,7 +304,7 @@ $tranStrings = [
 		'S_MAX_COOKIE_SIZE_REACHED' => _('We are sorry, the maximum possible number of elements to remember has been reached.')
 	],
 	'class.coverride.js' => [
-		'S_COLOR' => _('colour'),
+		'S_COLOR' => _('color'),
 		'S_TIME_SHIFT' => _('time shift')
 	],
 	'class.cverticalaccordion.js' => [
@@ -234,6 +315,18 @@ $tranStrings = [
 		'S_EXPAND' => _('Expand'),
 		'S_COLLAPSE' => _('Collapse'),
 		'S_CLOSE' => _('Close')
+	],
+	'hostinterfacemanager.js' => [
+		'Agent' => _('Agent'),
+		'SNMP' => _('SNMP'),
+		'JMX' => _('JMX'),
+		'IPMI' => _('IPMI'),
+		'No interfaces are defined.' => _('No interfaces are defined.')
+	],
+	'hostmacrosmanager.js' => [
+		'Change' => _x('Change', 'verb'),
+		'Remove' => _('Remove'),
+		'value' => _('value')
 	],
 	'multilineinput.js' => [
 		'S_N_CHAR_COUNT' => _('%1$s characters'),
@@ -251,7 +344,7 @@ $tranStrings = [
 		'Added, %1$s' => _x('Added, %1$s', 'screen reader'),
 		'Removed, %1$s' => _x('Removed, %1$s', 'screen reader'),
 		'%1$s, read only' => _x('%1$s, read only', 'screen reader'),
-		'Can not be removed' => _x('Can not be removed', 'screen reader'),
+		'Cannot be removed' => _x('Cannot be removed', 'screen reader'),
 		'Selected, %1$s in position %2$d of %3$d' => _x('Selected, %1$s in position %2$d of %3$d', 'screen reader'),
 		'Selected, %1$s, read only, in position %2$d of %3$d' => _x('Selected, %1$s, read only, in position %2$d of %3$d', 'screen reader'),
 		'More than %1$d matches for %2$s found' => _x('More than %1$d matches for %2$s found', 'screen reader'),
@@ -259,6 +352,7 @@ $tranStrings = [
 		'%1$s preselected, use down,up arrow keys and enter to select' => _x('%1$s preselected, use down,up arrow keys and enter to select', 'screen reader')
 	],
 	'menupopup.js' => [
+		'500 latest values' => _('500 latest values'),
 		'Actions' => _('Actions'),
 		'Acknowledge' => _('Acknowledge'),
 		'Configuration' => _('Configuration'),
@@ -267,43 +361,35 @@ $tranStrings = [
 		'Create trigger' => _('Create trigger'),
 		'Create dependent item' => _('Create dependent item'),
 		'Create dependent discovery rule' => _('Create dependent discovery rule'),
+		'Dashboards' => _('Dashboards'),
 		'Delete' => _('Delete'),
 		'Delete dashboard?' => _('Delete dashboard?'),
 		'Do you wish to replace the conditional expression?' => _('Do you wish to replace the conditional expression?'),
-		'Edit trigger' => _('Edit trigger'),
+		'Item' => _('Item'),
 		'Insert expression' => _('Insert expression'),
 		'Sharing' => _('Sharing'),
 		'Trigger status "OK"' => _('Trigger status "OK"'),
 		'Trigger status "Problem"' => _('Trigger status "Problem"'),
 		'Go to' => _('Go to'),
+		'Graph' => _('Graph'),
 		'Graphs' => _('Graphs'),
 		'History' => _('History'),
 		'Host' => _('Host'),
 		'Inventory' => _('Inventory'),
-		'Screens' => _('Screens'),
 		'Latest data' => _('Latest data'),
 		'Latest values' => _('Latest values'),
 		'Last hour graph' => _('Last hour graph'),
 		'Last month graph' => _('Last month graph'),
 		'Last week graph' => _('Last week graph'),
 		'Problems' => _('Problems'),
-		'Refresh interval' => _('Refresh interval'),
-		'Refresh interval multiplier' => _('Refresh interval multiplier'),
 		'Scripts' => _('Scripts'),
 		'Submap' => _('Submap'),
 		'S_TRIGGER' => _('Trigger'),
 		'URL' => _('URL'),
 		'URLs' => _('URLs'),
+		'Values' => _('Values'),
 		'Web' => _('Web'),
-		'No refresh' => _('No refresh'),
-		'10 seconds' => _n('%1$s second', '%1$s seconds', 10),
-		'30 seconds' => _n('%1$s second', '%1$s seconds', 30),
-		'1 minute' => _n('%1$s minute', '%1$s minutes', 1),
-		'2 minutes' => _n('%1$s minute', '%1$s minutes', 2),
-		'10 minutes' => _n('%1$s minute', '%1$s minutes', 10),
-		'15 minutes' => _n('%1$s minute', '%1$s minutes', 15),
-		'S_SELECTED_SR' => _x('%1$s, selected', 'screen reader'),
-		'Download image' => _('Download image')
+		'S_SELECTED_SR' => _x('%1$s, selected', 'screen reader')
 	],
 	'init.js' => [
 		'Debug' => _('Debug'),
@@ -314,42 +400,39 @@ $tranStrings = [
 		'No interface found' => _('No interface found'),
 		'Item type does not use interface' => _('Item type does not use interface')
 	],
-	'class.cnavtree.js' => [
-		'Edit' => _('Edit'),
-		'Remove' => _('Remove'),
-		'root' => _('root'),
-		'Edit tree element' => _('Edit tree element'),
-		'Apply' => _('Apply'),
-		'Add' => _('Add'),
-		'Cancel' => _('Cancel'),
-		'Add child element' => _('Add child element'),
-		'Add multiple maps' => _('Add multiple maps')
-	],
 	'colorpicker.js' => [
-		'S_CLOSE' => _('Close')
+		'D' => _x('D', 'Default color option'),
+		'S_CLOSE' => _('Close'),
+		'Use default' => _('Use default')
 	],
 	'class.csvggraph.js' => [
 		'S_DISPLAYING_FOUND' => _('Displaying %1$s of %2$s found'),
 		'S_MINUTE_SHORT' => _x('m', 'minute short')
 	],
 	'common.js' => [
-		'Cancel' => _('Cancel')
+		'Cancel' => _('Cancel'),
+		'Ok' => _('Ok')
 	],
 	'component.z-select.js' => [
 		'All' => _('All')
 	],
 	'macrovalue.js' => [
-		'Set new value' => _('Set new value')
+		'Set new value' => _('Set new value'),
+		'path/to/secret:key' => _('path/to/secret:key'),
+		'value' => _('value')
+	],
+	'popup.condition.common.js' => [
+		'Services' => _('Services')
 	]
 ];
 
 $js = '';
 if (empty($_GET['files'])) {
-
 	$files = [
 		'jquery.js',
 		'jquery-ui.js',
 		'common.js',
+		'component.z-bar-gauge.js',
 		'component.z-select.js',
 		'class.base-component.js',
 		'class.cdebug.js',
@@ -361,7 +444,6 @@ if (empty($_GET['files'])) {
 		'class.menu.js',
 		'class.menu-item.js',
 		'class.rpc.js',
-		'class.bbcode.js',
 		'class.csuggest.js',
 		'class.scrollable.js',
 		'class.sidebar.js',
@@ -370,18 +452,29 @@ if (empty($_GET['files'])) {
 		'chkbxrange.js',
 		'functions.js',
 		'menupopup.js',
+		'inputsecret.js',
+		'macrovalue.js',
+		'multiselect.js',
+		'class.cverticalaccordion.js',
+		'class.cviewswitcher.js',
+		'class.tab-indicators.js',
+		'hostinterfacemanager.js',
+		'hostmacrosmanager.js',
+		'textareaflexible.js',
 		'init.js'
 	];
 
 	require_once dirname(__FILE__).'/include/defines.inc.php';
+	require_once dirname(__FILE__).'/include/classes/helpers/CCookieHelper.php';
 
-	if (array_key_exists(ZBX_SESSION_NAME, $_COOKIE)) {
-		$js .= 'window.ZBX_SESSION_NAME = "'.crc32($_COOKIE[ZBX_SESSION_NAME]).'";';
+	if (CCookieHelper::has(ZBX_SESSION_NAME)) {
+		$session = json_decode(base64_decode(CCookieHelper::get(ZBX_SESSION_NAME)), true);
+		$js .= 'window.ZBX_SESSION_NAME = "'.crc32($session['sessionid']).'";';
 		$files[] = 'class.localstorage.js';
 	}
 
 	// load frontend messaging only for some pages
-	if (isset($_GET['showGuiMessaging']) && $_GET['showGuiMessaging']) {
+	if (array_key_exists('showGuiMessaging', $_GET) && $_GET['showGuiMessaging']) {
 		$files[] = 'class.browsertab.js';
 		$files[] = 'class.notification.collection.js';
 		$files[] = 'class.notifications.audio.js';
@@ -396,20 +489,20 @@ else {
 }
 
 $js .= 'if (typeof(locale) === "undefined") { var locale = {}; }'."\n";
+
 foreach ($files as $file) {
-	if (isset($tranStrings[$file])) {
-		foreach ($tranStrings[$file] as $origStr => $str) {
-			$js .= 'locale[\'' . $origStr . '\'] = ' . zbx_jsvalue($str) . ';';
+	if (array_key_exists($file, $translate_strings)) {
+		foreach ($translate_strings[$file] as $origStr => $str) {
+			$js .= 'locale[\''.$origStr.'\'] = '.json_encode($str).';';
 		}
 	}
 }
 
 foreach ($files as $file) {
-	if (isset($availableJScripts[$file])) {
-		$js .= file_get_contents('js/'.$availableJScripts[$file].$file)."\n";
+	if (array_key_exists($file, $available_js)) {
+		$js .= file_get_contents('js/'.$available_js[$file].$file)."\n";
 	}
 }
-
 
 $etag = md5($js);
 /**

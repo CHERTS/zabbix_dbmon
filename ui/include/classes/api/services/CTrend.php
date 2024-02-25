@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,10 @@
  * Class containing methods for operations with trends.
  */
 class CTrend extends CApiService {
+
+	public const ACCESS_RULES = [
+		'get' => ['min_user_type' => USER_TYPE_ZABBIX_USER]
+	];
 
 	public function __construct() {
 		// the parent::__construct() method should not be called.
@@ -81,6 +85,11 @@ class CTrend extends CApiService {
 						break;
 
 					default:
+						if (CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS_GLOBAL) == 1) {
+							$hk_trends = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS));
+							$options['time_from'] = max($options['time_from'], time() - $hk_trends + 1);
+						}
+
 						$data = $this->getFromSql($options);
 				}
 

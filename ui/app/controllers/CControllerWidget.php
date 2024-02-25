@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ abstract class CControllerWidget extends CController {
 	 * Initialization function.
 	 */
 	protected function init() {
-		$this->disableSIDValidation();
+		$this->setPostContentType(self::POST_CONTENT_TYPE_JSON);
 	}
 
 	/**
@@ -68,6 +68,12 @@ abstract class CControllerWidget extends CController {
 		return $this;
 	}
 
+	protected function getContext(): string {
+		return $this->hasInput('templateid')
+			? CWidgetConfig::CONTEXT_TEMPLATE_DASHBOARD
+			: CWidgetConfig::CONTEXT_DASHBOARD;
+	}
+
 	/**
 	 * Set validation rules for input parameters.
 	 *
@@ -82,12 +88,12 @@ abstract class CControllerWidget extends CController {
 	}
 
 	/**
-	 * Returns default widget header.
+	 * Returns default widget name.
 	 *
 	 * @return string
 	 */
-	protected function getDefaultHeader() {
-		return CWidgetConfig::getKnownWidgetTypes()[$this->type];
+	protected function getDefaultName() {
+		return CWidgetConfig::getKnownWidgetTypes($this->getContext())[$this->type];
 	}
 
 	/**
@@ -96,14 +102,27 @@ abstract class CControllerWidget extends CController {
 	 * @return bool
 	 */
 	protected function checkInput() {
-		$ret = $this->validateInput($this->validation_rules);
+		$validation_rules = $this->validation_rules;
+
+		if (CWidgetConfig::isWidgetTypeSupportedInContext($this->type, CWidgetConfig::CONTEXT_TEMPLATE_DASHBOARD)) {
+			$validation_rules['templateid'] = 'db dashboard.templateid';
+		}
+
+		$ret = $this->validateInput($validation_rules);
+		$widget_name = $this->getDefaultName();
 
 		if ($ret) {
-			$this->form = CWidgetConfig::getForm($this->type, $this->getInput('fields', '{}'));
+			$this->form = CWidgetConfig::getForm($this->type, $this->getInput('fields', '{}'),
+				$this->hasInput('templateid') ? $this->getInput('templateid') : null
+			);
+
+			if ($this->getInput('name', '') !== '') {
+				$widget_name = $this->getInput('name');
+			}
 
 			if ($errors = $this->form->validate()) {
 				foreach ($errors as $error) {
-					info($error);
+					error($error);
 				}
 
 				$ret = false;
@@ -112,12 +131,9 @@ abstract class CControllerWidget extends CController {
 
 		if (!$ret) {
 			$output = [
-				'header' => $this->getDefaultHeader()
+				'name' => $widget_name,
+				'messages' => getMessages()->toString()
 			];
-
-			if (($messages = getMessages()) !== null) {
-				$output['messages'] = $messages->toString();
-			}
 
 			$this->setResponse(
 				(new CControllerResponseData(['main_block' => json_encode($output)]))->disableView()

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,18 +42,15 @@ class CSvgGraphHelper {
 	 *
 	 * @return array
 	 */
-	public static function get(array $options = [], $width, $height) {
+	public static function get(array $options, $width, $height) {
 		$metrics = [];
 		$errors = [];
 
 		// Find which metrics will be shown in graph and calculate time periods and display options.
 		self::getMetrics($metrics, $options['data_sets']);
 		// Apply overrides for previously selected $metrics.
-
-		$metrics = CMacrosResolverHelper::resolveItemNames($metrics);
-		$metrics = CArrayHelper::renameObjectsKeys($metrics, ['name_expanded' => 'name']);
-
 		self::applyOverrides($metrics, $options['overrides']);
+		self::applyUnits($metrics, $options['left_y_axis'], $options['right_y_axis']);
 		// Apply time periods for each $metric, based on graph/dashboard time as well as metric level timeshifts.
 		self::getTimePeriods($metrics, $options['time_period']);
 		// Find what data source (history or trends) will be used for each metric.
@@ -78,10 +75,19 @@ class CSvgGraphHelper {
 
 		// Get problems to display in graph.
 		if ($options['problems']['show_problems'] == SVG_GRAPH_PROBLEMS_SHOW) {
-			$options['problems']['itemids'] =
-				($options['problems']['graph_item_problems'] == SVG_GRAPH_SELECTED_ITEM_PROBLEMS)
-					? array_unique(zbx_objectValues($metrics, 'itemid'))
-					: null;
+			if ($options['problems']['graph_item_problems'] == SVG_GRAPH_SELECTED_ITEM_PROBLEMS) {
+				$options['problems']['itemids'] = [];
+
+				foreach ($metrics as $metric) {
+					$options['problems']['itemids'] += $metric['options']['aggregate_function'] != AGGREGATE_NONE
+						? array_column($metric['items'], 'itemid', 'itemid')
+						: [$metric['itemid'] => $metric['itemid']];
+				}
+				$options['problems']['itemids'] = array_values($options['problems']['itemids']);
+			}
+			else {
+				$options['problems']['itemids'] = null;
+			}
 
 			$problems = self::getProblems($options['problems'], $options['time_period']);
 			$graph->addProblems($problems);
@@ -139,7 +145,7 @@ class CSvgGraphHelper {
 		$dataset_metrics = [];
 
 		foreach ($metrics as $metric_num => &$metric) {
-			if ($metric['options']['aggregate_function'] == GRAPH_AGGREGATE_NONE) {
+			if ($metric['options']['aggregate_function'] == AGGREGATE_NONE) {
 				continue;
 			}
 
@@ -181,11 +187,11 @@ class CSvgGraphHelper {
 		unset($metric);
 
 		foreach ($metrics as &$metric) {
-			if ($metric['options']['aggregate_function'] == GRAPH_AGGREGATE_NONE) {
+			if ($metric['options']['aggregate_function'] == AGGREGATE_NONE) {
 				continue;
 			}
 
-			$result = Manager::History()->getGraphAggregationByInterval(
+			$result = Manager::History()->getAggregationByInterval(
 				$metric['items'], $metric['time_period']['time_from'], $metric['time_period']['time_to'],
 				$metric['options']['aggregate_function'], $metric['options']['aggregate_interval']
 			);
@@ -209,17 +215,17 @@ class CSvgGraphHelper {
 				ksort($metric_points, SORT_NUMERIC);
 
 				switch ($metric['options']['aggregate_function']) {
-					case GRAPH_AGGREGATE_MIN:
+					case AGGREGATE_MIN:
 						foreach ($metric_points as $tick => $point) {
 							$metric['points'][] = ['clock' => $tick, 'value' => min($point['value'])];
 						}
 						break;
-					case GRAPH_AGGREGATE_MAX:
+					case AGGREGATE_MAX:
 						foreach ($metric_points as $tick => $point) {
 							$metric['points'][] = ['clock' => $tick, 'value' => max($point['value'])];
 						}
 						break;
-					case GRAPH_AGGREGATE_AVG:
+					case AGGREGATE_AVG:
 						foreach ($metric_points as $tick => $point) {
 							$metric['points'][] = [
 								'clock' => $tick,
@@ -227,17 +233,17 @@ class CSvgGraphHelper {
 							];
 						}
 						break;
-					case GRAPH_AGGREGATE_COUNT:
+					case AGGREGATE_COUNT:
 						foreach ($metric_points as $tick => $point) {
 							$metric['points'][] = ['clock' => $tick, 'value' => array_sum($point['count'])];
 						}
 						break;
-					case GRAPH_AGGREGATE_SUM:
+					case AGGREGATE_SUM:
 						foreach ($metric_points as $tick => $point) {
 							$metric['points'][] = ['clock' => $tick, 'value' => array_sum($point['value'])];
 						}
 						break;
-					case GRAPH_AGGREGATE_FIRST:
+					case AGGREGATE_FIRST:
 						foreach ($metric_points as $tick => $point) {
 							if ($point['clock']) {
 								$metric['points'][] = [
@@ -247,7 +253,7 @@ class CSvgGraphHelper {
 							}
 						}
 						break;
-					case GRAPH_AGGREGATE_LAST:
+					case AGGREGATE_LAST:
 						foreach ($metric_points as $tick => $point) {
 							if ($point['clock']) {
 								$metric['points'][] = [
@@ -265,11 +271,11 @@ class CSvgGraphHelper {
 	/**
 	 * Select data to show in graph for each metric.
 	 */
-	protected static function getMetricsData(array &$metrics = [], $width) {
+	protected static function getMetricsData(array &$metrics, $width) {
 		// To reduce number of requests, group metrics by time range.
 		$tr_groups = [];
 		foreach ($metrics as $metric_num => &$metric) {
-			if ($metric['options']['aggregate_function'] != GRAPH_AGGREGATE_NONE) {
+			if ($metric['options']['aggregate_function'] != AGGREGATE_NONE) {
 				continue;
 			}
 
@@ -324,7 +330,7 @@ class CSvgGraphHelper {
 	/**
 	 * Calculate what data source must be used for each metric.
 	 */
-	protected static function getGraphDataSource(array &$metrics = [], array &$errors = [], $data_source, $width) {
+	protected static function getGraphDataSource(array &$metrics, array &$errors, $data_source, $width) {
 		/**
 		 * If data source is not specified, calculate it automatically. Otherwise, set given $data_source to each
 		 * $metric.
@@ -338,12 +344,15 @@ class CSvgGraphHelper {
 			 *
 			 * Do the same with trends.
 			 */
-			$config = select_config();
 			$to_resolve = [];
 
-			if ($config['hk_history_global']) {
+			if (CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL)) {
 				foreach ($metrics as &$metric) {
-					$metric['history'] = timeUnitToSeconds($config['hk_history']);
+					if ($metric['history'] != 0) {
+						$metric['history'] = timeUnitToSeconds(
+							CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY)
+						);
+					}
 				}
 				unset($metric);
 			}
@@ -351,9 +360,11 @@ class CSvgGraphHelper {
 				$to_resolve[] = 'history';
 			}
 
-			if ($config['hk_trends_global']) {
+			if (CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS_GLOBAL)) {
 				foreach ($metrics as &$metric) {
-					$metric['trends'] = timeUnitToSeconds($config['hk_trends']);
+					if ($metric['trends'] != 0) {
+						$metric['trends'] = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS));
+					}
 				}
 				unset($metric);
 			}
@@ -368,7 +379,7 @@ class CSvgGraphHelper {
 
 				foreach ($metrics as $num => &$metric) {
 					// Convert its values to seconds.
-					if (!$config['hk_history_global']) {
+					if (!CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL)) {
 						if ($simple_interval_parser->parse($metric['history']) != CParser::PARSE_SUCCESS) {
 							$errors[] = _s('Incorrect value for field "%1$s": %2$s.', 'history',
 								_('invalid history storage period')
@@ -380,7 +391,7 @@ class CSvgGraphHelper {
 						}
 					}
 
-					if (!$config['hk_trends_global']) {
+					if (!CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS_GLOBAL)) {
 						if ($simple_interval_parser->parse($metric['trends']) != CParser::PARSE_SUCCESS) {
 							$errors[] = _s('Incorrect value for field "%1$s": %2$s.', 'trends',
 								_('invalid trend storage period')
@@ -541,10 +552,8 @@ class CSvgGraphHelper {
 
 			if ($hosts) {
 				$items = API::Item()->get([
-					'output' => [
-						'itemid', 'hostid', 'name', 'history', 'trends', 'units', 'value_type', 'valuemapid', 'key_'
-					],
-					'selectHosts' => ['hostid', 'name'],
+					'output' => ['itemid', 'hostid', 'name', 'history', 'trends', 'units', 'value_type'],
+					'selectHosts' => ['name'],
 					'hostids' => array_keys($hosts),
 					'webitems' => true,
 					'filter' => [
@@ -690,9 +699,24 @@ class CSvgGraphHelper {
 	}
 
 	/**
+	 * Apply static units for each metric if selected.
+	 */
+	private static function applyUnits(array &$metrics, array $left_y_axis_options, array $right_y_axis_options): void {
+		foreach ($metrics as &$metric) {
+			if ($metric['options']['axisy'] == GRAPH_YAXIS_SIDE_LEFT && $left_y_axis_options['units'] !== null) {
+				$metric['units'] = trim(preg_replace('/\s+/', ' ', $left_y_axis_options['units']));
+			}
+			elseif ($metric['options']['axisy'] == GRAPH_YAXIS_SIDE_RIGHT && $right_y_axis_options['units'] !== null) {
+				$metric['units'] = trim(preg_replace('/\s+/', ' ', $right_y_axis_options['units']));
+			}
+		}
+		unset($metric);
+	}
+
+	/**
 	 * Apply time period for each metric.
 	 */
-	protected static function getTimePeriods(array &$metrics = [], array $options) {
+	protected static function getTimePeriods(array &$metrics, array $options) {
 		foreach ($metrics as &$metric) {
 			$metric['time_period'] = $options;
 

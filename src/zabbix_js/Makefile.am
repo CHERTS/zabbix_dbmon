@@ -6,6 +6,7 @@ zabbix_js_SOURCES = zabbix_js.c
 
 zabbix_js_LDADD = \
 	$(top_srcdir)/src/libs/zbxlog/libzbxlog.a \
+	$(top_srcdir)/src/libs/zbxprof/libzbxprof.a \
 	$(top_srcdir)/src/libs/zbxembed/libzbxembed.a \
 	$(top_srcdir)/src/libs/zbxjson/libzbxjson.a \
 	$(top_srcdir)/src/libs/zbxregexp/libzbxregexp.a \
@@ -18,8 +19,9 @@ zabbix_js_LDADD = \
 	$(top_srcdir)/src/libs/zbxcommon/libzbxcommon.a \
 	$(top_srcdir)/src/libs/zbxcrypto/libzbxcrypto.a \
 	$(top_srcdir)/src/libs/zbxcompress/libzbxcompress.a \
-	$(top_srcdir)/src/libs/zbxhttp/libzbxhttp.a
-	
-zabbix_js_LDADD += @ZBXJS_LIBS@
+	$(top_srcdir)/src/libs/zbxhttp/libzbxhttp.a \
+	$(top_srcdir)/src/libs/zbxxml/libzbxxml.a
 
-zabbix_js_LDFLAGS = @ZBXJS_LDFLAGS@
+zabbix_js_LDADD += @ZBXJS_LIBS@ $(LIBXML2_LIBS)
+
+zabbix_js_LDFLAGS = @ZBXJS_LDFLAGS@ $(LIBXML2_LDFLAGS)

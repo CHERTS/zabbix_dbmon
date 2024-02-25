@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,15 +21,16 @@ package zbxcmd
 
 import "time"
 
-const maxExecuteOutputLenB = 512 * 1024
+//MaxExecuteOutputLenB maximum output length for Execute and ExecuteStrict in bytes.
+const MaxExecuteOutputLenB = 16 * 1024 * 1024
 
 // Execute runs the 's' command without checking cmd.Wait error.
 // This means that non zero exit status code will not return an error.
 // Returns an error if there is an issue with executing the command or
 // if the specified timeout has been reached or if maximum output length
 // has been reached.
-func Execute(s string, timeout time.Duration) (string, error) {
-	return execute(s, timeout, false)
+func Execute(s string, timeout time.Duration, path string) (string, error) {
+	return execute(s, timeout, path, false)
 }
 
 // ExecuteStrict runs the 's' command and checks cmd.Wait error.
@@ -37,6 +38,6 @@ func Execute(s string, timeout time.Duration) (string, error) {
 // Also returns an error if there is an issue with executing the command or
 // if the specified timeout has been reached or if maximum output length
 // has been reached.
-func ExecuteStrict(s string, timeout time.Duration) (string, error) {
-	return execute(s, timeout, true)
+func ExecuteStrict(s string, timeout time.Duration, path string) (string, error) {
+	return execute(s, timeout, path, true)
 }

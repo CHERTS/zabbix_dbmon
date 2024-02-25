@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,6 +24,12 @@
  */
 class CAlert extends CApiService {
 
+	public const ACCESS_RULES = [
+		'get' => [
+			'min_user_type' => USER_TYPE_ZABBIX_USER
+		]
+	];
+
 	protected $tableName = 'alerts';
 	protected $tableAlias = 'a';
 	protected $sortColumns = ['alertid', 'clock', 'eventid', 'status', 'sendto', 'mediatypeid'];
@@ -36,7 +42,6 @@ class CAlert extends CApiService {
 	 * @param array $options['hostids']
 	 * @param array $options['groupids']
 	 * @param array $options['alertids']
-	 * @param array $options['applicationids']
 	 * @param array $options['status']
 	 * @param bool  $options['editable']
 	 * @param array $options['extendoutput']
@@ -242,8 +247,8 @@ class CAlert extends CApiService {
 		}
 
 		// objectids
-		if ($options['objectids'] !== null
-				&& in_array($options['eventobject'], [EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE])) {
+		if ($options['objectids'] !== null && in_array($options['eventobject'],
+				[EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE, EVENT_OBJECT_SERVICE])) {
 			zbx_value2array($options['objectids']);
 
 			// Oracle does not support using distinct with nclob fields, so we must use exists instead of joins

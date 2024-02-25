@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,10 +31,10 @@ import (
 	"strings"
 	"time"
 
+	"git.zabbix.com/ap/plugin-support/conf"
+	"git.zabbix.com/ap/plugin-support/log"
+	"git.zabbix.com/ap/plugin-support/plugin"
 	"github.com/go-ldap/ldap"
-	"zabbix.com/pkg/conf"
-	"zabbix.com/pkg/log"
-	"zabbix.com/pkg/plugin"
 	"zabbix.com/pkg/web"
 )
 
@@ -42,6 +42,8 @@ const (
 	errorInvalidFirstParam  = "Invalid first parameter."
 	errorInvalidSecondParam = "Invalid second parameter."
 	errorInvalidThirdParam  = "Invalid third parameter."
+	errorInvalidFourthParam = "Invalid fourth parameter."
+	errorInvalidFifthParam  = "Invalid fifth parameter."
 	errorTooManyParams      = "Too many parameters."
 	errorUnsupportedMetric  = "Unsupported metric."
 )
@@ -53,8 +55,8 @@ const (
 )
 
 type Options struct {
-	Timeout  time.Duration `conf:"optional,range=1:30"`
-	Capacity int           `conf:"optional,range=1:100"`
+	plugin.SystemOptions `conf:"optional"`
+	Timeout              int `conf:"optional,range=1:30"`
 }
 
 // Plugin -
@@ -80,7 +82,7 @@ func (p *Plugin) exportNetTcpListen(params []string) (result interface{}, err er
 	return exportSystemTcpListen(uint16(port))
 }
 
-func (p *Plugin) exportNetTcpPort(params []string) (result int, err error) {
+func (p *Plugin) exportNetTcpPort(params []string, timeout int) (result int, err error) {
 	if len(params) > 2 {
 		err = errors.New(errorTooManyParams)
 		return
@@ -105,7 +107,7 @@ func (p *Plugin) exportNetTcpPort(params []string) (result int, err error) {
 		address = net.JoinHostPort(params[0], port)
 	}
 
-	if _, err := net.Dial("tcp", address); err != nil {
+	if _, err := net.DialTimeout("tcp", address, time.Duration(timeout)*time.Second); err != nil {
 		return 0, nil
 	}
 	return 1, nil
@@ -324,7 +326,7 @@ func (p *Plugin) httpsExpect(ip string, port string) int {
 
 	// does NOT return an error on >=400 status codes same as C agent
 	_, err = web.Get(fmt.Sprintf("%s://%s:%s%s", u.Scheme, u.Hostname(), port, u.Path),
-		time.Second*p.options.Timeout, false)
+		time.Second*time.Duration(p.options.Timeout), false)
 	if err != nil {
 		log.Debugf("https network error: cannot connect to [%s]: %s", u, err.Error())
 		return 0
@@ -358,7 +360,7 @@ func (p *Plugin) tcpExpect(service string, address string) (result int) {
 	var conn net.Conn
 	var err error
 
-	if conn, err = net.DialTimeout("tcp", address, time.Second*p.options.Timeout); err != nil {
+	if conn, err = net.DialTimeout("tcp", address, time.Second*time.Duration(p.options.Timeout)); err != nil {
 		log.Debugf("TCP expect network error: cannot connect to [%s]: %s", address, err.Error())
 		return
 	}
@@ -368,7 +370,7 @@ func (p *Plugin) tcpExpect(service string, address string) (result int) {
 		return 1
 	}
 
-	if err = conn.SetReadDeadline(time.Now().Add(time.Second * p.options.Timeout)); err != nil {
+	if err = conn.SetReadDeadline(time.Now().Add(time.Second * time.Duration(p.options.Timeout))); err != nil {
 		return
 	}
 
@@ -493,7 +495,7 @@ func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider)
 	case "net.tcp.listen":
 		return p.exportNetTcpListen(params)
 	case "net.tcp.port":
-		return p.exportNetTcpPort(params)
+		return p.exportNetTcpPort(params, p.options.Timeout)
 	case "net.tcp.service", "net.tcp.service.perf":
 		if len(params) > 3 {
 			err = errors.New(errorTooManyParams)
@@ -528,6 +530,8 @@ func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider)
 		} else if key == "net.tcp.service.perf" {
 			return p.exportNetServicePerf(params), nil
 		}
+	case "net.tcp.socket.count":
+		return p.exportNetTcpSocketCount(params)
 	}
 
 	/* SHOULD_NEVER_HAPPEN */
@@ -539,7 +543,7 @@ func (p *Plugin) Configure(global *plugin.GlobalOptions, options interface{}) {
 		p.Warningf("cannot unmarshal configuration options: %s", err)
 	}
 	if p.options.Timeout == 0 {
-		p.options.Timeout = time.Duration(global.Timeout)
+		p.options.Timeout = global.Timeout
 	}
 }
 

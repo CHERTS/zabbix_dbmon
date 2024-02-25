@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,17 +18,30 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 /**
  * Global message element.
  */
 class CMessageElement extends CElement {
 
 	/**
-	 * @inheritdoc
+	 * Simplified selector for message element that can be located directly on page.
+	 *
+	 * @param string|CElement    $selector    message element search area
+	 * @param boolean            $strict      absolute or relative path to message element
+	 *
+	 * @return CMessageElement
 	 */
-	public static function find() {
-		return (new CElementQuery('xpath:.//output[@role="contentinfo" or '.
-				CXPathHelper::fromClass('msg-global').']'))->waitUntilVisible()->asMessage();
+	public static function find($selector = null, $strict = false) {
+		$prefix = 'xpath:./'.(!$strict ? '/' : '');
+		$query = new CElementQuery($prefix.'output[@role="contentinfo" or '.CXPathHelper::fromClass('msg-global').']');
+		if ($selector) {
+			if (!$selector instanceof CElement) {
+				$selector = (new CElementQuery($selector))->waitUntilPresent()->one();
+			}
+			$query->setContext($selector);
+		}
+		return $query->waitUntilVisible()->asMessage();
 	}
 
 	/**
@@ -50,6 +63,16 @@ class CMessageElement extends CElement {
 	}
 
 	/**
+	 * Check if message is warning.
+	 *
+	 * @return boolean
+	 */
+	public function isWarning() {
+		return in_array('msg-warning', explode(' ', $this->getAttribute('class')));
+	}
+
+
+	/**
 	 * Get message title.
 	 *
 	 * @return string
@@ -69,7 +92,7 @@ class CMessageElement extends CElement {
 	 * @return CElementCollection
 	 */
 	public function getLines() {
-		return $this->query('xpath:./div[@class="msg-details"]/ul/li')->all();
+		return $this->query('xpath:./div[@class="msg-details"]//li')->all();
 	}
 
 	/**
@@ -96,6 +119,6 @@ class CMessageElement extends CElement {
 	 */
 	public function close() {
 		$this->query('xpath:.//button[contains(@class, "overlay-close-btn")]')->one()->click();
-		return $this->waitUntilNotPresent();
+		return $this->waitUntilNotVisible();
 	}
 }

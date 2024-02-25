@@ -1,7 +1,7 @@
 ﻿<?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -365,6 +365,21 @@ class CPrometheusPatternParserTest extends TestCase {
 				[
 					'rc' => CParser::PARSE_SUCCESS,
 					'match' => '{label1="value1\\\\"}'
+				]
+			],
+			// Operators != and !~.
+			[
+				'{label1!="value1"}', 0, [],
+				[
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => '{label1!="value1"}'
+				]
+			],
+			[
+				'{label1!~"value1"}', 0, [],
+				[
+					'rc' => CParser::PARSE_SUCCESS,
+					'match' => '{label1!~"value1"}'
 				]
 			],
 			// partial success
@@ -763,6 +778,27 @@ class CPrometheusPatternParserTest extends TestCase {
 			// Invalid label name using a user macro.
 			[
 				'{__{$M}__="value1"}', 0, ['usermacros' => true],
+				[
+					'rc' => CParser::PARSE_FAIL,
+					'match' => ''
+				]
+			],
+			[
+				'{label1~"value1"}', 0, [],
+				[
+					'rc' => CParser::PARSE_FAIL,
+					'match' => ''
+				]
+			],
+			[
+				'{label1!"value1"}', 0, [],
+				[
+					'rc' => CParser::PARSE_FAIL,
+					'match' => ''
+				]
+			],
+			[
+				'{label1!', 0, [],
 				[
 					'rc' => CParser::PARSE_FAIL,
 					'match' => ''

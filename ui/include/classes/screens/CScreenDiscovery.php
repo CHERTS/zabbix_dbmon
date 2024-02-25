@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -121,15 +121,13 @@ class CScreenDiscovery extends CScreenBase {
 		];
 
 		foreach ($services as $name => $foo) {
-			$header[] = (new CColHeader($name))
-				->addClass('vertical_rotation')
+			$header[] = (new CSpan($name))
+				->addClass(ZBX_STYLE_TEXT_VERTICAL)
 				->setTitle($name);
 		}
 
 		// create table
-		$table = (new CTableInfo())
-			->makeVerticalRotation()
-			->setHeader($header);
+		$table = (new CTableInfo())->setHeader($header);
 
 		foreach ($drules as $drule) {
 			$discovery_info = [];
@@ -210,7 +208,7 @@ class CScreenDiscovery extends CScreenBase {
 
 			if ($discovery_info) {
 				$col = new CCol(
-					[bold($drule['name']), SPACE.'('._n('%d device', '%d devices', count($discovery_info)).')']
+					[bold($drule['name']), NBSP(), '('._n('%d device', '%d devices', count($discovery_info)).')']
 				);
 				$col->setColSpan(count($services) + 3);
 
@@ -223,7 +221,7 @@ class CScreenDiscovery extends CScreenBase {
 				$row = [
 					($h_data['type'] === 'primary')
 						? (new CSpan($ip.$dns))->addClass($h_data['class'])
-						: new CSpan(SPACE.SPACE.$ip.$dns),
+						: new CSpan([NBSP(), NBSP(), $ip.$dns]),
 					new CSpan(array_key_exists('host', $h_data) ? $h_data['host'] : ''),
 					(new CSpan((($h_data['time'] == 0 || $h_data['type'] === 'slave')
 						? ''

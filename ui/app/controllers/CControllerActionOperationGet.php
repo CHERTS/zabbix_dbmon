@@ -1,7 +1,7 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,12 +21,11 @@
 
 class CControllerActionOperationGet extends CController {
 
-	protected function checkInput() {
+	protected function checkInput(): bool {
 		$fields = [
-			'eventsource'   => 'required|in '.implode(',', [EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_DISCOVERY, EVENT_SOURCE_AUTOREGISTRATION, EVENT_SOURCE_INTERNAL]),
-			'recovery'      => 'required|in '.implode(',', [ACTION_OPERATION, ACTION_RECOVERY_OPERATION, ACTION_ACKNOWLEDGE_OPERATION]),
-			'actionid'      => 'db actions.actionid',
-			'operation'     => 'array'
+			'eventsource' =>	'required|in '.implode(',', [EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_DISCOVERY, EVENT_SOURCE_AUTOREGISTRATION, EVENT_SOURCE_INTERNAL, EVENT_SOURCE_SERVICE]),
+			'recovery' =>		'required|in '.implode(',', [ACTION_OPERATION, ACTION_RECOVERY_OPERATION, ACTION_UPDATE_OPERATION]),
+			'operation' =>		'array'
 		];
 
 		$ret = $this->validateInput($fields) && $this->validateInputConstraints();
@@ -57,23 +56,11 @@ class CControllerActionOperationGet extends CController {
 		return true;
 	}
 
-	protected function checkPermissions() {
-		if ($this->getUserType() >= USER_TYPE_ZABBIX_ADMIN) {
-			if (!$this->getInput('actionid', '0')) {
-				return true;
-			}
-
-			return (bool) API::Action()->get([
-				'output' => [],
-				'actionids' => $this->getInput('actionid'),
-				'editable' => true
-			]);
-		}
-
-		return false;
+	protected function checkPermissions(): bool {
+		return $this->getUserType() >= USER_TYPE_ZABBIX_ADMIN;
 	}
 
-	protected function doAction() {
+	protected function doAction(): void {
 		$operation = $this->getInput('operation', []) + $this->defaultOperationObject();
 
 		$eventsource = (int) $this->getInput('eventsource');
@@ -121,16 +108,7 @@ class CControllerActionOperationGet extends CController {
 				'inventory_mode' => (string) HOST_INVENTORY_MANUAL
 			],
 			'opcommand' => [
-				'type' => (string) ZBX_SCRIPT_TYPE_CUSTOM_SCRIPT,
-				'scriptid' => '0',
-				'execute_on' => (string) ZBX_SCRIPT_EXECUTE_ON_AGENT,
-				'port' => '',
-				'authtype' => (string) ITEM_AUTHTYPE_PASSWORD,
-				'username' => '',
-				'password' => '',
-				'publickey' => '',
-				'privatekey' => '',
-				'command' => ''
+				'scriptid' => '0'
 			]
 		];
 	}
@@ -145,7 +123,7 @@ class CControllerActionOperationGet extends CController {
 	 * @return array  Each of fields is nullable, meaning given operation may not have particular configuration domain.
 	 */
 	private function popupConfig(array $operation, int $eventsource, int $recovery): array {
-		$operation_type = $this->popupConfigOperationType($operation, $eventsource, $recovery);
+		$operation_types = $this->popupConfigOperationTypes($operation, $eventsource, $recovery);
 		$operation_steps = $this->popupConfigOperationSteps($operation, $eventsource, $recovery);
 		$operation_message = $this->popupConfigOperationMessage($operation, $eventsource);
 		$operation_command = $this->popupConfigOperationCommand($operation, $eventsource);
@@ -153,7 +131,7 @@ class CControllerActionOperationGet extends CController {
 		$operation_condition = $this->popupConfigOperationCondition($operation, $eventsource, $recovery);
 
 		return [
-			'operation_type' => $operation_type,
+			'operation_types' => $operation_types,
 			'operation_steps' => $operation_steps,
 			'operation_message' => $operation_message,
 			'operation_command' => $operation_command,
@@ -171,19 +149,54 @@ class CControllerActionOperationGet extends CController {
 	 *
 	 * @return array
 	 */
-	private function popupConfigOperationType(array $operation, int $eventsource, int $recovery): array {
+	private function popupConfigOperationTypes(array $operation, int $eventsource, int $recovery): array {
 		$operation_type_options = [];
+		$scripts_allowed = false;
 
+		// First determine if scripts are allowed for this action type.
 		foreach (getAllowedOperations($eventsource)[$recovery] as $operation_type) {
+			if ($operation_type == OPERATION_TYPE_COMMAND) {
+				$scripts_allowed = true;
+
+				break;
+			}
+		}
+
+		// Then remove Remote command from dropdown list.
+		foreach (getAllowedOperations($eventsource)[$recovery] as $operation_type) {
+			if ($operation_type == OPERATION_TYPE_COMMAND) {
+				continue;
+			}
+
 			$operation_type_options[] = [
-				'value' => $operation_type,
+				'value' => 'cmd['.$operation_type.']',
 				'name' => operation_type2str($operation_type)
 			];
 		}
 
+		if ($scripts_allowed) {
+			$db_scripts = API::Script()->get([
+				'output' => ['name', 'scriptid'],
+				'filter' => ['scope' => ZBX_SCRIPT_SCOPE_ACTION],
+				'sortfield' => 'name',
+				'sortorder' => ZBX_SORT_UP
+			]);
+
+			if ($db_scripts) {
+				foreach ($db_scripts as $db_script) {
+					$operation_type_options[] = [
+						'value' => 'scriptid['.$db_script['scriptid'].']',
+						'name' => $db_script['name']
+					];
+				}
+			}
+		}
+
 		return [
 			'options' => $operation_type_options,
-			'selected' => $operation['operationtype']
+			'selected' => ($operation['opcommand']['scriptid'] == 0)
+				? 'cmd['.$operation['operationtype'].']'
+				: 'scriptid['.$operation['opcommand']['scriptid'].']'
 		];
 	}
 
@@ -197,14 +210,13 @@ class CControllerActionOperationGet extends CController {
 	 * @return array|null
 	 */
 	private function popupConfigOperationSteps(array $operation, int $eventsource, int $recovery): ?array {
-		if ($eventsource == EVENT_SOURCE_TRIGGERS || $eventsource == EVENT_SOURCE_INTERNAL) {
-			if ($recovery == ACTION_OPERATION) {
-				return [
-					'from' => $operation['esc_step_from'],
-					'to' => $operation['esc_step_to'],
-					'duration' => $operation['esc_period']
-				];
-			}
+		if (in_array($eventsource, [EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_INTERNAL, EVENT_SOURCE_SERVICE])
+				&& $recovery == ACTION_OPERATION) {
+			return [
+				'from' => $operation['esc_step_from'],
+				'to' => $operation['esc_step_to'],
+				'duration' => $operation['esc_period']
+			];
 		}
 
 		return null;
@@ -219,48 +231,43 @@ class CControllerActionOperationGet extends CController {
 	 * @return array|null
 	 */
 	private function popupConfigOperationMessage(array $operation, int $eventsource): ?array {
-		if ($eventsource == EVENT_SOURCE_TRIGGERS || $eventsource == EVENT_SOURCE_DISCOVERY
-				|| $eventsource == EVENT_SOURCE_AUTOREGISTRATION || $eventsource == EVENT_SOURCE_INTERNAL) {
-			$usergroups = [];
-			if ($operation['opmessage_grp']) {
-				$usergroups = API::UserGroup()->get([
-					'output' => ['usergroupid', 'name'],
-					'usrgrpids' => array_column($operation['opmessage_grp'], 'usrgrpid')
-				]);
-			}
-
-			$users = [];
-			if ($operation['opmessage_usr']) {
-				$db_users = API::User()->get([
-					'output' => ['userid', 'alias', 'name', 'surname'],
-					'userids' => array_column($operation['opmessage_usr'], 'userid')
-				]);
-				CArrayHelper::sort($db_users, ['alias']);
-
-				foreach ($db_users as $db_user) {
-					$users[] = [
-						'id' => $db_user['userid'],
-						'name' => getUserFullname($db_user)
-					];
-				}
-			}
-
-			$mediatypes = API::MediaType()->get(['output' => ['mediatypeid', 'name', 'status']]);
-			CArrayHelper::sort($mediatypes, ['name']);
-			$mediatypes = array_values($mediatypes);
-
-			return [
-				'custom_message' => $operation['opmessage']['default_msg'] === '0',
-				'subject' => $operation['opmessage']['subject'],
-				'body' => $operation['opmessage']['message'],
-				'mediatypeid' => $operation['opmessage']['mediatypeid'],
-				'mediatypes' => $mediatypes,
-				'usergroups' => $usergroups,
-				'users' => $users
-			];
+		$usergroups = [];
+		if ($operation['opmessage_grp']) {
+			$usergroups = API::UserGroup()->get([
+				'output' => ['usergroupid', 'name'],
+				'usrgrpids' => array_column($operation['opmessage_grp'], 'usrgrpid')
+			]);
 		}
 
-		return null;
+		$users = [];
+		if ($operation['opmessage_usr']) {
+			$db_users = API::User()->get([
+				'output' => ['userid', 'username', 'name', 'surname'],
+				'userids' => array_column($operation['opmessage_usr'], 'userid')
+			]);
+			CArrayHelper::sort($db_users, ['username']);
+
+			foreach ($db_users as $db_user) {
+				$users[] = [
+					'id' => $db_user['userid'],
+					'name' => getUserFullname($db_user)
+				];
+			}
+		}
+
+		$mediatypes = API::MediaType()->get(['output' => ['mediatypeid', 'name', 'status']]);
+		CArrayHelper::sort($mediatypes, ['name']);
+		$mediatypes = array_values($mediatypes);
+
+		return [
+			'custom_message' => ($operation['opmessage']['default_msg'] === '0'),
+			'subject' => $operation['opmessage']['subject'],
+			'body' => $operation['opmessage']['message'],
+			'mediatypeid' => $operation['opmessage']['mediatypeid'],
+			'mediatypes' => $mediatypes,
+			'usergroups' => $usergroups,
+			'users' => $users
+		];
 	}
 
 	/**
@@ -272,65 +279,43 @@ class CControllerActionOperationGet extends CController {
 	 * @return array|null
 	 */
 	private function popupConfigOperationCommand(array $operation, int $eventsource): ?array {
-		if ($eventsource == EVENT_SOURCE_TRIGGERS || $eventsource == EVENT_SOURCE_DISCOVERY
-				|| $eventsource == EVENT_SOURCE_AUTOREGISTRATION) {
-			$current_host = false;
-
-			$hostids = [];
-			foreach ($operation['opcommand_hst'] as $hostid) {
-				if ($hostid == '0') {
-					$current_host = true;
-				}
-				else {
-					$hostids[] = $hostid;
-				}
-			}
-
-			$operation_command = [
-				'type' => $operation['opcommand']['type'],
-				'current_host' => $current_host,
-				'execute_on' => $operation['opcommand']['execute_on'],
-				'command' => $operation['opcommand']['command'],
-				'username' => $operation['opcommand']['username'],
-				'password' => $operation['opcommand']['password'],
-				'privatekey' => $operation['opcommand']['privatekey'],
-				'publickey' => $operation['opcommand']['publickey'],
-				'port' => $operation['opcommand']['port'],
-				'authtype' => $operation['opcommand']['authtype'],
-				'global_script' => ['scriptid' => '0', 'name' => ''],
-				'hosts' => [],
-				'groups' => []
-			];
-
-			if ($operation['opcommand']['scriptid']) {
-				$db_scrpt = API::Script()->get([
-					'output' => ['name', 'scriptid'],
-					'scriptids' => (array) $operation['opcommand']['scriptid']
-				]);
-
-				if ($db_scrpt) {
-					$operation_command['global_script'] = $db_scrpt[0];
-				}
-			}
-
-			if ($hostids) {
-				$operation_command['hosts'] = CArrayHelper::renameObjectsKeys(API::Host()->get([
-					'output' => ['hostid', 'name'],
-					'hostids' => $hostids
-				]), ['hostid' => 'id']);
-			}
-
-			if ($operation['opcommand_grp']) {
-				$operation_command['groups'] = CArrayHelper::renameObjectsKeys(API::HostGroup()->get([
-					'output' => ['groupid', 'name'],
-					'groupids' => $operation['opcommand_grp']
-				]), ['groupid' => 'id']);
-			}
-
-			return $operation_command;
+		if (!in_array($eventsource, [EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_DISCOVERY, EVENT_SOURCE_AUTOREGISTRATION])) {
+			return null;
 		}
 
-		return null;
+		$current_host = false;
+
+		$hostids = [];
+		foreach ($operation['opcommand_hst'] as $hostid) {
+			if ($hostid === '0') {
+				$current_host = true;
+			}
+			else {
+				$hostids[] = $hostid;
+			}
+		}
+
+		$operation_command = [
+			'current_host' => $current_host,
+			'hosts' => [],
+			'groups' => []
+		];
+
+		if ($hostids) {
+			$operation_command['hosts'] = CArrayHelper::renameObjectsKeys(API::Host()->get([
+				'output' => ['hostid', 'name'],
+				'hostids' => $hostids
+			]), ['hostid' => 'id']);
+		}
+
+		if ($operation['opcommand_grp']) {
+			$operation_command['groups'] = CArrayHelper::renameObjectsKeys(API::HostGroup()->get([
+				'output' => ['groupid', 'name'],
+				'groupids' => $operation['opcommand_grp']
+			]), ['groupid' => 'id']);
+		}
+
+		return $operation_command;
 	}
 
 	/**

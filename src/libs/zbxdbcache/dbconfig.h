@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@
 #ifndef ZABBIX_DBCONFIG_H
 #define ZABBIX_DBCONFIG_H
 
-#ifndef ZBX_DBCONFIG_IMPL
-#	error This header must be used by configuration cache implementation
-#endif
+#include "mutexs.h"
+#include "zbxalgo.h"
+#include "dbcache.h"
 
 typedef struct
 {
@@ -33,9 +33,12 @@ typedef struct
 	const char		*error;
 	const char		*correlation_tag;
 	const char		*opdata;
+	const char		*event_name;
+	const unsigned char	*expression_bin;
+	const unsigned char	*recovery_expression_bin;
 	int			lastchange;
-	int			nextcheck;		/* time of next trigger recalculation,    */
-							/* valid for triggers with time functions */
+	int			revision;
+	int			timer_revision;
 	unsigned char		topoindex;
 	unsigned char		priority;
 	unsigned char		type;
@@ -46,11 +49,20 @@ typedef struct
 	unsigned char		functional;		/* see TRIGGER_FUNCTIONAL_* defines      */
 	unsigned char		recovery_mode;		/* see TRIGGER_RECOVERY_MODE_* defines   */
 	unsigned char		correlation_mode;	/* see ZBX_TRIGGER_CORRELATION_* defines */
-	unsigned char		timer;			/* see ZBX_TRIGGER_TIMER_* defines       */
+	unsigned char		timer;
+	unsigned char		flags;
+
+	zbx_uint64_t		*itemids;
 
 	zbx_vector_ptr_t	tags;
 }
 ZBX_DC_TRIGGER;
+
+/* specifies if trigger expression/recovery expression has timer functions */
+/* (date, time, now, dayofweek or dayofmonth)                              */
+#define ZBX_TRIGGER_TIMER_DEFAULT		0x00
+#define ZBX_TRIGGER_TIMER_EXPRESSION		0x01
+#define ZBX_TRIGGER_TIMER_RECOVERY_EXPRESSION	0x02
 
 typedef struct zbx_dc_trigger_deplist
 {
@@ -68,7 +80,9 @@ typedef struct
 	zbx_uint64_t	itemid;
 	const char	*function;
 	const char	*parameter;
-	unsigned char	timer;
+	int		revision;
+	int		timer_revision;
+	unsigned char	type;
 }
 ZBX_DC_FUNCTION;
 
@@ -85,7 +99,6 @@ typedef struct
 	const char		*delay;
 	ZBX_DC_TRIGGER		**triggers;
 	int			nextcheck;
-	int			lastclock;
 	int			mtime;
 	int			data_expected_from;
 	int			history_sec;
@@ -103,9 +116,17 @@ typedef struct
 	unsigned char		schedulable;
 	unsigned char		update_triggers;
 	zbx_uint64_t		templateid;
-	zbx_uint64_t		parent_itemid; /* from joined item_discovery table */
+
+	zbx_vector_ptr_t	tags;
 }
 ZBX_DC_ITEM;
+
+typedef struct
+{
+	zbx_uint64_t	itemid;
+	zbx_uint64_t	parent_itemid;
+}
+ZBX_DC_ITEM_DISCOVERY;
 
 typedef struct
 {
@@ -227,8 +248,9 @@ ZBX_DC_JMXITEM;
 
 typedef struct
 {
-	zbx_uint64_t	itemid;
-	const char	*params;
+	zbx_uint64_t		itemid;
+	const char		*params;
+	const unsigned char	*formula_bin;
 }
 ZBX_DC_CALCITEM;
 
@@ -275,6 +297,15 @@ typedef struct
 }
 ZBX_DC_HTTPITEM;
 
+typedef struct
+{
+	zbx_uint64_t		itemid;
+	const char		*script;
+	const char		*timeout;
+	zbx_vector_ptr_t	params;
+}
+ZBX_DC_SCRIPTITEM;
+
 #if defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 typedef struct
 {
@@ -284,6 +315,18 @@ typedef struct
 }
 ZBX_DC_PSK;
 #endif
+
+ZBX_PTR_VECTOR_DECL(dc_item_ptr, ZBX_DC_ITEM *)
+
+#define ZBX_LOC_NOWHERE	0
+#define ZBX_LOC_QUEUE	1
+#define ZBX_LOC_POLLER	2
+
+#define ZBX_ITEM_COLLECTED		0x01	/* force item rescheduling after new value collection */
+#define ZBX_HOST_UNREACHABLE		0x02
+#define ZBX_ITEM_KEY_CHANGED		0x04
+#define ZBX_ITEM_TYPE_CHANGED		0x08
+#define ZBX_ITEM_DELAY_CHANGED		0x10
 
 typedef struct
 {
@@ -301,34 +344,10 @@ typedef struct
 	const char	*name;
 	int		maintenance_from;
 	int		data_expected_from;
-	int		errors_from;
-	int		disable_until;
-	int		snmp_errors_from;
-	int		snmp_disable_until;
-	int		ipmi_errors_from;
-	int		ipmi_disable_until;
-	int		jmx_errors_from;
-	int		jmx_disable_until;
-
-	/* item statistics per interface type */
-	int		items_num;
-	int		snmp_items_num;
-	int		ipmi_items_num;
-	int		jmx_items_num;
-
-	/* timestamp of last availability status (available/error) field change on any interface */
-	int		availability_ts;
 
 	unsigned char	maintenance_status;
 	unsigned char	maintenance_type;
-	unsigned char	available;
-	unsigned char	snmp_available;
-	unsigned char	ipmi_available;
-	unsigned char	jmx_available;
 	unsigned char	status;
-
-	/* flag to reset host availability to unknown */
-	unsigned char	reset_availability;
 
 	/* flag to force update for all items */
 	unsigned char	update_items;
@@ -341,10 +360,6 @@ typedef struct
 	const char	*tls_subject;
 	ZBX_DC_PSK	*tls_dc_psk;
 #endif
-	const char	*error;
-	const char	*snmp_error;
-	const char	*ipmi_error;
-	const char	*jmx_error;
 
 	zbx_vector_ptr_t	interfaces_v;	/* for quick finding of all host interfaces in */
 						/* 'config->interfaces' hashset */
@@ -408,10 +423,26 @@ ZBX_DC_HTMPL;
 
 typedef struct
 {
+	const char	*key;
+	const char	*value;
+	int		refcount;
+}
+zbx_dc_kv_t;
+
+typedef struct
+{
+	const char	*path;
+	zbx_hashset_t	kvs;
+}
+zbx_dc_kvs_path_t;
+
+typedef struct
+{
 	zbx_uint64_t	globalmacroid;
 	const char	*macro;
 	const char	*context;
 	const char	*value;
+	zbx_dc_kv_t	*kv;
 	unsigned char	type;
 	unsigned char	context_op;
 }
@@ -431,6 +462,7 @@ typedef struct
 	const char	*macro;
 	const char	*context;
 	const char	*value;
+	zbx_dc_kv_t	*kv;
 	unsigned char	type;
 	unsigned char	context_op;
 }
@@ -451,9 +483,19 @@ typedef struct
 	const char	*ip;
 	const char	*dns;
 	const char	*port;
+	const char	*error;
 	unsigned char	type;
 	unsigned char	main;
 	unsigned char	useip;
+	unsigned char	available;
+	int		disable_until;
+	int		errors_from;
+	/* timestamp of last availability status (available/error) field change on interface */
+	int		availability_ts;
+	/* flag to reset interface availability to unknown */
+	unsigned char	reset_availability;
+	/* item statistics per interface */
+	int		items_num;
 }
 ZBX_DC_INTERFACE;
 
@@ -521,9 +563,10 @@ typedef struct
 	const char	*instanceid;
 	zbx_uint64_t	discovery_groupid;
 	int		default_inventory_mode;
-	int		refresh_unsupported;
 	unsigned char	snmptrap_logging;
 	unsigned char	autoreg_tls_accept;
+	const char	*default_timezone;
+	int		auditlog_enabled;
 
 	/* database configuration data for ZBX_CONFIG_DB_EXTENSION_* extensions */
 	zbx_config_db_t	db;
@@ -548,6 +591,7 @@ typedef struct
 							/* disabled then trigger is counted as disabled) */
 	double		required_performance;		/* required performance of server (values per second) */
 	time_t		last_update;
+	int		sync_ts;
 }
 ZBX_DC_STATUS;
 
@@ -581,6 +625,15 @@ typedef struct
 	const char	*value;
 }
 zbx_dc_trigger_tag_t;
+
+typedef struct
+{
+	zbx_uint64_t	itemtagid;
+	zbx_uint64_t	itemid;
+	const char	*tag;
+	const char	*value;
+}
+zbx_dc_item_tag_t;
 
 typedef struct
 {
@@ -694,6 +747,15 @@ zbx_dc_preproc_op_t;
 
 typedef struct
 {
+	zbx_uint64_t	item_script_paramid;
+	zbx_uint64_t	itemid;
+	const char	*name;
+	const char	*value;
+}
+zbx_dc_scriptitem_param_t;
+
+typedef struct
+{
 	zbx_uint64_t		maintenanceid;
 	unsigned char		type;
 	unsigned char		tags_evaltype;
@@ -748,6 +810,7 @@ typedef struct
 	int			proxy_lastaccess_ts;
 	int			sync_ts;
 	int			item_sync_ts;
+	int			sync_start_ts;
 
 	unsigned int		internal_actions;		/* number of enabled internal actions */
 
@@ -761,6 +824,7 @@ typedef struct
 
 	zbx_hashset_t		items;
 	zbx_hashset_t		items_hk;		/* hostid, key */
+	zbx_hashset_t		item_discovery;
 	zbx_hashset_t		template_items;		/* template items selected from items table */
 	zbx_hashset_t		prototype_items;	/* item prototypes selected from items table */
 	zbx_hashset_t		numitems;
@@ -778,6 +842,7 @@ typedef struct
 	zbx_hashset_t		masteritems;
 	zbx_hashset_t		preprocitems;
 	zbx_hashset_t		httpitems;
+	zbx_hashset_t		scriptitems;
 	zbx_hashset_t		functions;
 	zbx_hashset_t		triggers;
 	zbx_hashset_t		trigdeps;
@@ -806,14 +871,17 @@ typedef struct
 	zbx_hashset_t		actions;
 	zbx_hashset_t		action_conditions;
 	zbx_hashset_t		trigger_tags;
+	zbx_hashset_t		item_tags;
 	zbx_hashset_t		host_tags;
-	zbx_hashset_t		host_tags_index;		/* host tag index by hostid */
+	zbx_hashset_t		host_tags_index;	/* host tag index by hostid */
 	zbx_hashset_t		correlations;
 	zbx_hashset_t		corr_conditions;
 	zbx_hashset_t		corr_operations;
 	zbx_hashset_t		hostgroups;
-	zbx_vector_ptr_t	hostgroups_name; 	/* host groups sorted by name */
+	zbx_vector_ptr_t	hostgroups_name;	/* host groups sorted by name */
+	zbx_vector_ptr_t	kvs_paths;
 	zbx_hashset_t		preprocops;
+	zbx_hashset_t		itemscript_params;
 	zbx_hashset_t		maintenances;
 	zbx_hashset_t		maintenance_periods;
 	zbx_hashset_t		maintenance_tags;
@@ -824,7 +892,7 @@ typedef struct
 	zbx_hashset_t		data_sessions;
 	zbx_binary_heap_t	queues[ZBX_POLLER_TYPE_COUNT];
 	zbx_binary_heap_t	pqueue;
-	zbx_binary_heap_t	timer_queue;
+	zbx_binary_heap_t	trigger_queue;
 	ZBX_DC_CONFIG_TABLE	*config;
 	ZBX_DC_STATUS		*status;
 	zbx_hashset_t		strpool;
@@ -841,8 +909,22 @@ extern zbx_rwlock_t	config_lock;
 #define	WRLOCK_CACHE	if (0 == sync_in_progress) zbx_rwlock_wrlock(config_lock)
 #define	UNLOCK_CACHE	if (0 == sync_in_progress) zbx_rwlock_unlock(config_lock)
 
+extern zbx_rwlock_t	config_history_lock;
+
+#define	RDLOCK_CACHE_CONFIG_HISTORY	zbx_rwlock_rdlock(config_history_lock)
+#define	WRLOCK_CACHE_CONFIG_HISTORY	zbx_rwlock_wrlock(config_history_lock)
+#define	UNLOCK_CACHE_CONFIG_HISTORY	zbx_rwlock_unlock(config_history_lock)
+
 #define ZBX_IPMI_DEFAULT_AUTHTYPE	-1
 #define ZBX_IPMI_DEFAULT_PRIVILEGE	2
+
+void		DCget_interface(DC_INTERFACE *dst_interface, const ZBX_DC_INTERFACE *src_interface);
+ZBX_DC_HOST	*DCfind_host(const char *host);
+ZBX_DC_ITEM	*DCfind_item(zbx_uint64_t hostid, const char *key);
+void		DCget_function(DC_FUNCTION *dst_function, const ZBX_DC_FUNCTION *src_function);
+void		DCget_trigger(DC_TRIGGER *dst_trigger, const ZBX_DC_TRIGGER *src_trigger);
+int		DCitem_nextcheck_update(ZBX_DC_ITEM *item, const ZBX_DC_INTERFACE *interface, int flags, int now,
+				char **error);
 
 void	dc_get_hostids_by_functionids(const zbx_uint64_t *functionids, int functionids_num,
 		zbx_vector_uint64_t *hostids);
@@ -876,16 +958,21 @@ void	DCsync_maintenance_hosts(zbx_dbsync_t *sync);
 		((CONFIG_TIMER_FORKS + sizeof(uint64_t) * 8 - 1) / (sizeof(uint64_t) * 8))
 
 char	*dc_expand_user_macros_in_expression(const char *text, zbx_uint64_t *hostids, int hostids_num);
-char	*dc_expand_user_macros_in_func_params(const char *params, zbx_uint64_t hostid);
+char	*dc_expand_user_macros_in_func_params(const char *params, zbx_uint64_t itemid);
 char	*dc_expand_user_macros_in_calcitem(const char *formula, zbx_uint64_t hostid);
 
-/******************************************************************************
- *                                                                            *
- * dc_expand_user_macros - has no autoquoting                                 *
- * for triggers and calculated items use                                      *
- * dc_expand_user_macros_in_expression - which autoquotes macros that are     *
- * not already quoted and cannot be casted to a double                        *
- *                                                                            *
- ******************************************************************************/
 char	*dc_expand_user_macros(const char *text, zbx_uint64_t *hostids, int hostids_num);
+int	dc_expand_user_macros_len(const char *text, size_t text_len, zbx_uint64_t *hostids, int hostids_num,
+		char **value, char **error);
+
+#define ZBX_TRIGGER_TIMER_NONE			0x0000
+#define ZBX_TRIGGER_TIMER_TRIGGER		0x0001
+#define ZBX_TRIGGER_TIMER_FUNCTION_TIME		0x0002
+#define ZBX_TRIGGER_TIMER_FUNCTION_TREND	0x0004
+#define ZBX_TRIGGER_TIMER_FUNCTION		(ZBX_TRIGGER_TIMER_FUNCTION_TIME | ZBX_TRIGGER_TIMER_FUNCTION_TREND)
+
+#define ZBX_DC_ITEM_UPDATE_TRIGGER_NONE		0
+#define ZBX_DC_ITEM_UPDATE_TRIGGER_REFRESH	1
+#define ZBX_ITEM_UPDATE_TRIGGER_NEW_ITEM	2
+
 #endif

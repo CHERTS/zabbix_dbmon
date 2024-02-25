@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -92,11 +92,10 @@ class CWidgetField {
 			case ZBX_WIDGET_FIELD_TYPE_ITEM_PROTOTYPE:
 			case ZBX_WIDGET_FIELD_TYPE_GRAPH:
 			case ZBX_WIDGET_FIELD_TYPE_GRAPH_PROTOTYPE:
-				$this->validation_rules = ['type' => API_IDS];
-				break;
-
 			case ZBX_WIDGET_FIELD_TYPE_MAP:
-				$this->validation_rules = ['type' => API_ID];
+			case ZBX_WIDGET_FIELD_TYPE_SERVICE:
+			case ZBX_WIDGET_FIELD_TYPE_SLA:
+				$this->validation_rules = ['type' => API_IDS];
 				break;
 
 			default:
@@ -207,13 +206,11 @@ class CWidgetField {
 	}
 
 	/**
-	 * Validate field.
+	 * @param bool $strict  Widget form submit validation?
 	 *
-	 * @param bool $strict  Enables more strict validation of the field.
-	 *
-	 * @return bool
+	 * @return array  Errors.
 	 */
-	public function validate($strict = false) {
+	public function validate(bool $strict = false): array {
 		$errors = [];
 
 		$validation_rules = ($strict && $this->strict_validation_rules !== null)

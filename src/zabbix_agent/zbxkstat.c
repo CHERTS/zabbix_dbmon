@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,11 +17,10 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
+#include "zbxkstat.h"
 
 #if defined(HAVE_KSTAT_H) && defined(HAVE_VMINFO_T_UPDATES)
 
-#include "zbxkstat.h"
 #include "mutexs.h"
 #include "log.h"
 #include "stats.h"
@@ -35,8 +34,6 @@ static kstat_t		*kc_vminfo;
 static zbx_mutex_t	kstat_lock = ZBX_MUTEX_NULL;
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_kstat_refresh                                                *
  *                                                                            *
  * Purpose: refreshes kstat environment                                       *
  *                                                                            *
@@ -77,8 +74,6 @@ out:
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_kstat_init                                                   *
  *                                                                            *
  * Purpose: initialize kstat environment                                      *
  *                                                                            *
@@ -146,8 +141,6 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_kstat_collect                                                *
- *                                                                            *
  * Purpose: collect kstat stats                                               *
  *                                                                            *
  * Comments: This function is called every second to collect statistics.      *
@@ -191,8 +184,6 @@ out:
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_kstat_get_freemem                                            *
  *                                                                            *
  * Purpose: get free memory size                                              *
  *                                                                            *

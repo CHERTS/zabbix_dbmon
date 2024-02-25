@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,12 +21,15 @@
 
 /**
  * @var CView $this
+ * @var array $data
  */
 
 require_once dirname(__FILE__).'/js/configuration.triggers.list.js.php';
 
+$hg_ms_params = ($data['context'] === 'host') ? ['real_hosts' => 1] : ['templated_hosts' => 1];
+
 $filter_column1 = (new CFormList())
-	->addRow((new CLabel(_('Host groups'), 'filter_groupids')),
+	->addRow((new CLabel(_('Host groups'), 'filter_groupids__ms')),
 		(new CMultiSelect([
 			'name' => 'filter_groupids[]',
 			'object_name' => 'hostGroup',
@@ -37,22 +40,23 @@ $filter_column1 = (new CFormList())
 					'srcfld1' => 'groupid',
 					'dstfrm' => 'groupids',
 					'dstfld1' => 'filter_groupids_',
-					'editable' => true
-				]
+					'editable' => true,
+					'enrich_parent_groups' => true
+				] + $hg_ms_params
 			]
 		]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 	)
-	->addRow((new CLabel(_('Hosts'), 'filter_hostids')),
+	->addRow((new CLabel(($data['context'] === 'host') ? _('Hosts') : _('Templates'), 'filter_hostids__ms')),
 		(new CMultiSelect([
 			'name' => 'filter_hostids[]',
-			'object_name' => 'host_templates',
+			'object_name' => ($data['context'] === 'host') ? 'hosts' : 'templates',
 			'data' => $data['filter_hostids_ms'],
 			'popup' => [
 				'filter_preselect_fields' => [
 					'hostgroups' => 'filter_groupids_'
 				],
 				'parameters' => [
-					'srctbl' => 'host_templates',
+					'srctbl' => ($data['context'] === 'host') ? 'hosts' : 'templates',
 					'srcfld1' => 'hostid',
 					'dstfrm' => 'hostids',
 					'dstfld1' => 'filter_hostids_',
@@ -64,73 +68,51 @@ $filter_column1 = (new CFormList())
 	->addRow(_('Name'),
 		(new CTextBox('filter_name', $data['filter_name']))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 	)
-	->addRow(_('Severity'),	(new CSeverityCheckBoxList('filter_priority'))->setChecked($data['filter_priority']))
-	->addRow(_('State'),
+	->addRow(_('Severity'),
+		(new CCheckBoxList('filter_priority'))
+			->setOptions(CSeverityHelper::getSeverities())
+			->setChecked($data['filter_priority'])
+			->setColumns(3)
+			->setVertical(true)
+	);
+
+if ($data['context'] === 'host') {
+	$filter_column1->addRow(_('State'),
 		(new CRadioButtonList('filter_state', (int) $data['filter_state']))
 			->addValue(_('all'), -1)
 			->addValue(_('Normal'), TRIGGER_STATE_NORMAL)
 			->addValue(_('Unknown'), TRIGGER_STATE_UNKNOWN)
 			->setModern(true)
-	)
-	->addRow(_('Status'),
-		(new CRadioButtonList('filter_status', (int) $data['filter_status']))
-			->addValue(_('all'), -1)
-			->addValue(triggerIndicator(TRIGGER_STATUS_ENABLED), TRIGGER_STATUS_ENABLED)
-			->addValue(triggerIndicator(TRIGGER_STATUS_DISABLED), TRIGGER_STATUS_DISABLED)
-			->setModern(true)
-	)
-	->addRow(_('Value'),
+	);
+}
+
+$filter_column1->addRow(_('Status'),
+	(new CRadioButtonList('filter_status', (int) $data['filter_status']))
+		->addValue(_('all'), -1)
+		->addValue(triggerIndicator(TRIGGER_STATUS_ENABLED), TRIGGER_STATUS_ENABLED)
+		->addValue(triggerIndicator(TRIGGER_STATUS_DISABLED), TRIGGER_STATUS_DISABLED)
+		->setModern(true)
+);
+
+if ($data['context'] === 'host') {
+	$filter_column1->addRow(_('Value'),
 		(new CRadioButtonList('filter_value', (int) $data['filter_value']))
 			->addValue(_('all'), -1)
 			->addValue(_('Ok'), TRIGGER_VALUE_FALSE)
 			->addValue(_('Problem'), TRIGGER_VALUE_TRUE)
 			->setModern(true)
 	);
+}
 
 $filter_tags = $data['filter_tags'];
 if (!$filter_tags) {
 	$filter_tags = [['tag' => '', 'value' => '', 'operator' => TAG_OPERATOR_LIKE]];
 }
 
-$filter_tags_table = (new CTable())
-	->setId('filter-tags')
-	->addRow((new CCol(
-		(new CRadioButtonList('filter_evaltype', (int) $data['filter_evaltype']))
-			->addValue(_('And/Or'), TAG_EVAL_TYPE_AND_OR)
-			->addValue(_('Or'), TAG_EVAL_TYPE_OR)
-			->setModern(true)
-		))->setColSpan(4)
-	);
-
-$i = 0;
-foreach ($filter_tags as $tag) {
-	$filter_tags_table->addRow([
-		(new CTextBox('filter_tags['.$i.'][tag]', $tag['tag']))
-			->setAttribute('placeholder', _('tag'))
-			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
-		(new CRadioButtonList('filter_tags['.$i.'][operator]', (int) $tag['operator']))
-			->addValue(_('Contains'), TAG_OPERATOR_LIKE)
-			->addValue(_('Equals'), TAG_OPERATOR_EQUAL)
-			->setModern(true),
-		(new CTextBox('filter_tags['.$i.'][value]', $tag['value']))
-			->setAttribute('placeholder', _('value'))
-			->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
-		(new CCol(
-			(new CButton('filter_tags['.$i.'][remove]', _('Remove')))
-				->addClass(ZBX_STYLE_BTN_LINK)
-				->addClass('element-table-remove')
-		))->addClass(ZBX_STYLE_NOWRAP)
-	], 'form_row');
-
-	$i++;
-}
-$filter_tags_table->addRow(
-	(new CCol(
-		(new CButton('filter_tags_add', _('Add')))
-			->addClass(ZBX_STYLE_BTN_LINK)
-			->addClass('element-table-add')
-	))->setColSpan(3)
-);
+$filter_tags_table = CTagFilterFieldHelper::getTagFilterField([
+	'evaltype' => $data['filter_evaltype'],
+	'tags' => $filter_tags
+]);
 
 $filter_column2 = (new CFormList())
 	->addRow(_('Tags'), $filter_tags_table)
@@ -140,25 +122,31 @@ $filter_column2 = (new CFormList())
 			->addValue(_('Yes'), 1)
 			->addValue(_('No'), 0)
 			->setModern(true)
-	)
-	->addRow(_('Discovered'),
+	);
+
+if ($data['context'] === 'host') {
+	$filter_column2->addRow(_('Discovered'),
 		(new CRadioButtonList('filter_discovered', (int) $data['filter_discovered']))
 			->addValue(_('all'), -1)
 			->addValue(_('Yes'), 1)
 			->addValue(_('No'), 0)
 			->setModern(true)
-	)
-	->addRow(_('With dependencies'),
-		(new CRadioButtonList('filter_dependent', (int) $data['filter_dependent']))
-			->addValue(_('all'), -1)
-			->addValue(_('Yes'), 1)
-			->addValue(_('No'), 0)
-			->setModern(true)
 	);
+}
 
-$filter = (new CFilter(new CUrl('triggers.php')))
+$filter_column2->addRow(_('With dependencies'),
+	(new CRadioButtonList('filter_dependent', (int) $data['filter_dependent']))
+		->addValue(_('all'), -1)
+		->addValue(_('Yes'), 1)
+		->addValue(_('No'), 0)
+		->setModern(true)
+);
+
+$filter = (new CFilter())
+	->setResetUrl((new CUrl('triggers.php'))->setArgument('context', $data['context']))
 	->setProfile($data['profileIdx'])
 	->setActiveTab($data['active_tab'])
+	->addvar('context', $data['context'], 'filter_context')
 	->addFilterTab(_('Filter'), [$filter_column1, $filter_column2]);
 
 $widget = (new CWidget())
@@ -168,24 +156,32 @@ $widget = (new CWidget())
 			? new CRedirectButton(_('Create trigger'), (new CUrl('triggers.php'))
 				->setArgument('hostid', $data['single_selected_hostid'])
 				->setArgument('form', 'create')
+				->setArgument('context', $data['context'])
 				->getUrl()
 			)
-			: (new CButton('form', _('Create trigger (select host first)')))->setEnabled(false)
+			: (new CButton('form',
+				($data['context'] === 'host')
+					? _('Create trigger (select host first)')
+					: _('Create trigger (select template first)')
+			))->setEnabled(false)
 		))->setAttribute('aria-label', _('Content controls'))
 	]));
 
 if ($data['single_selected_hostid'] != 0) {
-	$widget->addItem(get_header_host_table('triggers', $data['single_selected_hostid']));
+	$widget->setNavigation(getHostNavigation('triggers', $data['single_selected_hostid']));
 }
 
 $widget->addItem($filter);
 
-// create form
-$triggers_form = (new CForm())
-	->addVar('checkbox_hash', $data['checkbox_hash'])
-	->setName('triggersForm');
+$url = (new CUrl('triggers.php'))
+	->setArgument('context', $data['context'])
+	->getUrl();
 
-$url = (new CUrl('triggers.php'))->getUrl();
+// create form
+$triggers_form = (new CForm('post', $url))
+	->setName('triggersForm')
+	->addVar('checkbox_hash', $data['checkbox_hash'])
+	->addVar('context', $data['context'], 'form_context');
 
 // create table
 $triggers_table = (new CTableInfo())->setHeader([
@@ -195,7 +191,11 @@ $triggers_table = (new CTableInfo())->setHeader([
 	))->addClass(ZBX_STYLE_CELL_WIDTH),
 	make_sorting_header(_('Severity'), 'priority', $data['sort'], $data['sortorder'], $url),
 	$data['show_value_column'] ? _('Value') : null,
-	$data['single_selected_hostid'] == 0 ? _('Host') : null,
+	($data['single_selected_hostid'] == 0)
+		? ($data['context'] === 'host')
+			? _('Host')
+			: _('Template')
+		: null,
 	make_sorting_header(_('Name'), 'description', $data['sort'], $data['sortorder'], $url),
 	_('Operational data'),
 	_('Expression'),
@@ -206,7 +206,8 @@ $triggers_table = (new CTableInfo())->setHeader([
 
 $data['triggers'] = CMacrosResolverHelper::resolveTriggerExpressions($data['triggers'], [
 	'html' => true,
-	'sources' => ['expression', 'recovery_expression']
+	'sources' => ['expression', 'recovery_expression'],
+	'context' => $data['context']
 ]);
 
 foreach ($data['triggers'] as $tnum => $trigger) {
@@ -215,15 +216,17 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 	// description
 	$description = [];
 	$description[] = makeTriggerTemplatePrefix($trigger['triggerid'], $data['parent_templates'],
-		ZBX_FLAG_DISCOVERY_NORMAL
+		ZBX_FLAG_DISCOVERY_NORMAL, $data['allowed_ui_conf_templates']
 	);
 
 	$trigger['hosts'] = zbx_toHash($trigger['hosts'], 'hostid');
 
 	if ($trigger['discoveryRule']) {
 		$description[] = (new CLink(
-			CHtml::encode($trigger['discoveryRule']['name']),
-			(new CUrl('trigger_prototypes.php'))->setArgument('parent_discoveryid', $trigger['discoveryRule']['itemid'])
+			$trigger['discoveryRule']['name'],
+			(new CUrl('trigger_prototypes.php'))
+				->setArgument('parent_discoveryid', $trigger['discoveryRule']['itemid'])
+				->setArgument('context', $data['context'])
 		))
 			->addClass(ZBX_STYLE_LINK_ALT)
 			->addClass(ZBX_STYLE_ORANGE);
@@ -231,10 +234,11 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 	}
 
 	$description[] = (new CLink(
-		CHtml::encode($trigger['description']),
+		$trigger['description'],
 		(new CUrl('triggers.php'))
 			->setArgument('form', 'update')
 			->setArgument('triggerid', $triggerid)
+			->setArgument('context', $data['context'])
 	))->addClass(ZBX_STYLE_WORDWRAP);
 
 	if ($trigger['dependencies']) {
@@ -244,12 +248,14 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 		foreach ($trigger['dependencies'] as $dependency) {
 			$dep_trigger = $data['dep_triggers'][$dependency['triggerid']];
 
-			$dep_trigger_desc = CHtml::encode(
-				implode(', ', zbx_objectValues($dep_trigger['hosts'], 'name')).NAME_DELIMITER.$dep_trigger['description']
-			);
+			$dep_trigger_desc =
+				implode(', ', array_column($dep_trigger['hosts'], 'name')).NAME_DELIMITER.$dep_trigger['description'];
 
 			$trigger_deps[] = (new CLink($dep_trigger_desc,
-				'triggers.php?form=update&triggerid='.$dep_trigger['triggerid']
+				(new CUrl('triggers.php'))
+					->setArgument('form', 'update')
+					->setArgument('triggerid', $dep_trigger['triggerid'])
+					->setArgument('context', $data['context'])
 			))
 				->addClass(ZBX_STYLE_LINK_ALT)
 				->addClass(triggerIndicatorStyle($dep_trigger['status']));
@@ -277,12 +283,15 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 	// status
 	$status = (new CLink(
 		triggerIndicator($trigger['status'], $trigger['state']),
-		'triggers.php?'.
-			'action='.($trigger['status'] == TRIGGER_STATUS_DISABLED
+		(new CUrl('triggers.php'))
+			->setArgument('action', ($trigger['status'] == TRIGGER_STATUS_DISABLED)
 				? 'trigger.massenable'
 				: 'trigger.massdisable'
-			).
-			'&g_triggerid='.$triggerid))
+			)
+			->setArgument('g_triggerid[]', $triggerid)
+			->setArgument('context', $data['context'])
+			->getUrl()
+		))
 		->addClass(ZBX_STYLE_LINK_ACTION)
 		->addClass(triggerIndicatorStyle($trigger['status'], $trigger['state']))
 		->addSID();
@@ -317,7 +326,7 @@ foreach ($data['triggers'] as $tnum => $trigger) {
 
 	$triggers_table->addRow([
 		new CCheckBox('g_triggerid['.$triggerid.']', $triggerid),
-		getSeverityCell($trigger['priority'], $data['config']),
+		CSeverityHelper::makeSeverityCell((int) $trigger['priority']),
 		$data['show_value_column'] ? $trigger_value : null,
 		$hosts,
 		$description,
@@ -338,7 +347,17 @@ $triggers_form->addItem([
 			'trigger.massenable' => ['name' => _('Enable'), 'confirm' => _('Enable selected triggers?')],
 			'trigger.massdisable' => ['name' => _('Disable'), 'confirm' => _('Disable selected triggers?')],
 			'trigger.masscopyto' => ['name' => _('Copy')],
-			'trigger.massupdateform' => ['name' => _('Mass update')],
+			'popup.massupdate.trigger' => [
+				'content' => (new CButton('', _('Mass update')))
+					->onClick(
+						"openMassupdatePopup('popup.massupdate.trigger', {}, {
+							dialogue_class: 'modal-popup-static',
+							trigger_element: this
+						});"
+					)
+					->addClass(ZBX_STYLE_BTN_ALT)
+					->removeAttribute('id')
+			],
 			'trigger.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected triggers?')]
 		],
 		$data['checkbox_hash']
@@ -349,3 +368,7 @@ $triggers_form->addItem([
 $widget->addItem($triggers_form);
 
 $widget->show();
+
+(new CScriptTag('view.init();'))
+	->setOnDocumentReady()
+	->show();

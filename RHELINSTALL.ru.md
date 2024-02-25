@@ -14,7 +14,7 @@
 Установка репозитория DBService
 
 ~~~~
-rpm -Uvh https://repo.dbservice.tech/zabbix/5.0/rhel/7/x86_64/dbs-release-5.0-1.el7.noarch.rpm
+rpm -Uvh https://repo.programs74.ru/zabbix/6.0/rhel/7/x86_64/dbs-release-6.0-1.el7.noarch.rpm
 yum clean all
 yum makecache fast
 ~~~~
@@ -33,7 +33,7 @@ yum install zabbix-agent-dbmon
 Установка репозитория DBService
 
 ~~~~
-rpm -Uvh https://repo.dbservice.tech/zabbix/5.0/rhel/8/x86_64/dbs-release-5.0-1.el8.noarch.rpm
+rpm -Uvh https://repo.programs74.ru/zabbix/6.0/rhel/8/x86_64/dbs-release-6.0-1.el8.noarch.rpm
 yum clean all
 yum makecache fast
 ~~~~

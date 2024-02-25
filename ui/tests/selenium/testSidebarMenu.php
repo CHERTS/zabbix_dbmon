@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ require_once dirname(__FILE__).'/../include/CWebTest.php';
 /**
  * @backup sessions
  *
- * Test Zabbix side menu.
+ * Test side menu.
  */
 class testSidebarMenu extends CWebTest {
 
@@ -44,20 +44,7 @@ class testSidebarMenu extends CWebTest {
 			[
 				[
 					'section' => 'Monitoring',
-					'page' => 'Overview',
-					'header' => 'Trigger overview'
-				]
-			],
-			[
-				[
-					'section' => 'Monitoring',
 					'page' => 'Latest data'
-				]
-			],
-			[
-				[
-					'section' => 'Monitoring',
-					'page' => 'Screens'
 				]
 			],
 			[
@@ -75,8 +62,26 @@ class testSidebarMenu extends CWebTest {
 			],
 			[
 				[
-					'section' => 'Monitoring',
+					'section' => 'Services',
 					'page' => 'Services'
+				]
+			],
+			[
+				[
+					'section' => 'Services',
+					'page' => 'Service actions'
+				]
+			],
+			[
+				[
+					'section' => 'Services',
+					'page' => 'SLA'
+				]
+			],
+			[
+				[
+					'section' => 'Services',
+					'page' => 'SLA report'
 				]
 			],
 			[
@@ -160,7 +165,13 @@ class testSidebarMenu extends CWebTest {
 				[
 					'section' => 'Configuration',
 					'page' => 'Actions',
-					'header' => 'Autoregistration actions'
+					'third_level' =>
+					[
+						'Trigger actions',
+						'Discovery actions',
+						'Autoregistration actions',
+						'Internal actions'
+					]
 				]
 			],
 			[
@@ -178,15 +189,22 @@ class testSidebarMenu extends CWebTest {
 			],
 			[
 				[
-					'section' => 'Configuration',
-					'page' => 'Services'
-				]
-			],
-			[
-				[
 					'section' => 'Administration',
 					'page' => 'General',
-					'header' => 'GUI'
+					'third_level' =>
+					[
+						'GUI',
+						'Autoregistration',
+						'Housekeeping',
+						'Images',
+						'Icon mapping',
+						'Regular expressions',
+						'Macros',
+						'Trigger displaying options',
+						'Modules',
+						'API tokens',
+						'Other'
+					]
 				]
 			],
 			[
@@ -205,6 +223,12 @@ class testSidebarMenu extends CWebTest {
 				[
 					'section' => 'Administration',
 					'page' => 'User groups'
+				]
+			],
+			[
+				[
+					'section' => 'Administration',
+					'page' => 'User roles'
 				]
 			],
 			[
@@ -229,14 +253,32 @@ class testSidebarMenu extends CWebTest {
 				[
 					'section' => 'Administration',
 					'page' => 'Queue',
-					'header' => 'Queue overview'
+					'third_level' =>
+					[
+						'Queue overview',
+						'Queue overview by proxy',
+						'Queue details'
+					]
+				]
+			],
+			[
+				[
+					'section' => 'User settings',
+					'page' => 'Profile',
+					'header' => 'User profile: Zabbix Administrator'
+				]
+			],
+			[
+				[
+					'section' => 'User settings',
+					'page' => 'API tokens'
 				]
 			]
 		];
 	}
 
 	/**
-	 * Check menu pages that allows to navigate in Zabbix.
+	 * Check menu pages that allows to navigate.
 	 *
 	 * @dataProvider getMainData
 	 */
@@ -256,12 +298,30 @@ class testSidebarMenu extends CWebTest {
 				return CElementQuery::getDriver()->executeScript('return arguments[0].clientHeight ==='.
 						' parseInt(arguments[0].style.maxHeight, 10)', [$element]);
 			});
+
+			$submenu = $element->query('link', $data['page'])->one();
+		}
+		else {
+			$submenu = $main_section->one()->parents('tag:li')->query('link', $data['page'])->one();
 		}
 
-		// Second level menu.
-		$submenu = $main_section->one()->parents('tag:li')->query('link', $data['page'])->one();
+		// Open second level menu.
 		$submenu->waitUntilClickable()->click();
-		$this->page->assertHeader((array_key_exists('header', $data)) ? $data['header'] : $data['page']);
+
+		// Checking 3rd level menu.
+		if (array_key_exists('third_level', $data)) {
+			foreach ($data['third_level'] as $third_level) {
+				$submenu->parents('tag:li')->query('xpath://ul/li/a[text()="'.$third_level.'"]')
+						->waitUntilClickable()->one()->click();
+				$this->assertTrue($this->query('xpath://li[contains(@class, "is-selected")]/a[text()="'.
+						$data['page'].'"]')->exists());
+				$this->page->assertHeader(($third_level === 'Other') ? 'Other configuration parameters' : $third_level);
+				$submenu->click();
+			}
+		}
+		else {
+			$this->page->assertHeader((array_key_exists('header', $data)) ? $data['header'] : $data['page']);
+		}
 	}
 
 	/**
@@ -299,7 +359,7 @@ class testSidebarMenu extends CWebTest {
 			// Checking that collapsed, hidden sidemenu appears on clicking.
 			$this->query('xpath://aside[@class="sidebar is-'.$view.' is-opened"]')->one()->waitUntilVisible();
 
-			// Returning standart sidemenu view clicking on unhide, expand button.
+			// Returning standard sidemenu view clicking on unhide, expand button.
 			$this->query('button', $unhide)->one()->waitUntilClickable()->click();
 			$this->assertTrue($this->query('class:sidebar')->one()->isVisible());
 		}
@@ -315,20 +375,14 @@ class testSidebarMenu extends CWebTest {
 			],
 			[
 				[
-					'section' => 'Share',
-					'link' => 'https://share.zabbix.com/'
+					'section' => 'Integrations',
+					'link' => 'https://www.zabbix.com/integrations'
 				]
 			],
 			[
 				[
 					'section' => 'Help',
-					'link' => 'https://www.zabbix.com/documentation/5.0/'
-				]
-			],
-			[
-				[
-					'section' => 'User settings',
-					'title' => 'User profile'
+					'link' => 'https://www.zabbix.com/documentation/6.0/'
 				]
 			],
 			[
@@ -341,7 +395,7 @@ class testSidebarMenu extends CWebTest {
 	}
 
 	/**
-	 * Side menu user section.
+	 * Pages that transfer you to another webpage and logout button.
 	 *
 	 * @dataProvider getUserSectionData
 	 */
@@ -354,7 +408,7 @@ class testSidebarMenu extends CWebTest {
 		}
 		else {
 			$this->query('xpath://ul[@class="menu-user"]//a[text()="'.$data['section'].'"]')->one()->click();
-			$this->page->assertTitle($data['title']);
+			$this->page->assertTitle('Zabbix');
 		}
 	}
 }

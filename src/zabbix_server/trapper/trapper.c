@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,44 +17,39 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
+#include "trapper.h"
 
-#include "comms.h"
 #include "log.h"
-#include "zbxjson.h"
-#include "zbxserver.h"
-#include "dbcache.h"
 #include "proxy.h"
 #include "zbxself.h"
-
-#include "trapper.h"
 #include "active.h"
 #include "nodecommand.h"
 #include "proxyconfig.h"
 #include "proxydata.h"
-#include "../alerter/alerter_protocol.h"
-#include "trapper_preproc.h"
-#include "trapper_expressions_evaluate.h"
-
 #include "daemon.h"
 #include "zbxcrypto.h"
 #include "../../libs/zbxserver/zabbix_stats.h"
-#include "zbxipcservice.h"
-#include "trapper_item_test.h"
 #include "../poller/checks_snmp.h"
+#include "trapper_auth.h"
+#include "trapper_preproc.h"
+#include "trapper_expressions_evaluate.h"
+#include "trapper_item_test.h"
+#include "trapper_request.h"
+#include "base64.h"
+
+#ifdef HAVE_NETSNMP
+#	include "zbxrtc.h"
+#endif
 
 #define ZBX_MAX_SECTION_ENTRIES		4
 #define ZBX_MAX_ENTRY_ATTRIBUTES	3
 
-extern unsigned char	process_type, program_type;
-extern int		server_num, process_num;
-extern size_t		(*find_psk_in_cache)(const unsigned char *, unsigned char *, unsigned int *);
+extern ZBX_THREAD_LOCAL unsigned char	process_type;
+extern unsigned char			program_type;
+extern ZBX_THREAD_LOCAL int		server_num, process_num;
+extern size_t				(*find_psk_in_cache)(const unsigned char *, unsigned char *, unsigned int *);
 
 extern int	CONFIG_CONFSYNCER_FORKS;
-
-#ifdef HAVE_NETSNMP
-static volatile sig_atomic_t	snmp_cache_reload_requested;
-#endif
 
 typedef struct
 {
@@ -104,8 +99,6 @@ zbx_status_section_t;
 
 /******************************************************************************
  *                                                                            *
- * Function: recv_agenthistory                                                *
- *                                                                            *
  * Purpose: processes the received values from active agents                  *
  *                                                                            *
  ******************************************************************************/
@@ -135,8 +128,6 @@ static void	recv_agenthistory(zbx_socket_t *sock, struct zbx_json_parse *jp, zbx
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: recv_senderhistory                                               *
  *                                                                            *
  * Purpose: processes the received values from senders                        *
  *                                                                            *
@@ -168,14 +159,10 @@ static void	recv_senderhistory(zbx_socket_t *sock, struct zbx_json_parse *jp, zb
 
 /******************************************************************************
  *                                                                            *
- * Function: recv_proxy_heartbeat                                             *
- *                                                                            *
  * Purpose: process heartbeat sent by proxy servers                           *
  *                                                                            *
  * Return value:  SUCCEED - processed successfully                            *
  *                FAIL - an error occurred                                    *
- *                                                                            *
- * Author: Alexander Vladishev                                                *
  *                                                                            *
  ******************************************************************************/
 static void	recv_proxy_heartbeat(zbx_socket_t *sock, struct zbx_json_parse *jp)
@@ -236,8 +223,6 @@ zbx_queue_stats_t;
 
 /******************************************************************************
  *                                                                            *
- * Function: queue_stats_update                                               *
- *                                                                            *
  * Purpose: update queue stats with a new item delay                          *
  *                                                                            *
  * Parameters: stats   - [IN] the queue stats                                 *
@@ -261,8 +246,6 @@ static void	queue_stats_update(zbx_queue_stats_t *stats, int delay)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: queue_stats_export                                               *
  *                                                                            *
  * Purpose: export queue stats to JSON format                                 *
  *                                                                            *
@@ -306,8 +289,6 @@ static int	queue_compare_by_nextcheck_asc(zbx_queue_item_t **d1, zbx_queue_item_
 
 /******************************************************************************
  *                                                                            *
- * Function: recv_getqueue                                                    *
- *                                                                            *
  * Purpose: process queue request                                             *
  *                                                                            *
  * Parameters:  sock  - [IN] the request socket                               *
@@ -320,7 +301,7 @@ static int	queue_compare_by_nextcheck_asc(zbx_queue_item_t **d1, zbx_queue_item_
 static int	recv_getqueue(zbx_socket_t *sock, struct zbx_json_parse *jp)
 {
 	int			ret = FAIL, request_type = ZBX_GET_QUEUE_UNKNOWN, now, i, limit;
-	char			type[MAX_STRING_LEN], sessionid[MAX_STRING_LEN], limit_str[MAX_STRING_LEN];
+	char			type[MAX_STRING_LEN], limit_str[MAX_STRING_LEN];
 	zbx_user_t		user;
 	zbx_vector_ptr_t	queue;
 	struct zbx_json		json;
@@ -329,8 +310,9 @@ static int	recv_getqueue(zbx_socket_t *sock, struct zbx_json_parse *jp)
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
 
-	if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_SID, sessionid, sizeof(sessionid), NULL) ||
-			SUCCEED != DBget_user_by_active_session(sessionid, &user) || USER_TYPE_SUPER_ADMIN > user.type)
+	zbx_user_init(&user);
+
+	if (FAIL == zbx_get_user_from_json(jp, &user, NULL) || USER_TYPE_SUPER_ADMIN > user.type)
 	{
 		zbx_send_response(sock, ret, "Permission denied.", CONFIG_TIMEOUT);
 		goto out;
@@ -350,8 +332,8 @@ static int	recv_getqueue(zbx_socket_t *sock, struct zbx_json_parse *jp)
 		{
 			request_type = ZBX_GET_QUEUE_DETAILS;
 
-			if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_LIMIT, limit_str, sizeof(limit_str), NULL) ||
-					FAIL == is_uint31(limit_str, &limit))
+			if (FAIL == zbx_json_value_by_name(jp, ZBX_PROTO_TAG_LIMIT, limit_str, sizeof(limit_str),
+					NULL) || FAIL == is_uint31(limit_str, &limit))
 			{
 				zbx_send_response(sock, ret, "Unsupported limit value.", CONFIG_TIMEOUT);
 				goto out;
@@ -387,7 +369,8 @@ static int	recv_getqueue(zbx_socket_t *sock, struct zbx_json_parse *jp)
 				{
 					zbx_queue_stats_t	data = {.id = id};
 
-					stats = (zbx_queue_stats_t *)zbx_hashset_insert(&queue_stats, &data, sizeof(data));
+					stats = (zbx_queue_stats_t *)zbx_hashset_insert(&queue_stats, &data,
+							sizeof(data));
 				}
 				queue_stats_update(stats, now - item->nextcheck);
 			}
@@ -412,7 +395,8 @@ static int	recv_getqueue(zbx_socket_t *sock, struct zbx_json_parse *jp)
 				{
 					zbx_queue_stats_t	data = {.id = id};
 
-					stats = (zbx_queue_stats_t *)zbx_hashset_insert(&queue_stats, &data, sizeof(data));
+					stats = (zbx_queue_stats_t *)zbx_hashset_insert(&queue_stats, &data,
+							sizeof(data));
 				}
 				queue_stats_update(stats, now - item->nextcheck);
 			}
@@ -456,156 +440,11 @@ static int	recv_getqueue(zbx_socket_t *sock, struct zbx_json_parse *jp)
 
 	ret = SUCCEED;
 out:
+	zbx_user_free(&user);
+
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __func__, zbx_result_string(ret));
 
 	return ret;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: recv_alert_send                                                  *
- *                                                                            *
- * Purpose: process alert send request that is used to test media types       *
- *                                                                            *
- * Parameters:  sock  - [IN] the request socket                               *
- *              jp    - [IN] the request data                                 *
- *                                                                            *
- * Return value:  SUCCEED - processed successfully                            *
- *                FAIL - an error occurred                                    *
- *                                                                            *
- ******************************************************************************/
-static void	recv_alert_send(zbx_socket_t *sock, const struct zbx_json_parse *jp)
-{
-	DB_RESULT		result;
-	DB_ROW			row;
-	int			ret = FAIL, errcode;
-	char			tmp[ZBX_MAX_UINT64_LEN + 1], sessionid[MAX_STRING_LEN], *sendto = NULL, *subject = NULL,
-				*message = NULL, *error = NULL, *params = NULL, *value = NULL, *debug = NULL;
-	zbx_uint64_t		mediatypeid;
-	size_t			string_alloc;
-	struct zbx_json		json;
-	struct zbx_json_parse	jp_data, jp_params;
-	unsigned char		*data = NULL,smtp_security, smtp_verify_peer, smtp_verify_host,
-				smtp_authentication, content_type, *response = NULL;
-	zbx_uint32_t		size;
-	zbx_user_t		user;
-	unsigned short		smtp_port;
-
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
-
-	zbx_json_init(&json, ZBX_JSON_STAT_BUF_LEN);
-
-	if (SUCCEED != zbx_json_value_by_name(jp, ZBX_PROTO_TAG_SID, sessionid, sizeof(sessionid), NULL) ||
-			SUCCEED != DBget_user_by_active_session(sessionid, &user) || USER_TYPE_SUPER_ADMIN > user.type)
-	{
-		error = zbx_strdup(NULL, "Permission denied.");
-		goto fail;
-	}
-
-	if (SUCCEED != zbx_json_brackets_by_name(jp, ZBX_PROTO_TAG_DATA, &jp_data))
-	{
-		error = zbx_dsprintf(NULL, "Cannot parse request tag: %s.", ZBX_PROTO_TAG_DATA);
-		goto fail;
-	}
-
-	if (SUCCEED != zbx_json_value_by_name(&jp_data, ZBX_PROTO_TAG_MEDIATYPEID, tmp, sizeof(tmp), NULL) ||
-			SUCCEED != is_uint64(tmp, &mediatypeid))
-	{
-		error = zbx_dsprintf(NULL, "Cannot parse request tag: %s.", ZBX_PROTO_TAG_MEDIATYPEID);
-		goto fail;
-	}
-
-	string_alloc = 0;
-	if (SUCCEED == zbx_json_value_by_name_dyn(&jp_data, ZBX_PROTO_TAG_SENDTO, &sendto, &string_alloc, NULL))
-		string_alloc = 0;
-	if (SUCCEED == zbx_json_value_by_name_dyn(&jp_data, ZBX_PROTO_TAG_SUBJECT, &subject, &string_alloc, NULL))
-		string_alloc = 0;
-	if (SUCCEED == zbx_json_value_by_name_dyn(&jp_data, ZBX_PROTO_TAG_MESSAGE, &message, &string_alloc, NULL))
-		string_alloc = 0;
-
-	if (SUCCEED == zbx_json_brackets_by_name(&jp_data, ZBX_PROTO_TAG_PARAMETERS, &jp_params))
-	{
-		size_t	string_offset = 0;
-
-		zbx_strncpy_alloc(&params, &string_alloc, &string_offset, jp_params.start,
-				jp_params.end - jp_params.start + 1);
-	}
-
-	result = DBselect("select type,smtp_server,smtp_helo,smtp_email,exec_path,gsm_modem,username,"
-				"passwd,smtp_port,smtp_security,smtp_verify_peer,smtp_verify_host,smtp_authentication,"
-				"exec_params,maxsessions,maxattempts,attempt_interval,content_type,script,timeout"
-			" from media_type"
-			" where mediatypeid=" ZBX_FS_UI64, mediatypeid);
-
-	if (NULL == (row = DBfetch(result)))
-	{
-		DBfree_result(result);
-		error = zbx_dsprintf(NULL, "Cannot find the specified media type.");
-		goto fail;
-	}
-
-	if (FAIL == is_ushort(row[8], &smtp_port))
-	{
-		DBfree_result(result);
-		error = zbx_dsprintf(NULL, "Invalid port value.");
-		goto fail;
-	}
-
-	ZBX_STR2UCHAR(smtp_security, row[9]);
-	ZBX_STR2UCHAR(smtp_verify_peer, row[10]);
-	ZBX_STR2UCHAR(smtp_verify_host, row[11]);
-	ZBX_STR2UCHAR(smtp_authentication, row[12]);
-	ZBX_STR2UCHAR(content_type, row[17]);
-
-	size = zbx_alerter_serialize_alert_send(&data, mediatypeid, atoi(row[0]), row[1], row[2], row[3], row[4],
-			row[5], row[6], row[7], smtp_port, smtp_security, smtp_verify_peer, smtp_verify_host,
-			smtp_authentication, row[13], atoi(row[14]), atoi(row[15]), row[16], content_type, row[18],
-			row[19], sendto, subject, message, params);
-
-	DBfree_result(result);
-
-	if (SUCCEED != zbx_ipc_async_exchange(ZBX_IPC_SERVICE_ALERTER, ZBX_IPC_ALERTER_ALERT, SEC_PER_MIN, data, size,
-			&response, &error))
-	{
-		goto fail;
-	}
-
-	zbx_alerter_deserialize_result(response, &value, &errcode, &error, &debug);
-	zbx_free(response);
-
-	if (SUCCEED == errcode)
-		ret = SUCCEED;
-fail:
-	zbx_json_addstring(&json, ZBX_PROTO_TAG_RESPONSE, SUCCEED == ret ? ZBX_PROTO_VALUE_SUCCESS :
-				ZBX_PROTO_VALUE_FAILED, ZBX_JSON_TYPE_STRING);
-
-	if (SUCCEED == ret)
-	{
-		if (NULL != value)
-			zbx_json_addstring(&json, ZBX_PROTO_TAG_DATA, value, ZBX_JSON_TYPE_STRING);
-	}
-	else
-	{
-		if (NULL != error && '\0' != *error)
-			zbx_json_addstring(&json, ZBX_PROTO_TAG_INFO, error, ZBX_JSON_TYPE_STRING);
-	}
-
-	if (NULL != debug)
-		zbx_json_addraw(&json, "debug", debug);
-
-	(void)zbx_tcp_send(sock, json.buffer);
-
-	zbx_free(params);
-	zbx_free(message);
-	zbx_free(subject);
-	zbx_free(sendto);
-	zbx_free(data);
-	zbx_free(value);
-	zbx_free(error);
-	zbx_free(debug);
-	zbx_json_free(&json);
-
-	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __func__, zbx_result_string(ret));
 }
 
 static int	DBget_template_count(zbx_uint64_t *count)
@@ -706,7 +545,7 @@ static void	zbx_status_counters_free(void)
 }
 
 const zbx_status_section_t	status_sections[] = {
-/*	{SECTION NAME,			NUMBER OF SECTION ENTRIES	SECTION ACCESS LEVEL	SECTION READYNESS, */
+/*	{SECTION NAME,			NUMBER OF SECTION ENTRIES	SECTION ACCESS LEVEL	SECTION READINESS, */
 /*		{                                                                                                  */
 /*			{ENTRY INFORMATION,		COUNTER TYPE,                                              */
 /*				{                                                                                  */
@@ -922,8 +761,6 @@ static void	status_stats_export(struct zbx_json *json, zbx_user_type_t access_le
 
 /******************************************************************************
  *                                                                            *
- * Function: recv_getstatus                                                   *
- *                                                                            *
  * Purpose: process status request                                            *
  *                                                                            *
  * Parameters:  sock  - [IN] the request socket                               *
@@ -941,13 +778,14 @@ static int	recv_getstatus(zbx_socket_t *sock, struct zbx_json_parse *jp)
 
 	zbx_user_t	user;
 	int		ret = FAIL, request_type = ZBX_GET_STATUS_UNKNOWN;
-	char		type[MAX_STRING_LEN], sessionid[MAX_STRING_LEN];
+	char		type[MAX_STRING_LEN];
 	struct zbx_json	json;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
 
-	if (SUCCEED != zbx_json_value_by_name(jp, ZBX_PROTO_TAG_SID, sessionid, sizeof(sessionid), NULL) ||
-			SUCCEED != DBget_user_by_active_session(sessionid, &user))
+	zbx_user_init(&user);
+
+	if (FAIL == zbx_get_user_from_json(jp, &user, NULL))
 	{
 		zbx_send_response(sock, ret, "Permission denied.", CONFIG_TIMEOUT);
 		goto out;
@@ -976,12 +814,14 @@ static int	recv_getstatus(zbx_socket_t *sock, struct zbx_json_parse *jp)
 	switch (request_type)
 	{
 		case ZBX_GET_STATUS_PING:
-			zbx_json_addstring(&json, ZBX_PROTO_TAG_RESPONSE, ZBX_PROTO_VALUE_SUCCESS, ZBX_JSON_TYPE_STRING);
+			zbx_json_addstring(&json, ZBX_PROTO_TAG_RESPONSE, ZBX_PROTO_VALUE_SUCCESS,
+					ZBX_JSON_TYPE_STRING);
 			zbx_json_addobject(&json, ZBX_PROTO_TAG_DATA);
 			zbx_json_close(&json);
 			break;
 		case ZBX_GET_STATUS_FULL:
-			zbx_json_addstring(&json, ZBX_PROTO_TAG_RESPONSE, ZBX_PROTO_VALUE_SUCCESS, ZBX_JSON_TYPE_STRING);
+			zbx_json_addstring(&json, ZBX_PROTO_TAG_RESPONSE, ZBX_PROTO_VALUE_SUCCESS,
+					ZBX_JSON_TYPE_STRING);
 			zbx_json_addobject(&json, ZBX_PROTO_TAG_DATA);
 			status_stats_export(&json, user.type);
 			zbx_json_close(&json);
@@ -998,6 +838,8 @@ static int	recv_getstatus(zbx_socket_t *sock, struct zbx_json_parse *jp)
 
 	ret = SUCCEED;
 out:
+	zbx_user_free(&user);
+
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s():%s", __func__, zbx_result_string(ret));
 
 	return ret;
@@ -1008,8 +850,6 @@ out:
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: send_internal_stats_json                                         *
  *                                                                            *
  * Purpose: process Zabbix stats request                                      *
  *                                                                            *
@@ -1110,6 +950,97 @@ static void	active_passive_misconfig(zbx_socket_t *sock)
 	zbx_free(msg);
 }
 
+static int	comms_parse_response(char *xml, char *host, size_t host_len, char *key, size_t key_len,
+		char *data, size_t data_len, char *lastlogsize, size_t lastlogsize_len,
+		char *timestamp, size_t timestamp_len, char *source, size_t source_len,
+		char *severity, size_t severity_len)
+{
+	int	i, ret = SUCCEED;
+	char	*data_b64 = NULL;
+
+	assert(NULL != host && 0 != host_len);
+	assert(NULL != key && 0 != key_len);
+	assert(NULL != data && 0 != data_len);
+	assert(NULL != lastlogsize && 0 != lastlogsize_len);
+	assert(NULL != timestamp && 0 != timestamp_len);
+	assert(NULL != source && 0 != source_len);
+	assert(NULL != severity && 0 != severity_len);
+
+	if (SUCCEED == xml_get_data_dyn(xml, "host", &data_b64))
+	{
+		str_base64_decode(data_b64, host, (int)host_len - 1, &i);
+		host[i] = '\0';
+		xml_free_data_dyn(&data_b64);
+	}
+	else
+	{
+		*host = '\0';
+		ret = FAIL;
+	}
+
+	if (SUCCEED == xml_get_data_dyn(xml, "key", &data_b64))
+	{
+		str_base64_decode(data_b64, key, (int)key_len - 1, &i);
+		key[i] = '\0';
+		xml_free_data_dyn(&data_b64);
+	}
+	else
+	{
+		*key = '\0';
+		ret = FAIL;
+	}
+
+	if (SUCCEED == xml_get_data_dyn(xml, "data", &data_b64))
+	{
+		str_base64_decode(data_b64, data, (int)data_len - 1, &i);
+		data[i] = '\0';
+		xml_free_data_dyn(&data_b64);
+	}
+	else
+	{
+		*data = '\0';
+		ret = FAIL;
+	}
+
+	if (SUCCEED == xml_get_data_dyn(xml, "lastlogsize", &data_b64))
+	{
+		str_base64_decode(data_b64, lastlogsize, (int)lastlogsize_len - 1, &i);
+		lastlogsize[i] = '\0';
+		xml_free_data_dyn(&data_b64);
+	}
+	else
+		*lastlogsize = '\0';
+
+	if (SUCCEED == xml_get_data_dyn(xml, "timestamp", &data_b64))
+	{
+		str_base64_decode(data_b64, timestamp, (int)timestamp_len - 1, &i);
+		timestamp[i] = '\0';
+		xml_free_data_dyn(&data_b64);
+	}
+	else
+		*timestamp = '\0';
+
+	if (SUCCEED == xml_get_data_dyn(xml, "source", &data_b64))
+	{
+		str_base64_decode(data_b64, source, (int)source_len - 1, &i);
+		source[i] = '\0';
+		xml_free_data_dyn(&data_b64);
+	}
+	else
+		*source = '\0';
+
+	if (SUCCEED == xml_get_data_dyn(xml, "severity", &data_b64))
+	{
+		str_base64_decode(data_b64, severity, (int)severity_len - 1, &i);
+		severity[i] = '\0';
+		xml_free_data_dyn(&data_b64);
+	}
+	else
+		*severity = '\0';
+
+	return ret;
+}
+
 static int	process_trap(zbx_socket_t *sock, char *s, ssize_t bytes_received, zbx_timespec_t *ts)
 {
 	int	ret = SUCCEED;
@@ -1121,7 +1052,7 @@ static int	process_trap(zbx_socket_t *sock, char *s, ssize_t bytes_received, zbx
 	if ('{' == *s)	/* JSON protocol */
 	{
 		struct zbx_json_parse	jp;
-		char			value[MAX_STRING_LEN];
+		char			value[MAX_STRING_LEN] = "";
 
 		if (SUCCEED != zbx_json_open(s, &jp))
 		{
@@ -1215,11 +1146,6 @@ static int	process_trap(zbx_socket_t *sock, char *s, ssize_t bytes_received, zbx
 			{
 				ret = send_internal_stats_json(sock, &jp);
 			}
-			else if (0 == strcmp(value, ZBX_PROTO_VALUE_ZABBIX_ALERT_SEND))
-			{
-				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
-					recv_alert_send(sock, &jp);
-			}
 			else if (0 == strcmp(value, ZBX_PROTO_VALUE_PREPROCESSING_TEST))
 			{
 				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
@@ -1235,10 +1161,10 @@ static int	process_trap(zbx_socket_t *sock, char *s, ssize_t bytes_received, zbx
 				if (0 != (program_type & ZBX_PROGRAM_TYPE_SERVER))
 					zbx_trapper_item_test(sock, &jp);
 			}
-			else
+			else if (SUCCEED != trapper_process_request(value, sock, &jp))
 			{
 				zabbix_log(LOG_LEVEL_WARNING, "unknown request received from \"%s\": [%s]", sock->peer,
-						value);
+					value);
 			}
 		}
 	}
@@ -1254,7 +1180,7 @@ static int	process_trap(zbx_socket_t *sock, char *s, ssize_t bytes_received, zbx
 					key[ITEM_KEY_LEN * ZBX_MAX_BYTES_IN_UTF8_CHAR + 1];
 		zbx_agent_value_t	av;
 		zbx_host_key_t		hk = {host, key};
-		DC_ITEM			item;
+		zbx_history_recv_item_t	item;
 		int			errcode;
 
 		if (ZBX_GIBIBYTE < bytes_received)
@@ -1309,9 +1235,8 @@ static int	process_trap(zbx_socket_t *sock, char *s, ssize_t bytes_received, zbx
 		if (0 == strcmp(av.value, ZBX_NOTSUPPORTED))
 			av.state = ITEM_STATE_NOTSUPPORTED;
 
-		DCconfig_get_items_by_keys(&item, &hk, &errcode, 1);
+		zbx_dc_config_history_recv_get_items_by_keys(&item, &hk, &errcode, 1);
 		process_history_data(&item, &av, &errcode, 1, NULL);
-		DCconfig_clean_items(&item, &errcode, 1);
 
 		zbx_alarm_on(CONFIG_TIMEOUT);
 		if (SUCCEED != zbx_tcp_send_raw(sock, "OK"))
@@ -1332,21 +1257,15 @@ static void	process_trapper_child(zbx_socket_t *sock, zbx_timespec_t *ts)
 	process_trap(sock, sock->buffer, bytes_received, ts);
 }
 
-static void	zbx_trapper_sigusr_handler(int flags)
-{
-#ifdef HAVE_NETSNMP
-	if (ZBX_RTC_SNMP_CACHE_RELOAD == ZBX_RTC_GET_MSG(flags))
-		snmp_cache_reload_requested = 1;
-#else
-	ZBX_UNUSED(flags);
-#endif
-}
-
 ZBX_THREAD_ENTRY(trapper_thread, args)
 {
-	double		sec = 0.0;
-	zbx_socket_t	s;
-	int		ret;
+	double			sec = 0.0;
+	zbx_socket_t		s;
+	int			ret;
+
+#ifdef HAVE_NETSNMP
+	zbx_ipc_async_socket_t	rtc;
+#endif
 
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
@@ -1367,17 +1286,18 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 
 	DBconnect(ZBX_DB_CONNECT_NORMAL);
 
-	zbx_set_sigusr_handler(zbx_trapper_sigusr_handler);
+#ifdef HAVE_NETSNMP
+	zbx_rtc_subscribe(&rtc, process_type, process_num);
+#endif
 
 	while (ZBX_IS_RUNNING())
 	{
 #ifdef HAVE_NETSNMP
-		if (1 == snmp_cache_reload_requested)
-		{
-			zbx_clear_cache_snmp(process_type, process_num);
-			snmp_cache_reload_requested = 0;
-		}
+		zbx_uint32_t	rtc_cmd;
+		unsigned char	*rtc_data;
+		int		snmp_reload = 0;
 #endif
+
 		zbx_setproctitle("%s #%d [processed data in " ZBX_FS_DBL " sec, waiting for connection]",
 				get_process_type_string(process_type), process_num, sec);
 
@@ -1387,7 +1307,7 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 		/* Only after receiving data it is known who has sent them and one can decide to accept or discard */
 		/* the data. */
 		ret = zbx_tcp_accept(&s, ZBX_TCP_SEC_TLS_CERT | ZBX_TCP_SEC_TLS_PSK | ZBX_TCP_SEC_UNENCRYPTED);
-		zbx_update_env(zbx_time());
+		zbx_update_env(get_process_type_string(process_type), zbx_time());
 
 		if (SUCCEED == ret)
 		{
@@ -1401,6 +1321,22 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 			zbx_setproctitle("%s #%d [processing data]", get_process_type_string(process_type),
 					process_num);
 
+#ifdef HAVE_NETSNMP
+			while (SUCCEED == zbx_rtc_wait(&rtc, &rtc_cmd, &rtc_data, 0) && 0 != rtc_cmd)
+			{
+				if (ZBX_RTC_SNMP_CACHE_RELOAD == rtc_cmd && 0 == snmp_reload)
+				{
+					zbx_clear_cache_snmp(process_type, process_num);
+					snmp_reload = 1;
+				}
+				else if (ZBX_RTC_SHUTDOWN == rtc_cmd)
+				{
+					zbx_tcp_unaccept(&s);
+					goto out;
+				}
+
+			}
+#endif
 			sec = zbx_time();
 			process_trapper_child(&s, &ts);
 			sec = zbx_time() - sec;
@@ -1413,7 +1349,9 @@ ZBX_THREAD_ENTRY(trapper_thread, args)
 					zbx_socket_strerror());
 		}
 	}
-
+#ifdef HAVE_NETSNMP
+out:
+#endif
 	zbx_setproctitle("%s #%d [terminated]", get_process_type_string(process_type), process_num);
 
 	while (1)

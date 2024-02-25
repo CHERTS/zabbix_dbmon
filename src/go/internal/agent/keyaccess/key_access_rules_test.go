@@ -1,9 +1,8 @@
-//go:build linux && amd64
-// +build linux,amd64
+//go:build linux && (amd64 || arm64)
 
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +24,7 @@ package keyaccess
 import (
 	"testing"
 
-	"zabbix.com/pkg/conf"
+	"git.zabbix.com/ap/plugin-support/conf"
 	"zabbix.com/pkg/itemutil"
 )
 

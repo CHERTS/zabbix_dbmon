@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@
  */
 class CFrontendSetup {
 
-	const MIN_PHP_VERSION = '7.2.0';
+	const MIN_PHP_VERSION = '7.2.5';
 	const MIN_PHP_MEMORY_LIMIT = '134217728'; // 128 * ZBX_MEBIBYTE;
 	const MIN_PHP_POST_MAX_SIZE = '16777216'; // 16 * ZBX_MEBIBYTE;
 	const MIN_PHP_UPLOAD_MAX_FILESIZE = '2097152'; // 2 * ZBX_MEBIBYTE;
@@ -64,7 +64,6 @@ class CFrontendSetup {
 		$result[] = $this->checkPhpUploadMaxFilesize();
 		$result[] = $this->checkPhpMaxExecutionTime();
 		$result[] = $this->checkPhpMaxInputTime();
-		$result[] = $this->checkPhpTimeZone();
 		$result[] = $this->checkPhpDatabases();
 		$result[] = $this->checkPhpBcmath();
 		$result[] = $this->checkPhpMbstring();
@@ -221,23 +220,6 @@ class CFrontendSetup {
 	}
 
 	/**
-	 * Checks for PHP timezone.
-	 *
-	 * @return array
-	 */
-	public function checkPhpTimeZone() {
-		$current = ini_get('date.timezone');
-
-		return [
-			'name' => _s('PHP option "%1$s"', 'date.timezone'),
-			'current' => $current ? $current : _('unknown'),
-			'required' => null,
-			'result' => $current ? self::CHECK_OK : self::CHECK_FATAL,
-			'error' => _('Time zone for PHP is not set (configuration parameter "date.timezone").')
-		];
-	}
-
-	/**
 	 * Checks for databases support.
 	 *
 	 * @return array
@@ -246,7 +228,7 @@ class CFrontendSetup {
 		$current = [];
 
 		$databases = self::getSupportedDatabases();
-		foreach ($databases as $database => $name) {
+		foreach ($databases as $name) {
 			$current[] = $name;
 			$current[] = BR();
 		}
@@ -268,13 +250,14 @@ class CFrontendSetup {
 	public static function getSupportedDatabases() {
 		$allowed_db = [];
 
-		if (zbx_is_callable(['mysqli_close', 'mysqli_connect', 'mysqli_connect_error', 'mysqli_error',
-				'mysqli_fetch_assoc', 'mysqli_free_result', 'mysqli_query', 'mysqli_real_escape_string'])) {
+		if (zbx_is_callable(['mysqli_close', 'mysqli_fetch_assoc', 'mysqli_free_result', 'mysqli_init', 'mysqli_query',
+				'mysqli_real_escape_string', 'mysqli_report'])) {
 			$allowed_db[ZBX_DB_MYSQL] = 'MySQL';
 		}
 
 		if (zbx_is_callable(['pg_close', 'pg_connect', 'pg_escape_bytea', 'pg_escape_string', 'pg_fetch_assoc',
-				'pg_free_result', 'pg_last_error', 'pg_parameter_status', 'pg_query', 'pg_unescape_bytea'])) {
+				'pg_free_result', 'pg_last_error', 'pg_parameter_status', 'pg_query', 'pg_unescape_bytea',
+				'pg_field_type'])) {
 			$allowed_db[ZBX_DB_POSTGRESQL] = 'PostgreSQL';
 		}
 
@@ -658,8 +641,8 @@ class CFrontendSetup {
 
 		return [
 			'name' => _s('PHP option "%1$s"', 'arg_separator.output'),
-			'current' => htmlspecialchars($current),
-			'required' => htmlspecialchars(self::REQUIRED_PHP_ARG_SEPARATOR_OUTPUT),
+			'current' => $current,
+			'required' => self::REQUIRED_PHP_ARG_SEPARATOR_OUTPUT,
 			'result' => ($current === self::REQUIRED_PHP_ARG_SEPARATOR_OUTPUT) ? self::CHECK_OK : self::CHECK_FATAL,
 			'error' => _s('PHP option "%1$s" must be set to "%2$s"', 'arg_separator.output',
 				self::REQUIRED_PHP_ARG_SEPARATOR_OUTPUT

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ class CControllerUsergroupList extends CController {
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() == USER_TYPE_SUPER_ADMIN);
+		return $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_USER_GROUPS);
 	}
 
 	protected function doAction() {
@@ -75,8 +75,7 @@ class CControllerUsergroupList extends CController {
 			'user_status' => CProfile::get('web.usergroup.filter_user_status', -1)
 		];
 
-		$config = select_config();
-
+		$limit = CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT) + 1;
 		$data = [
 			'uncheck' => $this->hasInput('uncheck'),
 			'sort' => $sort_field,
@@ -86,12 +85,13 @@ class CControllerUsergroupList extends CController {
 			'active_tab' => CProfile::get('web.usergroup.filter.active', 1),
 			'usergroups' => API::UserGroup()->get([
 				'output' => ['usrgrpid', 'name', 'debug_mode', 'gui_access', 'users_status'],
-				'selectUsers' => ['userid', 'alias', 'name', 'surname', 'gui_access', 'users_status'],
+				'selectUsers' => ['userid', 'username', 'name', 'surname', 'gui_access', 'users_status'],
 				'search' => ['name' => ($filter['name'] !== '') ? $filter['name'] : null],
 				'filter' => ['users_status' => ($filter['user_status'] != -1) ? $filter['user_status'] : null],
 				'sortfield' => $sort_field,
-				'limit' => $config['search_limit'] + 1
-			])
+				'limit' => $limit
+			]),
+			'allowed_ui_users' => $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_USERS)
 		];
 
 		// data sort and pager
@@ -104,11 +104,13 @@ class CControllerUsergroupList extends CController {
 		);
 
 		foreach ($data['usergroups'] as &$usergroup) {
-			CArrayHelper::sort($usergroup['users'], ['alias']);
+			CArrayHelper::sort($usergroup['users'], ['username']);
 
 			$usergroup['user_cnt'] = count($usergroup['users']);
-			if ($usergroup['user_cnt'] > $config['max_in_table']) {
-				$usergroup['users'] = array_slice($usergroup['users'], 0, $config['max_in_table']);
+			if ($usergroup['user_cnt'] > CSettingsHelper::get(CSettingsHelper::MAX_IN_TABLE)) {
+				$usergroup['users'] = array_slice($usergroup['users'], 0, CSettingsHelper::get(
+					CSettingsHelper::MAX_IN_TABLE
+				));
 			}
 		}
 		unset($usergroup);

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 /**
  * @var CPartial $this
+ * @var array    $data
  */
 
 if ($data['readonly'] && !$data['macros']) {
@@ -32,7 +33,8 @@ else {
 	$inherited_width = $is_hostprototype ? ZBX_TEXTAREA_MACRO_INHERITED_WIDTH : ZBX_TEXTAREA_MACRO_VALUE_WIDTH;
 	$table = (new CTable())
 		->setId('tbl_macros')
-		->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_CONTAINER);
+		->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_CONTAINER)
+		->addClass('inherited-macros-table');
 
 	if (CWebUser::getType() == USER_TYPE_SUPER_ADMIN) {
 		$link = (new CLink(_('configure'), (new CUrl('zabbix.php'))
@@ -43,49 +45,51 @@ else {
 		$link = [' (', $link, ')'];
 	}
 
-	$table->setHeader([
-		_('Macro'),
-		_('Effective value'),
-		$data['readonly'] ? null : '',
-		$is_hostprototype ? '' : null,
-		$is_hostprototype ? _('Parent host value') : null,
-		'',
-		_('Template value'),
-		'',
-		[_('Global value'), $link]
+	$table->setColumns([
+		(new CTableColumn(_('Macro')))->addClass('table-col-macro'),
+		(new CTableColumn(_('Effective value')))->addClass('table-col-value'),
+		!$data['readonly'] ? (new CTableColumn())->addClass('table-col-action') : null,
+		$is_hostprototype ? (new CTableColumn())->addClass('table-col-arrow') : null,
+		$is_hostprototype ? (new CTableColumn(_('Parent host value')))->addClass('table-col-parent-value') : null,
+		(new CTableColumn())->addClass('table-col-arrow'),
+		(new CTableColumn(_('Template value')))->addClass('table-col-template-value'),
+		(new CTableColumn())->addClass('table-col-arrow'),
+		(new CTableColumn([_('Global value'), $link]))->addClass('table-col-global-value')
 	]);
 
 	foreach ($data['macros'] as $i => $macro) {
 		$readonly = ($data['readonly'] || !($macro['inherited_type'] & ZBX_PROPERTY_OWN));
+		$macro_value = (new CMacroValue($macro['type'], 'macros['.$i.']', null, false))->setReadonly($readonly);
+
 		$macro_cell = [
 			(new CTextAreaFlexible('macros['.$i.'][macro]', $macro['macro']))
 				->setReadonly($data['readonly'] || $macro['inherited_type'] & ZBX_PROPERTY_INHERITED)
 				->addClass('macro')
 				->setWidth(ZBX_TEXTAREA_MACRO_WIDTH)
-				->setAttribute('placeholder', '{$MACRO}'),
-			new CVar('macros['.$i.'][inherited_type]', $macro['inherited_type'])
+				->setAttribute('placeholder', '{$MACRO}')
+				->disableSpellcheck()
 		];
 
-		if (!$data['readonly']) {
-			if (array_key_exists('hostmacroid', $macro)) {
-				$macro_cell[] = new CVar('macros['.$i.'][hostmacroid]', $macro['hostmacroid']);
-			}
-
-			if ($macro['inherited_type'] & ZBX_PROPERTY_INHERITED) {
-				$inherited_macro = $macro[$macro['inherited_level']];
-				$macro_cell[] = new CVar('macros['.$i.'][inherited][value]', $inherited_macro['value']);
-				$macro_cell[] = new CVar('macros['.$i.'][inherited][description]', $inherited_macro['description']);
-				$macro_cell[] = new CVar('macros['.$i.'][inherited][macro_type]', $inherited_macro['type']);
-			}
+		if (array_key_exists('hostmacroid', $macro)) {
+			$macro_cell[] = new CVar('macros['.$i.'][hostmacroid]', $macro['hostmacroid']);
 		}
 
-		$macro_value = (new CMacroValue($macro['type'], 'macros['.$i.']', null, false))->setReadonly($readonly);
+		$macro_cell[] = new CVar('macros['.$i.'][inherited_type]', $macro['inherited_type']);
 
-		if ($macro['type'] == ZBX_MACRO_TYPE_SECRET) {
+		if ($macro['inherited_type'] & ZBX_PROPERTY_INHERITED) {
+			$inherited_macro = $macro[$macro['inherited_level']];
+			$macro_cell[] = new CVar('macros['.$i.'][inherited][value]', $inherited_macro['value']);
+			$macro_cell[] = new CVar('macros['.$i.'][inherited][description]', $inherited_macro['description']);
+			$macro_cell[] = new CVar('macros['.$i.'][inherited][macro_type]', $inherited_macro['type']);
+		}
+
+		if (array_key_exists('allow_revert', $macro)) {
 			$macro_value->addRevertButton();
-			$macro_value->setRevertButtonVisibility(array_key_exists('value', $macro)
-				&& array_key_exists('hostmacroid', $macro)
+			$macro_value->setRevertButtonVisibility($macro['type'] != ZBX_MACRO_TYPE_SECRET
+				|| array_key_exists('value', $macro)
 			);
+
+			$macro_cell[] = new CVar('macros['.$i.'][allow_revert]', '1');
 		}
 
 		if (array_key_exists('value', $macro)) {
@@ -94,7 +98,9 @@ else {
 
 		$row = [
 			(new CCol($macro_cell))->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT),
-			(new CCol($macro_value))->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT)
+			(new CCol($macro_value))
+				->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT)
+				->addClass(ZBX_STYLE_NOWRAP)
 		];
 
 		if (!$data['readonly']) {
@@ -123,9 +129,9 @@ else {
 
 		// Parent host macro value.
 		if ($is_hostprototype) {
-			$row[] = array_key_exists('parent_host', $macro) ? '&lArr;' : '';
+			$row[] = array_key_exists('parent_host', $macro) ? LARR() : '';
 			$row[] = (new CDiv(array_key_exists('parent_host', $macro) ? '"'.$macro['parent_host']['value'].'"' : null))
-				->setWidth($inherited_width)
+				->setAdaptiveWidth($inherited_width)
 				->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS);
 		}
 
@@ -134,28 +140,28 @@ else {
 
 		if (array_key_exists('template', $macro)) {
 			if ($macro['template']['rights'] == PERM_READ_WRITE) {
-				$link = (new CLink(CHtml::encode($macro['template']['name']),
+				$link = (new CLink($macro['template']['name'],
 					'templates.php?form=update&templateid='.$macro['template']['templateid'])
 				)
 					->addClass('unknown')
 					->setTarget('_blank');
 			}
 			else {
-				$link = new CSpan(CHtml::encode($macro['template']['name']));
+				$link = new CSpan($macro['template']['name']);
 			}
 
 			$template_macro = [$link, NAME_DELIMITER, '"'.$macro['template']['value'].'"'];
 		}
 
-		$row[] = array_key_exists('template', $macro) ? '&lArr;' : '';
+		$row[] = array_key_exists('template', $macro) ? LARR() : '';
 		$row[] = (new CDiv(array_key_exists('template', $macro) ? $template_macro : null))
-			->setWidth($inherited_width)
+			->setAdaptiveWidth($inherited_width)
 			->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS);
 
 		// Global macro value.
-		$row[] = array_key_exists('global', $macro) ? '&lArr;' : '';
+		$row[] = array_key_exists('global', $macro) ? LARR() : '';
 		$row[] = (new CDiv(array_key_exists('global', $macro) ? '"'.$macro['global']['value'].'"' : null))
-			->setWidth($inherited_width)
+			->setAdaptiveWidth($inherited_width)
 			->addClass(ZBX_STYLE_OVERFLOW_ELLIPSIS);
 
 		$table
@@ -164,9 +170,11 @@ else {
 				(new CCol(
 					(new CTextAreaFlexible('macros['.$i.'][description]', $macro['description']))
 						->setMaxlength(DB::getFieldLength('hostmacro', 'description'))
-						->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+						->setAdaptiveWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 						->setAttribute('placeholder', _('description'))
-						->setReadonly($readonly)
+						->setReadonly($readonly || (
+							($macro['type'] == ZBX_MACRO_TYPE_SECRET) && !($macro['inherited_type'] & ZBX_PROPERTY_OWN)
+						))
 				))
 					->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT)
 					->setColSpan(count($row))
@@ -187,4 +195,4 @@ $table->show();
 
 // Initializing input secret and macro value init script separately.
 (new CScriptTag("jQuery('.input-secret').inputSecret();"))->show();
-(new CScriptTag("jQuery('.input-group').macroValue();"))->show();
+(new CScriptTag("jQuery('.macro-input-group').macroValue();"))->show();

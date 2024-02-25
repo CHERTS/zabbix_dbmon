@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,12 +26,13 @@ require_once dirname(__FILE__).'/../../include/helpers/CDataHelper.php';
  */
 class testFormPreprocessingLowLevelDiscovery extends testFormPreprocessing {
 
-	public $link = 'host_discovery.php?filter_set=1&filter_hostids%5B0%5D='.self::HOSTID;
-	public $ready_link = 'host_discovery.php?form=update&itemid=';
+	public $link = 'host_discovery.php?context=host&filter_set=1&filter_hostids%5B0%5D='.self::HOSTID;
+	public $ready_link = 'host_discovery.php?form=update&context=host&itemid=';
 	public $button = 'Create discovery rule';
 	public $success_message = 'Discovery rule created';
 	public $fail_message = 'Cannot add discovery rule';
 
+	const IS_LLD = true;
 	const HOSTID = 40001;
 	const INHERITANCE_TEMPLATEID	= 15000;	// 'Inheritance test template'
 	const INHERITANCE_HOSTID		= 15001;	// 'Template inheritance test host'
@@ -180,8 +181,10 @@ class testFormPreprocessingLowLevelDiscovery extends testFormPreprocessing {
 						['type' => 'JavaScript', 'parameter_1' => 'Test JavaScript'],
 						['type' => 'Does not match regular expression', 'parameter_1' => 'Pattern'],
 						['type' => 'Check for error in JSON', 'parameter_1' => '$.new.path'],
-						['type' => 'Discard unchanged with heartbeat', 'parameter_1' => '30']
-					]
+						['type' => 'Discard unchanged with heartbeat', 'parameter_1' => '30'],
+						['type' => 'XML to JSON']
+					],
+					'screenshot' => true
 				]
 			],
 			[
@@ -200,6 +203,8 @@ class testFormPreprocessingLowLevelDiscovery extends testFormPreprocessing {
 						['type' => 'CSV to JSON', 'parameter_1' => '.', 'parameter_2' => "'" ,'parameter_3' => false],
 						['type' => 'JSONPath', 'parameter_1' => '$.data.test1'],
 						['type' => 'JSONPath', 'parameter_1' => '$.data.test2'],
+						['type' => 'XML to JSON'],
+						['type' => 'XML to JSON'],
 						['type' => 'Does not match regular expression', 'parameter_1' => 'Pattern1'],
 						['type' => 'Does not match regular expression', 'parameter_1' => 'Pattern2'],
 						['type' => 'JavaScript', 'parameter_1' => 'Test JavaScript'],
@@ -271,20 +276,20 @@ class testFormPreprocessingLowLevelDiscovery extends testFormPreprocessing {
 	 * @dataProvider getCustomOnFailValidationData
 	 */
 	public function testFormPreprocessingLowLevelDiscovery_CreateAllSteps($data) {
-		$this->checkCreate($data);
+		$this->checkCreate($data, self::IS_LLD);
 	}
 
 	/**
 	 * @dataProvider getCommonPreprocessingTrailingSpacesData
 	 */
 	public function testFormPreprocessingLowLevelDiscovery_TrailingSpaces($data) {
-		$this->checkTrailingSpaces($data);
+		$this->checkTrailingSpaces($data, self::IS_LLD);
 	}
 
 	/**
 	 * Add preprocessing steps to templated LLD for cloning.
 	 */
-	public function prepareСloneTemplatedLLDPreprocessing() {
+	public function prepareCloneTemplatedLLDPreprocessing() {
 		CDataHelper::call('discoveryrule.update', [
 			'itemid' => '15011',
 			'preprocessing' => self::CLONE_PREPROCESSING
@@ -292,10 +297,10 @@ class testFormPreprocessingLowLevelDiscovery extends testFormPreprocessing {
 	}
 
 	/**
-	 * @onBefore prepareСloneTemplatedLLDPreprocessing
+	 * @onBefore prepareCloneTemplatedLLDPreprocessing
 	 */
 	public function testFormPreprocessingLowLevelDiscovery_CloneTemplatedLLD() {
-		$link = 'host_discovery.php?form=update&itemid='.self::INHERITANCE_LLDID;
+		$link = 'host_discovery.php?form=update&context=host&itemid='.self::INHERITANCE_LLDID;
 		$this->checkCloneItem($link, 'Discovery rule', $templated = true);
 	}
 
@@ -313,7 +318,7 @@ class testFormPreprocessingLowLevelDiscovery extends testFormPreprocessing {
 	 * @onBefore prepareCloneLLDPreprocessing
 	 */
 	public function testFormPreprocessingLowLevelDiscovery_CloneLLD() {
-		$link = 'host_discovery.php?form=update&itemid='.self::CLONE_LLDID;
+		$link = 'host_discovery.php?form=update&context=host&itemid='.self::CLONE_LLDID;
 		$this->checkCloneItem($link, 'Discovery rule');
 	}
 
@@ -321,16 +326,16 @@ class testFormPreprocessingLowLevelDiscovery extends testFormPreprocessing {
 	 * @dataProvider getCommonCustomOnFailData
 	 */
 	public function testFormPreprocessingLowLevelDiscovery_CustomOnFail($data) {
-		$this->checkCustomOnFail($data);
+		$this->checkCustomOnFail($data, self::IS_LLD);
 	}
 
 	/**
 	 * @dataProvider getCommonInheritancePreprocessing
 	 */
 	public function testFormPreprocessingLowLevelDiscovery_PreprocessingInheritanceFromTemplate($data) {
-		$this->link = 'host_discovery.php?filter_set=1&filter_hostids%5B0%5D='.self::INHERITANCE_TEMPLATEID;
-		$host_link = 'host_discovery.php?filter_set=1&filter_hostids%5B0%5D='.self::INHERITANCE_HOSTID;
+		$this->link = 'host_discovery.php?filter_set=1&&context=template&filter_hostids%5B0%5D='.self::INHERITANCE_TEMPLATEID;
+		$host_link = 'host_discovery.php?filter_set=1&context=host&filter_hostids%5B0%5D='.self::INHERITANCE_HOSTID;
 
-		$this->checkPreprocessingInheritance($data, $host_link);
+		$this->checkPreprocessingInheritance($data, $host_link, self::IS_LLD);
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,44 +35,24 @@ class CControllerWidgetFavGraphsView extends CControllerWidget {
 
 	protected function doAction() {
 		$graphs = [];
-		$ids = ['graphid' => [], 'itemid' => []];
+		$itemids = [];
 
 		foreach (CFavorite::get('web.favorite.graphids') as $favourite) {
-			$ids[$favourite['source']][$favourite['value']] = true;
+			$itemids[$favourite['value']] = true;
 		}
 
-		if ($ids['graphid']) {
-			$db_graphs = API::Graph()->get([
-				'output' => ['graphid', 'name'],
-				'selectHosts' => ['hostid', 'name'],
-				'expandName' => true,
-				'graphids' => array_keys($ids['graphid'])
-			]);
-
-			foreach ($db_graphs as $db_graph) {
-				$graphs[] = [
-					'graphid' => $db_graph['graphid'],
-					'label' => $db_graph['hosts'][0]['name'].NAME_DELIMITER.$db_graph['name'],
-					'simple' => false
-				];
-			}
-		}
-
-		if ($ids['itemid']) {
+		if ($itemids) {
 			$db_items = API::Item()->get([
-				'output' => ['itemid', 'hostid', 'name', 'key_'],
-				'selectHosts' => ['hostid', 'name'],
-				'itemids' => array_keys($ids['itemid']),
+				'output' => ['itemid', 'name'],
+				'selectHosts' => ['name'],
+				'itemids' => array_keys($itemids),
 				'webitems' => true
 			]);
-
-			$db_items = CMacrosResolverHelper::resolveItemNames($db_items);
 
 			foreach ($db_items as $db_item) {
 				$graphs[] = [
 					'itemid' => $db_item['itemid'],
-					'label' => $db_item['hosts'][0]['name'].NAME_DELIMITER.$db_item['name_expanded'],
-					'simple' => true
+					'label' => $db_item['hosts'][0]['name'].NAME_DELIMITER.$db_item['name']
 				];
 			}
 		}
@@ -80,11 +60,13 @@ class CControllerWidgetFavGraphsView extends CControllerWidget {
 		CArrayHelper::sort($graphs, ['label']);
 
 		$this->setResponse(new CControllerResponseData([
-			'name' => $this->getInput('name', $this->getDefaultHeader()),
+			'name' => $this->getInput('name', $this->getDefaultName()),
 			'graphs' => $graphs,
 			'user' => [
 				'debug_mode' => $this->getDebugMode()
-			]
+			],
+			'allowed_ui_hosts' => $this->checkAccess(CRoleHelper::UI_MONITORING_HOSTS),
+			'allowed_ui_latest_data' => $this->checkAccess(CRoleHelper::UI_MONITORING_LATEST_DATA)
 		]));
 	}
 }

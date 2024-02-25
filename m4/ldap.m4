@@ -1,6 +1,5 @@
 # LIBLDAP_CHECK_CONFIG ([DEFAULT-ACTION])
 # ----------------------------------------------------------
-#    Eugene Grigorjev <eugene@zabbix.com>   Feb-02-2007
 #
 # Checks for ldap.  DEFAULT-ACTION is the string yes or no to
 # specify whether to default to --with-ldap or --without-ldap.
@@ -30,18 +29,18 @@ CPPFLAGS="$CPPFLAGS $3"
 CFLAGS="$CFLAGS $4"
 ldap_link="no"
 
-AC_TRY_LINK([
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <stdio.h>
 #include <ldap.h>
 #include <lber.h>
 #include <ldap_schema.h>
-],[
+]], [[
 printf("%p,%p", ldap_initialize, ldap_str2attributetype);
 printf("%p", ber_free);
 return 0;
-],[
+]])],[
 ldap_link="yes"
-])
+],[])
 
 CPPFLAGS="$_save_ldap_cppflags"
 CFLAGS="$_save_ldap_cflags"
@@ -60,7 +59,7 @@ AC_DEFUN([LIBLDAP_CHECK_CONFIG],
 [
   AC_ARG_WITH(ldap,[
 If you want to check LDAP servers:
-AC_HELP_STRING([--with-ldap@<:@=DIR@:>@],[Include LDAP support @<:@default=no@:>@. DIR is the LDAP base install directory, default is to search through a number of common places for the LDAP files.])],
+AS_HELP_STRING([--with-ldap@<:@=DIR@:>@],[Include LDAP support @<:@default=no@:>@. DIR is the LDAP base install directory, default is to search through a number of common places for the LDAP files.])],
      [ if test "$withval" = "no"; then
             want_ldap="no"
             _libldap_with="no"

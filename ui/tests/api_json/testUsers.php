@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,92 +22,345 @@
 require_once dirname(__FILE__).'/../include/CAPITest.php';
 
 /**
+ * @onBefore prepareUsersData
+ *
  * @backup users
  */
 class testUsers extends CAPITest {
+
+	private static $data = [
+		'userids' => [
+			'user_with_not_authorized_session' => null,
+			'user_with_expired_session' => null,
+			'user_with_passive_session' => null,
+			'user_with_disabled_usergroup' => null,
+			'user_for_token_tests' => null,
+			'user_with_valid_session' => null,
+			'user_for_extend_parameter_tests' => null
+		],
+		'sessionids' => [
+			'not_authorized_session' => null,
+			'expired_session' => null,
+			'passive_session' => null,
+			'valid_for_user_with_disabled_usergroup' => null,
+			'valid' => null,
+			'for_extend_parameter_tests' => null
+		],
+		'tokens' => [
+			'not_authorized' => null,
+			'expired' => null,
+			'disabled' => null,
+			'valid' => null,
+			'valid_for_user_with_disabled_usergroup' => null
+		]
+	];
+
+	/**
+	 * Prepare data for user.checkAuthentication tests.
+	 */
+	public function prepareUsersData() {
+		$usergroup_data = [
+			[
+				'name' => 'API test users status enabled',
+				'users_status' => GROUP_STATUS_ENABLED
+			],
+			[
+				'name' => 'API test users status disabled',
+				'users_status' => GROUP_STATUS_DISABLED
+			]
+		];
+
+		$usergroups = CDataHelper::call('usergroup.create', $usergroup_data);
+		$this->assertArrayHasKey('usrgrpids', $usergroups, 'prepareUsersData() failed: Could not create user groups.');
+
+		$usergroupids['users_status_enabled'] = $usergroups['usrgrpids'][0];
+		$usergroupids['users_status_disabled'] = $usergroups['usrgrpids'][1];
+
+		$roleids = CDataHelper::call('role.create', [
+			[
+				'name' => 'test',
+				'type' => USER_TYPE_ZABBIX_ADMIN
+			]
+		]);
+		$this->assertArrayHasKey('roleids', $roleids, 'prepareUsersData() failed: Could not create user role.');
+		$admin_roleid = $roleids['roleids'][0];
+
+		$users_data = [
+			[
+				'username' => 'API test user with expired session',
+				'roleid' => $admin_roleid,
+				'passwd' => 'zabbix123456',
+				'usrgrps' => [
+					['usrgrpid' => $usergroupids['users_status_enabled']]
+				]
+			],
+			[
+				'username' => 'API test user with passive session',
+				'roleid' => $admin_roleid,
+				'passwd' => 'zabbix123456',
+				'usrgrps' => [
+					['usrgrpid' => $usergroupids['users_status_enabled']]
+				]
+			],
+			[
+				'username' => 'API test user with disabled group',
+				'roleid' => $admin_roleid,
+				'passwd' => 'zabbix123456',
+				'usrgrps' => [
+					['usrgrpid' => $usergroupids['users_status_enabled']]
+				]
+			],
+			[
+				'username' => 'API test user with valid session',
+				'roleid' => $admin_roleid,
+				'passwd' => 'zabbix123456',
+				'usrgrps' => [
+					['usrgrpid' => $usergroupids['users_status_enabled']]
+				]
+			],
+			[
+				'username' => 'API test user for extend parameter tests',
+				'roleid' => $admin_roleid,
+				'passwd' => 'zabbix123456',
+				'usrgrps' => [
+					['usrgrpid' => $usergroupids['users_status_enabled']]
+				]
+			]
+		];
+
+		$users = CDataHelper::call('user.create', $users_data);
+		$this->assertArrayHasKey('userids', $users, 'prepareUsersData() failed: Could not create users.');
+
+		self::$data['userids']['user_with_expired_session'] = $users['userids'][0];
+		self::$data['userids']['user_with_passive_session'] = $users['userids'][1];
+		self::$data['userids']['user_with_disabled_usergroup'] = $users['userids'][2];
+		self::$data['userids']['user_with_valid_session'] = $users['userids'][3];
+		self::$data['userids']['user_for_extend_parameter_tests'] = $users['userids'][4];
+		self::$data['userids']['user_for_token_tests'] = $users['userids'][0];
+
+		$login_data = [
+			[
+				'jsonrpc' => '2.0',
+				'method' => 'user.login',
+				'params' => [
+					'username' => 'API test user with expired session',
+					'password' => 'zabbix123456'
+				],
+				'id' => self::$data['userids']['user_with_expired_session']
+			],
+			[
+				'jsonrpc' => '2.0',
+				'method' => 'user.login',
+				'params' => [
+					'username' => 'API test user with passive session',
+					'password' => 'zabbix123456'
+				],
+				'id' => self::$data['userids']['user_with_passive_session']
+			],
+			[
+				'jsonrpc' => '2.0',
+				'method' => 'user.login',
+				'params' => [
+					'username' => 'API test user with disabled group',
+					'password' => 'zabbix123456'
+				],
+				'id' => self::$data['userids']['user_with_disabled_usergroup']
+			],
+			[
+				'jsonrpc' => '2.0',
+				'method' => 'user.login',
+				'params' => [
+					'username' => 'API test user with valid session',
+					'password' => 'zabbix123456'
+				],
+				'id' => self::$data['userids']['user_with_valid_session']
+			],
+			[
+				'jsonrpc' => '2.0',
+				'method' => 'user.login',
+				'params' => [
+					'username' => 'API test user for extend parameter tests',
+					'password' => 'zabbix123456'
+				],
+				'id' => self::$data['userids']['user_for_extend_parameter_tests']
+			]
+		];
+
+		$login = CDataHelper::callRaw($login_data);
+		$this->assertArrayHasKey(0, $login, 'prepareUsersData() failed: Could not login users.');
+
+		self::$data['sessionids']['not_authorized_session'] = 'InvalidSessionID';
+		self::$data['sessionids']['expired_session'] = $login[0]['result'];
+		self::$data['sessionids']['passive_session'] = $login[1]['result'];
+		self::$data['sessionids']['valid_for_user_with_disabled_usergroup'] = $login[2]['result'];
+		self::$data['sessionids']['valid'] = $login[3]['result'];
+		self::$data['sessionids']['for_extend_parameter_tests'] = $login[4]['result'];
+
+		// Add disabled user group to authenticated user.
+		CDataHelper::call('user.update', [
+			'userid' => self::$data['userids']['user_with_disabled_usergroup'],
+			'usrgrps' => [
+				['usrgrpid' => $usergroupids['users_status_disabled']]
+			]
+		]);
+
+		$now = time();
+		self::$data['lastacess_time_for_sessionid_with_extend_tests'] = $now - 1;
+
+		// Data for updating sessions to have different states.
+		$session_data = [
+			[
+				// Update session lastaccess time to expire sessions default active time - 15minutes (900 seconds).
+				'values' => ['lastaccess' => $now - 901],
+				'where' => ['sessionid' => self::$data['sessionids']['expired_session']]
+			],
+			[
+				// Update session status to passive state.
+				'values' => ['status' => ZBX_SESSION_PASSIVE],
+				'where' => ['sessionid' => self::$data['sessionids']['passive_session']]
+			],
+			[
+				// Update sessions lastaccess time for test case when user.checkAuthentication extends session time.
+				'values' => ['lastaccess' => self::$data['lastacess_time_for_sessionid_with_extend_tests']],
+				'where' => ['sessionid' => self::$data['sessionids']['for_extend_parameter_tests']]
+			]
+		];
+
+		DB::update('sessions', $session_data);
+
+		$token_data = [
+			[
+				'name' => 'API test expired token',
+				'userid' => self::$data['userids']['user_for_token_tests'],
+				'status' => ZBX_AUTH_TOKEN_ENABLED,
+				'expires_at' => $now - 100
+			],
+			[
+				'name' => 'API test disabled token',
+				'userid' => self::$data['userids']['user_for_token_tests'],
+				'status' => ZBX_AUTH_TOKEN_DISABLED,
+				'expires_at' => $now + 100
+			],
+			[
+				'name' => 'API test valid token',
+				'userid' => self::$data['userids']['user_with_valid_session'],
+				'status' => ZBX_AUTH_TOKEN_ENABLED,
+				'expires_at' => $now + 100
+			],
+			[
+				'name' => 'API test valid token for user with disabled user group',
+				'userid' => self::$data['userids']['user_with_disabled_usergroup'],
+				'status' => ZBX_AUTH_TOKEN_ENABLED,
+				'expires_at' => $now + 100
+			]
+		];
+
+		$tokenids = CDataHelper::call('token.create', $token_data);
+		$this->assertArrayHasKey('tokenids', $tokenids, 'prepareUsersData() failed: Could not create tokens.');
+
+		$tokens = CDataHelper::call('token.generate', $tokenids['tokenids']);
+		$this->assertArrayHasKey(0, $tokens, 'prepareUsersData() failed: Could not generate tokens.');
+
+		self::$data['tokens']['not_authorized'] = 'NotAuthorizedTokenString';
+		self::$data['tokens']['expired'] = $tokens[0]['token'];
+		self::$data['tokens']['disabled'] = $tokens[1]['token'];
+		self::$data['tokens']['valid'] = $tokens[2]['token'];
+		self::$data['tokens']['valid_for_user_with_disabled_usergroup'] = $tokens[3]['token'];
+	}
 
 	public static function user_create() {
 		return [
 			// Check user password.
 			[
 				'user' => [
-					'alias' => 'API user create without password',
+					'username' => 'API user create without password',
+					'roleid' => 1,
 					'usrgrps' => [
 						['usrgrpid' => 7]
 					]
 				],
 				'Incorrect value for field "passwd": cannot be empty.'
 			],
-			// Check user alias.
+			// Check user username.
 			[
 				'user' => [
 					'passwd' => 'zabbix',
+					'roleid' => 1,
 					'usrgrps' => [
 						['usrgrpid' => 7]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1": the parameter "alias" is missing.'
+				'expected_error' => 'Invalid parameter "/1": the parameter "username" is missing.'
 			],
 			[
 				'user' => [
-					'alias' => '',
+					'username' => '',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => 7]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/alias": cannot be empty.'
+				'expected_error' => 'Invalid parameter "/1/username": cannot be empty.'
 			],
 			[
 				'user' => [
-					'alias' => 'Admin',
+					'username' => 'Admin',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => 7]
 					]
 				],
-				'expected_error' => 'User with alias "Admin" already exists.'
+				'expected_error' => 'Incorrect value for field "/1/passwd": must be at least 8 characters long.'
 			],
 			[
 				'user' => [
 					[
-						'alias' => 'API create users with the same names',
+						'username' => 'API create users with the same names',
+						'roleid' => 1,
 						'passwd' => 'zabbix',
 						'usrgrps' => [
 							['usrgrpid' => 7]
 						]
 					],
 					[
-						'alias' => 'API create users with the same names',
+						'username' => 'API create users with the same names',
+						'roleid' => 1,
 						'passwd' => 'zabbix',
 						'usrgrps' => [
 							['usrgrpid' => 7]
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/2": value (alias)=(API create users with the same names) already exists.'
+				'expected_error' => 'Invalid parameter "/2": value (username)=(API create users with the same names)'.
+					' already exists.'
 			],
 			[
 				'user' => [
-					'alias' => 'qwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnm',
+					'username' => 'qwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwert'.
+						'yuioplkjhgfdsazxcvbnm',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						'usrgrpid' => 7
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/alias": value is too long.'
+				'expected_error' => 'Invalid parameter "/1/username": value is too long.'
 			],
 			// Check user group.
 			[
 				'user' => [
-					'alias' => 'User without group parameter',
+					'username' => 'User without group parameter',
+					'roleid' => 1,
 					'passwd' => 'zabbix'
 				],
 				'expected_error' => 'Invalid parameter "/1": the parameter "usrgrps" is missing.'
 			],
 			[
 				'user' => [
-					'alias' => 'User without group',
+					'username' => 'User without group',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 					]
@@ -116,7 +369,8 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'Group unexpected parameter',
+					'username' => 'Group unexpected parameter',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['userid' => '1']
@@ -126,7 +380,8 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with empty group id',
+					'username' => 'User with empty group id',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '']
@@ -136,7 +391,8 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User group id not number',
+					'username' => 'User group id not number',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => 'abc']
@@ -146,7 +402,8 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User group id not valid',
+					'username' => 'User group id not valid',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '1.1']
@@ -156,8 +413,9 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with nonexistent group id',
-					'passwd' => 'zabbix',
+					'username' => 'User with nonexistent group id',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '123456']
 					]
@@ -166,7 +424,8 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with two identical user group id',
+					'username' => 'User with two identical user group id',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7'],
@@ -175,12 +434,40 @@ class testUsers extends CAPITest {
 				],
 				'expected_error' => 'Invalid parameter "/1/usrgrps/2": value (usrgrpid)=(7) already exists.'
 			],
+			// Roleid is missing.
+			[
+				'user' => [
+					[
+						'username' => 'API user create 1',
+						'passwd' => 'zabbix',
+						'usrgrps' => [
+							['usrgrpid' => 7]
+						]
+					]
+				],
+				'expected_error' => 'Invalid parameter "/1": the parameter "roleid" is missing.'
+			],
+			// Roleid is as a string.
+			[
+				'user' => [
+					[
+						'username' => 'API user create 1',
+						'roleid' => 'twenty_five',
+						'passwd' => 'zabbix',
+						'usrgrps' => [
+							['usrgrpid' => 7]
+						]
+					]
+				],
+				'expected_error' => 'Invalid parameter "/1/roleid": a number is expected.'
+			],
 			// Check successfully creation of user.
 			[
 				'user' => [
 					[
-						'alias' => 'API user create 1',
-						'passwd' => 'zabbix',
+						'username' => 'API user create 1',
+						'roleid' => 1,
+						'passwd' => 'Z@bb1x1234',
 						'usrgrps' => [
 							['usrgrpid' => 7]
 						]
@@ -191,8 +478,9 @@ class testUsers extends CAPITest {
 			[
 				'user' => [
 					[
-						'alias' => '☺',
-						'passwd' => '☺',
+						'username' => '☺',
+						'roleid' => 1,
+						'passwd' => 'O0o@O0o@',
 						'usrgrps' => [
 							['usrgrpid' => 7]
 						]
@@ -203,8 +491,9 @@ class testUsers extends CAPITest {
 			[
 				'user' => [
 					[
-						'alias' => 'УТФ Юзер',
-						'passwd' => 'zabbix',
+						'username' => 'УТФ Юзер',
+						'roleid' => 1,
+						'passwd' => 'Z@bb1x1234',
 						'usrgrps' => [
 							['usrgrpid' => 7]
 						]
@@ -215,12 +504,13 @@ class testUsers extends CAPITest {
 			[
 				'user' => [
 					[
-						'alias' => 'API user create with media',
-						'passwd' => 'zabbix',
+						'username' => 'API user create with media',
+						'roleid' => 1,
+						'passwd' => 'Z@bb1x1234',
 						'usrgrps' => [
 							['usrgrpid' => 7]
 						],
-						'user_medias' => [
+						'medias' => [
 							[
 								'mediatypeid' => '1',
 								'sendto' => 'api@zabbix.com'
@@ -234,8 +524,8 @@ class testUsers extends CAPITest {
 	}
 
 	/**
-	* @dataProvider user_create
-	*/
+	 * @dataProvider user_create
+	 */
 	public function testUsers_Create($user, $expected_error) {
 		$result = $this->call('user.create', $user, $expected_error);
 
@@ -243,12 +533,12 @@ class testUsers extends CAPITest {
 			foreach ($result['result']['userids'] as $key => $id) {
 				$dbResultUser = DBSelect('select * from users where userid='.zbx_dbstr($id));
 				$dbRowUser = DBFetch($dbResultUser);
-				$this->assertEquals($dbRowUser['alias'], $user[$key]['alias']);
+				$this->assertEquals($dbRowUser['username'], $user[$key]['username']);
 				$this->assertEquals($dbRowUser['name'], '');
 				$this->assertEquals($dbRowUser['surname'], '');
 				$this->assertEquals($dbRowUser['autologin'], 0);
 				$this->assertEquals($dbRowUser['autologout'], '15m');
-				$this->assertEquals($dbRowUser['lang'], 'en_GB');
+				$this->assertEquals($dbRowUser['lang'], 'default');
 				$this->assertEquals($dbRowUser['refresh'], '30s');
 				$this->assertEquals($dbRowUser['rows_per_page'], 50);
 				$this->assertEquals($dbRowUser['theme'], 'default');
@@ -258,11 +548,11 @@ class testUsers extends CAPITest {
 						' and usrgrpid='.zbx_dbstr($user[$key]['usrgrps'][0]['usrgrpid']))
 				);
 
-				if (array_key_exists('user_medias', $user[$key])) {
+				if (array_key_exists('medias', $user[$key])) {
 					$dbResultMedia = DBSelect('select * from media where userid='.$id);
 					$dbRowMedia = DBFetch($dbResultMedia);
-					$this->assertEquals($dbRowMedia['mediatypeid'], $user[$key]['user_medias'][0]['mediatypeid']);
-					$this->assertEquals($dbRowMedia['sendto'], $user[$key]['user_medias'][0]['sendto']);
+					$this->assertEquals($dbRowMedia['mediatypeid'], $user[$key]['medias'][0]['mediatypeid']);
+					$this->assertEquals($dbRowMedia['sendto'], $user[$key]['medias'][0]['sendto']);
 					$this->assertEquals($dbRowMedia['active'], 0);
 					$this->assertEquals($dbRowMedia['severity'], 63);
 					$this->assertEquals($dbRowMedia['period'], '1-7,00:00-24:00');
@@ -276,16 +566,17 @@ class testUsers extends CAPITest {
 	}
 
 	/**
-	* Create user with multiple email address
-	*/
+	 * Create user with multiple email address
+	 */
 	public function testUsers_CreateUserWithMultipleEmails() {
 		$user = [
-			'alias' => 'API user create with multiple emails',
-			'passwd' => 'zabbix',
+			'username' => 'API user create with multiple emails',
+			'roleid' => 1,
+			'passwd' => 'Z@bb1x1234',
 			'usrgrps' => [
 				['usrgrpid' => 7]
 			],
-			'user_medias' => [
+			'medias' => [
 				[
 					'mediatypeid' => '1',
 					'sendto' => ["api1@zabbix.com","Api test <api2@zabbix.com>","АПИ test ☺æų <api2@zabbix.com>"]
@@ -299,7 +590,7 @@ class testUsers extends CAPITest {
 
 		$dbResultMedia = DBSelect('select * from media where userid='.zbx_dbstr($id));
 		$dbRowMedia = DBFetch($dbResultMedia);
-		$diff = array_diff($user['user_medias'][0]['sendto'], explode("\n", $dbRowMedia['sendto']));
+		$diff = array_diff($user['medias'][0]['sendto'], explode("\n", $dbRowMedia['sendto']));
 		$this->assertEquals(0, count($diff));
 	}
 
@@ -308,34 +599,34 @@ class testUsers extends CAPITest {
 			// Check user id.
 			[
 				'user' => [[
-					'alias' => 'API user update without userid'
+					'username' => 'API user update without userid'
 				]],
 				'expected_error' => 'Invalid parameter "/1": the parameter "userid" is missing.'
 			],
 			[
 				'user' => [[
-					'alias' => 'API user update with empty userid',
+					'username' => 'API user update with empty userid',
 					'userid' => ''
 				]],
 				'expected_error' => 'Invalid parameter "/1/userid": a number is expected.'
 			],
 			[
 				'user' => [[
-					'alias' => 'API user update with nonexistent userid',
+					'username' => 'API user update with nonexistent userid',
 					'userid' => '1.1'
 				]],
 				'expected_error' => 'Invalid parameter "/1/userid": a number is expected.'
 			],
 			[
 				'user' => [[
-					'alias' => 'API user update with nonexistent userid',
+					'username' => 'API user update with nonexistent userid',
 					'userid' => 'abc'
 				]],
 				'expected_error' => 'Invalid parameter "/1/userid": a number is expected.'
 			],
 			[
 				'user' => [[
-					'alias' => 'API user update with nonexistent userid',
+					'username' => 'API user update with nonexistent userid',
 					'userid' => '123456'
 				]],
 				'expected_error' => 'No permissions to referred object or it does not exist!'
@@ -344,11 +635,11 @@ class testUsers extends CAPITest {
 				'user' => [
 					[
 						'userid' => '9',
-						'alias' => 'API update users with the same id1'
+						'username' => 'API update users with the same id1'
 					],
 					[
 						'userid' => '9',
-						'alias' => 'API update users with the same id2'
+						'username' => 'API update users with the same id2'
 					]
 				],
 				'expected_error' => 'Invalid parameter "/2": value (userid)=(9) already exists.'
@@ -357,57 +648,59 @@ class testUsers extends CAPITest {
 			[
 				'user' => [[
 					'userid' => '2',
-					'passwd' => 'zabbix'
+					'passwd' => 'Z@bb1x1234'
 				]],
 				'expected_error' => 'Not allowed to set password for user "guest".'
 			],
-			// Check user alias.
+			// Check user username.
 			[
 				'user' => [[
 					'userid' => '9',
-					'alias' => ''
+					'username' => ''
 				]],
-				'expected_error' => 'Invalid parameter "/1/alias": cannot be empty.'
+				'expected_error' => 'Invalid parameter "/1/username": cannot be empty.'
 			],
 			[
 				'user' => [[
 					'userid' => '2',
-					'alias' => 'Try rename guest'
+					'username' => 'Try to rename guest'
 				]],
 				'expected_error' => 'Cannot rename guest user.'
 			],
 			[
 				'user' => [[
 					'userid' => '9',
-					'alias' => 'Admin'
+					'username' => 'Admin'
 				]],
-				'expected_error' => 'User with alias "Admin" already exists.'
+				'expected_error' => 'User with username "Admin" already exists.'
 			],
 			[
 				'user' => [
 					[
 						'userid' => '9',
-						'alias' => 'API update users with the same alias'
+						'username' => 'API update users with the same username'
 					],
 					[
 						'userid' => '10',
-						'alias' => 'API update users with the same alias'
+						'username' => 'API update users with the same username'
 					]
 				],
-				'expected_error' => 'Invalid parameter "/2": value (alias)=(API update users with the same alias) already exists.'
+				'expected_error' => 'Invalid parameter "/2": value'.
+					' (username)=(API update users with the same username) already exists.'
 			],
 			[
 				'user' => [[
 					'userid' => '9',
-					'alias' => 'qwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnm'
+					'username' => 'qwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwertyuioplkjhgfdsazxcvbnmqwert'.
+						'yuioplkjhgfdsazxcvbnm'
 				]],
-				'expected_error' => 'Invalid parameter "/1/alias": value is too long.'
+				'expected_error' => 'Invalid parameter "/1/username": value is too long.'
 			],
 			// Check user group.
 			[
 				'user' => [[
 					'userid' => '9',
-					'alias' => 'User without group',
+					'username' => 'User without group',
 					'usrgrps' => [
 					]
 				]],
@@ -416,7 +709,7 @@ class testUsers extends CAPITest {
 			[
 				'user' => [[
 					'userid' => '9',
-					'alias' => 'Group unexpected parameter',
+					'username' => 'Group unexpected parameter',
 					'usrgrps' => [
 						['userid' => '1']
 					]
@@ -426,7 +719,7 @@ class testUsers extends CAPITest {
 			[
 				'user' => [[
 					'userid' => '9',
-					'alias' => 'User with empty group id',
+					'username' => 'User with empty group id',
 					'usrgrps' => [
 						['usrgrpid' => '']
 					]
@@ -436,7 +729,7 @@ class testUsers extends CAPITest {
 			[
 				'user' => [[
 					'userid' => '9',
-					'alias' => 'User group id not number',
+					'username' => 'User group id not number',
 					'usrgrps' => [
 						['usrgrpid' => 'abc']
 					]
@@ -446,7 +739,7 @@ class testUsers extends CAPITest {
 			[
 				'user' => [[
 					'userid' => '9',
-					'alias' => 'User group id not valid',
+					'username' => 'User group id not valid',
 					'usrgrps' => [
 						['usrgrpid' => '1.1']
 					]
@@ -456,7 +749,7 @@ class testUsers extends CAPITest {
 			[
 				'user' => [[
 					'userid' => '9',
-					'alias' => 'User with nonexistent group id',
+					'username' => 'User with nonexistent group id',
 					'usrgrps' => [
 						['usrgrpid' => '123456']
 					]
@@ -466,7 +759,7 @@ class testUsers extends CAPITest {
 			[
 				'user' => [[
 					'userid' => '9',
-					'alias' => 'User with two identical user group id',
+					'username' => 'User with two identical user group id',
 					'usrgrps' => [
 						['usrgrpid' => '7'],
 						['usrgrpid' => '7']
@@ -478,7 +771,7 @@ class testUsers extends CAPITest {
 			[
 				'user' => [[
 					'userid' => '1',
-					'alias' => 'Try add user to group with disabled GUI access',
+					'username' => 'Try to add user to group with disabled GUI access',
 					'usrgrps' => [
 						['usrgrpid' => '12']
 					]
@@ -488,7 +781,7 @@ class testUsers extends CAPITest {
 			[
 				'user' => [[
 					'userid' => '1',
-					'alias' => 'Try add user to a disabled group',
+					'username' => 'Try to add user to a disabled group',
 					'usrgrps' => [
 						['usrgrpid' => '9']
 					]
@@ -499,18 +792,18 @@ class testUsers extends CAPITest {
 			[
 				'user' => [[
 					'userid' => '1',
-					'alias' => 'Try to change super-admin user type',
-					'type' => '2'
+					'username' => 'Try to change super-admin user type',
+					'roleid' => '2'
 				]],
-				'expected_error' => 'User cannot change their user type.'
+				'expected_error' => 'At least one active user must exist with role "Super admin role".'
 			],
 			// Successfully user update.
 			[
 				'user' => [
 					[
 						'userid' => '9',
-						'alias' => 'API user updated',
-						'passwd' => 'zabbix1',
+						'username' => 'API user updated',
+						'passwd' => 'Z@bb1x1234',
 						'usrgrps' => [
 							['usrgrpid' => 7]
 						]
@@ -522,8 +815,8 @@ class testUsers extends CAPITest {
 				'user' => [
 					[
 						'userid' => '9',
-						'alias' => 'УТФ Юзер обновлённ',
-						'passwd' => 'zabbix',
+						'username' => 'УТФ Юзер обновлённ',
+						'passwd' => 'Z@bb1x1234',
 						'usrgrps' => [
 							['usrgrpid' => 7]
 						]
@@ -535,12 +828,12 @@ class testUsers extends CAPITest {
 				'user' => [
 					[
 						'userid' => '9',
-						'alias' => 'API user update with media',
-						'passwd' => 'zabbix',
+						'username' => 'API user update with media',
+						'passwd' => 'Z@bb1x1234',
 						'usrgrps' => [
 							['usrgrpid' => 7]
 						],
-						'user_medias' => [
+						'medias' => [
 							[
 								'mediatypeid' => '1',
 								'sendto' => 'api@zabbix.com'
@@ -554,8 +847,8 @@ class testUsers extends CAPITest {
 	}
 
 	/**
-	* @dataProvider user_update
-	*/
+	 * @dataProvider user_update
+	 */
 	public function testUsers_Update($users, $expected_error) {
 		foreach ($users as $user) {
 			if (array_key_exists('userid', $user) && filter_var($user['userid'], FILTER_VALIDATE_INT)
@@ -571,12 +864,12 @@ class testUsers extends CAPITest {
 			foreach ($result['result']['userids'] as $key => $id) {
 				$dbResultUser = DBSelect('select * from users where userid='.zbx_dbstr($id));
 				$dbRowUser = DBFetch($dbResultUser);
-				$this->assertEquals($dbRowUser['alias'], $users[$key]['alias']);
+				$this->assertEquals($dbRowUser['username'], $users[$key]['username']);
 				$this->assertEquals($dbRowUser['name'], '');
 				$this->assertEquals($dbRowUser['surname'], '');
 				$this->assertEquals($dbRowUser['autologin'], 0);
 				$this->assertEquals($dbRowUser['autologout'], '15m');
-				$this->assertEquals($dbRowUser['lang'], 'en_GB');
+				$this->assertEquals($dbRowUser['lang'], 'en_US');
 				$this->assertEquals($dbRowUser['refresh'], '30s');
 				$this->assertEquals($dbRowUser['rows_per_page'], 50);
 				$this->assertEquals($dbRowUser['theme'], 'default');
@@ -586,11 +879,11 @@ class testUsers extends CAPITest {
 						' and usrgrpid='.zbx_dbstr($users[$key]['usrgrps'][0]['usrgrpid']))
 				);
 
-				if (array_key_exists('user_medias', $users[$key])) {
+				if (array_key_exists('medias', $users[$key])) {
 					$dbResultMedia = DBSelect('select * from media where userid='.zbx_dbstr($id));
 					$dbRowMedia = DBFetch($dbResultMedia);
-					$this->assertEquals($dbRowMedia['mediatypeid'], $users[$key]['user_medias'][0]['mediatypeid']);
-					$this->assertEquals($dbRowMedia['sendto'], $users[$key]['user_medias'][0]['sendto']);
+					$this->assertEquals($dbRowMedia['mediatypeid'], $users[$key]['medias'][0]['mediatypeid']);
+					$this->assertEquals($dbRowMedia['sendto'], $users[$key]['medias'][0]['sendto']);
 					$this->assertEquals($dbRowMedia['active'], 0);
 					$this->assertEquals($dbRowMedia['severity'], 63);
 					$this->assertEquals($dbRowMedia['period'], '1-7,00:00-24:00');
@@ -613,7 +906,7 @@ class testUsers extends CAPITest {
 			// Check readonly parameter.
 			[
 				'user' => [
-					'alias' => 'Unexpected parameter attempt_clock',
+					'username' => 'Unexpected parameter attempt_clock',
 					'passwd' => 'zabbix',
 					'attempt_clock' => '0',
 					'usrgrps' => [
@@ -624,7 +917,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'Unexpected parameter attempt_failed',
+					'username' => 'Unexpected parameter attempt_failed',
 					'passwd' => 'zabbix',
 					'attempt_failed' => '3',
 					'usrgrps' => [
@@ -635,7 +928,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'Unexpected parameter attempt_ip',
+					'username' => 'Unexpected parameter attempt_ip',
 					'passwd' => 'zabbix',
 					'attempt_ip' => '127.0.0.1',
 					'usrgrps' => [
@@ -647,7 +940,7 @@ class testUsers extends CAPITest {
 			// Check user properties, name and surname.
 			[
 				'user' => [
-					'alias' => 'User with long name',
+					'username' => 'User with long name',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -658,7 +951,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with long surname',
+					'username' => 'User with long surname',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -670,7 +963,7 @@ class testUsers extends CAPITest {
 			// Check user properties, autologin.
 			[
 				'user' => [
-					'alias' => 'User with invalid autologin',
+					'username' => 'User with invalid autologin',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -681,7 +974,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid autologin',
+					'username' => 'User with invalid autologin',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -692,7 +985,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid autologin',
+					'username' => 'User with invalid autologin',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -704,7 +997,7 @@ class testUsers extends CAPITest {
 			// Check user properties, autologout.
 			[
 				'user' => [
-					'alias' => 'User with invalid autologout',
+					'username' => 'User with invalid autologout',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -715,7 +1008,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid autologout',
+					'username' => 'User with invalid autologout',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -726,7 +1019,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid autologout',
+					'username' => 'User with invalid autologout',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -737,7 +1030,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid autologout',
+					'username' => 'User with invalid autologout',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -748,7 +1041,8 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with autologout and autologin together',
+					'username' => 'User with autologout and autologin together',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -761,7 +1055,7 @@ class testUsers extends CAPITest {
 			// Check user properties, lang.
 			[
 				'user' => [
-					'alias' => 'User with empty lang',
+					'username' => 'User with empty lang',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -772,89 +1066,87 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid lang',
+					'username' => 'User with invalid lang',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
 					'lang' => '123456'
 				],
-				'expected_error' => 'Invalid parameter "/1/lang": value must be one of en_GB, en_US, bg_BG, ca_ES, zh_CN, '
-				. 'zh_TW, cs_CZ, nl_NL, fi_FI, fr_FR, ka_GE, de_DE, el_GR, he_IL, hu_HU, id_ID, it_IT, ko_KR, ja_JP, lv_LV, '
-				. 'lt_LT, nb_NO, fa_IR, pl_PL, pt_BR, pt_PT, ro_RO, ru_RU, sk_SK, es_ES, sv_SE, tr_TR, uk_UA, vi_VN.'
+				'expected_error' => 'Invalid parameter "/1/lang": value must be one of "default", "en_GB", "en_US", "bg_BG", "ca_ES", "zh_CN", "zh_TW", "cs_CZ", "nl_NL", "fi_FI", "fr_FR", "ka_GE", "de_DE", "el_GR", "he_IL", "hu_HU", "id_ID", "it_IT", "ko_KR", "ja_JP", "lv_LV", "lt_LT", "nb_NO", "fa_IR", "pl_PL", "pt_BR", "pt_PT", "ro_RO", "ru_RU", "sk_SK", "es_ES", "sv_SE", "tr_TR", "uk_UA", "vi_VN".'
 			],
 			// Check user properties, theme.
 			[
 				'user' => [
-					'alias' => 'User with empty theme',
+					'username' => 'User with empty theme',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
 					'theme' => ''
 				],
-				'expected_error' => 'Invalid parameter "/1/theme": value must be one of default, blue-theme, dark-theme, hc-light, hc-dark.'
+				'expected_error' => 'Invalid parameter "/1/theme": value must be one of "default", "blue-theme", "dark-theme", "hc-light", "hc-dark".'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid theme',
+					'username' => 'User with invalid theme',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
 					'theme' => 'classic'
 				],
-				'expected_error' => 'Invalid parameter "/1/theme": value must be one of default, blue-theme, dark-theme, hc-light, hc-dark.'
+				'expected_error' => 'Invalid parameter "/1/theme": value must be one of "default", "blue-theme", "dark-theme", "hc-light", "hc-dark".'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid theme',
+					'username' => 'User with invalid theme',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
 					'theme' => 'originalblue'
 				],
-				'expected_error' => 'Invalid parameter "/1/theme": value must be one of default, blue-theme, dark-theme, hc-light, hc-dark.'
+				'expected_error' => 'Invalid parameter "/1/theme": value must be one of "default", "blue-theme", "dark-theme", "hc-light", "hc-dark".'
 			],
 			// Check user properties, type.
 			[
 				'user' => [
-					'alias' => 'User with empty type',
+					'username' => 'User with empty roleid',
+					'roleid' => '',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
-					],
-					'type' => ''
+					]
 				],
-				'expected_error' => 'Invalid parameter "/1/type": an integer is expected.'
+				'expected_error' => 'Invalid parameter "/1/roleid": a number is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid type',
-					'passwd' => 'zabbix',
+					'username' => 'User with invalid roleid',
+					'roleid' => 0,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
-					],
-					'type' => '0'
+					]
 				],
-				'expected_error' => 'Invalid parameter "/1/type": value must be one of 1, 2, 3.'
+				'expected_error' => 'User role with ID "0" is not available.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid type',
+					'username' => 'User with invalid roleid',
+					'roleid' => '1.1',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
-					],
-					'type' => '1.1'
+					]
 				],
-				'expected_error' => 'Invalid parameter "/1/type": an integer is expected.'
+				'expected_error' => 'Invalid parameter "/1/roleid": a number is expected.'
 			],
 			// Check user properties, refresh.
 			[
 				'user' => [
-					'alias' => 'User with empty refresh',
+					'username' => 'User with empty refresh',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -865,7 +1157,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid refresh',
+					'username' => 'User with invalid refresh',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -876,7 +1168,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid refresh',
+					'username' => 'User with invalid refresh',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -888,7 +1180,7 @@ class testUsers extends CAPITest {
 			// Check user properties, rows_per_page.
 			[
 				'user' => [
-					'alias' => 'User with empty rows_per_page',
+					'username' => 'User with empty rows_per_page',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -899,7 +1191,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid rows_per_page',
+					'username' => 'User with invalid rows_per_page',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -910,7 +1202,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid rows_per_page',
+					'username' => 'User with invalid rows_per_page',
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
@@ -922,53 +1214,57 @@ class testUsers extends CAPITest {
 			// Check user media, mediatypeid.
 			[
 				'user' => [
-					'alias' => 'User without user_medias properties',
+					'username' => 'User without medias properties',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [[ ]]
+					'medias' => [[ ]]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1": the parameter "mediatypeid" is missing.'
+				'expected_error' => 'Invalid parameter "/1/medias/1": the parameter "mediatypeid" is missing.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with empty mediatypeid',
+					'username' => 'User with empty mediatypeid',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => ''
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/mediatypeid": a number is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/mediatypeid": a number is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid mediatypeid',
+					'username' => 'User with invalid mediatypeid',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1.1'
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/mediatypeid": a number is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/mediatypeid": a number is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with nonexistent media type id',
-					'passwd' => 'zabbix',
+					'username' => 'User with nonexistent media type id',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1234',
 							'sendto' => 'api@zabbix.com'
@@ -980,27 +1276,29 @@ class testUsers extends CAPITest {
 			// Check user media, sendto.
 			[
 				'user' => [
-					'alias' => 'User without sendto',
+					'username' => 'User without sendto',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1'
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1": the parameter "sendto" is missing.'
+				'expected_error' => 'Invalid parameter "/1/medias/1": the parameter "sendto" is missing.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with empty sendto',
-					'passwd' => 'zabbix',
+					'username' => 'User with empty sendto',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => ''
@@ -1011,44 +1309,47 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with empty sendto',
+					'username' => 'User with empty sendto',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => [[]]
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/sendto/1": a character string is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/sendto/1": a character string is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with empty sendto',
+					'username' => 'User with empty sendto',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => []
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/sendto": cannot be empty.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/sendto": cannot be empty.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with empty sendto',
-					'passwd' => 'zabbix',
+					'username' => 'User with empty sendto',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => [""]
@@ -1059,12 +1360,13 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with empty second email',
-					'passwd' => 'zabbix',
+					'username' => 'User with empty second email',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => ["test1@zabbix.com",""]
@@ -1075,12 +1377,13 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid email',
-					'passwd' => 'zabbix',
+					'username' => 'User with invalid email',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => ["test1zabbix.com"]
@@ -1091,12 +1394,13 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid email',
-					'passwd' => 'zabbix',
+					'username' => 'User with invalid email',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => ["test1@zabbixcom"]
@@ -1107,12 +1411,13 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid email',
-					'passwd' => 'zabbix',
+					'username' => 'User with invalid email',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => ["test1@@zabbix.com"]
@@ -1123,12 +1428,13 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid email',
-					'passwd' => 'zabbix',
+					'username' => 'User with invalid email',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => ["test1 test2@zabbix.com"]
@@ -1139,12 +1445,13 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid email',
-					'passwd' => 'zabbix',
+					'username' => 'User with invalid email',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => ["<test1@zabbix.com> test2"]
@@ -1155,12 +1462,13 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid email',
-					'passwd' => 'zabbix',
+					'username' => 'User with invalid email',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => ["test1@zabbix.com, a,b"]
@@ -1171,12 +1479,13 @@ class testUsers extends CAPITest {
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid email',
-					'passwd' => 'zabbix',
+					'username' => 'User with invalid email',
+					'roleid' => 1,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => ["test1@zabbix.com,test2@zabbix.com"]
@@ -1188,12 +1497,13 @@ class testUsers extends CAPITest {
 			// Check user media, active.
 			[
 				'user' => [
-					'alias' => 'User with empty active',
+					'username' => 'User with empty active',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 							'mediatypeid' => '1',
 							'sendto' => 'api@zabbix.com',
@@ -1201,16 +1511,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/active": an integer is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/active": an integer is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid active',
+					'username' => 'User with invalid active',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1218,16 +1529,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/active": an integer is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/active": an integer is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid active',
+					'username' => 'User with invalid active',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1235,17 +1547,18 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/active": value must be one of 0, 1.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/active": value must be one of 0, 1.'
 			],
 			// Check user media, severity.
 			[
 				'user' => [
-					'alias' => 'User with empty severity',
+					'username' => 'User with empty severity',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1253,16 +1566,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/severity": an integer is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/severity": an integer is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid severity',
+					'username' => 'User with invalid severity',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1270,17 +1584,18 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/severity": value must be one of 0-63.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/severity": value must be one of 0-63.'
 			],
 			// Check user media, period.
 			[
 				'user' => [
-					'alias' => 'User with empty period',
+					'username' => 'User with empty period',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1288,16 +1603,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/period": cannot be empty.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/period": cannot be empty.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with string period',
+					'username' => 'User with string period',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1305,16 +1621,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/period": a time period is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/period": a time period is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid period, without comma',
+					'username' => 'User with invalid period, without comma',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1322,16 +1639,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/period": a time period is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/period": a time period is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid period, with two comma',
+					'username' => 'User with invalid period, with two comma',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1339,16 +1657,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/period": a time period is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/period": a time period is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid period, 8 week days',
+					'username' => 'User with invalid period, 8 week days',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1356,16 +1675,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/period": a time period is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/period": a time period is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid period, zero week day',
+					'username' => 'User with invalid period, zero week day',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1373,16 +1693,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/period": a time period is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/period": a time period is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid time',
+					'username' => 'User with invalid time',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1390,16 +1711,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/period": a time period is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/period": a time period is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid time',
+					'username' => 'User with invalid time',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1407,16 +1729,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/period": a time period is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/period": a time period is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid time',
+					'username' => 'User with invalid time',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1424,16 +1747,17 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/period": a time period is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/period": a time period is expected.'
 			],
 			[
 				'user' => [
-					'alias' => 'User with invalid time',
+					'username' => 'User with invalid time',
+					'roleid' => 1,
 					'passwd' => 'zabbix',
 					'usrgrps' => [
 						['usrgrpid' => '7']
 					],
-					'user_medias' => [
+					'medias' => [
 						[
 						'mediatypeid' => '1',
 						'sendto' => 'api@zabbix.com',
@@ -1441,15 +1765,16 @@ class testUsers extends CAPITest {
 						]
 					]
 				],
-				'expected_error' => 'Invalid parameter "/1/user_medias/1/period": a time period is expected.'
+				'expected_error' => 'Invalid parameter "/1/medias/1/period": a time period is expected.'
 			],
 			// Successfully user update and create with all parameters.
 			[
 				'user' => [
-					'alias' => 'all-parameters',
-					'passwd' => 'zabbix',
+					'username' => 'all-parameters',
+					'roleid' => 3,
+					'passwd' => 'Z@bb1x1234',
 					'usrgrps' => [['usrgrpid' => 7]],
-					'user_medias' => [
+					'medias' => [
 							[
 								'mediatypeid' => '1',
 								'sendto' => 'apicreate@zabbix.com',
@@ -1464,7 +1789,6 @@ class testUsers extends CAPITest {
 					'autologout' => 0,
 					'lang' => 'en_US',
 					'refresh' => 90,
-					'type' => 3,
 					'theme' => 'dark-theme',
 					'rows_per_page' => 25,
 					'url' => 'zabbix.php?action=userprofile.edit'
@@ -1475,22 +1799,22 @@ class testUsers extends CAPITest {
 	}
 
 	/**
-	* @dataProvider user_properties
-	*/
+	 * @dataProvider user_properties
+	 */
 	public function testUser_NotRequiredPropertiesAndMedias($user, $expected_error) {
 		$methods = ['user.create', 'user.update'];
 
 		foreach ($methods as $method) {
 			if ($method == 'user.update') {
 				$user['userid'] = '9';
-				$user['alias'] = 'updated-'.$user['alias'];
+				$user['username'] = 'updated-'.$user['username'];
 			}
 			$result = $this->call($method, $user, $expected_error);
 
 			if ($expected_error === null) {
 				$dbResultUser = DBSelect('select * from users where userid='.zbx_dbstr($result['result']['userids'][0]));
 				$dbRowUser = DBFetch($dbResultUser);
-				$this->assertEquals($dbRowUser['alias'], $user['alias']);
+				$this->assertEquals($dbRowUser['username'], $user['username']);
 				$this->assertEquals($dbRowUser['name'], $user['name']);
 				$this->assertEquals($dbRowUser['surname'], $user['surname']);
 				$this->assertEquals($dbRowUser['autologin'], $user['autologin']);
@@ -1511,14 +1835,16 @@ class testUsers extends CAPITest {
 				);
 
 				$dbRowMedia = DBFetch($dbResultMedia);
-				$this->assertEquals($dbRowMedia['mediatypeid'], $user['user_medias'][0]['mediatypeid']);
-				$this->assertEquals($dbRowMedia['sendto'], $user['user_medias'][0]['sendto']);
-				$this->assertEquals($dbRowMedia['active'], $user['user_medias'][0]['active']);
-				$this->assertEquals($dbRowMedia['severity'], $user['user_medias'][0]['severity']);
-				$this->assertEquals($dbRowMedia['period'], $user['user_medias'][0]['period']);
+				$this->assertEquals($dbRowMedia['mediatypeid'], $user['medias'][0]['mediatypeid']);
+				$this->assertEquals($dbRowMedia['sendto'], $user['medias'][0]['sendto']);
+				$this->assertEquals($dbRowMedia['active'], $user['medias'][0]['active']);
+				$this->assertEquals($dbRowMedia['severity'], $user['medias'][0]['severity']);
+				$this->assertEquals($dbRowMedia['period'], $user['medias'][0]['period']);
 			}
 			else {
-				$this->assertEquals(0, CDBHelper::getCount('select * from users where alias='.zbx_dbstr($user['alias'])));
+				$this->assertEquals(0, CDBHelper::getCount('select * from users where username='.
+					zbx_dbstr($user['username'])
+				));
 			}
 		}
 	}
@@ -1566,22 +1892,12 @@ class testUsers extends CAPITest {
 				'user' => ['14'],
 				'expected_error' => 'User "api-user-map" is map "API map" owner.'
 			],
-			// Check if deleted users have a screen.
-			[
-				'user' => ['15'],
-				'expected_error' => 'User "api-user-screen" is screen "API screen" owner.'
-			],
-			// Check if deleted users have a slide show.
-			[
-				'user' => ['16'],
-				'expected_error' => 'User "api-user-slideshow" is slide show "API slide show" owner.'
-			],
 			// Check successfully delete of user.
 			[
 				'user' => ['10'],
 				'expected_error' => null
 			],
-						[
+			[
 				'user' => ['11', '12'],
 				'expected_error' => null
 			]
@@ -1589,8 +1905,8 @@ class testUsers extends CAPITest {
 	}
 
 	/**
-	* @dataProvider user_delete
-	*/
+	 * @dataProvider user_delete
+	 */
 	public function testUsers_Delete($user, $expected_error) {
 		$result = $this->call('user.delete', $user, $expected_error);
 
@@ -1601,68 +1917,157 @@ class testUsers extends CAPITest {
 		}
 	}
 
+	public static function user_unblock_data_invalid(): array {
+		return [
+			[
+				'user' => [],
+				'expected_error' => 'Invalid parameter "/": cannot be empty.'
+			],
+			[
+				'user' => [null],
+				'expected_error' => 'Invalid parameter "/1": a number is expected.'
+			],
+			[
+				'user' => [true],
+				'expected_error' => 'Invalid parameter "/1": a number is expected.'
+			],
+			[
+				'user' => [[]],
+				'expected_error' => 'Invalid parameter "/1": a number is expected.'
+			],
+			[
+				'user' => [''],
+				'expected_error' => 'Invalid parameter "/1": a number is expected.'
+			],
+			[
+				'user' => ['1.0'],
+				'expected_error' => 'Invalid parameter "/1": a number is expected.'
+			],
+			[
+				'user' => [-1],
+				'expected_error' => 'Invalid parameter "/1": a number is expected.'
+			],
+			[
+				'user' => ['123456'], // Non-existing user.
+				'expected_error' => 'No permissions to referred object or it does not exist!'
+			],
+			[
+				'user' => ['15', '15'],
+				'expected_error' => 'Invalid parameter "/2": value (15) already exists.'
+			]
+		];
+	}
+
+	public static function user_unblock_data_valid(): array {
+		return [
+			[
+				'user' => ['15'],
+				'expected_error' => null
+			],
+			[
+				'user' => ['14', '15'],
+				'expected_error' => null
+			]
+		];
+	}
+
+	/**
+	 * @dataProvider user_unblock_data_invalid
+	 * @dataProvider user_unblock_data_valid
+	 */
+	public function testUsers_Unblock($users, ?string $expected_error): void {
+		$response = $this->call('user.unblock', $users, $expected_error);
+
+		if ($expected_error !== null) {
+			return;
+		}
+
+		$db_users = CDBHelper::getAll(
+			'SELECT u.attempt_failed'.
+			' FROM users u'.
+			' WHERE '.dbConditionId('u.userid', $response['result']['userids']).
+			' ORDER BY u.userid ASC'
+		);
+
+		foreach ($db_users as $db_user) {
+			$this->assertEquals(0, $db_user['attempt_failed']);
+		}
+	}
+
 	public static function user_permissions() {
 		return [
 			[
 				'method' => 'user.create',
 				'login' => ['user' => 'zabbix-admin', 'password' => 'zabbix'],
 				'user' => [
-							'alias' => 'API user create as zabbix admin',
-							'passwd' => 'zabbix',
-							'usrgrps' => [
-								['usrgrpid' => 7]
-							]
-						],
-				'expected_error' => 'You do not have permissions to create users.'
+					'username' => 'API user create as zabbix admin',
+					'passwd' => 'zabbix',
+					'usrgrps' => [
+						['usrgrpid' => 7]
+					]
+				],
+				'expected_error' => 'No permissions to call "user.create".'
 			],
 			[
 				'method' => 'user.update',
 				'login' => ['user' => 'zabbix-admin', 'password' => 'zabbix'],
 				'user' => [
-							'userid' => '9',
-							'alias' => 'API user update as zabbix admin without permissions'
-						],
+					'userid' => '9',
+					'username' => 'API user update as zabbix admin without permissions'
+				],
 				'expected_error' => 'No permissions to referred object or it does not exist!'
 			],
 			[
 				'method' => 'user.delete',
 				'login' => ['user' => 'zabbix-admin', 'password' => 'zabbix'],
 				'user' => ['9'],
-				'expected_error' => 'No permissions to referred object or it does not exist!'
+				'expected_error' => 'No permissions to call "user.delete".'
 			],
 			[
 				'method' => 'user.create',
 				'login' => ['user' => 'zabbix-user', 'password' => 'zabbix'],
 				'user' => [
-							'alias' => 'API user create as zabbix user',
-							'passwd' => 'zabbix',
-							'usrgrps' => [
-								['usrgrpid' => 7]
-							]
-						],
-				'expected_error' => 'You do not have permissions to create users.'
+					'username' => 'API user create as zabbix user',
+					'passwd' => 'zabbix',
+					'usrgrps' => [
+						['usrgrpid' => 7]
+					]
+				],
+				'expected_error' => 'No permissions to call "user.create".'
 			],
 			[
 				'method' => 'user.update',
 				'login' => ['user' => 'zabbix-user', 'password' => 'zabbix'],
 				'user' => [
-							'userid' => '9',
-							'alias' => 'API user update as zabbix user without permissions'
-						],
+					'userid' => '9',
+					'username' => 'API user update as zabbix user without permissions'
+				],
 				'expected_error' => 'No permissions to referred object or it does not exist!'
 			],
 			[
 				'method' => 'user.delete',
 				'login' => ['user' => 'zabbix-user', 'password' => 'zabbix'],
 				'user' => ['9'],
-				'expected_error' => 'No permissions to referred object or it does not exist!'
+				'expected_error' => 'No permissions to call "user.delete".'
+			],
+			[
+				'method' => 'user.unblock',
+				'login' => ['user' => 'zabbix-user', 'password' => 'zabbix'],
+				'user' => ['15'],
+				'expected_error' => 'No permissions to call "user.unblock".'
+			],
+			[
+				'method' => 'user.unblock',
+				'login' => ['user' => 'zabbix-admin', 'password' => 'zabbix'],
+				'user' => ['15'],
+				'expected_error' => 'No permissions to call "user.unblock".'
 			]
 		];
 	}
 
 	/**
-	* @dataProvider user_permissions
-	*/
+	 * @dataProvider user_permissions
+	 */
 	public function testUsers_UserPermissions($method, $login, $user, $expected_error) {
 		$this->authorize($login['user'], $login['password']);
 		$this->call($method, $user, $expected_error);
@@ -1676,7 +2081,7 @@ class testUsers extends CAPITest {
 				'params' =>
 					[
 						'userid' => '9',
-						'alias' => 'check authentication'
+						'username' => 'check authentication'
 					],
 				'auth' => '12345',
 				'id' => '1'
@@ -1692,8 +2097,8 @@ class testUsers extends CAPITest {
 	}
 
 	/**
-	* @dataProvider auth_data
-	*/
+	 * @dataProvider auth_data
+	 */
 	public function testUsers_Session($data) {
 		$this->checkResult($this->callRaw($data), 'Session terminated, re-login, please.');
 	}
@@ -1716,7 +2121,7 @@ class testUsers extends CAPITest {
 			'params' =>
 				[
 					'userid' => '9',
-					'alias' => 'check authentication'
+					'username' => 'check authentication'
 				],
 			'auth' => CAPIHelper::getSessionId(),
 			'id' => '1'
@@ -1728,7 +2133,7 @@ class testUsers extends CAPITest {
 		return [
 			[
 				'login' => [
-					'user' => 'Admin',
+					'username' => 'Admin',
 					'password' => 'zabbix',
 					'sessionid' => '123456'
 				],
@@ -1739,25 +2144,25 @@ class testUsers extends CAPITest {
 				'login' => [
 					'password' => 'zabbix'
 				],
-				'expected_error' => 'Invalid parameter "/": the parameter "user" is missing.'
+				'expected_error' => 'Invalid parameter "/": the parameter "username" is missing.'
 			],
 			[
 				'login' => [
-					'user' => '',
+					'username' => '',
 					'password' => 'zabbix'
 				],
 				'expected_error' => 'Incorrect user name or password or account is temporarily blocked.'
 			],
 			[
 				'login' => [
-					'user' => 'Unknown user',
+					'username' => 'Unknown user',
 					'password' => 'zabbix'
 				],
 				'expected_error' => 'Incorrect user name or password or account is temporarily blocked.'
 			],
 			[
 				'login' => [
-					'user' => '!@#$%^&\\\'\"""\;:',
+					'username' => '!@#$%^&\\\'\"""\;:',
 					'password' => 'zabbix'
 				],
 				'expected_error' => 'Incorrect user name or password or account is temporarily blocked.'
@@ -1765,27 +2170,27 @@ class testUsers extends CAPITest {
 			// Check password
 			[
 				'login' => [
-					'user' => 'Admin'
+					'username' => 'Admin'
 				],
 				'expected_error' => 'Invalid parameter "/": the parameter "password" is missing.'
 			],
 			[
 				'login' => [
-					'user' => 'Admin',
+					'username' => 'Admin',
 					'password' => ''
 				],
 				'expected_error' => 'Incorrect user name or password or account is temporarily blocked.'
 			],
 			[
 				'login' => [
-					'user' => 'Admin',
+					'username' => 'Admin',
 					'password' => 'wrong password'
 				],
 				'expected_error' => 'Incorrect user name or password or account is temporarily blocked.'
 			],
 			[
 				'login' => [
-					'user' => 'Admin',
+					'username' => 'Admin',
 					'password' => '!@#$%^&\\\'\"""\;:'
 				],
 				'expected_error' => 'Incorrect user name or password or account is temporarily blocked.'
@@ -1793,7 +2198,7 @@ class testUsers extends CAPITest {
 			// Check disabled user.
 			[
 				'login' => [
-					'user' => 'api-user-action',
+					'username' => 'api-user-action',
 					'password' => 'zabbix'
 				],
 				'expected_error' => 'No permissions for system access.'
@@ -1801,14 +2206,14 @@ class testUsers extends CAPITest {
 			// Successfully login.
 			[
 				'login' => [
-					'user' => 'Admin',
+					'username' => 'Admin',
 					'password' => 'zabbix'
 				],
 				'expected_error' => null
 			],
 			[
 				'login' => [
-					'user' => 'Admin',
+					'username' => 'Admin',
 					'password' => 'zabbix',
 					'userData' => true
 				],
@@ -1816,7 +2221,7 @@ class testUsers extends CAPITest {
 			],
 			[
 				'login' => [
-					'user' => 'guest',
+					'username' => 'guest',
 					'password' => ''
 				],
 				'expected_error' => null
@@ -1835,15 +2240,445 @@ class testUsers extends CAPITest {
 		$this->call('user.login', $user, $expected_error);
 	}
 
+	public function testUsers_AuthTokenIncorrect() {
+		$res = $this->callRaw([
+			'jsonrpc' => '2.0',
+			'method' => 'host.get',
+			'params' => [
+				'output' => [],
+				'limit' => 1
+			],
+			'auth' => bin2hex(random_bytes(32)),
+			'id' => '1'
+		]);
+
+		$this->assertTrue(array_key_exists('error', $res));
+
+		['error' => ['data' => $error]] = $res;
+		$this->assertEquals($error, 'Not authorized.');
+	}
+
+	public function testUsers_AuthTokenDisabled() {
+		$token = bin2hex(random_bytes(32));
+		DB::insert('token', [[
+			'status' => ZBX_AUTH_TOKEN_DISABLED,
+			'userid' => 1,
+			'name' => 'disabled',
+			'token' => hash('sha512', $token)
+		]]);
+
+		$res = $this->callRaw([
+			'jsonrpc' => '2.0',
+			'method' => 'host.get',
+			'params' => [
+				'output' => [],
+				'limit' => 1
+			],
+			'auth' => $token,
+			'id' => '1'
+		]);
+
+		$this->assertTrue(array_key_exists('error', $res));
+
+		['error' => ['data' => $error]] = $res;
+		$this->assertEquals($error, 'Not authorized.');
+	}
+
+	public function testUsers_AuthTokenExpired() {
+		$now = time();
+		$token = bin2hex(random_bytes(32));
+		DB::insert('token', [[
+			'status' => ZBX_AUTH_TOKEN_ENABLED,
+			'userid' => 1,
+			'name' => 'expired',
+			'expires_at' => $now - 1,
+			'token' => hash('sha512', $token)
+		]]);
+
+		$res = $this->callRaw([
+			'jsonrpc' => '2.0',
+			'method' => 'host.get',
+			'params' => [
+				'output' => [],
+				'limit' => 1
+			],
+			'auth' => $token,
+			'id' => '1'
+		]);
+
+		$this->assertTrue(array_key_exists('error', $res));
+
+		['error' => ['data' => $error]] = $res;
+		$this->assertEquals($error, 'API token expired.');
+	}
+
+	public function testUsers_AuthTokenNotExpired() {
+		$now = time();
+		$token = bin2hex(random_bytes(32));
+
+		DB::insert('token', [[
+			'status' => ZBX_AUTH_TOKEN_ENABLED,
+			'userid' => 1,
+			'name' => 'correct',
+			'expires_at'  => $now + 10,
+			'token' => hash('sha512', $token)
+		]]);
+
+		$res = $this->callRaw([
+			'jsonrpc' => '2.0',
+			'method' => 'host.get',
+			'params' => [
+				'output' => [],
+				'limit' => 1
+			],
+			'auth' => $token,
+			'id' => '1'
+		]);
+
+		$this->assertTrue(array_key_exists('result', $res));
+	}
+
+	public function testUsers_AuthTokenDebugModeEnabled() {
+		$token = bin2hex(random_bytes(32));
+
+		DB::insert('token', [[
+			'status' => ZBX_AUTH_TOKEN_ENABLED,
+			'userid' => 1,
+			'name' => 'debug mode',
+			'token' => hash('sha512', $token)
+		]]);
+
+		DB::update('usrgrp', [
+			'values' => ['debug_mode' => GROUP_DEBUG_MODE_ENABLED],
+			'where' => ['usrgrpid' => 7]
+		]);
+
+		$res = $this->callRaw([
+			'jsonrpc' => '2.0',
+			'method' => 'host.get',
+			'params' => [
+				'output' => [],
+				'inheritedTags' => 'incorrect value',
+				'limit' => 1
+			],
+			'auth' => $token,
+			'id' => '1'
+		]);
+
+		DB::update('usrgrp', [
+			'values' => ['debug_mode' => GROUP_DEBUG_MODE_DISABLED],
+			'where' => ['usrgrpid' => 7]
+		]);
+
+		$this->assertTrue(array_key_exists('error', $res), 'Expected error to occur.');
+		$this->assertTrue(array_key_exists('debug', $res['error']), 'Expected debug trace in error.');
+	}
+
+	public function testUsers_AuthTokenDebugModeDisabled() {
+		$token = bin2hex(random_bytes(32));
+
+		DB::insert('token', [[
+			'status' => ZBX_AUTH_TOKEN_ENABLED,
+			'userid' => 1,
+			'name' => 'debug mode disabled',
+			'token' => hash('sha512', $token)
+		]]);
+
+		$res = $this->callRaw([
+			'jsonrpc' => '2.0',
+			'method' => 'host.get',
+			'params' => [
+				'output' => [],
+				'inheritedTags' => 'incorrect value',
+				'limit' => 1
+			],
+			'auth' => $token,
+			'id' => '1'
+		]);
+
+		$this->assertTrue(array_key_exists('error', $res), 'Expected error to occur.');
+		$this->assertTrue(!array_key_exists('debug', $res['error']), 'Not expected debug trace in error.');
+	}
+
+	public function testUsers_AuthTokenLastaccessIsUpdated() {
+		$token = bin2hex(random_bytes(32));
+		$formeraccess = time() - 1;
+
+		$tokenids = DB::insert('token', [[
+			'status' => ZBX_AUTH_TOKEN_ENABLED,
+			'userid' => 1,
+			'lastaccess' => $formeraccess,
+			'name' => 'lastaccess updated',
+			'token' => hash('sha512', $token)
+		]]);
+
+		$this->callRaw([
+			'jsonrpc' => '2.0',
+			'method' => 'host.get',
+			'params' => [
+				'output' => [],
+				'limit' => 1
+			],
+			'auth' => $token,
+			'id' => '1'
+		]);
+
+		[['lastaccess' => $lastaccess]] = DB::select('token', [
+			'output' => ['lastaccess'],
+			'tokenids' => $tokenids
+		]);
+
+		$this->assertTrue($lastaccess > $formeraccess);
+	}
+
+	public function testUsers_AuthTokenUserDisabled() {
+		$token = bin2hex(random_bytes(32));
+
+		DB::insert('token', [[
+			'status' => ZBX_AUTH_TOKEN_ENABLED,
+			'userid' => 13,
+			'name' => 'user with status "Disabled"',
+			'token' => hash('sha512', $token)
+		]]);
+
+		$res = $this->callRaw([
+			'jsonrpc' => '2.0',
+			'method' => 'host.get',
+			'params' => [
+				'output' => [],
+				'limit' => 1
+			],
+			'auth' => $token,
+			'id' => '1'
+		]);
+
+		$this->assertTrue(array_key_exists('error', $res), 'Expected error to occur.');
+		$this->assertEquals($res['error']['data'], 'Not authorized.');
+	}
+
 	public function testUsers_LoginBlocked() {
 		$this->disableAuthorization();
 		for ($i = 1; $i <= 6; $i++) {
-			$result = $this->call('user.login', ['user' => 'Admin', 'password' => 'attempt '.$i], true);
+			$result = $this->call('user.login', ['username' => 'Admin', 'password' => 'attempt '.$i], true);
 		}
 
 		$this->assertEquals('Incorrect user name or password or account is temporarily blocked.',
 			$result['error']['data']
 		);
+	}
+
+	/**
+	 * Data provider for user.checkAuthentication testing. Array contains common invalid parameter data.
+	 *
+	 * @return array
+	 */
+	public static function getUsersCheckAuthenticationDataInvalidParameters(): array {
+		return [
+			'Test user.checkAuthentication invalid case when missing "sessionid" or "token" parameter' => [
+				'params' => [],
+				'expected_error' => 'Session ID or token is expected.'
+			],
+			'Test user.checkAuthentication invalid case when "sessionid" and "token" parameters given' => [
+				'params' => [
+					'token' => 'string',
+					'sessionid' => 'string'
+				],
+				'expected_error' => 'Session ID or token is expected.'
+			],
+			'Test user.checkAuthentication invalid case when "token" and "extend" parameters given' => [
+				'params' => [
+					'token' => 'string',
+					'extend' => true
+				],
+				'expected_error' => 'Invalid parameter "/": unexpected parameter "extend".'
+			],
+			'Test user.checkAuthentication invalid "sessionid" parameter (integer)' => [
+				'params' => [
+					'sessionid' => 123456
+				],
+				'expected_error' => 'Invalid parameter "/sessionid": a character string is expected.'
+			],
+			'Test user.checkAuthentication invalid "sessionid" parameter (boolean)' => [
+				'params' => [
+					'sessionid' => true
+				],
+				'expected_error' => 'Invalid parameter "/sessionid": a character string is expected.'
+			],
+			'Test user.checkAuthentication invalid "extend" parameter (string)' => [
+				'params' => [
+					'extend' => 'Boolean expected'
+				],
+				'expected_error' => 'Invalid parameter "/extend": a boolean is expected.'
+			],
+			'Test user.checkAuthentication invalid "extend" parameter (integer)' => [
+				'params' => [
+					'extend' => 123456
+				],
+				'expected_error' => 'Invalid parameter "/extend": a boolean is expected.'
+			],
+			'Test user.checkAuthentication invalid "token" parameter (integer)' => [
+				'params' => [
+					'token' => 123456
+				],
+				'expected_error' => 'Invalid parameter "/token": a character string is expected.'
+			],
+			'Test user.checkAuthentication invalid "token" parameter (boolean)' => [
+				'params' => [
+					'token' => true
+				],
+				'expected_error' => 'Invalid parameter "/token": a character string is expected.'
+			],
+			'Test user.checkAuthentication invalid case when unexpected parameter given' => [
+				'params' => [
+					'unexpected_parameter' => 'expect error'
+				],
+				'expected_error' => 'Invalid parameter "/": unexpected parameter "unexpected_parameter".'
+			]
+		];
+	}
+
+	/**
+	 * Test user.checkAuthentication with invalid parameter data.
+	 *
+	 * @dataProvider getUsersCheckAuthenticationDataInvalidParameters
+	 */
+	public function testUser_checkAuthentication_InvalidParameters(array $params, string $expected_error) {
+		$res = $this->callRaw([
+			'jsonrpc' => '2.0',
+			'method' => 'user.checkAuthentication',
+			'params' => $params,
+			'id' => 1
+		]);
+
+		$this->checkResult($res, $expected_error);
+	}
+
+	/**
+	 * Data provider for user.checkAuthentication. Array contains paths to data for invalid users authentication cases.
+	 *
+	 * @return array
+	 */
+	public static function getUsersCheckAuthenticationDataInvalidAuthorization(): array {
+		return [
+			'Test user.checkAuthentication not authorized session ID' => [
+				'data' => ['sessionids' => 'not_authorized_session'],
+				'expected_error' => 'Session terminated, re-login, please.'
+			],
+			'Test user.checkAuthentication expired active session ID' => [
+				'data' => ['sessionids' => 'expired_session'],
+				'expected_error' => 'Session terminated, re-login, please.'
+			],
+			'Test user.checkAuthentication passive session ID' => [
+				'data' => ['sessionids' => 'passive_session'],
+				'expected_error' => 'Session terminated, re-login, please.'
+			],
+			'Test user.checkAuthentication not authorized token' => [
+				'data' => ['tokens' => 'not_authorized'],
+				'expected_error' => 'Not authorized.'
+			],
+			'Test user.checkAuthentication expired token' => [
+				'data' => ['tokens' => 'expired'],
+				'expected_error' => 'API token expired.'
+			],
+			'Test user.checkAuthentication disabled token' => [
+				'data' => ['tokens' => 'disabled'],
+				'expected_error' => 'Not authorized.'
+			],
+			'Test user.checkAuthentication user with active session ID and disabled user group' => [
+				'data' => ['sessionids' => 'valid_for_user_with_disabled_usergroup'],
+				'expected_error' => 'Session terminated, re-login, please.'
+			],
+			'Test user.checkAuthentication user with active token and disabled user group' => [
+				'data' => ['tokens' => 'valid_for_user_with_disabled_usergroup'],
+				'expected_error' => 'Not authorized.'
+			]
+		];
+	}
+
+	/**
+	 * Data provider for user.checkAuthentication testing. Array contains authorized users data.
+	 *
+	 * @return array
+	 */
+	public static function getUsersCheckAuthenticationDataValidAuthorization(): array	{
+		return [
+			'Test user.checkAuthentication user with valid session ID' => [
+				'data' => ['sessionids' => 'valid'],
+				'expected_error' => null
+			],
+			'Test user.checkAuthentication user with valid token' => [
+				'data' => ['tokens' => 'valid'],
+				'expected_error' => null
+			]
+		];
+	}
+
+	/**
+	 * Test user.checkAuthentication with various valid and invalid user authorization cases.
+	 *
+	 * @dataProvider getUsersCheckAuthenticationDataInvalidAuthorization
+	 * @dataProvider getUsersCheckAuthenticationDataValidAuthorization
+	 */
+	public function testUser_checkAuthentication_Authorization(array $data, ?string $expected_error) {
+		foreach ($data as $parameter => $name) {
+			$parameter_key = $parameter === 'sessionids' ? 'sessionid' : 'token';
+
+			$res = $this->callRaw([
+				'jsonrpc' => '2.0',
+				'method' => 'user.checkAuthentication',
+				'params' => [
+					$parameter_key => self::$data[$parameter][$name]
+				],
+				'id' => 1
+			]);
+
+			$this->checkResult($res, $expected_error);
+		}
+	}
+
+	/**
+	 * Data provider for user.checkAuthentication testing. Array contains various valid extend parameter options.
+	 *
+	 * @return array
+	 */
+	public static function getUsersCheckAuthenticationDataValidSessionIDWithExtend(): array {
+		return [
+			'Test user.checkAuthentication user does not extend session' => [
+				'extend' => false
+			],
+			'Test user.checkAuthentication user extends session' => [
+				'extend' => true
+			]
+		];
+	}
+
+	/**
+	 * Test user.checkAuthentication parameter extend effect for user with active session ID.
+	 *
+	 * @dataProvider getUsersCheckAuthenticationDataValidSessionIDWithExtend
+	 */
+	public function testUser_checkAuthentication_SessionIDWithExtend(bool $extend) {
+		$res = $this->callRaw([
+			'jsonrpc' => '2.0',
+			'method' => 'user.checkAuthentication',
+			'params' => [
+				'sessionid' => self::$data['sessionids']['for_extend_parameter_tests'],
+				'extend' => $extend
+			],
+			'id' => 1
+		]);
+
+		$this->checkResult($res);
+
+		$lastaccess = CDBHelper::getValue(
+			'SELECT lastaccess'.
+			' FROM sessions'.
+			' WHERE sessionid='.zbx_dbstr(self::$data['sessionids']['for_extend_parameter_tests'])
+		);
+
+		$extend
+			? $this->assertGreaterThan(self::$data['lastacess_time_for_sessionid_with_extend_tests'], $lastaccess)
+			: $this->assertEquals(self::$data['lastacess_time_for_sessionid_with_extend_tests'], $lastaccess);
 	}
 
 	/**

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,17 +21,7 @@
 
 class CControllerResponseFatal extends CControllerResponse {
 
-	private $messages = [];
-
-	public function getLocation() {
-		return $this->location;
-	}
-
-	public function getMessages() {
-		return $this->messages;
-	}
-
-	public function addMessage($msg) {
-		$this->messages[] = $msg;
+	public function __construct() {
+		$this->location = 'zabbix.php?action=system.warning';
 	}
 }

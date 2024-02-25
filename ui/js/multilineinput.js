@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -114,7 +114,8 @@
 				class: 'multilineinput-textarea' + monospace_font,
 				text: obj.$hidden.val(),
 				readonly: obj.options.readonly ? true : null,
-				placeholder: obj.options.placeholder_textarea
+				placeholder: obj.options.placeholder_textarea,
+				spellcheck: false
 			}).attr('wrap', 'off'),
 			$line_numbers = $('<ul>', {class: 'multilineinput-line-numbers' + monospace_font}).append('<li>'),
 			$footer = $('<div>', {class: 'multilineinput-char-count'});
@@ -129,7 +130,7 @@
 
 		overlayDialogue({
 			'title': obj.options.title,
-			'class': 'multilineinput-modal',
+			'class': 'modal-popup multilineinput-modal',
 			'content': $content,
 			'footer': $footer,
 			'buttons': [

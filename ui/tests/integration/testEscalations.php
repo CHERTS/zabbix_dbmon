@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -85,7 +85,7 @@ class testEscalations extends CIntegrationTest {
 		// Create trigger
 		$response = $this->call('trigger.create', [
 			'description' => 'Trapper received 1',
-			'expression' => '{'.self::HOST_NAME.':'.self::TRAPPER_ITEM_NAME.'.last()}>0'
+			'expression' => 'last(/'.self::HOST_NAME.'/'.self::TRAPPER_ITEM_NAME.')>0'
 		]);
 		$this->assertArrayHasKey('triggerids', $response['result']);
 		$this->assertEquals(1, count($response['result']['triggerids']));
@@ -112,7 +112,6 @@ class testEscalations extends CIntegrationTest {
 					'esc_period' => 0,
 					'esc_step_from' => 1,
 					'esc_step_to' => 1,
-					'evaltype' => 0,
 					'operationtype' => OPERATION_TYPE_MESSAGE,
 					'opmessage' => ['default_msg' => 1,
 									'mediatypeid' => 0
@@ -125,7 +124,6 @@ class testEscalations extends CIntegrationTest {
 			'pause_suppressed' => 0,
 			'recovery_operations' => [
 				[
-					'evaltype' => 0,
 					'operationtype' => OPERATION_TYPE_MESSAGE,
 					'opmessage' => [
 						'default_msg' => 1,
@@ -228,22 +226,14 @@ class testEscalations extends CIntegrationTest {
 
 		$response = $this->call('maintenance.create', [
 			'name' => 'Test maintenance',
-			'groupids' => [],
-			'hostids' => [self::$hostid],
+			'hosts' => ['hostid' => self::$hostid],
 			'active_since' => self::$maint_start_tm,
 			'active_till' => $maint_end_tm,
-			'tags_evaltype' => 0,
+			'tags_evaltype' => MAINTENANCE_TAG_EVAL_TYPE_AND_OR,
 			'timeperiods' => [
-				[
-					'day' => '1',
-					'dayofweek' => '0',
-					'every' => '1',
-					'month' => '0',
-					'period' => '300',
-					'start_date' => self::$maint_start_tm,
-					'start_time' => '0',
-					'timeperiod_type' => '0'
-				]
+				'timeperiod_type' => TIMEPERIOD_TYPE_ONETIME,
+				'period' => 300,
+				'start_date' => self::$maint_start_tm
 			]
 		]);
 		$this->assertArrayHasKey('maintenanceids', $response['result']);
@@ -262,8 +252,9 @@ class testEscalations extends CIntegrationTest {
 		$this->assertEquals(0, $response['result'][0]['p_eventid']);
 
 		$this->sendSenderValue(self::HOST_NAME, self::TRAPPER_ITEM_NAME, 0);
+
 		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In escalation_execute()', true, 120);
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true, 10, 3);
 
 		$response = $this->callUntilDataIsPresent('alert.get', [
 			'actionids' => [self::$trigger_actionid],
@@ -293,22 +284,14 @@ class testEscalations extends CIntegrationTest {
 
 		$response = $this->call('maintenance.create', [
 			'name' => 'Test maintenance',
-			'groupids' => [],
-			'hostids' => [self::$hostid],
+			'hosts' => ['hostid' => self::$hostid],
 			'active_since' => self::$maint_start_tm,
 			'active_till' => $maint_end_tm,
-			'tags_evaltype' => 0,
+			'tags_evaltype' => MAINTENANCE_TAG_EVAL_TYPE_AND_OR,
 			'timeperiods' => [
-				[
-					'day' => '1',
-					'dayofweek' => '0',
-					'every' => '1',
-					'month' => '0',
-					'period' => '300',
-					'start_date' => self::$maint_start_tm,
-					'start_time' => '0',
-					'timeperiod_type' => '0'
-				]
+				'timeperiod_type' => TIMEPERIOD_TYPE_ONETIME,
+				'period' => 300,
+				'start_date' => self::$maint_start_tm
 			]
 		]);
 		$this->assertArrayHasKey('maintenanceids', $response['result']);
@@ -319,7 +302,7 @@ class testEscalations extends CIntegrationTest {
 
 		$this->sendSenderValue(self::HOST_NAME, self::TRAPPER_ITEM_NAME, 4);
 		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In escalation_execute()', true, 120);
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true, 10, 3);
 
 		$response = $this->callUntilDataIsPresent('alert.get', [
 			'actionids' => [self::$trigger_actionid]
@@ -363,22 +346,14 @@ class testEscalations extends CIntegrationTest {
 
 		$response = $this->call('maintenance.create', [
 			'name' => 'Test maintenance',
-			'groupids' => [],
-			'hostids' => [self::$hostid],
+			'hosts' => ['hostid' => self::$hostid],
 			'active_since' => self::$maint_start_tm,
 			'active_till' => $maint_end_tm,
-			'tags_evaltype' => 0,
+			'tags_evaltype' => MAINTENANCE_TAG_EVAL_TYPE_AND_OR,
 			'timeperiods' => [
-				[
-					'day' => '1',
-					'dayofweek' => '0',
-					'every' => '1',
-					'month' => '0',
-					'period' => '300',
-					'start_date' => self::$maint_start_tm,
-					'start_time' => '0',
-					'timeperiod_type' => '0'
-				]
+				'timeperiod_type' => TIMEPERIOD_TYPE_ONETIME,
+				'period' => 300,
+				'start_date' => self::$maint_start_tm
 			]
 		]);
 		$this->assertArrayHasKey('maintenanceids', $response['result']);
@@ -402,10 +377,11 @@ class testEscalations extends CIntegrationTest {
 		$this->assertArrayHasKey('maintenanceids', $response['result']);
 		$this->assertEquals($maintenance_id, $response['result']['maintenanceids'][0]);
 		$this->reloadConfigurationCache();
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In zbx_dc_update_maintenances()', true, 120);
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of zbx_dc_update_maintenances()', true);
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In escalation_execute()', true, 120);
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true);
+
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In zbx_dc_update_maintenances()|In escalation_execute()', true, 120, null, true);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of zbx_dc_update_maintenances()|End of escalation_execute()', true, null, 3, true);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In escalation_execute()|In zbx_dc_update_maintenances()', true, 120, null, true);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()|End of zbx_dc_update_maintenances()', true, null, 3, true);
 
 		$response = $this->callUntilDataIsPresent('alert.get', [
 			'actionids' => [self::$trigger_actionid]
@@ -470,7 +446,7 @@ class testEscalations extends CIntegrationTest {
 		$this->assertArrayHasKey(0, $response['result']['actionids']);
 		$response = $this->call('user.update', [
 			'userid' => 1,
-			'user_medias' => [
+			'medias' => [
 				[
 					'mediatypeid' => 1,
 					'sendto' => 'test@local.local'
@@ -499,7 +475,7 @@ class testEscalations extends CIntegrationTest {
 			'actionids' => [self::$trigger_actionid],
 			'sortfield' => 'alertid'
 		], 5, 2);
-		$esc_msg = 'NOTE: Escalation cancelled';
+		$esc_msg = 'NOTE: Escalation canceled';
 		$this->assertArrayHasKey(1, $response['result']);
 		$this->assertEquals(0, strncmp($esc_msg, $response['result'][1]['message'], strlen($esc_msg)));
 
@@ -509,6 +485,57 @@ class testEscalations extends CIntegrationTest {
 			'triggerid' => self::$triggerid,
 			'status' => 0
 		]);
+
+		$this->reloadConfigurationCache();
+
+		$this->sendSenderValue(self::HOST_NAME, self::TRAPPER_ITEM_NAME, 0);
+
+		// test ability to disable notifications about cancelled escalations
+		$response = $this->call('action.update', [
+			'actionid' => self::$trigger_actionid,
+			'notify_if_canceled' => 0
+		]);
+		$this->assertArrayHasKey('actionids', $response['result']);
+		$this->assertArrayHasKey(0, $response['result']['actionids']);
+
+		$this->reloadConfigurationCache();
+
+		$this->sendSenderValue(self::HOST_NAME, self::TRAPPER_ITEM_NAME, 10);
+
+		$response = $this->call('trigger.update', [
+			'triggerid' => self::$triggerid,
+			'status' => 1
+		]);
+
+		$this->assertArrayHasKey('triggerids', $response['result']);
+		$this->assertEquals(1, count($response['result']['triggerids']));
+
+		$this->reloadConfigurationCache();
+
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_cancel()', true, 120);
+
+		$response = $this->callUntilDataIsPresent('alert.get', [
+			'actionids' => [self::$trigger_actionid],
+			'sortfield' => 'alertid',
+			'sortorder' => 'DESC'
+		], 5, 2);
+		$this->assertArrayHasKey(0, $response['result']);
+		$this->assertNotEquals(0, strncmp($esc_msg, $response['result'][0]['message'], strlen($esc_msg)));
+
+		// revert to defaults, restore trigger status and value
+		$response = $this->call('action.update', [
+			'actionid' => self::$trigger_actionid,
+			'notify_if_canceled' => 1
+		]);
+		$this->assertArrayHasKey('actionids', $response['result']);
+		$this->assertArrayHasKey(0, $response['result']['actionids']);
+
+		$response = $this->call('trigger.update', [
+			'triggerid' => self::$triggerid,
+			'status' => 0
+		]);
+		$this->assertArrayHasKey('triggerids', $response['result']);
+		$this->assertEquals(1, count($response['result']['triggerids']));
 
 		$this->reloadConfigurationCache();
 
@@ -564,11 +591,11 @@ class testEscalations extends CIntegrationTest {
 		$this->reloadConfigurationCache();
 
 		$this->sendSenderValue(self::HOST_NAME, self::TRAPPER_ITEM_NAME, 7);
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In escalation_execute()', true, 200);
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In escalation_execute()', true, 95, 3);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true, 10, 3);
 
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In escalation_execute()', true, 200);
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In escalation_execute()', true, 95, 3);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true, 10, 3);
 
 		$response = $this->callUntilDataIsPresent('alert.get', [
 				'output' => 'extend',
@@ -625,7 +652,7 @@ HEREDOC;
 
 		$response = $this->call('user.update', [
 			'userid' => 1,
-			'user_medias' => [
+			'medias' => [
 				[
 					'mediatypeid' => $mediatypeid,
 					'sendto' => 'q'
@@ -656,7 +683,6 @@ HEREDOC;
 					'esc_period' => 0,
 					'esc_step_from' => 1,
 					'esc_step_to' => 1,
-					'evaltype' => 0,
 					'operationtype' => OPERATION_TYPE_MESSAGE,
 					'opmessage' => [
 						'default_msg' => 0,
@@ -670,11 +696,9 @@ HEREDOC;
 			'pause_suppressed' => 0,
 			'recovery_operations' => [
 				[
-					'evaltype' => 0,
 					'operationtype' => OPERATION_TYPE_RECOVERY_MESSAGE,
 					'opmessage' => [
 						'default_msg' => 0,
-						'mediatypeid' => 0,
 						'subject' => 'R',
 						'message' => 'R'
 					]
@@ -695,8 +719,8 @@ HEREDOC;
 		$this->sendSenderValue(self::HOST_NAME, self::TRAPPER_ITEM_NAME, 8);
 		$this->sendSenderValue(self::HOST_NAME, self::TRAPPER_ITEM_NAME, 0);
 
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In escalation_execute()', true, 200);
-		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'In escalation_execute()', true, 95, 3);
+		$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'End of escalation_execute()', true, 10, 3);
 
 		$response = $this->callUntilDataIsPresent('alert.get', [
 			'actionids' => $actionid
@@ -720,7 +744,7 @@ HEREDOC;
 		// Create trigger
 		$response = $this->call('trigger.create', [
 			'description' => 'Dependent trigger',
-			'expression' => '{'.self::HOST_NAME.':'.self::TRAPPER_ITEM_NAME.'.last()}>0',
+			'expression' => 'last(/'.self::HOST_NAME.'/'.self::TRAPPER_ITEM_NAME.')>0',
 			'dependencies' => [
 				['triggerid' => self::$triggerid]
 			]

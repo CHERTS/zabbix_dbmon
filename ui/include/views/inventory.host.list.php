@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,8 @@ foreach ($data['host_inventories'] as $inventoryField) {
 
 // filter
 $widget->addItem(
-	(new CFilter(new CUrl('hostinventories.php')))
+	(new CFilter())
+		->setResetUrl(new CUrl('hostinventories.php'))
 		->setProfile($data['profileIdx'])
 		->setActiveTab($data['active_tab'])
 		->addFilterTab(_('Filter'), [

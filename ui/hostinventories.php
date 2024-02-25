@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,13 +25,8 @@ require_once dirname(__FILE__).'/include/forms.inc.php';
 
 $page['title'] = _('Host inventory');
 $page['file'] = 'hostinventories.php';
-$page['scripts'] = ['layout.mode.js', 'multiselect.js'];
 
 $hostId = getRequest('hostid', 0);
-
-if ($hostId > 0) {
-	$page['web_layout_mode'] = CViewHelper::loadLayoutMode();
-}
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
@@ -44,7 +39,7 @@ $fields = [
 	'filter_field' =>		[T_ZBX_STR, O_OPT, null,	null,		null],
 	'filter_field_value' =>	[T_ZBX_STR, O_OPT, null,	null,		null],
 	'filter_exact' =>		[T_ZBX_INT, O_OPT, null,	'IN(0,1)',	null],
-	'filter_groups' =>		[T_ZBX_INT, O_OPT, null,	DB_ID,		null],
+	'filter_groups' =>		[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	DB_ID,	null],
 	// actions
 	'cancel' =>				[T_ZBX_STR, O_OPT, P_SYS,		null,	null],
 	// sort and sortorder
@@ -73,7 +68,12 @@ CProfile::update('web.'.$page['file'].'.sortorder', $sortOrder, PROFILE_TYPE_STR
  * Display
  */
 if ($hostId > 0) {
-	$data = [];
+	$data = [
+		'allowed_ui_hosts' => CWebUser::checkAccess(CRoleHelper::UI_MONITORING_HOSTS),
+		'allowed_ui_problems' => CWebUser::checkAccess(CRoleHelper::UI_MONITORING_PROBLEMS),
+		'allowed_ui_latest_data' => CWebUser::checkAccess(CRoleHelper::UI_MONITORING_LATEST_DATA),
+		'allowed_ui_conf_hosts' => CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_HOSTS)
+	];
 
 	// inventory info
 	$data['tableTitles'] = getHostInventories();
@@ -88,7 +88,6 @@ if ($hostId > 0) {
 		'selectTriggers' => API_OUTPUT_COUNT,
 		'selectInventory' => $inventoryFields,
 		'selectGraphs' => API_OUTPUT_COUNT,
-		'selectApplications' => API_OUTPUT_COUNT,
 		'selectDiscoveries' => API_OUTPUT_COUNT,
 		'selectHttpTests' => API_OUTPUT_COUNT,
 		'hostids' => $hostId,
@@ -131,7 +130,6 @@ if ($hostId > 0) {
 }
 else {
 	$data = [
-		'config' => select_config(),
 		'hosts' => [],
 		'sort' => $sortField,
 		'sortorder' => $sortOrder,
@@ -244,7 +242,7 @@ else {
 			unset($host);
 		}
 
-		$limit = $data['config']['search_limit'] + 1;
+		$limit = CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT) + 1;
 
 		order_result($data['hosts'], $sortField, $sortOrder);
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,13 +26,16 @@
 $widget = (new CWidget())
 	->setTitle(_('Maintenance periods'))
 	->setControls(
-		(new CTag('nav', true, new CRedirectButton(_('Create maintenance period'), (new CUrl('maintenance.php'))
-			->removeArgument('maintenanceid')
-			->setArgument('form', 'create')
-			->getUrl()
-		)))->setAttribute('aria-label', _('Content controls'))
+		(new CTag('nav', true,
+			(new CRedirectButton(_('Create maintenance period'), (new CUrl('maintenance.php'))
+				->removeArgument('maintenanceid')
+				->setArgument('form', 'create')
+				->getUrl()
+			))->setEnabled($data['allowed_edit']))
+		)->setAttribute('aria-label', _('Content controls'))
 	)
-	->addItem((new CFilter(new CUrl('maintenance.php')))
+	->addItem((new CFilter())
+		->setResetUrl(new CUrl('maintenance.php'))
 		->setProfile($data['profileIdx'])
 		->setActiveTab($data['active_tab'])
 		->addFilterTab(_('Filter'), [
@@ -118,7 +121,9 @@ $maintenanceForm->addItem([
 	$maintenanceTable,
 	$this->data['paging'],
 	new CActionButtonList('action', 'maintenanceids', [
-		'maintenance.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected maintenance periods?')]
+		'maintenance.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected maintenance periods?'),
+			'disabled' => $data['allowed_edit'] ? null : 'disabled'
+		]
 	])
 ]);
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,6 +27,13 @@ class CDateSelector extends CTag {
 	 * Default CSS class name for HTML root element.
 	 */
 	const ZBX_STYLE_CLASS = 'calendar-control';
+
+	/**
+	 * Input name.
+	 *
+	 * @var string
+	 */
+	private $name = '';
 
 	/**
 	 * Default date format.
@@ -57,11 +64,25 @@ class CDateSelector extends CTag {
 	private $value = null;
 
 	/**
+	 * Readonly state of HTML element.
+	 *
+	 * @var bool
+	 */
+	private $readonly = false;
+
+	/**
 	 * Enabled or disabled state of HTML element.
 	 *
 	 * @var bool
 	 */
 	private $enabled = true;
+
+	/**
+	 * Maxlength attribute of the input field.
+	 *
+	 * @var int
+	 */
+	private $maxlength = 255;
 
 	/**
 	 * Create array with all inputs required for date selection and calendar.
@@ -71,7 +92,7 @@ class CDateSelector extends CTag {
 	 *
 	 * @return CDateSelector
 	 */
-	public function __construct($name = 'calendar', $value = null) {
+	public function __construct(string $name = 'calendar', $value = null) {
 		parent::__construct('div', true);
 
 		$this->name = $name;
@@ -108,7 +129,7 @@ class CDateSelector extends CTag {
 	/**
 	 * Add placeholder to date textbox field.
 	 *
-	 * @param type $text  Placeholder text for date textbox field.
+	 * @param string $text  Placeholder text for date textbox field.
 	 *
 	 * @return CDateSelector
 	 */
@@ -119,7 +140,20 @@ class CDateSelector extends CTag {
 	}
 
 	/**
-	 * Set enabled or disabled  state to field.
+	 * Enable or disable readonly mode for the element.
+	 *
+	 * @param bool $value
+	 *
+	 * @return CDateSelector
+	 */
+	public function setReadonly(bool $value): self {
+		$this->readonly = $value;
+
+		return $this;
+	}
+
+	/**
+	 * Set enabled or disabled state to field.
 	 *
 	 * @param bool $enabled  Field state.
 	 *
@@ -144,12 +178,14 @@ class CDateSelector extends CTag {
 				(new CTextBox($this->name, $this->value))
 					->setId($this->name)
 					->setAttribute('placeholder', $this->placeholder)
+					->setAttribute('maxlength', $this->maxlength)
 					->setAriaRequired($this->is_required)
 					->setEnabled($this->enabled)
+					->setReadonly($this->readonly)
 			)
 			->addItem((new CButton($this->name.'_calendar'))
 				->addClass(ZBX_STYLE_ICON_CAL)
-				->setEnabled($this->enabled)
+				->setEnabled($this->enabled && !$this->readonly)
 				->onClick('toggleCalendar(this, "'.$this->name.'", "'.$this->date_format.'");'));
 
 		return parent::toString($destroy);

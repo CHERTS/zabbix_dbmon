@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -55,10 +55,10 @@ $web_layout_mode = $this->getLayoutMode();
 			),
 		(new CTag('nav', true, (new CList())
 			->addItem($data['map']['editable']
-				? new CRedirectButton(_('Edit map'), (new CUrl('sysmap.php'))
+				? (new CRedirectButton(_('Edit map'), (new CUrl('sysmap.php'))
 					->setArgument('sysmapid', $data['map']['sysmapid'])
 					->getUrl()
-				)
+				))->setEnabled($data['allowed_edit'])
 				: null
 			)
 			->addItem(get_icon('favourite', [
@@ -70,9 +70,7 @@ $web_layout_mode = $this->getLayoutMode();
 		))
 			->setAttribute('aria-label', _('Content controls'))
 	]))
-	->setBreadcrumbs(
-		get_header_sysmap_table($data['map']['sysmapid'], $data['map']['name'], $data['severity_min'])
-	)
+	->setNavigation(getSysmapNavigation($data['map']['sysmapid'], $data['map']['name'], $data['severity_min']))
 	->addItem(
 		(new CDiv())
 			->addClass(ZBX_STYLE_TABLE_FORMS_CONTAINER)
@@ -93,4 +91,8 @@ $web_layout_mode = $this->getLayoutMode();
 				])->get()
 			)
 	)
+	->show();
+
+(new CScriptTag('view.init();'))
+	->setOnDocumentReady()
 	->show();

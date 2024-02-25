@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,14 +34,11 @@ typedef struct
 }
 zbx_vcmock_ds_t;
 
-unsigned char	zbx_mock_str_to_value_type(const char *value_type);
-
 void	zbx_vcmock_ds_init(void);
 void	zbx_vcmock_ds_destroy(void);
 void	zbx_vcmock_ds_dump(void);
 zbx_vcmock_ds_item_t	*zbx_vcmock_ds_first_item(void);
 
-int	zbx_vcmock_str_to_cache_mode(const char *mode);
 int	zbx_vcmock_str_to_item_status(const char *str);
 
 void	zbx_vcmock_read_values(zbx_mock_handle_t hdata, unsigned char value_type, zbx_vector_history_record_t *values);
@@ -52,11 +49,10 @@ void	zbx_vcmock_set_available_mem(size_t size);
 size_t	zbx_vcmock_get_available_mem(void);
 
 void	zbx_vcmock_set_time(zbx_mock_handle_t hitem, const char *key);
-zbx_timespec_t	zbx_vcmock_get_ts();
+zbx_timespec_t	zbx_vcmock_get_ts(void);
 void	zbx_vcmock_set_cache_size(zbx_mock_handle_t hitem, const char *key);
 void	zbx_vcmock_get_request_params(zbx_mock_handle_t handle, zbx_uint64_t *itemid, unsigned char *value_type,
 		int *seconds, int *count, zbx_timespec_t *end);
-void	zbx_vcmock_set_mode(zbx_mock_handle_t hitem, const char *key);
 
 void	zbx_vcmock_get_dc_history(zbx_mock_handle_t handle, zbx_vector_ptr_t *history);
 void	zbx_vcmock_free_dc_history(void *ptr);

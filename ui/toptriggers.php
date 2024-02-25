@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,15 +24,15 @@ require_once dirname(__FILE__).'/include/triggers.inc.php';
 
 $page['title'] = _('100 busiest triggers');
 $page['file'] = 'toptriggers.php';
-$page['scripts'] = ['multiselect.js', 'class.calendar.js', 'gtlc.js'];
+$page['scripts'] = ['class.calendar.js', 'gtlc.js'];
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
 //	VAR					TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
 $fields = [
-	'groupids' =>	[T_ZBX_INT,			O_OPT,	P_SYS,	DB_ID,	null],
-	'hostids' =>	[T_ZBX_INT,			O_OPT,	P_SYS,	DB_ID,	null],
-	'severities' =>	[T_ZBX_INT,			O_OPT,	P_SYS,	null,	null],
+	'groupids' =>	[T_ZBX_INT,			O_OPT,	P_SYS|P_ONLY_ARRAY,	DB_ID,	null],
+	'hostids' =>	[T_ZBX_INT,			O_OPT,	P_SYS|P_ONLY_ARRAY,	DB_ID,	null],
+	'severities' =>	[T_ZBX_INT,			O_OPT,	P_SYS|P_ONLY_ARRAY,	null,	null],
 	'from' =>		[T_ZBX_RANGE_TIME,	O_OPT,	P_SYS,	null,	null],
 	'to' =>			[T_ZBX_RANGE_TIME,	O_OPT,	P_SYS,	null,	null],
 	'filter_rst' =>	[T_ZBX_STR,			O_OPT,	P_SYS,	null,	null],
@@ -41,16 +41,11 @@ $fields = [
 check_fields($fields);
 validateTimeSelectorPeriod(getRequest('from'), getRequest('to'));
 
-$data['config'] = select_config();
-
 /*
  * Filter
  */
 if (hasRequest('filter_set')) {
-	// prepare severity array
-	$severities = hasRequest('severities') ? array_keys(getRequest('severities')) : [];
-
-	CProfile::updateArray('web.toptriggers.filter.severities', $severities, PROFILE_TYPE_STR);
+	CProfile::updateArray('web.toptriggers.filter.severities', getRequest('severities', []), PROFILE_TYPE_STR);
 	CProfile::updateArray('web.toptriggers.filter.groupids', getRequest('groupids', []), PROFILE_TYPE_STR);
 	CProfile::updateArray('web.toptriggers.filter.hostids', getRequest('hostids', []), PROFILE_TYPE_STR);
 }

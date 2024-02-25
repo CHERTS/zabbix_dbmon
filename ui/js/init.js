@@ -1,6 +1,6 @@
 /*
  ** Zabbix
- ** Copyright (C) 2001-2022 Zabbix SIA
+ ** Copyright (C) 2001-2024 Zabbix SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -45,7 +45,9 @@ window.ZABBIX = Object.create({
 	/**
 	 * Logs user out, also, handles side effects before that.
 	 */
-	logout: function() {
+	logout: function(event) {
+		cancelEvent(event);
+
 		var ls = this.namespace('instances.localStorage');
 		ls && ls.destruct();
 
@@ -138,10 +140,6 @@ jQuery(function($) {
 				sections = getMenuPopupMapElementImage(data);
 				break;
 
-			case 'refresh':
-				sections = getMenuPopupRefresh(data, $obj);
-				break;
-
 			case 'trigger':
 				sections = getMenuPopupTrigger(data, $obj);
 				break;
@@ -155,11 +153,15 @@ jQuery(function($) {
 				break;
 
 			case 'item':
-				sections = getMenuPopupItem(data, $obj);
+				sections = getMenuPopupItem(data);
 				break;
 
-			case 'item_prototype':
-				sections = getMenuPopupItemPrototype(data);
+			case 'item_configuration':
+				sections = getMenuPopupItemConfiguration(data);
+				break;
+
+			case 'item_prototype_configuration':
+				sections = getMenuPopupItemPrototypeConfiguration(data);
 				break;
 
 			case 'dropdown':
@@ -168,10 +170,6 @@ jQuery(function($) {
 
 			case 'submenu':
 				sections = getMenuPopupSubmenu(data);
-				break;
-
-			case 'widget_actions':
-				sections = getMenuPopupWidgetActions(data, $obj);
 				break;
 
 			default:
@@ -212,6 +210,7 @@ jQuery(function($) {
 	 */
 	function isServerRequestRequired(type) {
 		switch (type) {
+			case 'dashboard':
 			case 'dropdown':
 			case 'submenu':
 				return false;
@@ -234,8 +233,7 @@ jQuery(function($) {
 				return {
 					of: $obj,
 					my: 'left top',
-					at: 'left top+24',
-					collision: 'none'
+					at: 'left bottom'
 				};
 
 			case 'submenu':
@@ -248,9 +246,22 @@ jQuery(function($) {
 			default:
 				// Should match the default algorithm used in $.menuPopup().
 				return {
-					of: (event.type === 'click' && event.originalEvent.detail) ? event : event.target,
+					of: (['click', 'mouseup', 'mousedown'].includes(event.type) && event.originalEvent.detail)
+						? event
+						: event.target,
 					my: 'left top',
-					at: 'left bottom'
+					at: 'left bottom',
+					using: (pos, data) => {
+						let max_left = data.horizontal === 'left'
+							? document.querySelector('.wrapper').clientWidth
+							: document.querySelector('.wrapper').clientWidth - data.element.width;
+
+						pos.top = Math.max(0, pos.top);
+						pos.left = Math.max(0, Math.min(max_left, pos.left));
+
+						data.element.element[0].style.top = `${pos.top}px`;
+						data.element.element[0].style.left = `${pos.left}px`;
+					}
 				};
 		}
 	}
@@ -304,7 +315,7 @@ jQuery(function($) {
 
 			xhr.done(function(resp) {
 				overlayPreloaderDestroy($preloader.prop('id'));
-				showMenuPopup($obj, resp.data, event, options);
+				showMenuPopup($obj, jQuery.extend({context: data.context}, resp.data), event, options);
 			});
 
 			$(document)
@@ -337,7 +348,8 @@ jQuery(function($) {
 				if (typeof data.values[i].id !== 'undefined') {
 					var item = {
 						'id': data.values[i].id,
-						'name': data.values[i].name
+						'name': data.values[i].name,
+						'query': data.values[i].query
 					};
 
 					if (typeof data.values[i].prefix !== 'undefined') {
@@ -349,10 +361,12 @@ jQuery(function($) {
 
 			$('#' + data.parentId).multiSelect('addData', items);
 		}
-		else if (!$('[name="' + data.parentId + '"]').hasClass('simple-textbox')
-				&& typeof addPopupValues !== 'undefined') {
+		else if (typeof window.addPopupValues !== 'undefined') {
 			// execute function if they exist
-			addPopupValues(data);
+			window.addPopupValues(data);
+		}
+		else if (typeof view.addPopupValues !== 'undefined') {
+			view.addPopupValues(data);
 		}
 		else {
 			$('#' + data.parentId).val(data.values[0].name);
@@ -362,10 +376,10 @@ jQuery(function($) {
 	// redirect buttons
 	$('button[data-url]').click(function() {
 		var button = $(this);
-		var confirmation = button.data('confirmation');
+		var confirmation = button.attr('data-confirmation');
 
 		if (typeof confirmation === 'undefined' || (typeof confirmation !== 'undefined' && confirm(confirmation))) {
-			window.location = button.data('url');
+			window.location = button.attr('data-url');
 		}
 	});
 

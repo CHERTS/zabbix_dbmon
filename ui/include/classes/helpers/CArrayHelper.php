@@ -1,7 +1,7 @@
 <?php
 /*
  ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -169,7 +169,7 @@ class CArrayHelper {
 			}
 		}
 		self::$fields = $fields;
-		uasort($array, ['self', 'compare']);
+		uasort($array, [self::class, 'compare']);
 	}
 
 	/**
@@ -328,5 +328,25 @@ class CArrayHelper {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Check if given array is hash or just normal indexed array.
+	 *
+	 * @param array $value
+	 *
+	 * @return bool  true if value is hash array, false otherwise
+	 */
+	public static function isHash($value): bool
+	{
+		$expectedKey = 0;
+
+		foreach ($value as $key => $val) {
+			if ($key !== $expectedKey++) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

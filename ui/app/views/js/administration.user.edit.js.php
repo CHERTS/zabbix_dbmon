@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,13 +26,14 @@
 
 <script type="text/javascript">
 	jQuery(function($) {
-		const $form = $('form[name="user_form"]');
+		let $form = $('form[name="user_form"]').submit(function() {
+			$(this).trimValues(['#username', '#name', '#surname', '#autologout', '#refresh', '#url']);
+		});
 
-		$form.find('[name="type"]').on('change', () => $form.submit());
-		$form.submit(function() {
-			$(this).trimValues(['#alias', '#name', '#surname', '#password1', '#password2', '#autologout', '#refresh',
-				'#url'
-			]);
+		$('#roleid').change(function() {
+			if ($(this).find('[name=roleid]').length) {
+				$form.submit();
+			}
 		});
 	});
 </script>

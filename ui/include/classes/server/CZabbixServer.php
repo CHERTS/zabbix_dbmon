@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -65,16 +65,23 @@ class CZabbixServer {
 	/**
 	 * Zabbix server host name.
 	 *
-	 * @var string
+	 * @var string|null
 	 */
 	protected $host;
 
 	/**
 	 * Zabbix server port number.
 	 *
-	 * @var string
+	 * @var int|null
 	 */
 	protected $port;
+
+	/**
+	 * Request connect timeout.
+	 *
+	 * @var int
+	 */
+	protected $connect_timeout;
 
 	/**
 	 * Request timeout.
@@ -119,35 +126,47 @@ class CZabbixServer {
 	/**
 	 * Class constructor.
 	 *
-	 * @param string $host
-	 * @param int $port
-	 * @param int $timeout
-	 * @param int $totalBytesLimit
+	 * @param string|null $host
+	 * @param int|null    $port
+	 * @param int         $connect_timeout
+	 * @param int         $timeout
+	 * @param int         $totalBytesLimit
 	 */
-	public function __construct($host, $port, $timeout, $totalBytesLimit) {
+	public function __construct($host, $port, $connect_timeout, $timeout, $totalBytesLimit) {
 		$this->host = $host;
 		$this->port = $port;
+		$this->connect_timeout = $connect_timeout;
 		$this->timeout = $timeout;
 		$this->totalBytesLimit = $totalBytesLimit;
 	}
 
 	/**
-	 * Executes a script on the given host and returns the result.
+	 * Executes a script on the given host or event and returns the result.
 	 *
-	 * @param $scriptId
-	 * @param $hostId
-	 * @param $sid
+	 * @param string      $scriptid
+	 * @param string      $sid
+	 * @param null|string $hostid
+	 * @param null|string $eventid
 	 *
 	 * @return bool|array
 	 */
-	public function executeScript($scriptId, $hostId, $sid) {
-		return $this->request([
+	public function executeScript(string $scriptid, string $sid, ?string $hostid = null, ?string $eventid = null) {
+		$params = [
 			'request' => 'command',
-			'scriptid' => $scriptId,
-			'hostid' => $hostId,
+			'scriptid' => $scriptid,
 			'sid' => $sid,
 			'clientip' => CWebUser::getIp()
-		]);
+		];
+
+		if ($hostid !== null) {
+			$params['hostid'] = $hostid;
+		}
+
+		if ($eventid !== null) {
+			$params['eventid'] = $eventid;
+		}
+
+		return $this->request($params);
 	}
 
 	/**
@@ -179,18 +198,12 @@ class CZabbixServer {
 	/**
 	 * Request server to test item.
 	 *
-	 * @param array  $data    Array of item properties to test.
-	 * @param string $sid     User session ID.
+	 * @param array  $data  Array of item properties to test.
+	 * @param string $sid   User session ID.
 	 *
-	 * @return array
+	 * @return array|bool
 	 */
-	public function testItem(array $data, $sid) {
-		/*
-		 * Timeout for 'item.test' request is increased because since message can be forwarded from server to proxy and
-		 * later to agent, it might take more time due network latency.
-		 */
-		$this->timeout = 60;
-
+	public function testItem(array $data, string $sid) {
 		return $this->request([
 			'request' => 'item.test',
 			'data' => $data,
@@ -242,6 +255,34 @@ class CZabbixServer {
 	public function testMediaType(array $data, $sid) {
 		return $this->request([
 			'request' => 'alert.send',
+			'sid' => $sid,
+			'data' => $data
+		]);
+	}
+
+	/**
+	 * Request server to test report.
+	 *
+	 * @param array  $data                       Array of report test data to send.
+	 * @param string $data['name']               Report name (used to make attachment file name).
+	 * @param string $data['dashboardid']        Dashboard ID.
+	 * @param string $data['userid']             User ID used to access the dashboard.
+	 * @param string $data['period']             Report period. Possible values:
+	 *                                            0 - ZBX_REPORT_PERIOD_DAY;
+	 *                                            1 - ZBX_REPORT_PERIOD_WEEK;
+	 *                                            2 - ZBX_REPORT_PERIOD_MONTH;
+	 *                                            3 - ZBX_REPORT_PERIOD_YEAR.
+	 * @param string $data['now']                Report generation time (seconds since Epoch).
+	 * @param array  $data['params']             Report parameters.
+	 * @param string $data['params']['subject']  Report message subject.
+	 * @param string $data['params']['body']     Report message text.
+	 * @param string $sid                        User session ID.
+	 *
+	 * @return bool|array
+	 */
+	public function testReport(array $data, string $sid) {
+		return $this->request([
+			'request' => 'report.test',
 			'sid' => $sid,
 			'data' => $data
 		]);
@@ -321,6 +362,21 @@ class CZabbixServer {
 	 * @return bool
 	 */
 	public function isRunning($sid) {
+		$active_node = API::getApiService('hanode')->get([
+			'output' => ['address', 'port', 'lastaccess'],
+			'filter' => ['status' => ZBX_NODE_STATUS_ACTIVE],
+			'sortfield' => 'lastaccess',
+			'sortorder' => 'DESC',
+			'limit' => 1
+		], false);
+
+		if ($active_node && $active_node[0]['address'] === $this->host && $active_node[0]['port'] == $this->port) {
+			if ((time() - $active_node[0]['lastaccess']) <
+					timeUnitToSeconds(CSettingsHelper::getGlobal(CSettingsHelper::HA_FAILOVER_DELAY))) {
+				return true;
+			}
+		}
+
 		$response = $this->request([
 			'request' => 'status.get',
 			'type' => 'ping',
@@ -332,6 +388,7 @@ class CZabbixServer {
 		}
 
 		$api_input_rules = ['type' => API_OBJECT, 'fields' => []];
+
 		return CApiInputValidator::validate($api_input_rules, $response, '/', $this->error);
 	}
 
@@ -510,7 +567,7 @@ class CZabbixServer {
 		}
 
 		// An error on the server side occurred.
-		$this->error = $response['info'];
+		$this->error = rtrim($response['info']);
 
 		return false;
 	}
@@ -523,18 +580,19 @@ class CZabbixServer {
 	 */
 	protected function connect() {
 		if (!$this->socket) {
-			if (!$this->host || !$this->port) {
+			if ($this->host === null || $this->port === null) {
+				$this->error = _('Connection to Zabbix server failed. Incorrect configuration.');
 				return false;
 			}
 
-			if (!$socket = @fsockopen($this->host, $this->port, $errorCode, $errorMsg, ZBX_CONNECT_TIMEOUT)) {
+			if (!$socket = @fsockopen($this->host, $this->port, $errorCode, $errorMsg, $this->connect_timeout)) {
 				switch ($errorMsg) {
 					case 'Connection refused':
 						$dErrorMsg = _s("Connection to Zabbix server \"%1\$s\" refused. Possible reasons:\n1. Incorrect server IP/DNS in the \"zabbix.conf.php\";\n2. Security environment (for example, SELinux) is blocking the connection;\n3. Zabbix server daemon not running;\n4. Firewall is blocking TCP connection.\n", $this->host);
 						break;
 
 					case 'No route to host':
-						$dErrorMsg = _s("Zabbix server \"%1\$s\" can not be reached. Possible reasons:\n1. Incorrect server IP/DNS in the \"zabbix.conf.php\";\n2. Incorrect network configuration.\n", $this->host);
+						$dErrorMsg = _s("Zabbix server \"%1\$s\" cannot be reached. Possible reasons:\n1. Incorrect server IP/DNS in the \"zabbix.conf.php\";\n2. Incorrect network configuration.\n", $this->host);
 						break;
 
 					case 'Connection timed out':
@@ -545,7 +603,7 @@ class CZabbixServer {
 						$dErrorMsg = _s("Connection to Zabbix server \"%1\$s\" failed. Possible reasons:\n1. Incorrect server IP/DNS in the \"zabbix.conf.php\";\n2. Incorrect DNS server configuration.\n", $this->host);
 				}
 
-				$this->error = $dErrorMsg.$errorMsg;
+				$this->error = rtrim($dErrorMsg.$errorMsg);
 			}
 
 			$this->socket = $socket;

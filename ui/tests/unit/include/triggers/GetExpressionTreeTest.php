@@ -1,7 +1,7 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,14 +22,14 @@
 use PHPUnit\Framework\TestCase;
 
 class GetExpressionTreeTest extends TestCase {
-	private $trigger_expression;
+	private $expression_parser;
 
 	protected function setUp(): void {
-		$this->trigger_expression = new CTriggerExpression();
+		$this->expression_parser = new CExpressionParser(['usermacros' => true]);
 	}
 
 	protected function tearDown(): void {
-		$this->trigger_expression = null;
+		$this->expression_parser = null;
 	}
 
 	public function provider() {
@@ -102,11 +102,9 @@ class GetExpressionTreeTest extends TestCase {
 	 * @param $expected_parsed
 	 */
 	public function test($expression, $expected_parsed) {
-		if (!$this->trigger_expression->parse($expression)) {
-			$this->fail('CTriggerExpression parse error');
-		}
+		$this->assertSame(CParser::PARSE_SUCCESS, $this->expression_parser->parse($expression));
 
-		$result = getExpressionTree($this->trigger_expression, 0, strlen($this->trigger_expression->expression) - 1);
+		$result = getExpressionTree($this->expression_parser, 0, $this->expression_parser->getLength() - 1);
 
 		if (!is_array($result)) {
 			$this->fail('getExpressionTree did not return an array');

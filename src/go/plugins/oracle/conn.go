@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,12 +28,11 @@ import (
 	"sync"
 	"time"
 
-	"zabbix.com/pkg/uri"
-
+	"git.zabbix.com/ap/plugin-support/log"
+	"git.zabbix.com/ap/plugin-support/uri"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 	"github.com/godror/godror"
 	"github.com/omeid/go-yarn"
-	"zabbix.com/pkg/log"
-	"zabbix.com/pkg/zbxerr"
 )
 
 type OraClient interface {
@@ -69,7 +68,8 @@ func (conn *OraConn) Query(ctx context.Context, query string, args ...interface{
 
 // Query executes a query from queryStorage by its name and returns multiple rows.
 func (conn *OraConn) QueryByName(ctx context.Context, queryName string,
-	args ...interface{}) (rows *sql.Rows, err error) {
+	args ...interface{},
+) (rows *sql.Rows, err error) {
 	if sql, ok := (*conn.queryStorage).Get(queryName + sqlExt); ok {
 		normalizedSQL := strings.TrimRight(strings.TrimSpace(sql), ";")
 
@@ -92,7 +92,8 @@ func (conn *OraConn) QueryRow(ctx context.Context, query string, args ...interfa
 
 // Query executes a query from queryStorage by its name and returns a single row.
 func (conn *OraConn) QueryRowByName(ctx context.Context, queryName string,
-	args ...interface{}) (row *sql.Row, err error) {
+	args ...interface{},
+) (row *sql.Row, err error) {
 	if sql, ok := (*conn.queryStorage).Get(queryName + sqlExt); ok {
 		normalizedSQL := strings.TrimRight(strings.TrimSpace(sql), ";")
 
@@ -116,7 +117,7 @@ func (conn *OraConn) updateAccessTime() {
 type ConnManager struct {
 	sync.Mutex
 	connMutex      sync.Mutex
-	connections    map[uri.URI]*OraConn
+	connections    map[connDetails]*OraConn
 	keepAlive      time.Duration
 	connectTimeout time.Duration
 	callTimeout    time.Duration
@@ -124,13 +125,19 @@ type ConnManager struct {
 	queryStorage   yarn.Yarn
 }
 
+type connDetails struct {
+	uri       uri.URI
+	privilege string
+}
+
 // NewConnManager initializes connManager structure and runs Go Routine that watches for unused connections.
 func NewConnManager(keepAlive, connectTimeout, callTimeout,
-	hkInterval time.Duration, queryStorage yarn.Yarn) *ConnManager {
+	hkInterval time.Duration, queryStorage yarn.Yarn,
+) *ConnManager {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	connMgr := &ConnManager{
-		connections:    make(map[uri.URI]*OraConn),
+		connections:    make(map[connDetails]*OraConn),
 		keepAlive:      keepAlive,
 		connectTimeout: connectTimeout,
 		callTimeout:    callTimeout,
@@ -148,11 +155,11 @@ func (c *ConnManager) closeUnused() {
 	c.connMutex.Lock()
 	defer c.connMutex.Unlock()
 
-	for uri, conn := range c.connections {
+	for cd, conn := range c.connections {
 		if time.Since(conn.lastTimeAccess) > c.keepAlive {
 			conn.client.Close()
-			delete(c.connections, uri)
-			log.Debugf("[%s] Closed unused connection: %s", pluginName, uri.Addr())
+			delete(c.connections, cd)
+			log.Debugf("[%s] Closed unused connection: %s", pluginName, cd.uri.Addr())
 		}
 	}
 }
@@ -185,11 +192,11 @@ func (c *ConnManager) housekeeper(ctx context.Context, interval time.Duration) {
 }
 
 // create creates a new connection with given credentials.
-func (c *ConnManager) create(uri uri.URI) (*OraConn, error) {
+func (c *ConnManager) create(cd connDetails) (*OraConn, error) {
 	c.connMutex.Lock()
 	defer c.connMutex.Unlock()
 
-	if _, ok := c.connections[uri]; ok {
+	if _, ok := c.connections[cd]; ok {
 		// Should never happen.
 		panic("connection already exists")
 	}
@@ -201,22 +208,28 @@ func (c *ConnManager) create(uri uri.URI) (*OraConn, error) {
 			Module:     godror.DriverName,
 		})
 
-	service, err := url.QueryUnescape(uri.GetParam("service"))
+	service, err := url.QueryUnescape(cd.uri.GetParam("service"))
 	if err != nil {
 		return nil, err
 	}
 
 	connectString := fmt.Sprintf(`(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=%s)(PORT=%s))`+
 		`(CONNECT_DATA=(SERVICE_NAME="%s"))(CONNECT_TIMEOUT=%d)(RETRY_COUNT=0))`,
-		uri.Host(), uri.Port(), service, c.connectTimeout/time.Second)
+		cd.uri.Host(), cd.uri.Port(), service, c.connectTimeout/time.Second)
+
+	connParams, err := getConnParams(cd.privilege)
+	if err != nil {
+		return nil, zbxerr.ErrorInvalidParams.Wrap(err)
+	}
 
 	connector := godror.NewConnector(godror.ConnectionParams{
 		StandaloneConnection: true,
 		CommonParams: godror.CommonParams{
-			Username:      uri.User(),
+			Username:      cd.uri.User(),
 			ConnectString: connectString,
-			Password:      godror.NewPassword(uri.Password()),
+			Password:      godror.NewPassword(cd.uri.Password()),
 		},
+		ConnParams: connParams,
 	})
 
 	client := sql.OpenDB(connector)
@@ -226,27 +239,27 @@ func (c *ConnManager) create(uri uri.URI) (*OraConn, error) {
 		return nil, err
 	}
 
-	c.connections[uri] = &OraConn{
+	c.connections[cd] = &OraConn{
 		client:         client,
 		callTimeout:    c.callTimeout,
 		version:        serverVersion,
 		lastTimeAccess: time.Now(),
 		ctx:            ctx,
 		queryStorage:   &c.queryStorage,
-		username:       uri.User(),
+		username:       cd.uri.User(),
 	}
 
-	log.Debugf("[%s] Created new connection: %s", pluginName, uri.Addr())
+	log.Debugf("[%s] Created new connection: %s", pluginName, cd.uri.Addr())
 
-	return c.connections[uri], nil
+	return c.connections[cd], nil
 }
 
 // get returns a connection with given uri if it exists and also updates lastTimeAccess, otherwise returns nil.
-func (c *ConnManager) get(uri uri.URI) *OraConn {
+func (c *ConnManager) get(cd connDetails) *OraConn {
 	c.connMutex.Lock()
 	defer c.connMutex.Unlock()
 
-	if conn, ok := c.connections[uri]; ok {
+	if conn, ok := c.connections[cd]; ok {
 		conn.updateAccessTime()
 		return conn
 	}
@@ -255,14 +268,14 @@ func (c *ConnManager) get(uri uri.URI) *OraConn {
 }
 
 // GetConnection returns an existing connection or creates a new one.
-func (c *ConnManager) GetConnection(uri uri.URI) (conn *OraConn, err error) {
+func (c *ConnManager) GetConnection(cd connDetails) (conn *OraConn, err error) {
 	c.Lock()
 	defer c.Unlock()
 
-	conn = c.get(uri)
+	conn = c.get(cd)
 
 	if conn == nil {
-		conn, err = c.create(uri)
+		conn, err = c.create(cd)
 	}
 
 	if err != nil {
@@ -271,6 +284,24 @@ func (c *ConnManager) GetConnection(uri uri.URI) (conn *OraConn, err error) {
 		} else {
 			err = zbxerr.ErrorConnectionFailed.Wrap(err)
 		}
+	}
+
+	return
+}
+
+func getConnParams(privilege string) (out godror.ConnParams, err error) {
+	switch privilege {
+	case "sysdba":
+		out.IsSysDBA = true
+	case "sysoper":
+		out.IsSysOper = true
+	case "sysasm":
+		out.IsSysASM = true
+	case "":
+	default:
+		err = fmt.Errorf("incorrect privilege, %s", privilege)
+
+		return
 	}
 
 	return

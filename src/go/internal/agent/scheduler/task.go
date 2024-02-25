@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,10 +25,10 @@ import (
 	"reflect"
 	"time"
 
+	"git.zabbix.com/ap/plugin-support/log"
+	"git.zabbix.com/ap/plugin-support/plugin"
 	"zabbix.com/internal/agent"
 	"zabbix.com/pkg/itemutil"
-	"zabbix.com/pkg/log"
-	"zabbix.com/pkg/plugin"
 	"zabbix.com/pkg/zbxlib"
 )
 
@@ -60,6 +60,10 @@ func (t *taskBase) getPlugin() *pluginAgent {
 	return t.plugin
 }
 
+func (t *taskBase) setPlugin(p *pluginAgent) {
+	t.plugin = p
+}
+
 func (t *taskBase) getScheduled() time.Time {
 	return t.scheduled
 }
@@ -89,6 +93,10 @@ func (t *taskBase) isActive() bool {
 
 func (t *taskBase) isRecurring() bool {
 	return t.recurring
+}
+
+func (t *taskBase) isItemKeyEqual(itemkey string) bool {
+	return false
 }
 
 // collectorTask provides access to plugin Collector interaface.
@@ -125,6 +133,10 @@ func (t *collectorTask) reschedule(now time.Time) (err error) {
 
 func (t *collectorTask) getWeight() int {
 	return t.plugin.maxCapacity
+}
+
+func (t *collectorTask) isItemKeyEqual(itemkey string) bool {
+	return false
 }
 
 // exporterTask provides access to plugin Exporter interaface. It's used
@@ -194,7 +206,7 @@ func (t *exporterTask) perform(s Scheduler) {
 
 func (t *exporterTask) reschedule(now time.Time) (err error) {
 	var nextcheck time.Time
-	nextcheck, err = zbxlib.GetNextcheck(t.item.itemid, t.item.delay, now, t.failed, t.client.RefreshUnsupported())
+	nextcheck, _, err = zbxlib.GetNextcheck(t.item.itemid, t.item.delay, now)
 	if err != nil {
 		return
 	}
@@ -220,12 +232,20 @@ func (t *exporterTask) ItemID() (itemid uint64) {
 	return t.item.itemid
 }
 
+func (t *exporterTask) isItemKeyEqual(itemkey string) bool {
+	return t.item.key == itemkey
+}
+
 func (t *exporterTask) Meta() (meta *plugin.Meta) {
 	return &t.meta
 }
 
 func (t *exporterTask) GlobalRegexp() plugin.RegexpMatcher {
 	return t.client.GlobalRegexp()
+}
+
+func (t *exporterTask) Delay() string {
+	return t.item.delay
 }
 
 // directExporterTask provides access to plugin Exporter interaface.
@@ -315,12 +335,20 @@ func (t *directExporterTask) ItemID() (itemid uint64) {
 	return t.item.itemid
 }
 
+func (t *directExporterTask) isItemKeyEqual(itemkey string) bool {
+	return t.item.key == itemkey
+}
+
 func (t *directExporterTask) Meta() (meta *plugin.Meta) {
 	return &t.meta
 }
 
 func (t *directExporterTask) GlobalRegexp() plugin.RegexpMatcher {
 	return t.client.GlobalRegexp()
+}
+
+func (t *directExporterTask) Delay() string {
+	return t.item.delay
 }
 
 // starterTask provides access to plugin Exporter interaface Start() method.
@@ -346,6 +374,10 @@ func (t *starterTask) getWeight() int {
 	return t.plugin.maxCapacity
 }
 
+func (t *starterTask) isItemKeyEqual(itemkey string) bool {
+	return false
+}
+
 // stopperTask provides access to plugin Exporter interaface Start() method.
 type stopperTask struct {
 	taskBase
@@ -367,6 +399,10 @@ func (t *stopperTask) reschedule(now time.Time) (err error) {
 
 func (t *stopperTask) getWeight() int {
 	return t.plugin.maxCapacity
+}
+
+func (t *stopperTask) isItemKeyEqual(itemkey string) bool {
+	return false
 }
 
 // stopperTask provides access to plugin Watcher interaface.
@@ -408,12 +444,20 @@ func (t *watcherTask) ItemID() (itemid uint64) {
 	return 0
 }
 
+func (t *watcherTask) isItemKeyEqual(itemkey string) bool {
+	return false
+}
+
 func (t *watcherTask) Meta() (meta *plugin.Meta) {
 	return nil
 }
 
 func (t *watcherTask) GlobalRegexp() plugin.RegexpMatcher {
 	return t.client.GlobalRegexp()
+}
+
+func (t *watcherTask) Delay() string {
+	return ""
 }
 
 // configuratorTask provides access to plugin Configurator interaface.
@@ -438,4 +482,8 @@ func (t *configuratorTask) reschedule(now time.Time) (err error) {
 
 func (t *configuratorTask) getWeight() int {
 	return t.plugin.maxCapacity
+}
+
+func (t *configuratorTask) isItemKeyEqual(itemkey string) bool {
+	return false
 }

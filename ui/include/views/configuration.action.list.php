@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,31 +21,38 @@
 
 /**
  * @var CView $this
+ * @var array $data
  */
 
-$submenu_source = [
-	EVENT_SOURCE_TRIGGERS => _('Trigger actions'),
-	EVENT_SOURCE_DISCOVERY => _('Discovery actions'),
-	EVENT_SOURCE_AUTOREGISTRATION => _('Autoregistration actions'),
-	EVENT_SOURCE_INTERNAL => _('Internal actions')
-];
+if ($data['eventsource'] == EVENT_SOURCE_SERVICE) {
+	$title = _('Service actions');
+	$submenu = null;
+}
+else {
+	$submenu_source = [
+		EVENT_SOURCE_TRIGGERS => _('Trigger actions'),
+		EVENT_SOURCE_DISCOVERY => _('Discovery actions'),
+		EVENT_SOURCE_AUTOREGISTRATION => _('Autoregistration actions'),
+		EVENT_SOURCE_INTERNAL => _('Internal actions')
+	];
 
-$submenu = [];
-foreach ($submenu_source as $value => $label) {
-	$url = (new CUrl('actionconf.php'))
-		->setArgument('eventsource', $value)
-		->getUrl();
+	$title = array_key_exists($data['eventsource'], $submenu_source) ? $submenu_source[$data['eventsource']] : null;
+	$submenu = [];
 
-	$submenu[$url] = $label;
+	foreach ($submenu_source as $value => $label) {
+		$url = (new CUrl('actionconf.php'))
+			->setArgument('eventsource', $value)
+			->getUrl();
+
+		$submenu[$url] = $label;
+	}
 }
 
+$current_url = (new CUrl('actionconf.php'))->setArgument('eventsource', $data['eventsource']);
+
 $widget = (new CWidget())
-	->setTitle(array_key_exists($data['eventsource'], $submenu_source) ? $submenu_source[$data['eventsource']] : null)
-	->setTitleSubmenu([
-		'main_section' => [
-			'items' => $submenu
-		]
-	])
+	->setTitle($title)
+	->setTitleSubmenu($submenu ? ['main_section' => ['items' => $submenu]] : null)
 	->setControls((new CTag('nav', true,
 		(new CForm('get'))
 			->cleanItems()
@@ -56,7 +63,9 @@ $widget = (new CWidget())
 		))
 			->setAttribute('aria-label', _('Content controls'))
 	)
-	->addItem((new CFilter(new CUrl('actionconf.php')))
+	->addItem((new CFilter())
+		->setResetUrl($current_url)
+		->addVar('eventsource', $data['eventsource'])
 		->setProfile($data['profileIdx'])
 		->setActiveTab($data['active_tab'])
 		->addFilterTab(_('Filter'), [
@@ -75,8 +84,12 @@ $widget = (new CWidget())
 		])
 	);
 
+$current_url->removeArgument('filter_rst');
+
 // create form
-$actionForm = (new CForm())->setName('actionForm');
+$actionForm = (new CForm())
+	->setName('actionForm')
+	->setAction($current_url->getUrl());
 
 // create table
 $actionTable = (new CTableInfo())
@@ -85,15 +98,17 @@ $actionTable = (new CTableInfo())
 			(new CCheckBox('all_items'))
 				->onClick("checkAll('".$actionForm->getName()."', 'all_items', 'g_actionid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		make_sorting_header(_('Name'), 'name', $data['sort'], $data['sortorder'], 'actionconf.php'),
+		make_sorting_header(_('Name'), 'name', $data['sort'], $data['sortorder'], $current_url->getUrl()),
 		_('Conditions'),
 		_('Operations'),
-		make_sorting_header(_('Status'), 'status', $data['sort'], $data['sortorder'], 'actionconf.php')
+		make_sorting_header(_('Status'), 'status', $data['sort'], $data['sortorder'], $current_url->getUrl())
 	]);
 
 if ($this->data['actions']) {
-	$actionConditionStringValues = actionConditionValueToString($this->data['actions'], $this->data['config']);
-	$actionOperationDescriptions = getActionOperationDescriptions($this->data['actions'], ACTION_OPERATION);
+	$actionConditionStringValues = actionConditionValueToString($this->data['actions']);
+	$actionOperationDescriptions = getActionOperationDescriptions($data['eventsource'], $data['actions'],
+		ACTION_OPERATION
+	);
 
 	foreach ($this->data['actions'] as $aIdx => $action) {
 		$conditions = [];
@@ -133,7 +148,10 @@ if ($this->data['actions']) {
 
 		$actionTable->addRow([
 			new CCheckBox('g_actionid['.$action['actionid'].']', $action['actionid']),
-			new CLink($action['name'], 'actionconf.php?form=update&actionid='.$action['actionid']),
+			(new CLink($action['name'], $current_url
+				->setArgument('form', 'update')
+				->setArgument('actionid', $action['actionid'])
+			)),
 			$conditions,
 			$operations,
 			$status
@@ -149,7 +167,7 @@ $actionForm->addItem([
 		'action.massenable' => ['name' => _('Enable'), 'confirm' => _('Enable selected actions?')],
 		'action.massdisable' => ['name' => _('Disable'), 'confirm' => _('Disable selected actions?')],
 		'action.massdelete' => ['name' => _('Delete'), 'confirm' => _('Delete selected actions?')]
-	])
+	], $data['eventsource'])
 ]);
 
 // append form to widget

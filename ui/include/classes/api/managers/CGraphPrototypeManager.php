@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,11 +67,6 @@ class CGraphPrototypeManager {
 		if ($del_discovered_graphids) {
 			CGraphManager::delete($del_discovered_graphids);
 		}
-
-		DB::delete('screens_items', [
-			'resourceid' => $del_graphids,
-			'resourcetype' => SCREEN_RESOURCE_LLD_GRAPH
-		]);
 
 		DB::delete('graphs_items', ['graphid' => $del_graphids]);
 		DB::delete('graphs', ['graphid' => $del_graphids]);

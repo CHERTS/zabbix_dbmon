@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,20 +17,19 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "../common/common.h"
+#include "hardware.h"
+
+#include "../common/zbxsysinfo_common.h"
 #include "sysinfo.h"
 #include <sys/mman.h>
 #include <setjmp.h>
 #include <signal.h>
 #include "zbxalgo.h"
-#include "hardware.h"
 #include "zbxregexp.h"
 #include "log.h"
 
-
 static ZBX_THREAD_LOCAL volatile char sigbus_handler_set;
 static ZBX_THREAD_LOCAL sigjmp_buf sigbus_jmp_buf;
-
 
 static void sigbus_handler(int signal)
 {

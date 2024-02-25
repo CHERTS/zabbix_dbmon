@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -61,13 +61,14 @@ class CElementCollection implements Iterator {
 	/**
 	 * @inheritdoc
 	 */
-	public function rewind() {
+	public function rewind(): void {
 		reset($this->elements);
 	}
 
 	/**
 	 * @inheritdoc
 	 */
+	#[\ReturnTypeWillChange]
 	public function current() {
 		return current($this->elements);
 	}
@@ -75,6 +76,7 @@ class CElementCollection implements Iterator {
 	/**
 	 * @inheritdoc
 	 */
+	#[\ReturnTypeWillChange]
 	public function key() {
 		return key($this->elements);
 	}
@@ -82,14 +84,14 @@ class CElementCollection implements Iterator {
 	/**
 	 * @inheritdoc
 	 */
-	public function next() {
-		return next($this->elements);
+	public function next(): void {
+		next($this->elements);
 	}
 
 	/**
 	 * @inheritdoc
 	 */
-	public function valid() {
+	public function valid(): bool {
 		$key = $this->key();
 
 		return ($key !== null && $key !== false);
@@ -100,7 +102,7 @@ class CElementCollection implements Iterator {
 	 *
 	 * @return integer
 	 */
-	public function count() {
+	public function count(): int {
 		return count($this->elements);
 	}
 
@@ -109,7 +111,7 @@ class CElementCollection implements Iterator {
 	 *
 	 * @return boolean
 	 */
-	public function isEmpty() {
+	public function isEmpty(): bool {
 		return ($this->elements === []);
 	}
 
@@ -120,7 +122,7 @@ class CElementCollection implements Iterator {
 	 *
 	 * @throws Exception
 	 */
-	public function first() {
+	public function first(): CElement {
 		$element = reset($this->elements);
 
 		if ($element === false) {
@@ -137,7 +139,7 @@ class CElementCollection implements Iterator {
 	 *
 	 * @throws Exception
 	 */
-	public function last() {
+	public function last(): CElement {
 		$element = end($this->elements);
 
 		if ($element === false) {
@@ -154,7 +156,7 @@ class CElementCollection implements Iterator {
 	 *
 	 * @return boolean
 	 */
-	public function exists($key) {
+	public function exists($key): bool {
 		return array_key_exists($key, $this->elements);
 	}
 
@@ -163,9 +165,9 @@ class CElementCollection implements Iterator {
 	 *
 	 * @param mixed $key    array key
 	 *
-	 * @return boolean
+	 * @return CElement
 	 */
-	public function get($key) {
+	public function get($key): CElement {
 		return $this->elements[$key];
 	}
 
@@ -175,7 +177,7 @@ class CElementCollection implements Iterator {
 	 * @param mixed $key        array key
 	 * @param mixed $element    element to be set
 	 */
-	public function set($key, $element) {
+	public function set($key, $element): void {
 		$this->elements[$key] = $element;
 	}
 
@@ -306,6 +308,24 @@ class CElementCollection implements Iterator {
 	}
 
 	/**
+	 * Apply element query to every element of a collection.
+	 *
+	 * @param mixed  $type     selector type (method) or selector
+	 * @param string $locator  locator part of selector
+	 *
+	 * @return CElementCollection
+	 */
+	public function query($type, $locator = null) {
+		$values = [];
+
+		foreach ($this->elements as $element) {
+			$values = array_merge($values, $element->query($type, $locator)->all()->asArray());
+		}
+
+		return new CElementCollection($values);
+	}
+
+	/**
 	 * Get elements as array.
 	 *
 	 * @return array
@@ -327,14 +347,19 @@ class CElementCollection implements Iterator {
 	 * Filter element collection based on a specified condition and parameters.
 	 *
 	 * @param CElementFilter $filter    condition to be filtered by
+	 * @param array          $params    filter parameters
 	 *
 	 * @return CElementCollection
 	 * @throws Exception
 	 */
-	public function filter($filter) {
+	public function filter($filter, $params = []) {
+		if (!($filter instanceof CElementFilter)) {
+			$filter = new CElementFilter($filter, $params);
+		}
+
 		$elements = [];
 		foreach ($this->elements as $key => $element) {
-			if ($filter->match($element)) {
+			if ($filter->match($element, $key)) {
 				$elements[$key] = $element;
 			}
 		}

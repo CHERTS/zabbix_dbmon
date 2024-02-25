@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,12 +25,20 @@
 class C42XmlValidator extends CXmlValidatorGeneral {
 
 	/**
+	 * Legacy screen resource types.
+	 */
+	private const SCREEN_RESOURCE_TYPE_GRAPH = 0;
+	private const SCREEN_RESOURCE_TYPE_SIMPLE_GRAPH = 1;
+	private const SCREEN_RESOURCE_TYPE_PLAIN_TEXT = 3;
+	private const SCREEN_RESOURCE_TYPE_CLOCK = 7;
+	private const SCREEN_RESOURCE_TYPE_LLD_SIMPLE_GRAPH = 19;
+	private const SCREEN_RESOURCE_TYPE_LLD_GRAPH = 20;
+
+	/**
 	 * Base validation function.
 	 *
 	 * @param array  $data  Import data.
 	 * @param string $path  XML path (for error reporting).
-	 *
-	 * @throws Exception if $data does not correspond to validation rules.
 	 *
 	 * @return array  Validator does some manipulations for the incoming data. For example, converts empty tags to an
 	 *                array, if desired. Converted array is returned.
@@ -1135,36 +1143,6 @@ class C42XmlValidator extends CXmlValidatorGeneral {
 					]]
 				]]
 			]],
-			'screens' =>				['type' => XML_INDEXED_ARRAY, 'prefix' => 'screen', 'rules' => [
-				'screen' =>					['type' => XML_ARRAY, 'rules' => [
-					'name' =>					['type' => XML_STRING | XML_REQUIRED],
-					'hsize' =>					['type' => XML_STRING | XML_REQUIRED],
-					'vsize' =>					['type' => XML_STRING | XML_REQUIRED],
-					'screen_items' =>			['type' => XML_INDEXED_ARRAY, 'prefix' => 'screen_item', 'rules' => [
-						'screen_item' =>			['type' => XML_ARRAY, 'rules' => [
-							// The tag 'resourcetype' should be validated before the 'resource' because it is used in 'ex_validate' method.
-							'resourcetype' =>			['type' => XML_STRING | XML_REQUIRED],
-							// The tag 'style' should be validated before the 'resource' because it is used in 'ex_validate' method.
-							'style' =>					['type' => XML_STRING | XML_REQUIRED],
-							'resource' =>				['type' => XML_REQUIRED, 'preprocessor' => [$this, 'transformZero2Array'], 'ex_validate' => [$this, 'validateScreenItemResource']],
-							'width' =>					['type' => XML_STRING | XML_REQUIRED],
-							'height' =>					['type' => XML_STRING | XML_REQUIRED],
-							'x' =>						['type' => XML_STRING | XML_REQUIRED],
-							'y' =>						['type' => XML_STRING | XML_REQUIRED],
-							'colspan' =>				['type' => XML_STRING | XML_REQUIRED],
-							'rowspan' =>				['type' => XML_STRING | XML_REQUIRED],
-							'elements' =>				['type' => XML_STRING | XML_REQUIRED],
-							'valign' =>					['type' => XML_STRING | XML_REQUIRED],
-							'halign' =>					['type' => XML_STRING | XML_REQUIRED],
-							'dynamic' =>				['type' => XML_STRING | XML_REQUIRED],
-							'sort_triggers' =>			['type' => XML_STRING | XML_REQUIRED],
-							'url' =>					['type' => XML_STRING | XML_REQUIRED],
-							'application' =>			['type' => XML_STRING | XML_REQUIRED],
-							'max_columns' =>			['type' => XML_STRING | XML_REQUIRED]
-						]]
-					]]
-				]]
-			]],
 			'images' =>					['type' => XML_INDEXED_ARRAY, 'prefix' => 'image', 'rules' => [
 				'image' =>					['type' => XML_ARRAY, 'rules' => [
 					'name' =>					['type' => XML_STRING | XML_REQUIRED],
@@ -1323,15 +1301,14 @@ class C42XmlValidator extends CXmlValidatorGeneral {
 	/**
 	 * Validate date and time format.
 	 *
-	 * @param string $data         Import data.
-	 * @param array  $parent_data  Data's parent array.
-	 * @param string $path         XML path (for error reporting).
+	 * @param string     $data         Import data.
+	 * @param array|null $parent_data  Data's parent array.
+	 * @param string     $path         XML path (for error reporting).
 	 *
-	 * @throws Exception if the date or time is invalid.
-	 *
+	 * @throws Exception If the date or time is invalid.
 	 * @return string
 	 */
-	public function validateDateTime($data, array $parent_data = null, $path) {
+	public function validateDateTime($data, ?array $parent_data, $path) {
 		if (!preg_match('/^20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[01])T(2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]Z$/', $data)) {
 			throw new Exception(_s('Invalid tag "%1$s": %2$s.', $path, _s('"%1$s" is expected', _x('YYYY-MM-DDThh:mm:ssZ', 'XML date and time format'))));
 		}
@@ -1343,8 +1320,6 @@ class C42XmlValidator extends CXmlValidatorGeneral {
 	 * Checking the map element for requirement.
 	 *
 	 * @param array $parent_data  Data's parent array.
-	 *
-	 * @throws Exception if the check is failed.
 	 *
 	 * @return bool
 	 */
@@ -1366,14 +1341,12 @@ class C42XmlValidator extends CXmlValidatorGeneral {
 	 * Validate map elements.
 	 *
 	 * @param array|string $data         Import data.
-	 * @param array        $parent_data  Data's parent array.
+	 * @param array|null   $parent_data  Data's parent array.
 	 * @param string       $path         XML path.
 	 *
-	 * @throws Exception if the map elements are invalid.
-	 *
-	 * @return array|string
+	 * @return mixed
 	 */
-	public function validateMapElements($data, array $parent_data = null, $path) {
+	public function validateMapElements($data, ?array $parent_data, $path) {
 		if (zbx_is_int($parent_data['elementtype'])) {
 			switch ($parent_data['elementtype']) {
 				case SYSMAP_ELEMENT_TYPE_HOST:
@@ -1417,57 +1390,34 @@ class C42XmlValidator extends CXmlValidatorGeneral {
 	 * Validate "screen_item/resource" tag.
 	 *
 	 * @param array|string $data         Import data.
-	 * @param array        $parent_data  Data's parent array.
+	 * @param array|null   $parent_data  Data's parent array.
 	 * @param string       $path         XML path.
 	 *
-	 * @throws Exception if the map element is invalid.
-	 *
-	 * @return array|string
+	 * @return mixed
 	 */
-	public function validateScreenItemResource($data, array $parent_data = null, $path) {
+	public function validateScreenItemResource($data, ?array $parent_data, $path) {
 		if (zbx_is_int($parent_data['resourcetype'])) {
 			switch ($parent_data['resourcetype']) {
-				case SCREEN_RESOURCE_GRAPH:
-				case SCREEN_RESOURCE_LLD_GRAPH:
+				case self::SCREEN_RESOURCE_TYPE_GRAPH:
+				case self::SCREEN_RESOURCE_TYPE_LLD_GRAPH:
 					$rules = ['type' => XML_ARRAY, 'rules' => [
 						'name' =>			['type' => XML_STRING | XML_REQUIRED],
 						'host' =>			['type' => XML_STRING | XML_REQUIRED]
 					]];
 					break;
 
-				case SCREEN_RESOURCE_CLOCK:
+				case self::SCREEN_RESOURCE_TYPE_CLOCK:
 					if ($parent_data['style'] != TIME_TYPE_HOST) {
 						return $data;
 					}
 					// break; is not missing here
 
-				case SCREEN_RESOURCE_SIMPLE_GRAPH:
-				case SCREEN_RESOURCE_LLD_SIMPLE_GRAPH:
-				case SCREEN_RESOURCE_PLAIN_TEXT:
+				case self::SCREEN_RESOURCE_TYPE_SIMPLE_GRAPH:
+				case self::SCREEN_RESOURCE_TYPE_LLD_SIMPLE_GRAPH:
+				case self::SCREEN_RESOURCE_TYPE_PLAIN_TEXT:
 					$rules = ['type' => XML_ARRAY, 'rules' => [
 						'key' =>			['type' => XML_STRING | XML_REQUIRED],
 						'host' =>			['type' => XML_STRING | XML_REQUIRED]
-					]];
-					break;
-
-				case SCREEN_RESOURCE_MAP:
-				case SCREEN_RESOURCE_SCREEN:
-				case SCREEN_RESOURCE_TRIGGER_OVERVIEW:
-				case SCREEN_RESOURCE_DATA_OVERVIEW:
-					$rules = ['type' => XML_ARRAY, 'rules' => [
-						'name' =>			['type' => XML_STRING | XML_REQUIRED]
-					]];
-					break;
-
-				case SCREEN_RESOURCE_HOSTGROUP_TRIGGERS:
-					$rules = ['type' => XML_ARRAY, 'rules' => [
-						'name' =>			['type' => XML_STRING]
-					]];
-					break;
-
-				case SCREEN_RESOURCE_HOST_TRIGGERS:
-					$rules = ['type' => XML_ARRAY, 'rules' => [
-						'host' =>			['type' => XML_STRING]
 					]];
 					break;
 
@@ -1484,15 +1434,13 @@ class C42XmlValidator extends CXmlValidatorGeneral {
 	/**
 	 * Validate "ymin_item_1" tag.
 	 *
-	 * @param string $data         Import data.
-	 * @param array  $parent_data  Data's parent array.
-	 * @param string $path         XML path.
-	 *
-	 * @throws Exception if the element is invalid.
+	 * @param string     $data         Import data.
+	 * @param array|null $parent_data  Data's parent array.
+	 * @param string     $path         XML path.
 	 *
 	 * @return array
 	 */
-	public function validateYMinItem($data, array $parent_data = null, $path) {
+	public function validateYMinItem($data, ?array $parent_data, $path) {
 		if (zbx_is_int($parent_data['ymin_type_1']) && $parent_data['ymin_type_1'] == GRAPH_YAXIS_TYPE_ITEM_VALUE) {
 			$rules = ['type' => XML_ARRAY, 'rules' => [
 				'host' =>	['type' => XML_STRING | XML_REQUIRED],
@@ -1509,15 +1457,13 @@ class C42XmlValidator extends CXmlValidatorGeneral {
 	/**
 	 * Validate "ymax_item_1" tag.
 	 *
-	 * @param string $data         Import data.
-	 * @param array  $parent_data  Data's parent array.
-	 * @param string $path         XML path.
-	 *
-	 * @throws Exception if the element is invalid.
+	 * @param string     $data         Import data.
+	 * @param array|null $parent_data  Data's parent array.
+	 * @param string     $path         XML path.
 	 *
 	 * @return array
 	 */
-	public function validateYMaxItem($data, array $parent_data = null, $path) {
+	public function validateYMaxItem($data, ?array $parent_data, $path) {
 		if (zbx_is_int($parent_data['ymax_type_1']) && $parent_data['ymax_type_1'] == GRAPH_YAXIS_TYPE_ITEM_VALUE) {
 			$rules = ['type' => XML_ARRAY, 'rules' => [
 				'host' =>	['type' => XML_STRING | XML_REQUIRED],
@@ -1536,7 +1482,7 @@ class C42XmlValidator extends CXmlValidatorGeneral {
 	 *
 	 * @param mixed $value
 	 *
-	 * @return mixed  Converted value.
+	 * @return mixed
 	 */
 	public function transformZero2Array($value) {
 		return ($value === '0') ? [] : $value;
@@ -1546,14 +1492,12 @@ class C42XmlValidator extends CXmlValidatorGeneral {
 	 * Validate "posts" tag of http test step.
 	 *
 	 * @param array|string $data         Import data.
-	 * @param array        $parent_data  Data's parent array.
+	 * @param array|null   $parent_data  Data's parent array.
 	 * @param string       $path         XML path.
-	 *
-	 * @throws Exception if the element is invalid.
 	 *
 	 * @return array
 	 */
-	public function validateHttpPosts($data, array $parent_data = null, $path) {
+	public function validateHttpPosts($data, ?array $parent_data, $path) {
 		if (is_array($data)) {
 			/* posts can be an HTTP pair array */
 			$rules = ['type' => XML_INDEXED_ARRAY, 'prefix' => 'post_field', 'rules' => [
@@ -1574,15 +1518,13 @@ class C42XmlValidator extends CXmlValidatorGeneral {
 	/**
 	 * Validate master item.
 	 *
-	 * @param string $data         Import data.
-	 * @param array  $parent_data  Data's parent array.
-	 * @param string $path         XML path.
-	 *
-	 * @throws Exception if the element is invalid.
+	 * @param string     $data         Import data.
+	 * @param array|null $parent_data  Data's parent array.
+	 * @param string     $path         XML path.
 	 *
 	 * @return array
 	 */
-	public function validateMasterItem($data, array $parent_data = null, $path) {
+	public function validateMasterItem($data, ?array $parent_data, $path) {
 		$prefix = substr(strrchr($path, '/'), 1);
 		$rules = ['type' => XML_ARRAY | XML_REQUIRED, 'prefix' => $prefix, 'rules' => ['key' => ['type' => XML_STRING]]];
 

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ int	SYSTEM_SWAP_IN(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	SYSTEM_SWAP_OUT(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	SYSTEM_SWAP_SIZE(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	SYSTEM_USERS_NUM(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	VFS_DIR_GET(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	VFS_FS_DISCOVERY(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	VFS_FS_INODE(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	VFS_FS_SIZE(AGENT_REQUEST *request, AGENT_RESULT *result);
@@ -88,6 +89,8 @@ func resolveMetric(key string) (cfunc unsafe.Pointer) {
 		cfunc = unsafe.Pointer(C.SYSTEM_SWAP_IN)
 	case "system.swap.out":
 		cfunc = unsafe.Pointer(C.SYSTEM_SWAP_OUT)
+	case "vfs.dir.get":
+		cfunc = unsafe.Pointer(C.VFS_DIR_GET)
 	}
 	return
 }

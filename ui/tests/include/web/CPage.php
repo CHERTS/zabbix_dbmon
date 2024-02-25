@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -103,6 +103,14 @@ class CPage {
 				'--disable-dev-shm-usage'
 			]);
 
+			if (defined('PHPUNIT_BROWSER_LOG_DIR')) {
+				$options->addArguments([
+					'--enable-logging',
+					'--log-file='.PHPUNIT_BROWSER_LOG_DIR.'/'.microtime(true).'.log',
+					'--log-level=0'
+				]);
+			}
+
 			$capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
 		}
 
@@ -113,6 +121,7 @@ class CPage {
 		}
 
 		$this->driver = RemoteWebDriver::create('http://'.$phpunit_driver_address.'/wd/hub', $capabilities);
+		$this->driver->setCommandExecutor(new CommandExecutor($this->driver->getCommandExecutor()));
 
 		$this->driver->manage()->window()->setSize(
 				new WebDriverDimension(self::DEFAULT_PAGE_WIDTH, self::DEFAULT_PAGE_HEIGHT)
@@ -128,7 +137,7 @@ class CPage {
 
 		if (self::$cookie !== null) {
 			foreach ($this->driver->manage()->getCookies() as $cookie) {
-				if ($cookie->getName() === 'zbx_sessionid') {
+				if ($cookie->getName() === 'zbx_session') {
 					if ($cookie->getValue() !== self::$cookie['value']) {
 						self::$cookie = null;
 					}
@@ -205,12 +214,20 @@ class CPage {
 			DBexecute('UPDATE sessions SET status=0 WHERE sessionid='.zbx_dbstr($sessionid));
 		}
 
-		$path = parse_url(PHPUNIT_URL, PHP_URL_PATH);
-		if (self::$cookie === null || $sessionid !== self::$cookie['value']) {
+		if (self::$cookie !== null) {
+			$cookie = json_decode(base64_decode(urldecode(self::$cookie['value'])), true);
+		}
+
+		if (self::$cookie === null || $sessionid !== $cookie['sessionid']) {
+			$data = ['sessionid' => $sessionid];
+
+			$config = CDBHelper::getRow('SELECT session_key FROM config WHERE configid=1');
+			$data['sign'] = hash_hmac('sha256', json_encode($data), $config['session_key'], false);
+
+			$path = parse_url(PHPUNIT_URL, PHP_URL_PATH);
 			self::$cookie = [
-				'name' => 'zbx_sessionid',
-				'value' => $sessionid,
-				'domain' => parse_url(PHPUNIT_URL, PHP_URL_HOST),
+				'name' => 'zbx_session',
+				'value' => base64_encode(json_encode($data)),
 				'path' => rtrim(substr($path, 0, strrpos($path, '/')), '/')
 			];
 
@@ -234,7 +251,7 @@ class CPage {
 
 			if (self::$cookie === null) {
 				foreach ($this->driver->manage()->getCookies() as $cookie) {
-					if ($cookie->getName() === 'zbx_sessionid') {
+					if ($cookie->getName() === 'zbx_session') {
 						$session = $cookie->getValue();
 						break;
 					}
@@ -437,9 +454,11 @@ class CPage {
 
 	/**
 	 * Wait until page is ready.
+	 *
+	 * @param integer $timeout    timeout in seconds
 	 */
-	public function waitUntilReady() {
-		return (new CElementQuery(null))->waitUntilReady();
+	public function waitUntilReady($timeout = null) {
+		return (new CElementQuery(null))->waitUntilReady($timeout);
 	}
 
 	/**
@@ -486,7 +505,7 @@ class CPage {
 	 *
 	 * @param array|string $keys   keys to be pressed
 	 */
-	public function keyPress($keys) {
+	public function pressKey($keys) {
 		if (!is_array($keys)) {
 			$keys = [$keys];
 		}
@@ -579,15 +598,27 @@ class CPage {
 	 *
 	 * @param string $alias     Username on login screen
 	 * @param string $password  Password on login screen
-	 * @param string $url		Dirrect link to certain Zabbix page
+	 * @param string $url		Direct link to certain Zabbix page
 	 */
 	public function userLogin($alias, $password, $url = 'index.php') {
+		if (self::$cookie === null) {
+			$this->driver->get(PHPUNIT_URL);
+		}
+
 		$this->logout();
 		$this->open($url);
 		$this->query('id:name')->waitUntilVisible()->one()->fill($alias);
 		$this->query('id:password')->one()->fill($password);
 		$this->query('id:enter')->one()->click();
 		$this->waitUntilReady();
+
+		// Make sure that logged in page is opened.
+		try {
+			$this->query('xpath://aside[@class="sidebar"]//a[text()="User settings"]')->exists();
+		}
+		catch (\Exception $ex) {
+			throw new \Exception('"User settings" menu is not found on page. Probably user is not logged in.');
+		}
 	}
 
 	/**

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ class C20TriggerConverter extends CConverter {
 	/**
 	 * A parser for function macros.
 	 *
-	 * @var CFunctionMacroParser
+	 * @var C10FunctionMacroParser
 	 */
 	protected $function_macro_parser;
 
@@ -46,7 +46,7 @@ class C20TriggerConverter extends CConverter {
 	protected $itemKeyConverter;
 
 	public function __construct() {
-		$this->function_macro_parser = new CFunctionMacroParser();
+		$this->function_macro_parser = new C10FunctionMacroParser();
 		$this->lld_macro_parser = new CLLDMacroParser();
 		$this->itemKeyConverter = new C20ItemKeyConverter();
 	}

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ use Core\CModule,
 require_once dirname(__FILE__).'/CAutoloader.php';
 
 class ZBase {
+
 	const EXEC_MODE_DEFAULT = 'default';
 	const EXEC_MODE_SETUP = 'setup';
 	const EXEC_MODE_API = 'api';
@@ -57,6 +58,13 @@ class ZBase {
 	 * @var CComponentRegistry
 	 */
 	private $component_registry;
+
+	/**
+	 * Application mode.
+	 *
+	 * @var string
+	 */
+	private $mode;
 
 	/**
 	 * @var CModuleManager
@@ -121,14 +129,13 @@ class ZBase {
 		require_once 'include/func.inc.php';
 		require_once 'include/html.inc.php';
 		require_once 'include/perm.inc.php';
-		require_once 'include/menu.inc.php';
 		require_once 'include/audit.inc.php';
 		require_once 'include/js.inc.php';
 		require_once 'include/users.inc.php';
 		require_once 'include/validate.inc.php';
-		require_once 'include/profiles.inc.php';
 		require_once 'include/locales.inc.php';
 		require_once 'include/db.inc.php';
+		require_once 'vendor/autoload.php';
 
 		// page specific includes
 		require_once 'include/actions.inc.php';
@@ -139,16 +146,13 @@ class ZBase {
 		require_once 'include/hostgroups.inc.php';
 		require_once 'include/hosts.inc.php';
 		require_once 'include/httptest.inc.php';
-		require_once 'include/ident.inc.php';
 		require_once 'include/images.inc.php';
 		require_once 'include/items.inc.php';
 		require_once 'include/maintenances.inc.php';
 		require_once 'include/maps.inc.php';
 		require_once 'include/media.inc.php';
-		require_once 'include/services.inc.php';
 		require_once 'include/sounds.inc.php';
 		require_once 'include/triggers.inc.php';
-		require_once 'include/valuemap.inc.php';
 	}
 
 	/**
@@ -156,9 +160,11 @@ class ZBase {
 	 *
 	 * @param string $mode  Application initialization mode.
 	 *
-	 * @throws DBException
+	 * @throws Exception
 	 */
 	public function run($mode) {
+		$this->mode = $mode;
+
 		$this->init();
 
 		$this->setMaintenanceMode();
@@ -177,8 +183,9 @@ class ZBase {
 
 				$this->loadConfigFile();
 				$this->initDB();
+				$this->setServerAddress();
 				$this->authenticateUser();
-				$this->initLocales(CWebUser::$data);
+
 				$this->initMessages();
 				$this->setLayoutModeByUrl();
 				$this->initComponents();
@@ -186,23 +193,40 @@ class ZBase {
 
 				$router = $this->component_registry->get('router');
 				$router->addActions($this->module_manager->getActions());
+
+				$validator = new CNewValidator(['action' => $action_name], ['action' => 'fatal|required|string']);
+				$errors = $validator->getAllErrors();
+
+				if ($errors) {
+					CCookieHelper::set('system-message-details', base64_encode(json_encode(
+						['type' => 'error', 'messages' => $errors]
+					)));
+
+					redirect('zabbix.php?action=system.warning');
+				}
+
 				$router->setAction($action_name);
 
 				$this->component_registry->get('menu.main')
-					->setSelectedByAction($action_name, $_GET,
+					->setSelectedByAction($action_name, $_REQUEST,
+						CViewHelper::loadSidebarMode() != ZBX_SIDEBAR_VIEW_MODE_COMPACT
+					);
+
+				$this->component_registry->get('menu.user')
+					->setSelectedByAction($action_name, $_REQUEST,
 						CViewHelper::loadSidebarMode() != ZBX_SIDEBAR_VIEW_MODE_COMPACT
 					);
 
 				CProfiler::getInstance()->start();
 
 				$this->processRequest($router);
-
 				break;
 
 			case self::EXEC_MODE_API:
 				$this->loadConfigFile();
 				$this->initDB();
-				$this->initLocales(['lang' => 'en_gb']);
+				$this->setServerAddress();
+				$this->initLocales('en_us');
 				break;
 
 			case self::EXEC_MODE_SETUP:
@@ -211,11 +235,41 @@ class ZBase {
 					$this->loadConfigFile();
 					$this->initDB();
 					$this->authenticateUser();
-					$this->initLocales(CWebUser::$data);
+					$this->initComponents();
 				}
-				catch (ConfigFileException $e) {}
+				catch (ConfigFileException $e) {
+					if ($e->getCode() == CConfigFile::CONFIG_VAULT_ERROR) {
+						echo (new CView('general.warning', [
+							'header' => _('Vault connection failed.'),
+							'messages' => [$e->getMessage()],
+							'theme' => ZBX_DEFAULT_THEME
+						]))->getOutput();
+
+						session_write_close();
+						exit;
+					}
+					else {
+						$session = new CCookieSession();
+						$sessionid = $session->extractSessionId() ?: CEncryptHelper::generateKey();
+
+						if (!$session->session_start($sessionid)) {
+							throw new Exception(_('Session initialization error.'));
+						}
+
+						CSessionHelper::set('sessionid', $sessionid);
+					}
+				}
 				break;
 		}
+	}
+
+	/**
+	 * Returns the application mode.
+	 *
+	 * @return string
+	 */
+	public static function getMode(): string {
+		return self::getInstance()->mode;
 	}
 
 	/**
@@ -250,6 +304,7 @@ class ZBase {
 			$this->rootDir.'/include/classes/api/clients',
 			$this->rootDir.'/include/classes/api/wrappers',
 			$this->rootDir.'/include/classes/core',
+			$this->rootDir.'/include/classes/data',
 			$this->rootDir.'/include/classes/mvc',
 			$this->rootDir.'/include/classes/db',
 			$this->rootDir.'/include/classes/debug',
@@ -281,7 +336,6 @@ class ZBase {
 			$this->rootDir.'/include/classes/helpers',
 			$this->rootDir.'/include/classes/helpers/trigger',
 			$this->rootDir.'/include/classes/macros',
-			$this->rootDir.'/include/classes/tree',
 			$this->rootDir.'/include/classes/html',
 			$this->rootDir.'/include/classes/html/pageheader',
 			$this->rootDir.'/include/classes/html/svg',
@@ -364,19 +418,18 @@ class ZBase {
 	protected function initDB() {
 		$error = null;
 		if (!DBconnect($error)) {
+			CDataCacheHelper::clearValues(['db_username', 'db_password']);
+
 			throw new DBException($error);
 		}
 	}
 
 	/**
-	 * Initialize translations.
+	 * Initialize translations, set up translated date and time constants.
 	 *
-	 * @param array  $user_data          Array of user data.
-	 * @param string $user_data['lang']  Language.
+	 * @param string $lang  Locale variant prefix like en_US, ru_RU etc.
 	 */
-	protected function initLocales(array $user_data) {
-		$language = $user_data['lang'];
-
+	public function initLocales(string $language): void {
 		if (!setupLocale($language, $error) && $error !== '') {
 			error($error);
 		}
@@ -388,28 +441,54 @@ class ZBase {
 	 * Set messages received in cookies.
 	 */
 	private function initMessages(): void {
-		foreach (['messageOk', 'messageError'] as $message_type) {
-			if (array_key_exists($message_type, $_COOKIE)) {
-				CSession::setValue($message_type, $_COOKIE[$message_type]);
-				zbx_setcookie($message_type, null, 1);
+		if (CCookieHelper::has('system-message-ok')) {
+			CMessageHelper::setSuccessTitle(CCookieHelper::get('system-message-ok'));
+			CCookieHelper::unset('system-message-ok');
+		}
+		if (CCookieHelper::has('system-message-error')) {
+			CMessageHelper::setErrorTitle(CCookieHelper::get('system-message-error'));
+			CCookieHelper::unset('system-message-error');
+		}
+		if (CCookieHelper::has('system-message-details')) {
+			$details = json_decode(base64_decode(CCookieHelper::get('system-message-details')), true);
+			if ($details['type'] === 'success') {
+				foreach ($details['messages'] as $message) {
+					CMessageHelper::addSuccess($message);
+				}
 			}
+			else {
+				foreach ($details['messages'] as $message) {
+					CMessageHelper::addError($message);
+				}
+			}
+			CCookieHelper::unset('system-message-details');
 		}
 	}
 
 	/**
-	 * Authenticate user.
+	 * Authenticate user, apply some user-specific settings.
+	 *
+	 * @throws Exception
 	 */
-	protected function authenticateUser() {
-		$sessionid = CWebUser::checkAuthentication(CWebUser::getSessionCookie());
+	protected function authenticateUser(): void {
+		$session = new CEncryptedCookieSession();
 
-		if (!$sessionid) {
+		if (!CWebUser::checkAuthentication($session->extractSessionId() ?: '')) {
 			CWebUser::setDefault();
 		}
 
-		// set the authentication token for the API
-		API::getWrapper()->auth = $sessionid;
+		$this->initLocales(CWebUser::$data['lang']);
 
-		// enable debug mode in the API
+		if (!$session->session_start(CWebUser::$data['sessionid'])) {
+			throw new Exception(_('Session initialization error.'));
+		}
+
+		CSessionHelper::set('sessionid', CWebUser::$data['sessionid']);
+
+		// Set the authentication token for the API.
+		API::getWrapper()->auth = CWebUser::$data['sessionid'];
+
+		// Enable debug mode in the API.
 		API::getWrapper()->debug = CWebUser::getDebugMode();
 	}
 
@@ -418,12 +497,16 @@ class ZBase {
 	 *
 	 * @param CRouter $router  CRouter class instance.
 	 */
-	private function processRequest(CRouter $router) {
+	private function processRequest(CRouter $router): void {
 		$action_name = $router->getAction();
 		$action_class = $router->getController();
 
 		try {
-			if (!class_exists($action_class, true)) {
+			if ($action_class === null) {
+				throw new Exception(_('Class not found.'));
+			}
+
+			if (!class_exists($action_class)) {
 				throw new Exception(_s('Class %1$s not found for action %2$s.', $action_class, $action_name));
 			}
 
@@ -469,52 +552,37 @@ class ZBase {
 				'theme' => ZBX_DEFAULT_THEME
 			]))->getOutput();
 
-			exit;
+			session_write_close();
+			exit();
 		}
 	}
 
-	private function processResponseFinal(CRouter $router, CAction $action) {
+	private function processResponseFinal(CRouter $router, CAction $action): void {
 		$response = $action->getResponse();
 
 		// Controller returned redirect to another page?
 		if ($response instanceof CControllerResponseRedirect) {
 			header('Content-Type: text/html; charset=UTF-8');
-			if ($response->getMessageOk() !== null) {
-				CSession::setValue('messageOk', $response->getMessageOk());
-			}
-			if ($response->getMessageError() !== null) {
-				CSession::setValue('messageError', $response->getMessageError());
-			}
-			global $ZBX_MESSAGES;
-			if (isset($ZBX_MESSAGES)) {
-				CSession::setValue('messages', $ZBX_MESSAGES);
-			}
-			if ($response->getFormData() !== null) {
-				CSession::setValue('formData', $response->getFormData());
-			}
 
-			redirect($response->getLocation());
+			filter_messages();
+
+			$response->redirect();
 		}
 		// Controller returned fatal error?
 		elseif ($response instanceof CControllerResponseFatal) {
 			header('Content-Type: text/html; charset=UTF-8');
 
-			global $ZBX_MESSAGES;
-			$messages = (isset($ZBX_MESSAGES) && $ZBX_MESSAGES) ? filter_messages($ZBX_MESSAGES) : [];
-			foreach ($messages as $message) {
-				$response->addMessage($message['message']);
-			}
+			filter_messages();
 
-			$response->addMessage('Controller: '.$router->getAction());
+			CMessageHelper::addError('Controller: '.$router->getAction());
 			ksort($_REQUEST);
 			foreach ($_REQUEST as $key => $value) {
 				if ($key !== 'sid') {
-					$response->addMessage(is_scalar($value) ? $key.': '.$value : $key.': '.gettype($value));
+					CMessageHelper::addError(is_scalar($value) ? $key.': '.$value : $key.': '.gettype($value));
 				}
 			}
-			CSession::setValue('messages', $response->getMessages());
 
-			redirect('zabbix.php?action=system.warning');
+			$response->redirect();
 		}
 		// Action has layout?
 		if ($router->getLayout() !== null) {
@@ -534,7 +602,14 @@ class ZBase {
 				'javascript' => [
 					'files' => []
 				],
-				'web_layout_mode' => ZBX_LAYOUT_NORMAL
+				'stylesheet' => [
+					'files' => []
+				],
+				'web_layout_mode' => ZBX_LAYOUT_NORMAL,
+				'config' => [
+					'server_check_interval' => CSettingsHelper::get(CSettingsHelper::SERVER_CHECK_INTERVAL),
+					'x_frame_options' => CSettingsHelper::get(CSettingsHelper::X_FRAME_OPTIONS)
+				]
 			];
 
 			if ($router->getView() !== null && $response->isViewEnabled()) {
@@ -544,6 +619,9 @@ class ZBase {
 					'main_block' => $view->getOutput(),
 					'javascript' => [
 						'files' => $view->getJsFiles()
+					],
+					'stylesheet' => [
+						'files' => $view->getCssFiles()
 					],
 					'web_layout_mode' => $view->getLayoutMode()
 				]);
@@ -555,11 +633,12 @@ class ZBase {
 			echo (new CView($router->getLayout(), $layout_data))->getOutput();
 		}
 
-		exit;
+		session_write_close();
+		exit();
 	}
 
 	/**
-	 * Set layout to kiosk mode if URL contains 'kiosk' arguments.
+	 * Set layout mode using URL parameters.
 	 */
 	private function setLayoutModeByUrl() {
 		if (hasRequest('kiosk')) {
@@ -575,18 +654,18 @@ class ZBase {
 	 */
 	private function initComponents() {
 		$this->component_registry->register('router', new CRouter());
-		$this->component_registry->register('menu.main', getMainMenu());
-		$this->component_registry->register('menu.user', getUserMenu());
+		$this->component_registry->register('menu.main', CMenuHelper::getMainMenu());
+		$this->component_registry->register('menu.user', CMenuHelper::getUserMenu());
 	}
 
 	/**
-	 * Initialize module manager and load all enabled modules.
+	 * Initialize module manager and load all enabled and allowed modules according to user role settings.
 	 */
 	private function initModuleManager() {
 		$this->module_manager = new CModuleManager($this->rootDir.'/modules');
 
 		$db_modules = API::getApiService('module')->get([
-			'output' => ['id', 'relative_path', 'config'],
+			'output' => ['moduleid', 'id', 'relative_path', 'config'],
 			'filter' => ['status' => MODULE_STATUS_ENABLED],
 			'sortfield' => 'relative_path'
 		], false);
@@ -594,6 +673,10 @@ class ZBase {
 		$modules_missing = [];
 
 		foreach ($db_modules as $db_module) {
+			if (!CWebUser::checkAccess('modules.module.'.$db_module['moduleid'])) {
+				continue;
+			}
+
 			$manifest = $this->module_manager->addModule($db_module['relative_path'], $db_module['id'],
 				$db_module['config']
 			);
@@ -616,5 +699,49 @@ class ZBase {
 		$this->module_manager->initModules();
 
 		array_map('error', $this->module_manager->getErrors());
+	}
+
+	/**
+	 * Check for High availability override to standalone mode, set server to use for system information checks.
+	 *
+	 * @return void
+	 */
+	private function setServerAddress(): void {
+		global $ZBX_SERVER, $ZBX_SERVER_PORT;
+
+		if ($ZBX_SERVER !== null) {
+			$ZBX_SERVER_PORT = $ZBX_SERVER_PORT !== null ? (int) $ZBX_SERVER_PORT : ZBX_SERVER_PORT_DEFAULT;
+
+			return;
+		}
+
+		$ha_nodes = API::getApiService('hanode')->get([
+			'output' => ['address', 'port', 'status'],
+			'sortfield' => 'lastaccess',
+			'sortorder' => 'DESC'
+		], false);
+
+		$active_node = null;
+
+		if (count($ha_nodes) == 1) {
+			$active_node = $ha_nodes[0];
+		}
+		else {
+			foreach ($ha_nodes as $node) {
+				if ($node['status'] == ZBX_NODE_STATUS_ACTIVE) {
+					$active_node = $node;
+					break;
+				}
+			}
+		}
+
+		if ($active_node !== null) {
+			$ZBX_SERVER = $active_node['address'];
+			$ZBX_SERVER_PORT = $active_node['port'];
+		}
+
+		if ($ZBX_SERVER_PORT !== null) {
+			$ZBX_SERVER_PORT = (int) $ZBX_SERVER_PORT;
+		}
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -57,10 +57,23 @@
 			url.setArgument('tls_connect', $('input[name=tls_connect]:checked').val());
 			url.setArgument('tls_psk_identity', $('#tls_psk_identity').val());
 			url.setArgument('tls_psk', $('#tls_psk').val());
+			url.setArgument('psk_edit_mode', $('#psk_edit_mode').val());
 			url.setArgument('tls_issuer', $('#tls_issuer').val());
 			url.setArgument('tls_subject', $('#tls_subject').val());
 			url.setArgument('tls_accept', getTlsAccept());
+			url.setArgument('clone_proxyid', $('#proxyid').val());
 			redirect(url.getUrl(), 'post', 'action');
+		});
+
+		$('#change_psk').click(function() {
+			let input = document.createElement('input');
+
+			input.setAttribute('type', 'hidden');
+			input.setAttribute('name', 'action');
+			input.setAttribute('value', 'proxy.edit');
+			document.forms['proxy-form'].appendChild(input);
+
+			submitFormWithParam('proxy-form', 'psk_edit_mode', '1');
 		});
 
 		// Refresh field visibility on document load.
@@ -68,18 +81,32 @@
 			$('#tls_in_none').prop('checked', true);
 		}
 
+		/*
+		 * Calling 'click' would reverse the property that was just set, and calling a manual 'click' even is just a not
+		 * good idea for checkboxes. For some reason jQuery .trigger('change') doesn't work on checkboxes. The event
+		 * listener in class.tab-indicators.js is not registering a change to it, so this is a workaround. So after the
+		 * property has changed by script, the tab indicator should update.
+		 */
 		if (($('#tls_accept').val() & <?= HOST_ENCRYPTION_PSK ?>) == <?= HOST_ENCRYPTION_PSK ?>) {
 			$('#tls_in_psk').prop('checked', true);
+
+			const event = new Event('change');
+
+			document.querySelector('[name=tls_in_psk]').dispatchEvent(event);
 		}
 
 		if (($('#tls_accept').val() & <?= HOST_ENCRYPTION_CERTIFICATE ?>) == <?= HOST_ENCRYPTION_CERTIFICATE ?>) {
 			$('#tls_in_cert').prop('checked', true);
+
+			const event = new Event('change');
+
+			document.querySelector('[name=tls_in_cert]').dispatchEvent(event);
 		}
 
 		$('input[name=tls_connect]').trigger('change');
 
 		// Trim spaces on submit and depending on checkboxes, create a value for hidden field 'tls_accept'.
-		$('#proxyForm').submit(function() {
+		$('#proxy-form').submit(function() {
 			$(this).trimValues([
 				'#host', '#ip', '#dns', '#port', '#description', '#tls_psk_identity', '#tls_psk', '#tls_issuer',
 				'#tls_subject', '#proxy_address'
@@ -145,20 +172,20 @@
 			// If PSK is selected or checked.
 			if ($('input[name=tls_connect]:checked').val() == <?= HOST_ENCRYPTION_PSK ?>
 					|| $('#tls_in_psk').is(':checked')) {
-				$('#tls_psk, #tls_psk_identity').closest('li').show();
+				$('#tls_psk, #tls_psk_identity, .tls_psk').closest('li').show();
 			}
 			else {
-				$('#tls_psk, #tls_psk_identity').closest('li').hide();
+				$('#tls_psk, #tls_psk_identity, .tls_psk').closest('li').hide();
 			}
 
 			if (($('input[name=tls_connect]:checked').val() == <?= HOST_ENCRYPTION_PSK ?>
 					&& $('input[name=status]:checked').val() == <?= HOST_STATUS_PROXY_PASSIVE ?>)
 					|| ($('#tls_in_psk').is(':checked')
 					&& $('input[name=status]:checked').val() == <?= HOST_STATUS_PROXY_ACTIVE ?>)) {
-				$('#tls_psk, #tls_psk_identity').prop('disabled', false);
+				$('#tls_psk, #tls_psk_identity, #change_psk').prop('disabled', false);
 			}
 			else {
-				$('#tls_psk, #tls_psk_identity').prop('disabled', true);
+				$('#tls_psk, #tls_psk_identity, #change_psk').prop('disabled', true);
 			}
 		}
 
@@ -169,6 +196,10 @@
 		 */
 		function getTlsAccept() {
 			var tls_accept = 0x00;
+
+			if ($('input[name=status]:checked').val() == <?= HOST_STATUS_PROXY_PASSIVE ?>) {
+				return <?= HOST_ENCRYPTION_NONE ?>;
+			}
 
 			if ($('#tls_in_none').is(':checked')) {
 				tls_accept |= <?= HOST_ENCRYPTION_NONE ?>;

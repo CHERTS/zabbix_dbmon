@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,6 +49,7 @@ int	SYSTEM_SW_PACKAGES(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	SYSTEM_SWAP_IN(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	SYSTEM_SWAP_OUT(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	SYSTEM_SWAP_SIZE(AGENT_REQUEST *request, AGENT_RESULT *result);
+int	VFS_DIR_GET(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	VFS_FS_INODE(AGENT_REQUEST *request, AGENT_RESULT *result);
 int	VM_MEMORY_SIZE(AGENT_REQUEST *request, AGENT_RESULT *result);
 */
@@ -62,6 +63,8 @@ func resolveMetric(key string) (cfunc unsafe.Pointer) {
 	switch key {
 	case "system.localtime":
 		cfunc = unsafe.Pointer(C.SYSTEM_LOCALTIME)
+	case "vfs.dir.get":
+		cfunc = unsafe.Pointer(C.VFS_DIR_GET)
 	}
 
 	return

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,8 +24,9 @@
 
 #include "common.h"
 #include "module.h"
+#include "zbxvariant.h"
 
-#include <malloc.h>
+#include <stdlib.h>
 
 const char	*zbx_mock_get_parameter_string(const char *path)
 {
@@ -37,6 +38,8 @@ const char	*zbx_mock_get_parameter_string(const char *path)
 			ZBX_MOCK_SUCCESS != (err = zbx_mock_string(handle, &parameter)))
 	{
 		fail_msg("Cannot read parameter at \"%s\": %s", path, zbx_mock_error_string(err));
+
+		return NULL;
 	}
 
 	return parameter;
@@ -52,6 +55,8 @@ const char	*zbx_mock_get_object_member_string(zbx_mock_handle_t object, const ch
 			ZBX_MOCK_SUCCESS != (err = zbx_mock_string(handle, &member)))
 	{
 		fail_msg("Cannot read object member \"%s\": %s", name, zbx_mock_error_string(err));
+
+		return NULL;
 	}
 
 	return member;
@@ -81,8 +86,6 @@ zbx_mock_handle_t	zbx_mock_get_object_member_handle(zbx_mock_handle_t object, co
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_mock_str_to_token_type                                       *
- *                                                                            *
  * Purpose: converts token type from text format                              *
  *                                                                            *
  ******************************************************************************/
@@ -92,31 +95,25 @@ void	zbx_mock_str_to_token_type(const char *str, int *out)
 		*out = ZBX_TOKEN_OBJECTID;
 	else if (0 == strcmp(str, "ZBX_TOKEN_MACRO"))
 		*out = ZBX_TOKEN_MACRO;
-
 	else if (0 == strcmp(str, "ZBX_TOKEN_LLD_MACRO"))
 		*out = ZBX_TOKEN_LLD_MACRO;
-
 	else if (0 == strcmp(str, "ZBX_TOKEN_USER_MACRO"))
 		*out = ZBX_TOKEN_USER_MACRO;
-
 	else if (0 == strcmp(str, "ZBX_TOKEN_FUNC_MACRO"))
 		*out = ZBX_TOKEN_FUNC_MACRO;
-
 	else if (0 == strcmp(str, "ZBX_TOKEN_SIMPLE_MACRO"))
 		*out = ZBX_TOKEN_SIMPLE_MACRO;
-
 	else if (0 == strcmp(str, "ZBX_TOKEN_REFERENCE"))
 		*out = ZBX_TOKEN_REFERENCE;
-
 	else if (0 == strcmp(str, "ZBX_TOKEN_LLD_FUNC_MACRO"))
 		*out = ZBX_TOKEN_LLD_FUNC_MACRO;
+	else if (0 == strcmp(str, "ZBX_TOKEN_EXPRESSION_MACRO"))
+		*out = ZBX_TOKEN_EXPRESSION_MACRO;
 	else
 		fail_msg("Unknown token type \"%s\"", str);
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_mock_str_to_value_type                                       *
  *                                                                            *
  * Purpose: converts item value type from text format                         *
  *                                                                            *
@@ -144,8 +141,6 @@ unsigned char	zbx_mock_str_to_value_type(const char *str)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_mock_str_to_item_type                                        *
- *                                                                            *
  * Purpose: converts item type from text format                               *
  *                                                                            *
  ******************************************************************************/
@@ -165,9 +160,6 @@ int	zbx_mock_str_to_item_type(const char *str)
 
 	if (0 == strcmp(str, "ITEM_TYPE_ZABBIX_ACTIVE"))
 		return ITEM_TYPE_ZABBIX_ACTIVE;
-
-	if (0 == strcmp(str, "ITEM_TYPE_AGGREGATE"))
-		return ITEM_TYPE_AGGREGATE;
 
 	if (0 == strcmp(str, "ITEM_TYPE_HTTPTEST"))
 		return ITEM_TYPE_HTTPTEST;
@@ -210,8 +202,6 @@ int	zbx_mock_str_to_item_type(const char *str)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_mock_str_to_variant                                          *
- *                                                                            *
  * Purpose: converts variant from text format                                 *
  *                                                                            *
  ******************************************************************************/
@@ -243,6 +233,8 @@ zbx_uint64_t	zbx_mock_get_parameter_uint64(const char *path)
 			ZBX_MOCK_SUCCESS != (err = zbx_mock_uint64(handle, &parameter)))
 	{
 		fail_msg("Cannot read parameter at \"%s\": %s", path, zbx_mock_error_string(err));
+
+		return 0;
 	}
 
 	return parameter;
@@ -258,6 +250,8 @@ zbx_uint64_t	zbx_mock_get_object_member_uint64(zbx_mock_handle_t object, const c
 			ZBX_MOCK_SUCCESS != (err = zbx_mock_uint64(handle, &member)))
 	{
 		fail_msg("Cannot read object member \"%s\": %s", name, zbx_mock_error_string(err));
+
+		return 0;
 	}
 
 	return member;
@@ -273,6 +267,8 @@ double	zbx_mock_get_parameter_float(const char *path)
 			ZBX_MOCK_SUCCESS != (err = zbx_mock_float(handle, &parameter)))
 	{
 		fail_msg("Cannot read parameter at \"%s\": %s", path, zbx_mock_error_string(err));
+
+		return 0;
 	}
 
 	return parameter;
@@ -288,14 +284,32 @@ double	zbx_mock_get_object_member_float(zbx_mock_handle_t object, const char *na
 			ZBX_MOCK_SUCCESS != (err = zbx_mock_float(handle, &member)))
 	{
 		fail_msg("Cannot read object member \"%s\": %s", name, zbx_mock_error_string(err));
+
+		return 0;
 	}
 
 	return member;
 }
 
+int	zbx_mock_get_object_member_int(zbx_mock_handle_t object, const char *name)
+{
+	zbx_mock_error_t	err;
+	zbx_mock_handle_t	handle;
+	int			member;
+
+	if (ZBX_MOCK_SUCCESS != (err = zbx_mock_object_member(object, name, &handle)) ||
+			ZBX_MOCK_SUCCESS != (err = zbx_mock_int(handle, &member)))
+	{
+		fail_msg("Cannot read object member \"%s\": %s", name, zbx_mock_error_string(err));
+
+		return 0;
+	}
+
+	return member;
+}
+
+
 /******************************************************************************
- *                                                                            *
- * Function: zbx_mock_str_to_return_code                                      *
  *                                                                            *
  * Purpose: converts common function return code from text format             *
  *                                                                            *
@@ -337,8 +351,6 @@ int	zbx_mock_str_to_return_code(const char *str)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_mock_str_to_value_type                                       *
  *                                                                            *
  * Purpose: converts item value type from text format                         *
  *                                                                            *

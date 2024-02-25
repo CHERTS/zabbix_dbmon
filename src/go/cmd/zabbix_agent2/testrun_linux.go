@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -42,13 +42,25 @@ func checkMetrics(s scheduler.Scheduler) {
 		`vfs.file.regmatch[/etc/passwd,root]`,
 		`vfs.file.md5sum[/etc/passwd]`,
 		`vfs.file.cksum[/etc/passwd]`,
+		`vfs.file.owner[/etc/passwd]`,
+		`vfs.file.permissions[/etc/passwd]`,
+		`vfs.file.get[/etc/passwd]`,
 		`vfs.dir.size[/var/log]`,
 		`vfs.dir.count[/var/log]`,
+		`vfs.dir.get[/var/log]`,
 		`net.dns[,zabbix.com]`,
 		`net.dns.record[,zabbix.com]`,
 		`net.tcp.dns[,zabbix.com]`,
 		`net.tcp.dns.query[,zabbix.com]`,
 		`net.tcp.port[,80]`,
+		`net.tcp.listen[80]`,
+		`net.tcp.service[ssh,127.0.0.1,22]`,
+		`net.tcp.service.perf[ssh,127.0.0.1,22]`,
+		`net.tcp.socket.count[,80]`,
+		`net.udp.listen[68]`,
+		`net.udp.service[ntp,127.0.0.1,123]`,
+		`net.udp.service.perf[ntp,127.0.0.1,123]`,
+		`net.udp.socket.count[,53]`,
 		`system.users.num`,
 		`log[logfile]`,
 		`log.count[logfile]`,
@@ -57,13 +69,12 @@ func checkMetrics(s scheduler.Scheduler) {
 		`zabbix.stats[127.0.0.1,10051]`,
 		`kernel.maxfiles`,
 		`kernel.maxproc`,
+		`kernel.openfiles`,
 		`vfs.fs.size[/,free]`,
 		`vfs.fs.inode[/,free]`,
 		`vfs.fs.discovery`,
 		`vfs.fs.get`,
 		`vfs.dev.write[sda,operations]`,
-		`net.tcp.listen[80]`,
-		`net.udp.listen[68]`,
 		`net.if.in[lo,bytes]`,
 		`net.if.out[lo,bytes]`,
 		`net.if.total[lo,bytes]`,
@@ -93,10 +104,7 @@ func checkMetrics(s scheduler.Scheduler) {
 		`system.uptime`,
 		`system.boottime`,
 		`sensor[w83781d-i2c-0-2d,temp1]`,
-		`net.tcp.service[ssh,127.0.0.1,22]`,
-		`net.tcp.service.perf[ssh,127.0.0.1,22]`,
-		`net.udp.service[ntp,127.0.0.1,123]`,
-		`net.udp.service.perf[ntp,127.0.0.1,123]`,
+		`modbus.get[tcp://localhost]`,
 		`system.hostname`,
 	}
 

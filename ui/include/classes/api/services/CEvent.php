@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,11 @@
  * Class containing methods for operations with events.
  */
 class CEvent extends CApiService {
+
+	public const ACCESS_RULES = [
+		'get' => ['min_user_type' => USER_TYPE_ZABBIX_USER],
+		'acknowledge' => ['min_user_type' => USER_TYPE_ZABBIX_USER]
+	];
 
 	protected $tableName = 'events';
 	protected $tableAlias = 'e';
@@ -57,7 +62,6 @@ class CEvent extends CApiService {
 	 * @param array $options['hostids']
 	 * @param array $options['groupids']
 	 * @param array $options['eventids']
-	 * @param array $options['applicationids']
 	 * @param array $options['status']
 	 * @param bool  $options['editable']
 	 * @param array $options['count']
@@ -72,7 +76,6 @@ class CEvent extends CApiService {
 			'eventids'					=> null,
 			'groupids'					=> null,
 			'hostids'					=> null,
-			'applicationids'			=> null,
 			'objectids'					=> null,
 
 			'editable'					=> false,
@@ -121,7 +124,8 @@ class CEvent extends CApiService {
 			zbx_value2array($options['value']);
 		}
 
-		if ($options['source'] == EVENT_SOURCE_TRIGGERS && $options['object'] == EVENT_OBJECT_TRIGGER) {
+		if (($options['source'] == EVENT_SOURCE_TRIGGERS && $options['object'] == EVENT_OBJECT_TRIGGER)
+				|| ($options['source'] == EVENT_SOURCE_SERVICE && $options['object'] == EVENT_OBJECT_SERVICE)) {
 			if ($options['value'] === null) {
 				$options['value'] = ($options['problem_time_from'] !== null && $options['problem_time_till'] !== null)
 					? [TRIGGER_VALUE_TRUE]
@@ -282,7 +286,8 @@ class CEvent extends CApiService {
 			}
 		}
 
-		if ($options['source'] == EVENT_SOURCE_TRIGGERS && $options['object'] == EVENT_OBJECT_TRIGGER) {
+		if (($options['source'] == EVENT_SOURCE_TRIGGERS && $options['object'] == EVENT_OBJECT_TRIGGER)
+				|| ($options['source'] == EVENT_SOURCE_SERVICE && $options['object'] == EVENT_OBJECT_SERVICE)) {
 			if ($options['problem_time_from'] !== null && $options['problem_time_till'] !== null) {
 				if ($options['value'][0] == TRIGGER_VALUE_TRUE) {
 					$sqlParts['where'][] =
@@ -322,9 +327,8 @@ class CEvent extends CApiService {
 		}
 
 		// objectids
-		if ($options['objectids'] !== null
-				&& in_array($options['object'], [EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE])) {
-
+		if ($options['objectids'] !== null && in_array($options['object'], [EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM,
+				EVENT_OBJECT_LLDRULE, EVENT_OBJECT_SERVICE])) {
 			zbx_value2array($options['objectids']);
 			$sqlParts['where'][] = dbConditionInt('e.objectid', $options['objectids']);
 
@@ -377,31 +381,10 @@ class CEvent extends CApiService {
 			}
 		}
 
-		// applicationids
-		if ($options['applicationids'] !== null) {
-			zbx_value2array($options['applicationids']);
-
-			// triggers
-			if ($options['object'] == EVENT_OBJECT_TRIGGER) {
-				$sqlParts['from']['f'] = 'functions f';
-				$sqlParts['from']['ia'] = 'items_applications ia';
-				$sqlParts['where']['e-f'] = 'e.objectid=f.triggerid';
-				$sqlParts['where']['f-ia'] = 'f.itemid=ia.itemid';
-				$sqlParts['where']['ia'] = dbConditionInt('ia.applicationid', $options['applicationids']);
-			}
-			// items
-			elseif ($options['object'] == EVENT_OBJECT_ITEM) {
-				$sqlParts['from']['ia'] = 'items_applications ia';
-				$sqlParts['where']['e-ia'] = 'e.objectid=ia.itemid';
-				$sqlParts['where']['ia'] = dbConditionInt('ia.applicationid', $options['applicationids']);
-			}
-			// ignore this filter for lld rules
-		}
-
 		// severities
 		if ($options['severities'] !== null) {
 			// triggers
-			if ($options['object'] == EVENT_OBJECT_TRIGGER) {
+			if ($options['object'] == EVENT_OBJECT_TRIGGER || $options['object'] == EVENT_OBJECT_SERVICE) {
 				zbx_value2array($options['severities']);
 				$sqlParts['where'][] = dbConditionInt('e.severity', $options['severities']);
 			}
@@ -763,11 +746,36 @@ class CEvent extends CApiService {
 		}
 
 		$has_close_action = (($data['action'] & ZBX_PROBLEM_UPDATE_CLOSE) == ZBX_PROBLEM_UPDATE_CLOSE);
+		$has_ack_action = (($data['action'] & ZBX_PROBLEM_UPDATE_ACKNOWLEDGE) == ZBX_PROBLEM_UPDATE_ACKNOWLEDGE);
 		$has_message_action = (($data['action'] & ZBX_PROBLEM_UPDATE_MESSAGE) == ZBX_PROBLEM_UPDATE_MESSAGE);
 		$has_severity_action = (($data['action'] & ZBX_PROBLEM_UPDATE_SEVERITY) == ZBX_PROBLEM_UPDATE_SEVERITY);
+		$has_unack_action = (($data['action'] & ZBX_PROBLEM_UPDATE_UNACKNOWLEDGE) == ZBX_PROBLEM_UPDATE_UNACKNOWLEDGE);
 
-		if (($data['action'] & ZBX_PROBLEM_UPDATE_ACKNOWLEDGE) &&
-				($data['action'] & ZBX_PROBLEM_UPDATE_UNACKNOWLEDGE)) {
+		// Check access rules.
+		if ($has_close_action && !self::checkAccess(CRoleHelper::ACTIONS_CLOSE_PROBLEMS)) {
+			self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.', 'action',
+				_('no permissions to close problems')
+			));
+		}
+		if ($has_message_action && !self::checkAccess(CRoleHelper::ACTIONS_ADD_PROBLEM_COMMENTS)) {
+			self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.', 'action',
+				_('no permissions to add problem comments')
+			));
+		}
+		if ($has_severity_action && !self::checkAccess(CRoleHelper::ACTIONS_CHANGE_SEVERITY)) {
+			self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.', 'action',
+				_('no permissions to change problem severity')
+			));
+		}
+		if (($has_ack_action || $has_unack_action) && !self::checkAccess(CRoleHelper::ACTIONS_ACKNOWLEDGE_PROBLEMS)) {
+			self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.', 'action',
+				$has_ack_action
+					? _('no permissions to acknowledge problems')
+					: _('no permissions to unacknowledge problems')
+			));
+		}
+
+		if ($has_ack_action && $has_unack_action) {
 			self::exception(ZBX_API_ERROR_PARAMETERS, _s('Incorrect value for field "%1$s": %2$s.', 'action',
 				_s('value must be one of %1$s', implode(', ', [ZBX_PROBLEM_UPDATE_ACKNOWLEDGE,
 					ZBX_PROBLEM_UPDATE_UNACKNOWLEDGE
@@ -1025,6 +1033,9 @@ class CEvent extends CApiService {
 				case EVENT_OBJECT_LLDRULE:
 					$api = API::DiscoveryRule();
 					break;
+				case EVENT_OBJECT_SERVICE:
+					$api = API::Service();
+					break;
 			}
 
 			$objects = $api->get([
@@ -1072,7 +1083,7 @@ class CEvent extends CApiService {
 				$acknowledges = DBFetchArrayAssoc(DBselect(self::createSelectQueryFromParts($sqlParts)), 'acknowledgeid');
 
 				// if the user data is requested via extended output or specified fields, join the users table
-				$userFields = ['alias', 'name', 'surname'];
+				$userFields = ['username', 'name', 'surname'];
 				$requestUserData = [];
 				foreach ($userFields as $userField) {
 					if ($this->outputIsRequested($userField, $options['select_acknowledges'])) {

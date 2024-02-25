@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 /**
  * @var CPartial $this
+ * @var array    $data
  */
 
 if ($data['readonly'] && !$data['macros']) {
@@ -30,26 +31,38 @@ else {
 	$table = (new CTable())
 		->setId('tbl_macros')
 		->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_CONTAINER)
-		->setHeader([
-			(new CColHeader(_('Macro')))->setWidth(ZBX_TEXTAREA_MACRO_WIDTH),
-			(new CColHeader(_('Value')))->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH),
-			_('Description'),
-			$data['readonly'] ? null : ''
+		->addClass('host-macros-table')
+		->setColumns([
+			(new CTableColumn(_('Macro')))->addClass('table-col-macro'),
+			(new CTableColumn(_('Value')))->addClass('table-col-value'),
+			(new CTableColumn(_('Description')))->addClass('table-col-description'),
+			$data['readonly'] ? null : (new CTableColumn())->addClass('table-col-action')
 		]);
 
 	foreach ($data['macros'] as $i => $macro) {
-		$macro_input = (new CTextAreaFlexible('macros['.$i.'][macro]', $macro['macro']))
-			->setReadonly($data['readonly'])
-			->addClass('macro')
-			->setWidth(ZBX_TEXTAREA_MACRO_WIDTH)
-			->setAttribute('placeholder', '{$MACRO}');
-		$macro_value = (new CMacroValue($macro['type'], 'macros['.$i.']', null, false))
-			->setReadonly($data['readonly']);
-		$macro_cell = [$macro_input];
+		$macro_value = (new CMacroValue($macro['type'], 'macros['.$i.']', null, false))->setReadonly($data['readonly']);
+
+		$macro_cell = [
+			(new CTextAreaFlexible('macros['.$i.'][macro]', $macro['macro']))
+				->setReadonly($data['readonly'])
+				->addClass('macro')
+				->setWidth(ZBX_TEXTAREA_MACRO_WIDTH)
+				->setAttribute('placeholder', '{$MACRO}')
+				->disableSpellcheck()
+		];
 
 		if (!$data['readonly']) {
 			if (array_key_exists('hostmacroid', $macro)) {
 				$macro_cell[] = new CVar('macros['.$i.'][hostmacroid]', $macro['hostmacroid']);
+			}
+
+			if (array_key_exists('allow_revert', $macro)) {
+				$macro_value->addRevertButton();
+				$macro_value->setRevertButtonVisibility($macro['type'] != ZBX_MACRO_TYPE_SECRET
+					|| array_key_exists('value', $macro)
+				);
+
+				$macro_cell[] = new CVar('macros['.$i.'][allow_revert]', '1');
 			}
 
 			$action_btn = (new CButton('macros['.$i.'][remove]', _('Remove')))
@@ -60,20 +73,15 @@ else {
 			$action_btn = null;
 		}
 
-		if ($macro['type'] == ZBX_MACRO_TYPE_SECRET) {
-			$macro_value->addRevertButton();
-			$macro_value->setRevertButtonVisibility(array_key_exists('value', $macro)
-				&& array_key_exists('hostmacroid', $macro)
-			);
-		}
-
 		if (array_key_exists('value', $macro)) {
 			$macro_value->setAttribute('value', $macro['value']);
 		}
 
 		$table->addRow([
 			(new CCol($macro_cell))->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT),
-			(new CCol($macro_value))->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT),
+			(new CCol($macro_value))
+				->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT)
+				->addClass(ZBX_STYLE_NOWRAP),
 			(new CCol(
 				(new CTextAreaFlexible('macros['.$i.'][description]', $macro['description']))
 					->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH)
@@ -99,4 +107,4 @@ $table->show();
 
 // Initializing input secret and macro value init script separately.
 (new CScriptTag("jQuery('.input-secret').inputSecret();"))->show();
-(new CScriptTag("jQuery('.input-group').macroValue();"))->show();
+(new CScriptTag("jQuery('.macro-input-group').macroValue();"))->show();

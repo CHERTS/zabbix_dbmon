@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,27 +17,22 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
+#include "timer.h"
 
-#include "cfg.h"
-#include "pid.h"
-#include "db.h"
 #include "log.h"
 #include "dbcache.h"
-#include "zbxserver.h"
 #include "daemon.h"
 #include "zbxself.h"
-#include "db.h"
-
-#include "timer.h"
+#include "service_protocol.h"
 
 #define ZBX_TIMER_DELAY		SEC_PER_MIN
 
 #define ZBX_EVENT_BATCH_SIZE	1000
 
-extern unsigned char	process_type, program_type;
-extern int		server_num, process_num;
-extern int		CONFIG_TIMER_FORKS;
+extern ZBX_THREAD_LOCAL unsigned char	process_type;
+extern unsigned char			program_type;
+extern ZBX_THREAD_LOCAL int		server_num, process_num;
+extern int				CONFIG_TIMER_FORKS;
 
 /* addition data for event maintenance calculations to pair with zbx_event_suppress_query_t */
 typedef struct
@@ -48,8 +43,6 @@ typedef struct
 zbx_event_suppress_data_t;
 
 /******************************************************************************
- *                                                                            *
- * Function: log_host_maintenance_update                                      *
  *                                                                            *
  * Purpose: log host maintenance changes                                      *
  *                                                                            *
@@ -82,7 +75,6 @@ static void	log_host_maintenance_update(const zbx_host_maintenance_diff_t* diff)
 	if (0 != (diff->flags & ZBX_FLAG_HOST_MAINTENANCE_UPDATE_MAINTENANCEID) && 0 != diff->maintenanceid)
 		zbx_snprintf_alloc(&msg, &msg_alloc, &msg_offset, "(" ZBX_FS_UI64 ")", diff->maintenanceid);
 
-
 	if (0 != (diff->flags & ZBX_FLAG_HOST_MAINTENANCE_UPDATE_MAINTENANCE_TYPE) && 0 == maintenance_off)
 	{
 		const char	*description[] = {"with data collection", "without data collection"};
@@ -95,8 +87,6 @@ static void	log_host_maintenance_update(const zbx_host_maintenance_diff_t* diff)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: db_update_host_maintenances                                      *
  *                                                                            *
  * Purpose: update host maintenance properties in database                    *
  *                                                                            *
@@ -170,23 +160,60 @@ static void	db_update_host_maintenances(const zbx_vector_ptr_t *updates)
 	zbx_free(sql);
 }
 
+static void     service_send_suppression_data(const zbx_vector_uint64_t *eventids, int suppressed)
+{
+	unsigned char   *data = NULL;
+	size_t          data_alloc = 0, data_offset = 0;
+	int             i;
+
+	for (i = 0; i < eventids->values_num; i++)
+		zbx_service_serialize_id(&data, &data_alloc, &data_offset, eventids->values[i]);
+
+	if (NULL == data)
+		return;
+
+	if (suppressed == 0)
+		zbx_service_flush(ZBX_IPC_SERVICE_SERVICE_EVENTS_UNSUPPRESS, data, (zbx_uint32_t)data_offset);
+	else
+		zbx_service_flush(ZBX_IPC_SERVICE_SERVICE_EVENTS_SUPPRESS, data, (zbx_uint32_t)data_offset);
+	zbx_free(data);
+}
+
+
 /******************************************************************************
- *                                                                            *
- * Function: db_remove_expired_event_suppress_data                            *
  *                                                                            *
  * Purpose: remove expired event_suppress records                             *
  *                                                                            *
  ******************************************************************************/
 static void	db_remove_expired_event_suppress_data(int now)
 {
+	zbx_vector_uint64_t	eventids;
+	DB_ROW			row;
+	DB_RESULT		result;
+
+	zbx_vector_uint64_create(&eventids);
+
+	result = DBselect("select eventid from event_suppress where suppress_until<%d", now);
+
+	while (NULL != (row = DBfetch(result)))
+	{
+		zbx_uint64_t	eventid;
+		ZBX_STR2UINT64(eventid, row[0]);
+
+		zbx_vector_uint64_append(&eventids, eventid);
+	}
+	DBfree_result(result);
+
 	DBbegin();
 	DBexecute("delete from event_suppress where suppress_until<%d", now);
 	DBcommit();
+
+	service_send_suppression_data(&eventids, 0);
+
+	zbx_vector_uint64_destroy(&eventids);
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: event_suppress_data_free                                         *
  *                                                                            *
  * Purpose: free event suppress data structure                                *
  *                                                                            *
@@ -198,8 +225,6 @@ static void	event_suppress_data_free(zbx_event_suppress_data_t *data)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: event_queries_fetch                                              *
  *                                                                            *
  * Purpose: fetch events that need to be queried for maintenance              *
  *                                                                            *
@@ -241,8 +266,6 @@ static void	event_queries_fetch(DB_RESULT result, zbx_vector_ptr_t *event_querie
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: db_get_query_events                                              *
  *                                                                            *
  * Purpose: get open, recently resolved and resolved problems with suppress   *
  *          data from database and prepare event query, event data structures *
@@ -361,8 +384,6 @@ static void	db_get_query_events(zbx_vector_ptr_t *event_queries, zbx_vector_ptr_
 
 /******************************************************************************
  *                                                                            *
- * Function: db_update_event_suppress_data                                    *
- *                                                                            *
  * Purpose: create/update event suppress data to reflect latest maintenance   *
  *          changes in cache                                                  *
  *                                                                            *
@@ -372,11 +393,13 @@ static void	db_get_query_events(zbx_vector_ptr_t *event_queries, zbx_vector_ptr_
 static void	db_update_event_suppress_data(int *suppressed_num)
 {
 	zbx_vector_ptr_t	event_queries, event_data;
+	zbx_vector_uint64_t	s_eventids;
 
 	*suppressed_num = 0;
 
 	zbx_vector_ptr_create(&event_queries);
 	zbx_vector_ptr_create(&event_data);
+	zbx_vector_uint64_create(&s_eventids);
 
 	db_get_query_events(&event_queries, &event_data);
 
@@ -389,7 +412,7 @@ static void	db_update_event_suppress_data(int *suppressed_num)
 		zbx_event_suppress_query_t	*query;
 		zbx_event_suppress_data_t	*data;
 		zbx_vector_uint64_pair_t	del_event_maintenances;
-		zbx_vector_uint64_t		maintenanceids;
+		zbx_vector_uint64_t		maintenanceids, eventids;
 		zbx_uint64_pair_t		pair;
 
 		zbx_vector_uint64_create(&maintenanceids);
@@ -403,7 +426,7 @@ static void	db_update_event_suppress_data(int *suppressed_num)
 			zbx_dc_get_event_maintenances(&event_queries, &maintenanceids);
 
 		zbx_db_insert_prepare(&db_insert, "event_suppress", "event_suppressid", "eventid", "maintenanceid",
-				"suppress_until", NULL);
+				"suppress_until", (char *)NULL);
 		DBbegin_multiple_update(&sql, &sql_alloc, &sql_offset);
 
 		for (i = 0; i < event_queries.values_num; i++)
@@ -484,10 +507,12 @@ static void	db_update_event_suppress_data(int *suppressed_num)
 							(int)query->maintenances.values[k].second);
 
 					(*suppressed_num)++;
+					zbx_vector_uint64_append(&s_eventids, query->eventid);
 				}
 			}
 		}
 
+		zbx_vector_uint64_create(&eventids);
 		for (i = 0; i < del_event_maintenances.values_num; i++)
 		{
 			zbx_snprintf_alloc(&sql, &sql_alloc, &sql_offset,
@@ -496,10 +521,14 @@ static void	db_update_event_suppress_data(int *suppressed_num)
 						" and maintenanceid=" ZBX_FS_UI64 ";\n",
 						del_event_maintenances.values[i].first,
 						del_event_maintenances.values[i].second);
+			zbx_vector_uint64_append(&eventids, del_event_maintenances.values[i].first);
 
 			if (FAIL == DBexecute_overflowed_sql(&sql, &sql_alloc, &sql_offset))
 				goto cleanup;
 		}
+		service_send_suppression_data(&eventids, 0);
+
+		zbx_vector_uint64_destroy(&eventids);
 
 		DBend_multiple_update(&sql, &sql_alloc, &sql_offset);
 
@@ -519,6 +548,8 @@ cleanup:
 
 		zbx_vector_uint64_pair_destroy(&del_event_maintenances);
 		zbx_vector_uint64_destroy(&maintenanceids);
+
+		service_send_suppression_data(&s_eventids, 1);
 	}
 
 	zbx_vector_ptr_clear_ext(&event_data, (zbx_clean_func_t)event_suppress_data_free);
@@ -526,11 +557,11 @@ cleanup:
 
 	zbx_vector_ptr_clear_ext(&event_queries, (zbx_clean_func_t)zbx_event_suppress_query_free);
 	zbx_vector_ptr_destroy(&event_queries);
+
+	zbx_vector_uint64_destroy(&s_eventids);
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: db_update_host_maintenances                                      *
  *                                                                            *
  * Purpose: update host maintenance parameters in cache and database          *
  *                                                                            *
@@ -576,8 +607,6 @@ static int	update_host_maintenances(void)
 
 /******************************************************************************
  *                                                                            *
- * Function: timer_thread                                                     *
- *                                                                            *
  * Purpose: periodically processes maintenance                                *
  *                                                                            *
  ******************************************************************************/
@@ -605,7 +634,7 @@ ZBX_THREAD_ENTRY(timer_thread, args)
 	while (ZBX_IS_RUNNING())
 	{
 		sec = zbx_time();
-		zbx_update_env(sec);
+		zbx_update_env(get_process_type_string(process_type), sec);
 
 		if (1 == process_num)
 		{

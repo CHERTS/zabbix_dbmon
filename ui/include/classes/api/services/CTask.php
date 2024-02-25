@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,11 @@
  * Class containing methods for operations with tasks.
  */
 class CTask extends CApiService {
+
+	public const ACCESS_RULES = [
+		'get' => ['min_user_type' => USER_TYPE_SUPER_ADMIN],
+		'create' => ['min_user_type' => USER_TYPE_SUPER_ADMIN]
+	];
 
 	protected $tableName = 'task';
 	protected $tableAlias = 't';
@@ -59,12 +64,10 @@ class CTask extends CApiService {
 			self::exception(ZBX_API_ERROR_PARAMETERS, $error);
 		}
 
-		$config = select_config();
-
 		$options += [
 			'sortfield' => 'taskid',
 			'sortorder' => ZBX_SORT_DOWN,
-			'limit'		=> $config['search_limit']
+			'limit'		=> CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT)
 		];
 
 		$sql_parts = [

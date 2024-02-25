@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,12 +32,15 @@ class CControllerAuthenticationEdit extends CController {
 	 */
 	protected function checkInput() {
 		$fields = [
-			'form_refresh' =>				'string',
+			'form_refresh' =>				'int32',
 			'ldap_test_user' =>				'string',
 			'ldap_test_password' =>			'string',
 			'change_bind_password' =>		'in 0,1',
 			'db_authentication_type' =>		'string',
 			'authentication_type' =>		'in '.ZBX_AUTH_INTERNAL.','.ZBX_AUTH_LDAP,
+			'http_auth_enabled' =>			'in '.ZBX_AUTH_HTTP_DISABLED.','.ZBX_AUTH_HTTP_ENABLED,
+			'http_login_form' =>			'in '.ZBX_AUTH_FORM_ZABBIX.','.ZBX_AUTH_FORM_HTTP,
+			'http_strip_domains' =>			'db config.http_strip_domains',
 			'http_case_sensitive' =>		'in '.ZBX_AUTH_CASE_INSENSITIVE.','.ZBX_AUTH_CASE_SENSITIVE,
 			'ldap_case_sensitive' =>		'in '.ZBX_AUTH_CASE_INSENSITIVE.','.ZBX_AUTH_CASE_SENSITIVE,
 			'ldap_configured' =>			'in '.ZBX_AUTH_LDAP_DISABLED.','.ZBX_AUTH_LDAP_ENABLED,
@@ -47,9 +50,6 @@ class CControllerAuthenticationEdit extends CController {
 			'ldap_bind_dn' =>				'db config.ldap_bind_dn',
 			'ldap_search_attribute' =>		'db config.ldap_search_attribute',
 			'ldap_bind_password' =>			'db config.ldap_bind_password',
-			'http_auth_enabled' =>			'in '.ZBX_AUTH_HTTP_DISABLED.','.ZBX_AUTH_HTTP_ENABLED,
-			'http_login_form' =>			'in '.ZBX_AUTH_FORM_ZABBIX.','.ZBX_AUTH_FORM_HTTP,
-			'http_strip_domains' =>			'db config.http_strip_domains',
 			'saml_auth_enabled' =>			'in '.ZBX_AUTH_SAML_DISABLED.','.ZBX_AUTH_SAML_ENABLED,
 			'saml_idp_entityid' =>			'db config.saml_idp_entityid',
 			'saml_sso_url' =>				'db config.saml_sso_url',
@@ -64,7 +64,9 @@ class CControllerAuthenticationEdit extends CController {
 			'saml_sign_logout_responses' =>	'in 0,1',
 			'saml_encrypt_nameid' =>		'in 0,1',
 			'saml_encrypt_assertions' =>	'in 0,1',
-			'saml_case_sensitive' =>		'in '.ZBX_AUTH_CASE_INSENSITIVE.','.ZBX_AUTH_CASE_SENSITIVE
+			'saml_case_sensitive' =>		'in '.ZBX_AUTH_CASE_INSENSITIVE.','.ZBX_AUTH_CASE_SENSITIVE,
+			'passwd_min_length' =>			'int32',
+			'passwd_check_rules' =>			'int32|ge 0|le '.(PASSWD_CHECK_CASE | PASSWD_CHECK_DIGITS | PASSWD_CHECK_SPECIAL | PASSWD_CHECK_SIMPLE)
 		];
 
 		$ret = $this->validateInput($fields);
@@ -82,7 +84,7 @@ class CControllerAuthenticationEdit extends CController {
 	 * @return bool
 	 */
 	protected function checkPermissions() {
-		return $this->getUserType() == USER_TYPE_SUPER_ADMIN;
+		return $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_AUTHENTICATION);
 	}
 
 	protected function doAction() {
@@ -90,15 +92,50 @@ class CControllerAuthenticationEdit extends CController {
 		$openssl_status = (new CFrontendSetup())->checkPhpOpenSsl();
 
 		$data = [
-			'action_submit' => 'authentication.update',
-			'action_passw_change' => 'authentication.edit',
 			'ldap_error' => ($ldap_status['result'] == CFrontendSetup::CHECK_OK) ? '' : $ldap_status['error'],
 			'ldap_test_password' => '',
-			'ldap_test_user' => CWebUser::$data['alias'],
+			'ldap_test_user' => CWebUser::$data['username'],
 			'saml_error' => ($openssl_status['result'] == CFrontendSetup::CHECK_OK) ? '' : $openssl_status['error'],
 			'change_bind_password' => 0,
 			'form_refresh' => 0
 		];
+
+		$auth_params = [
+			CAuthenticationHelper::AUTHENTICATION_TYPE,
+			CAuthenticationHelper::HTTP_AUTH_ENABLED,
+			CAuthenticationHelper::HTTP_LOGIN_FORM,
+			CAuthenticationHelper::HTTP_STRIP_DOMAINS,
+			CAuthenticationHelper::HTTP_CASE_SENSITIVE,
+			CAuthenticationHelper::LDAP_CASE_SENSITIVE,
+			CAuthenticationHelper::LDAP_CONFIGURED,
+			CAuthenticationHelper::LDAP_HOST,
+			CAuthenticationHelper::LDAP_PORT,
+			CAuthenticationHelper::LDAP_BASE_DN,
+			CAuthenticationHelper::LDAP_BIND_DN,
+			CAuthenticationHelper::LDAP_SEARCH_ATTRIBUTE,
+			CAuthenticationHelper::LDAP_BIND_PASSWORD,
+			CAuthenticationHelper::SAML_AUTH_ENABLED,
+			CAuthenticationHelper::SAML_IDP_ENTITYID,
+			CAuthenticationHelper::SAML_SSO_URL,
+			CAuthenticationHelper::SAML_SLO_URL,
+			CAuthenticationHelper::SAML_USERNAME_ATTRIBUTE,
+			CAuthenticationHelper::SAML_SP_ENTITYID,
+			CAuthenticationHelper::SAML_NAMEID_FORMAT,
+			CAuthenticationHelper::SAML_SIGN_MESSAGES,
+			CAuthenticationHelper::SAML_SIGN_ASSERTIONS,
+			CAuthenticationHelper::SAML_SIGN_AUTHN_REQUESTS,
+			CAuthenticationHelper::SAML_SIGN_LOGOUT_REQUESTS,
+			CAuthenticationHelper::SAML_SIGN_LOGOUT_RESPONSES,
+			CAuthenticationHelper::SAML_ENCRYPT_NAMEID,
+			CAuthenticationHelper::SAML_ENCRYPT_ASSERTIONS,
+			CAuthenticationHelper::SAML_CASE_SENSITIVE,
+			CAuthenticationHelper::PASSWD_MIN_LENGTH,
+			CAuthenticationHelper::PASSWD_CHECK_RULES
+		];
+		$auth = [];
+		foreach ($auth_params as $param) {
+			$auth[$param] = CAuthenticationHelper::get($param);
+		}
 
 		if ($this->hasInput('form_refresh')) {
 			$data['ldap_bind_password'] = '';
@@ -107,6 +144,9 @@ class CControllerAuthenticationEdit extends CController {
 				'change_bind_password',
 				'db_authentication_type',
 				'authentication_type',
+				'http_auth_enabled',
+				'http_login_form',
+				'http_strip_domains',
 				'http_case_sensitive',
 				'ldap_case_sensitive',
 				'ldap_configured',
@@ -118,9 +158,6 @@ class CControllerAuthenticationEdit extends CController {
 				'ldap_bind_password',
 				'ldap_test_user',
 				'ldap_test_password',
-				'http_auth_enabled',
-				'http_login_form',
-				'http_strip_domains',
 				'saml_auth_enabled',
 				'saml_idp_entityid',
 				'saml_sso_url',
@@ -135,13 +172,15 @@ class CControllerAuthenticationEdit extends CController {
 				'saml_sign_logout_responses',
 				'saml_encrypt_nameid',
 				'saml_encrypt_assertions',
-				'saml_case_sensitive'
+				'saml_case_sensitive',
+				'passwd_min_length',
+				'passwd_check_rules'
 			]);
 
-			$data += select_config();
+			$data += $auth;
 		}
 		else {
-			$data += select_config();
+			$data += $auth;
 			$data['db_authentication_type'] = $data['authentication_type'];
 			$data['change_bind_password'] = ($data['ldap_bind_password'] === '') ? 1 : 0;
 		}

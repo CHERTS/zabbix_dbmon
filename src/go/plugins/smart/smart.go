@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,11 +22,13 @@ package smart
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
-	"zabbix.com/pkg/conf"
-	"zabbix.com/pkg/plugin"
-	"zabbix.com/pkg/zbxerr"
+	"git.zabbix.com/ap/plugin-support/conf"
+	"git.zabbix.com/ap/plugin-support/errs"
+	"git.zabbix.com/ap/plugin-support/plugin"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 )
 
 const (
@@ -42,10 +44,13 @@ const (
 	attributeDiscovery = "smart.attribute.discovery"
 )
 
+var impl Plugin
+
 // Options -
 type Options struct {
-	Timeout int    `conf:"optional,range=1:30"`
-	Path    string `conf:"optional"`
+	plugin.SystemOptions `conf:"optional,name=System"`
+	Timeout              int    `conf:"optional,range=1:30"`
+	Path                 string `conf:"optional"`
 }
 
 // Plugin -
@@ -54,7 +59,19 @@ type Plugin struct {
 	options Options
 }
 
-var impl Plugin
+func init() {
+	err := plugin.RegisterMetrics(
+		&impl, "Smart",
+		"smart.disk.discovery", "Returns JSON array of smart devices.",
+		"smart.disk.get", "Returns JSON data of smart device.",
+		"smart.attribute.discovery", "Returns JSON array of smart device attributes.",
+	)
+	if err != nil {
+		panic(errs.Wrap(err, "failed to register metrics"))
+	}
+}
+
+var cleanRegex = regexp.MustCompile(`^[a-zA-Z0-9 \-_/\\\.]*$`)
 
 // Configure -
 func (p *Plugin) Configure(global *plugin.GlobalOptions, options interface{}) {
@@ -140,6 +157,13 @@ func (p *Plugin) diskDiscovery() (jsonArray []byte, err error) {
 }
 
 func (p *Plugin) diskGet(params []string) ([]byte, error) {
+	for _, v := range params {
+		err := clearString(v)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	switch len(params) {
 	case twoParameters:
 		return p.diskGetSingle(params[firstParameter], params[secondParameter])
@@ -426,10 +450,10 @@ func getTypeByRateAndAttr(rate int, tables []table) string {
 	return ssdType
 }
 
-func init() {
-	plugin.RegisterMetrics(&impl, "Smart",
-		"smart.disk.discovery", "Returns JSON array of smart devices.",
-		"smart.disk.get", "Returns JSON data of smart device.",
-		"smart.attribute.discovery", "Returns JSON array of smart device attributes.",
-	)
+func clearString(str string) error {
+	if !cleanRegex.MatchString(str) {
+		return zbxerr.New(fmt.Sprintf("invalid characters found in parameter '%s'", str))
+	}
+
+	return nil
 }

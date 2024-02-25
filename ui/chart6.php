@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ $fields = [
 	'widget_view' =>	[T_ZBX_INT,			O_OPT, null,	IN('0,1'),	null]
 ];
 if (!check_fields($fields)) {
+	session_write_close();
 	exit();
 }
 validateTimeSelectorPeriod(getRequest('from'), getRequest('to'));

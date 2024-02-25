@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,10 +47,6 @@ echo get_prepared_messages(['with_current_messages' => true]);
 if ($page['type'] == PAGE_TYPE_HTML) {
 	makeServerStatusOutput()->show();
 
-	insertPagePostJs();
-
-	require_once 'include/views/js/common.init.js.php';
-
 	if (in_array($page['type'], [PAGE_TYPE_HTML_BLOCK, PAGE_TYPE_HTML])) {
 		if (!is_null(CWebUser::$data) && isset(CWebUser::$data['debug_mode'])
 				&& CWebUser::$data['debug_mode'] == GROUP_DEBUG_MODE_ENABLED) {
@@ -67,7 +63,12 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 		makePageFooter()->show();
 	}
 
+	insertPagePostJs(true);
+
+	require_once 'include/views/js/common.init.js.php';
+
 	echo '</div></body></html>';
 }
 
-exit;
+session_write_close();
+exit();

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -79,11 +79,11 @@ class makeSqlTest extends CTest {
 					'output' => ['userid'],
 					'filter' => [
 						'userid' => [2],
-						'type' => [0, 1]
+						'roleid' => [3, 4]
 					]
 				],
-				'SELECT userid FROM users WHERE userid=2 AND type IN (0,1)',
-				'SELECT userid FROM users WHERE userid=2 AND type IN (0,1)'
+				'SELECT userid FROM users WHERE userid=2 AND roleid IN (3,4)',
+				'SELECT userid FROM users WHERE userid=2 AND roleid IN (3,4)'
 			]
 		];
 	}

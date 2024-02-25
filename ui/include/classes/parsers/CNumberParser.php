@@ -1,7 +1,7 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,11 @@ class CNumberParser extends CParser {
 	*/
 	private $options = [
 		'with_minus' => true,
-		'with_suffix' => false
+		'with_float' => true,
+		'with_size_suffix' => false,
+		'with_time_suffix' => false,
+		'with_year' => false,
+		'is_binary_size' => true
 	];
 
 	/**
@@ -53,17 +57,34 @@ class CNumberParser extends CParser {
 	 *
 	 * @var string
 	 */
-	private static $suffixes = ZBX_TIME_SUFFIXES.ZBX_BYTE_SUFFIXES;
+	private $suffixes = '';
 
 	/**
 	 * Suffix multiplier table for value calculation.
 	 *
 	 * @var array
 	 */
-	private static $suffix_multipliers = ZBX_BYTE_SUFFIX_MULTIPLIERS + ZBX_TIME_SUFFIX_MULTIPLIERS;
+	private $suffix_multipliers = [];
 
 	public function __construct(array $options = []) {
 		$this->options = array_replace($this->options, array_intersect_key($options, $this->options));
+
+		if ($this->options['with_size_suffix'] && $this->options['with_year']) {
+			throw new Exception('Ambiguous options.');
+		}
+
+		if ($this->options['with_size_suffix']) {
+			$this->suffixes .= ZBX_SIZE_SUFFIXES;
+
+			$this->suffix_multipliers += $this->options['is_binary_size']
+				? ZBX_SIZE_SUFFIX_MULTIPLIERS_BINARY
+				: ZBX_SIZE_SUFFIX_MULTIPLIERS;
+		}
+
+		if ($this->options['with_time_suffix']) {
+			$this->suffixes .= $this->options['with_year'] ? ZBX_TIME_SUFFIXES_WITH_YEAR : ZBX_TIME_SUFFIXES;
+			$this->suffix_multipliers += ZBX_TIME_SUFFIX_MULTIPLIERS;
+		}
 	}
 
 	/**
@@ -84,22 +105,25 @@ class CNumberParser extends CParser {
 
 		$fragment = substr($source, $pos);
 
-		$pattern = $this->options['with_suffix']
-			? '/^'.ZBX_PREG_NUMBER.'(?<suffix>['.self::$suffixes.'])?/'
-			: '/^'.ZBX_PREG_NUMBER.'/';
+		$pattern = $this->options['with_float'] ? ZBX_PREG_NUMBER : ZBX_PREG_INT;
+		$pattern = ($this->options['with_size_suffix'] || $this->options['with_time_suffix'])
+			? '/^'.$pattern.'(?<suffix>['.$this->suffixes.'])?/'
+			: '/^'.$pattern.'/';
 
 		if (!preg_match($pattern, $fragment, $matches)) {
 			return self::PARSE_FAIL;
 		}
 
-		if ($matches['number'][0] === '-' && !$this->options['with_minus']) {
+		$number = $this->options['with_float'] ? $matches['number'] : $matches['int'];
+
+		if ($number[0] === '-' && !$this->options['with_minus']) {
 			return self::PARSE_FAIL;
 		}
 
 		$this->length = strlen($matches[0]);
 		$this->match = $matches[0];
 
-		$this->number = $matches['number'];
+		$this->number = $number;
 		$this->suffix = array_key_exists('suffix', $matches) ? $matches['suffix'] : null;
 
 		return ($pos + $this->length < strlen($source)) ? self::PARSE_SUCCESS_CONT : self::PARSE_SUCCESS;
@@ -114,7 +138,7 @@ class CNumberParser extends CParser {
 		$number = (float) $this->number;
 
 		if ($this->suffix !== null) {
-			$number *= self::$suffix_multipliers[$this->suffix];
+			$number *= $this->suffix_multipliers[$this->suffix];
 		}
 
 		return $number;

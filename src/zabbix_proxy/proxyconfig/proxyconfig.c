@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,50 +17,35 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
-#include "db.h"
+#include "proxyconfig.h"
+
 #include "log.h"
 #include "daemon.h"
 #include "proxy.h"
 #include "zbxself.h"
 
-#include "proxyconfig.h"
-#include "../servercomms.h"
 #include "zbxcrypto.h"
 #include "zbxcompress.h"
-#include "zbxipcservice.h"
+#include "zbxrtc.h"
 
 #define CONFIG_PROXYCONFIG_RETRY	120	/* seconds */
 
-extern unsigned char	process_type, program_type;
-extern int		server_num, process_num;
+extern ZBX_THREAD_LOCAL unsigned char	process_type;
+extern unsigned char			program_type;
+extern ZBX_THREAD_LOCAL int		server_num, process_num;
 
-static void	zbx_proxyconfig_sigusr_handler(int flags)
-{
-	if (ZBX_RTC_CONFIG_CACHE_RELOAD == ZBX_RTC_GET_MSG(flags))
-	{
-		if (0 < zbx_sleep_get_remainder())
-		{
-			zabbix_log(LOG_LEVEL_WARNING, "forced reloading of the configuration cache");
-			zbx_wakeup();
-		}
-		else
-			zabbix_log(LOG_LEVEL_WARNING, "configuration cache reloading is already in progress");
-	}
-}
+extern zbx_vector_ptr_t	zbx_addrs;
+extern char		*CONFIG_HOSTNAME;
+extern char		*CONFIG_SOURCE_IP;
+extern unsigned int	configured_tls_connect_mode;
 
-/******************************************************************************
- *                                                                            *
- * Function: process_configuration_sync                                       *
- *                                                                            *
- ******************************************************************************/
 static void	process_configuration_sync(size_t *data_size)
 {
-	zbx_socket_t	sock;
-	struct		zbx_json_parse jp;
-	char		value[16], *error = NULL, *buffer = NULL;
-	size_t		buffer_size, reserved;
-	struct zbx_json	j;
+	zbx_socket_t		sock;
+	struct	zbx_json_parse	jp, jp_kvs_paths = {0};
+	char			value[16], *error = NULL, *buffer = NULL;
+	size_t			buffer_size, reserved;
+	struct zbx_json		j;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
 
@@ -83,7 +68,8 @@ static void	process_configuration_sync(size_t *data_size)
 
 	update_selfmon_counter(ZBX_PROCESS_STATE_IDLE);
 
-	if (FAIL == connect_to_server(&sock, 600, CONFIG_PROXYCONFIG_RETRY))	/* retry till have a connection */
+	if (FAIL == connect_to_server(&sock,CONFIG_SOURCE_IP, &zbx_addrs, 600, CONFIG_TIMEOUT,
+			configured_tls_connect_mode, CONFIG_PROXYCONFIG_RETRY, LOG_LEVEL_WARNING))	/* retry till have a connection */
 	{
 		update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
 		goto out;
@@ -134,10 +120,14 @@ static void	process_configuration_sync(size_t *data_size)
 	zabbix_log(LOG_LEVEL_WARNING, "received configuration data from server at \"%s\", datalen " ZBX_FS_SIZE_T,
 			sock.peer, (zbx_fs_size_t)*data_size);
 
-	if (SUCCEED == process_proxyconfig(&jp))
+	if (SUCCEED == process_proxyconfig(&jp, &jp_kvs_paths))
 	{
 		DCsync_configuration(ZBX_DBSYNC_UPDATE);
-		DCupdate_hosts_availability();
+
+		if (NULL != jp_kvs_paths.start)
+			DCsync_kvs_paths(&jp_kvs_paths);
+
+		DCupdate_interfaces_availability();
 	}
 error:
 	disconnect_server(&sock);
@@ -151,15 +141,7 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: main_proxyconfig_loop                                            *
- *                                                                            *
  * Purpose: periodically request config data                                  *
- *                                                                            *
- * Parameters:                                                                *
- *                                                                            *
- * Return value:                                                              *
- *                                                                            *
- * Author: Alexander Vladishev                                                *
  *                                                                            *
  * Comments: never returns                                                    *
  *                                                                            *
@@ -168,8 +150,8 @@ ZBX_THREAD_ENTRY(proxyconfig_thread, args)
 {
 	size_t			data_size;
 	double			sec;
-	zbx_ipc_service_t	config_service;
-	char			*error = NULL;
+	zbx_ipc_async_socket_t	rtc;
+	int			sleeptime;
 
 	process_type = ((zbx_thread_args_t *)args)->process_type;
 	server_num = ((zbx_thread_args_t *)args)->server_num;
@@ -178,17 +160,11 @@ ZBX_THREAD_ENTRY(proxyconfig_thread, args)
 	zabbix_log(LOG_LEVEL_INFORMATION, "%s #%d started [%s #%d]", get_program_type_string(program_type),
 			server_num, get_process_type_string(process_type), process_num);
 	update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
-	zbx_set_sigusr_handler(zbx_proxyconfig_sigusr_handler);
 #if defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_init_child();
 #endif
 
-	if (FAIL == zbx_ipc_service_start(&config_service, ZBX_IPC_SERVICE_CONFIG, &error))
-	{
-		zabbix_log(LOG_LEVEL_CRIT, "cannot start configuration syncer service: %s", error);
-		zbx_free(error);
-		exit(EXIT_FAILURE);
-	}
+	zbx_rtc_subscribe(&rtc, process_type, process_num);
 
 	zbx_setproctitle("%s [connecting to the database]", get_process_type_string(process_type));
 
@@ -197,42 +173,51 @@ ZBX_THREAD_ENTRY(proxyconfig_thread, args)
 	zbx_setproctitle("%s [syncing configuration]", get_process_type_string(process_type));
 	DCsync_configuration(ZBX_DBSYNC_INIT);
 
+	zbx_rtc_notify_finished_sync(&rtc, ZBX_RTC_CONFIG_SYNC_NOTIFY, get_process_type_string(process_type));
+
+	sleeptime = (ZBX_PROGRAM_TYPE_PROXY_PASSIVE == program_type ? ZBX_IPC_WAIT_FOREVER : 0);
+
 	while (ZBX_IS_RUNNING())
 	{
+		zbx_uint32_t	rtc_cmd;
+		unsigned char	*rtc_data;
+		int		config_cache_reload = 0;
+
+		while (SUCCEED == zbx_rtc_wait(&rtc, &rtc_cmd, &rtc_data, sleeptime) && 0 != rtc_cmd)
+		{
+			if (ZBX_RTC_CONFIG_CACHE_RELOAD == rtc_cmd)
+				config_cache_reload = 1;
+			else if (ZBX_RTC_SHUTDOWN == rtc_cmd)
+				goto stop;
+
+			sleeptime = 0;
+		}
+
+		sec = zbx_time();
+		zbx_update_env(get_process_type_string(process_type), sec);
+
 		if (ZBX_PROGRAM_TYPE_PROXY_PASSIVE == program_type)
 		{
-			zbx_ipc_client_t	*client;
-			zbx_ipc_message_t	*message;
-
-			update_selfmon_counter(ZBX_PROCESS_STATE_IDLE);
-			zbx_ipc_service_recv(&config_service, 1, &client, &message);
-			update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
-
-			sec = zbx_time();
-			zbx_update_env(sec);
-
-			if (NULL != message)
+			if (0 != config_cache_reload)
 			{
 				zbx_setproctitle("%s [loading configuration]", get_process_type_string(process_type));
 
 				DCsync_configuration(ZBX_DBSYNC_UPDATE);
-				DCupdate_hosts_availability();
+				DCupdate_interfaces_availability();
+
+				zbx_rtc_notify_finished_sync(&rtc, ZBX_RTC_CONFIG_SYNC_NOTIFY,
+						get_process_type_string(process_type));
 
 				zbx_setproctitle("%s [synced config in " ZBX_FS_DBL " sec]",
 						get_process_type_string(process_type), zbx_time() - sec);
-				zbx_ipc_client_send(client, ZBX_IPC_CONFIG_RELOAD_RESPONSE, NULL, 0);
 			}
 
-			zbx_ipc_message_free(message);
-
-			if (NULL != client)
-				zbx_ipc_client_release(client);
-
+			sleeptime = ZBX_IPC_WAIT_FOREVER;
 			continue;
 		}
 
-		sec = zbx_time();
-		zbx_update_env(sec);
+		if (1 == config_cache_reload)
+			zabbix_log(LOG_LEVEL_WARNING, "forced reloading of the configuration cache");
 
 		zbx_setproctitle("%s [loading configuration]", get_process_type_string(process_type));
 
@@ -243,9 +228,9 @@ ZBX_THREAD_ENTRY(proxyconfig_thread, args)
 				get_process_type_string(process_type), (zbx_fs_size_t)data_size, sec,
 				CONFIG_PROXYCONFIG_FREQUENCY);
 
-		zbx_sleep_loop(CONFIG_PROXYCONFIG_FREQUENCY);
+		sleeptime = CONFIG_PROXYCONFIG_FREQUENCY;
 	}
-
+stop:
 	zbx_setproctitle("%s #%d [terminated]", get_process_type_string(process_type), process_num);
 
 	while (1)

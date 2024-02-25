@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,11 +29,15 @@ $widget = (new CWidget())->setTitle(_('Actions'));
 
 // create form
 $actionForm = (new CForm())
-	->setId('action.edit')
+	->addItem((new CVar('form_refresh', $data['form_refresh'] + 1))->removeId())
+	->setId('action-form')
 	->setName('action.edit')
+	->setAction((new CUrl('actionconf.php'))
+		->setArgument('eventsource', $data['eventsource'])
+		->getUrl()
+	)
 	->setAttribute('aria-labelledby', ZBX_STYLE_PAGE_TITLE)
-	->addVar('form', $data['form'])
-	->addVar('eventsource', $data['eventsource']);
+	->addVar('form', $data['form']);
 
 if ($data['actionid']) {
 	$actionForm->addVar('actionid', $data['actionid']);
@@ -58,7 +62,7 @@ $condition_table = (new CTable(_('No conditions defined.')))
 $i = 0;
 
 if ($data['action']['filter']['conditions']) {
-	$actionConditionStringValues = actionConditionValueToString([$data['action']], $data['config']);
+	$actionConditionStringValues = actionConditionValueToString([$data['action']]);
 
 	foreach ($data['action']['filter']['conditions'] as $cIdx => $condition) {
 		if (!isset($condition['conditiontype'])) {
@@ -105,33 +109,43 @@ if ($data['action']['filter']['conditions']) {
 	}
 }
 
-$formula = (new CTextBox('formula', $data['action']['filter']['formula']))
+$formula = (new CTextBox('formula', $data['action']['filter']['formula'], false,
+		DB::getFieldLength('actions', 'formula')
+	))
 	->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 	->setId('formula')
-	->setAttribute('placeholder', 'A or (B and C) &hellip;');
+	->setAttribute('placeholder', 'A or (B and C) ...');
 
 $action_tab->addRow(new CLabel(_('Type of calculation'), 'label-evaltype'), [
-	(new CSelect('evaltype'))
-		->setId('evaltype')
-		->setFocusableElementId('label-evaltype')
-		->setValue($data['action']['filter']['evaltype'])
-		->addOptions(CSelect::createOptionsFromArray([
-			CONDITION_EVAL_TYPE_AND_OR => _('And/Or'),
-			CONDITION_EVAL_TYPE_AND => _('And'),
-			CONDITION_EVAL_TYPE_OR => _('Or'),
-			CONDITION_EVAL_TYPE_EXPRESSION => _('Custom expression')
-		])),
-	(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-	(new CSpan())->setId('conditionLabel'),
-	$formula
+	(new CDiv(
+		(new CSelect('evaltype'))
+			->setId('evaltype')
+			->setFocusableElementId('label-evaltype')
+			->setValue($data['action']['filter']['evaltype'])
+			->addOptions(CSelect::createOptionsFromArray([
+				CONDITION_EVAL_TYPE_AND_OR => _('And/Or'),
+				CONDITION_EVAL_TYPE_AND => _('And'),
+				CONDITION_EVAL_TYPE_OR => _('Or'),
+				CONDITION_EVAL_TYPE_EXPRESSION => _('Custom expression')
+			]))
+			->addClass(ZBX_STYLE_FORM_INPUT_MARGIN)
+	))->addClass(ZBX_STYLE_CELL),
+	(new CDiv([
+		(new CSpan())->setId('conditionLabel'),
+		$formula
+	]))
+		->addClass(ZBX_STYLE_CELL)
+		->addClass(ZBX_STYLE_CELL_EXPRESSION)
 ]);
 
 $condition_table->addRow([
 	(new CSimpleButton(_('Add')))
-		->onClick('return PopUp("popup.condition.actions",'.json_encode([
-			'type' => ZBX_POPUP_CONDITION_TYPE_ACTION,
-			'source' => $data['eventsource']
-		]).', null, this);')
+		->onClick(
+			'return PopUp("popup.condition.actions", '.json_encode([
+				'type' => ZBX_POPUP_CONDITION_TYPE_ACTION,
+				'source' => $data['eventsource']
+			]).', {dialogue_class: "modal-popup-medium"});'
+		)
 		->addClass(ZBX_STYLE_BTN_LINK)
 ]);
 
@@ -148,7 +162,7 @@ $action_tab->addRow(_('Enabled'),
 // Operations tab.
 $operation_tab = new CFormList();
 
-if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVENT_SOURCE_INTERNAL) {
+if (in_array($data['eventsource'], [EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_INTERNAL, EVENT_SOURCE_SERVICE])) {
 	$operation_tab->addRow((new CLabel(_('Default operation step duration'), 'esc_period'))->setAsteriskMark(),
 		(new CTextBox('esc_period', $data['action']['esc_period']))
 			->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
@@ -156,16 +170,12 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVE
 	);
 }
 
-if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS) {
-	$operation_tab->addRow(_('Pause operations for suppressed problems'),
-		(new CCheckBox('pause_suppressed', ACTION_PAUSE_SUPPRESSED_TRUE))
-			->setChecked($data['action']['pause_suppressed'] == ACTION_PAUSE_SUPPRESSED_TRUE)
-	);
-}
-
 // create operation table
-$operations_table = (new CTable())->setAttribute('style', 'width: 100%;');
-if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVENT_SOURCE_INTERNAL) {
+$operations_table = (new CTable())
+	->setId('op-table')
+	->setAttribute('style', 'width: 100%;');
+
+if (in_array($data['eventsource'], [EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_INTERNAL, EVENT_SOURCE_SERVICE])) {
 	$operations_table->setHeader([_('Steps'), _('Details'), _('Start in'), _('Duration'), _('Action')]);
 	$delays = count_operations_delay($data['action']['operations'], $data['action']['esc_period']);
 }
@@ -174,9 +184,7 @@ else {
 }
 
 if ($data['action']['operations']) {
-	$actionOperationDescriptions = getActionOperationDescriptions([$data['action']], ACTION_OPERATION);
-
-	$action_operation_hints = getActionOperationHints($data['action']['operations']);
+	$actionOperationDescriptions = getActionOperationDescriptions($data['eventsource'], [$data['action']], ACTION_OPERATION);
 
 	$simple_interval_parser = new CSimpleIntervalParser();
 
@@ -187,31 +195,15 @@ if ($data['action']['operations']) {
 
 		if (array_key_exists('opcommand', $operation)) {
 			$operation['opcommand'] += [
-				'type' => (string) ZBX_SCRIPT_TYPE_CUSTOM_SCRIPT,
-				'scriptid' => '0',
-				'execute_on' => (string) ZBX_SCRIPT_EXECUTE_ON_AGENT,
-				'port' => '',
-				'authtype' => (string) ITEM_AUTHTYPE_PASSWORD,
-				'username' => '',
-				'password' => '',
-				'publickey' => '',
-				'privatekey' => '',
-				'command' => ''
+				'scriptid' => '0'
 			];
 		}
 
 		if (!isset($operation['opconditions'])) {
 			$operation['opconditions'] = [];
 		}
-		if (!isset($operation['mediatypeid'])) {
-			$operation['mediatypeid'] = 0;
-		}
 
 		$details = new CSpan($actionOperationDescriptions[0][$operationid]);
-
-		if (array_key_exists($operationid, $action_operation_hints) && $action_operation_hints[$operationid]) {
-			$details->setHint($action_operation_hints[$operationid]);
-		}
 
 		$operation_for_popup = array_merge($operation, ['id' => $operationid]);
 		foreach (['opcommand_grp' => 'groupid', 'opcommand_hst' => 'hostid'] as $var => $field) {
@@ -220,7 +212,7 @@ if ($data['action']['operations']) {
 			}
 		}
 
-		if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVENT_SOURCE_INTERNAL) {
+		if (in_array($data['eventsource'], [EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_INTERNAL, EVENT_SOURCE_SERVICE])) {
 			$esc_steps_txt = null;
 			$esc_period_txt = null;
 			$esc_delay_txt = null;
@@ -322,16 +314,18 @@ $operation_tab->addRow(_('Operations'),
 		->setAttribute('style', 'min-width: '.ZBX_TEXTAREA_BIG_WIDTH.'px;')
 );
 
-// Recovery operation tab.
-if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVENT_SOURCE_INTERNAL) {
+// Recovery operations.
+if (in_array($data['eventsource'], [EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_INTERNAL, EVENT_SOURCE_SERVICE])) {
 	// Create operation table.
-	$operations_table = (new CTable())->setAttribute('style', 'width: 100%;');
+	$operations_table = (new CTable())
+		->setId('rec-table')
+		->setAttribute('style', 'width: 100%;');
 	$operations_table->setHeader([_('Details'), _('Action')]);
 
 	if ($data['action']['recovery_operations']) {
-		$actionOperationDescriptions = getActionOperationDescriptions([$data['action']], ACTION_RECOVERY_OPERATION);
-
-		$action_operation_hints = getActionOperationHints($data['action']['recovery_operations']);
+		$actionOperationDescriptions = getActionOperationDescriptions($data['eventsource'], [$data['action']],
+			ACTION_RECOVERY_OPERATION
+		);
 
 		foreach ($data['action']['recovery_operations'] as $operationid => $operation) {
 			if (!str_in_array($operation['operationtype'], $data['allowedOperations'][ACTION_RECOVERY_OPERATION])) {
@@ -353,10 +347,6 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVE
 			];
 
 			$details = new CSpan($actionOperationDescriptions[0][$operationid]);
-
-			if (array_key_exists($operationid, $action_operation_hints) && $action_operation_hints[$operationid]) {
-				$details->setHint($action_operation_hints[$operationid]);
-			}
 
 			$operation_for_popup = array_merge($operation, ['id' => $operationid]);
 			foreach (['opcommand_grp' => 'groupid', 'opcommand_hst' => 'hostid'] as $var => $field) {
@@ -411,32 +401,30 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVE
 	);
 }
 
-// Acknowledge operations
-if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS) {
+// Update operations.
+if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS || $data['eventsource'] == EVENT_SOURCE_SERVICE) {
 	$action_formname = $actionForm->getName();
 
-	$operations_table = (new CTable())->setAttribute('style', 'width: 100%;');
-	$operations_table->setHeader([_('Details'), _('Action')]);
+	$operations_table = (new CTable())
+		->setId('upd-table')
+		->setAttribute('style', 'width: 100%;')
+		->setHeader([_('Details'), _('Action')]);
 
-	if ($data['action']['ack_operations']) {
-		$operation_descriptions = getActionOperationDescriptions([$data['action']], ACTION_ACKNOWLEDGE_OPERATION);
+	if ($data['action']['update_operations']) {
+		$operation_descriptions = getActionOperationDescriptions($data['eventsource'], [$data['action']],
+			ACTION_UPDATE_OPERATION
+		);
 
-		$operation_hints = getActionOperationHints($data['action']['ack_operations']);
-
-		foreach ($data['action']['ack_operations'] as $operationid => $operation) {
-			if (!str_in_array($operation['operationtype'], $data['allowedOperations'][ACTION_ACKNOWLEDGE_OPERATION])) {
+		foreach ($data['action']['update_operations'] as $operationid => $operation) {
+			if (!str_in_array($operation['operationtype'], $data['allowedOperations'][ACTION_UPDATE_OPERATION])) {
 				continue;
 			}
+
 			$operation += [
-				'opconditions'	=> [],
-				'mediatypeid'	=> 0
+				'opconditions'	=> []
 			];
 
 			$details = new CSpan($operation_descriptions[0][$operationid]);
-
-			if (array_key_exists($operationid, $operation_hints) && $operation_hints[$operationid]) {
-				$details->setHint($operation_hints[$operationid]);
-			}
 
 			$operation_for_popup = array_merge($operation, ['id' => $operationid]);
 			foreach (['opcommand_grp' => 'groupid', 'opcommand_hst' => 'hostid'] as $var => $field) {
@@ -456,30 +444,28 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS) {
 								'operationid' => $operationid,
 								'actionid' => $data['actionid'],
 								'eventsource' => $data['eventsource'],
-								'operationtype' => ACTION_ACKNOWLEDGE_OPERATION
+								'operationtype' => ACTION_UPDATE_OPERATION
 							])),
 						[
 							(new CButton('remove', _('Remove')))
-								->onClick('javascript: removeOperation('.$operationid.', '.ACTION_ACKNOWLEDGE_OPERATION.
-									');'
-								)
+								->onClick('javascript: removeOperation('.$operationid.', '.ACTION_UPDATE_OPERATION.');')
 								->addClass(ZBX_STYLE_BTN_LINK)
 								->removeId(),
-							new CVar('ack_operations['.$operationid.']', $operation),
-							new CVar('operations_for_popup['.ACTION_ACKNOWLEDGE_OPERATION.']['.$operationid.']',
+							new CVar('update_operations['.$operationid.']', $operation),
+							new CVar('operations_for_popup['.ACTION_UPDATE_OPERATION.']['.$operationid.']',
 								json_encode($operation_for_popup)
 							)
 						]
 					])
 				))->addClass(ZBX_STYLE_NOWRAP)
-			], null, 'ack_operations_'.$operationid);
+			], null, 'update_operations_'.$operationid);
 		}
 	}
 
 	$operations_table->addRow(
 		(new CSimpleButton(_('Add')))
 			->onClick('operation_details.open(this,'.$data['actionid'].','.$data['eventsource'].','.
-				ACTION_ACKNOWLEDGE_OPERATION.')'
+				ACTION_UPDATE_OPERATION.')'
 			)
 			->addClass(ZBX_STYLE_BTN_LINK)
 	);
@@ -491,12 +477,24 @@ if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS) {
 	);
 }
 
+if ($data['eventsource'] == EVENT_SOURCE_TRIGGERS) {
+	$operation_tab
+		->addRow(_('Pause operations for suppressed problems'),
+			(new CCheckBox('pause_suppressed', ACTION_PAUSE_SUPPRESSED_TRUE))
+				->setChecked($data['action']['pause_suppressed'] == ACTION_PAUSE_SUPPRESSED_TRUE)
+		)
+		->addRow(_('Notify about canceled escalations'),
+			(new CCheckBox('notify_if_canceled', ACTION_NOTIFY_IF_CANCELED_TRUE))
+				->setChecked($data['action']['notify_if_canceled'] == ACTION_NOTIFY_IF_CANCELED_TRUE)
+		);
+}
+
 // Append tabs to form.
 $action_tabs = (new CTabView())
 	->addTab('actionTab', _('Action'), $action_tab)
-	->addTab('operationTab', _('Operations'), $operation_tab);
+	->addTab('operationTab', _('Operations'), $operation_tab, TAB_INDICATOR_OPERATIONS);
 
-if (!hasRequest('form_refresh')) {
+if ($data['form_refresh'] == 0) {
 	$action_tabs->setSelected(0);
 }
 
@@ -510,14 +508,14 @@ if ($data['actionid']) {
 				_('Delete current action?'),
 				url_param('form').url_param('eventsource').url_param('actionid')
 			),
-			new CButtonCancel(url_param('actiontype'))
+			new CButtonCancel(url_param('actiontype').url_param('eventsource'))
 		]
 	];
 }
 else {
 	$form_buttons = [
 		new CSubmit('add', _('Add')),
-		[new CButtonCancel(url_param('actiontype'))]
+		[new CButtonCancel(url_param('actiontype').url_param('eventsource'))]
 	];
 }
 

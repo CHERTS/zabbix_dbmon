@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -46,6 +46,29 @@ class CFormElement extends CElement {
 	protected $filter = null;
 
 	/**
+	 * Class for required label.
+	 *
+	 * @var string
+	 */
+	protected $required_label = 'form-label-asterisk';
+
+	/**
+	 * @inheritdoc
+	 */
+	public static function createInstance(RemoteWebElement $element, $options = []) {
+		$instance = parent::createInstance($element, $options);
+
+		if (get_class($instance) !== CGridFormElement::class) {
+			$grid = $instance->query('xpath:.//div[contains(@class, "form-grid")]')->one(false);
+			if ($grid->isValid() && !$grid->parents('xpath:*[contains(@class, "table-forms-td-right")]')->exists()) {
+				return $instance->asGridForm($options);
+			}
+		}
+
+		return $instance;
+	}
+
+	/**
 	 * Get filter.
 	 *
 	 * @return CElementFilter
@@ -57,14 +80,44 @@ class CFormElement extends CElement {
 	/**
 	 * Set filter conditions.
 	 *
-	 * @param mixed $filter		conditions to be filtered by
+	 * @param mixed $filter				conditions to be filtered by
+	 * @param array	$filter_params		filter parameters
 	 *
 	 * @return $this
 	 */
-	public function setFilter($filter) {
-		$this->filter = $filter;
+	public function setFilter($filter, $filter_params = []) {
+		if ($filter === null) {
+			$this->filter = null;
+		}
+		elseif ($filter instanceof CElementFilter) {
+			$this->filter = $filter;
+		}
+		else {
+			$this->filter = new CElementFilter($filter, $filter_params);
+		}
 
 		return $this;
+	}
+
+	/**
+	 * Set filter for element collection.
+	 *
+	 * @param CElementCollection $elements		collection of elements
+	 * @param CElementFilter	 $filter		condition to be filtered
+	 * @param array				 $filter_params	filter parameters
+	 *
+	 * @return CElementCollection
+	 */
+	protected function filterCollection($elements, $filter, $filter_params = []) {
+		if ($this->filter !== null) {
+			$elements = $elements->filter($this->filter);
+		}
+
+		if ($filter !== null) {
+			$elements = $elements->filter($filter, $filter_params);
+		}
+
+		return $elements;
 	}
 
 	/**
@@ -98,9 +151,12 @@ class CFormElement extends CElement {
 	/**
 	 * Get collection of form label elements.
 	 *
+	 * @param CElementFilter $filter        condition to be filtered
+	 * @param array          $filter_params filter parameters
+	 *
 	 * @return CElementCollection
 	 */
-	public function getLabels() {
+	public function getLabels($filter = null, $filter_params = []) {
 		$labels = $this->query('xpath:.//'.self::TABLE_FORM.'/li/'.self::TABLE_FORM_LEFT.'/label')->all();
 
 		foreach ($labels as $key => $label) {
@@ -112,11 +168,7 @@ class CFormElement extends CElement {
 			}
 		}
 
-		if ($this->filter !== null) {
-			return $labels->filter($this->filter);
-		}
-
-		return $labels;
+		return $this->filterCollection($labels, $filter, $filter_params);
 	}
 
 	/**
@@ -129,8 +181,7 @@ class CFormElement extends CElement {
 	 * @throws Exception
 	 */
 	public function getLabel($name) {
-		$prefix = 'xpath:.//'.self::TABLE_FORM.'/li/'.self::TABLE_FORM_LEFT;
-		$labels = $this->query($prefix.'/label[text()='.CXPathHelper::escapeQuotes($name).']')->all();
+		$labels = $this->findLabels($name);
 
 		if ($labels->isEmpty()) {
 			throw new Exception('Failed to find form label by name: "'.$name.'".');
@@ -149,6 +200,18 @@ class CFormElement extends CElement {
 		}
 
 		return $labels->first();
+	}
+
+	/**
+	 * Get label elements by text.
+	 *
+	 * @param string $name    field label text
+	 *
+	 * @return CElementCollection
+	 */
+	protected function findLabels($name) {
+		$prefix = 'xpath:.//'.self::TABLE_FORM.'/li/'.self::TABLE_FORM_LEFT;
+		return $this->query($prefix.'/label[text()='.CXPathHelper::escapeQuotes($name).']')->all();
 	}
 
 	/**
@@ -178,23 +241,23 @@ class CFormElement extends CElement {
 	/**
 	 * Get collection of element fields indexed by label name.
 	 *
+	 * @param CElementFilter $filter            condition to be filtered by
+	 * @param array          $filter_params     condition parameters to be set
+	 *
 	 * @return CElementCollection
 	 */
-	public function getFields() {
+	public function getFields($filter = null, $filter_params = []) {
 		$fields = [];
 
 		foreach ($this->getLabels() as $label) {
 			$element = $this->getFieldByLabelElement($label);
-			if ($this->filter !== null && !$this->filter->match($element)) {
-				$element = new CNullElement();
-			}
 
 			if ($element->isValid()) {
 				$fields[$label->getText()] = $element;
 			}
 		}
 
-		$this->fields = new CElementCollection($fields);
+		$this->fields = $this->filterCollection(new CElementCollection($fields), $filter, $filter_params);
 
 		return $this->fields;
 	}
@@ -257,6 +320,15 @@ class CFormElement extends CElement {
 	 */
 	public function getFieldContainer($name) {
 		return $this->getLabel($name)->query('xpath:./../../'.self::TABLE_FORM_RIGHT)->one();
+	}
+
+	/**
+	 * Get tabs from form.
+	 *
+	 * @return CElementCollection
+	 */
+	public function getTabs() {
+		return $this->query("xpath:.//li[@role='tab']")->all()->asText();
 	}
 
 	/**
@@ -324,7 +396,7 @@ class CFormElement extends CElement {
 	 * @return $this
 	 */
 	protected function setFieldValue($field, $values) {
-		$classes = [CMultifieldTableElement::class, CMultiselectElement::class, CCheckboxListElement::class];
+		$classes = [CMultifieldTableElement::class, CMultiselectElement::class, CCheckboxListElement::class, CHostInterfaceElement::class];
 		$element = $this->getField($field);
 
 		if (is_array($values) && !in_array(get_class($element), $classes)) {
@@ -387,11 +459,17 @@ class CFormElement extends CElement {
 	}
 
 	/**
-	* @inheritdoc
-	*/
+	 * @inheritdoc
+	 */
 	public function checkValue($expected, $raise_exception = true) {
 		if ($expected && is_array($expected)) {
 			foreach ($expected as $field => $value) {
+				if ($value instanceof \Closure) {
+					$function = new ReflectionFunction($value);
+					$variables = $function->getStaticVariables();
+					$value = $variables['value'];
+				}
+
 				if ($this->checkFieldValue($field, $value, $raise_exception) === false) {
 					return false;
 				}
@@ -413,7 +491,13 @@ class CFormElement extends CElement {
 	 * @throws Exception
 	 */
 	protected function checkFieldValue($field, $values, $raise_exception = true) {
-		$classes = [CMultifieldTableElement::class, CMultiselectElement::class, CCheckboxListElement::class];
+		$classes = [
+			CMultifieldTableElement::class,
+			CFormElement::class,
+			CMultiselectElement::class,
+			CCheckboxListElement::class,
+			CHostInterfaceElement::class
+		];
 		$element = $this->getField($field);
 
 		if (is_array($values) && !in_array(get_class($element), $classes)) {
@@ -446,7 +530,13 @@ class CFormElement extends CElement {
 			return false;
 		}
 
-		return $element->checkValue($values, $raise_exception);
+		try {
+			return $element->checkValue($values, $raise_exception);
+		}
+		catch (\Exception $exception) {
+			CExceptionHelper::setMessage($exception, 'Failed to check value of field "'.$field.'":' . "\n" . $exception->getMessage());
+			throw $exception;
+		}
 	}
 
 	/**
@@ -463,5 +553,40 @@ class CFormElement extends CElement {
 				$form->waitUntilReloaded();
 			}
 		};
+	}
+
+	/**
+	 * Check if field is marked as required in form.
+	 *
+	 * @param string $label    field label text
+	 *
+	 * @return boolean
+	 */
+	public function isRequired($label) {
+		return $this->getLabel($label)->hasClass($this->required_label);
+	}
+
+	/**
+	 * Get the mandatory labels marked with an asterisk.
+	 *
+	 * @return array
+	 */
+	public function getRequiredLabels() {
+		$labels = $this->getLabels(CElementFilter::CLASSES_PRESENT, [$this->required_label])
+				->filter(CElementFilter::VISIBLE)->asText();
+
+		return array_values($labels);
+	}
+
+	/**
+	 * Get form fields values.
+	 *
+	 * @param CElementFilter $filter			condition to be filtered by
+	 * @param array			 $filter_params		condition parameters to be set
+	 *
+	 * @return array
+	 */
+	public function getValues($filter = null, $filter_params = []) {
+		return $this->getFields($filter, $filter_params)->asValues();
 	}
 }
