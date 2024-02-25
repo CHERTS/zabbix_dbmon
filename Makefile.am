@@ -107,19 +107,19 @@ gettext:
 	ui/locale/make_mo.sh
 
 css_theme_blue:
-	sass --no-cache --sourcemap=none sass/stylesheets/sass/screen.scss ui/assets/styles/blue-theme.css
+	sass --no-source-map sass/stylesheets/sass/screen.scss ui/assets/styles/blue-theme.css
 	cp ui/assets/styles/blue-theme.css sass/stylesheets/screen.css
 
 css_theme_dark:
-	sass --no-cache --sourcemap=none sass/stylesheets/sass/dark-theme.scss ui/assets/styles/dark-theme.css
+	sass --no-source-map sass/stylesheets/sass/dark-theme.scss ui/assets/styles/dark-theme.css
 	cp ui/assets/styles/dark-theme.css sass/stylesheets/dark-theme.css
 
 css_hc_light:
-	sass --no-cache --sourcemap=none sass/stylesheets/sass/hc-light.scss ui/assets/styles/hc-light.css
+	sass --no-source-map sass/stylesheets/sass/hc-light.scss ui/assets/styles/hc-light.css
 	cp ui/assets/styles/hc-light.css sass/stylesheets/hc-light.css
 
 css_hc_dark:
-	sass --no-cache --sourcemap=none sass/stylesheets/sass/hc-dark.scss ui/assets/styles/hc-dark.css
+	sass --no-source-map sass/stylesheets/sass/hc-dark.scss ui/assets/styles/hc-dark.css
 	cp ui/assets/styles/hc-dark.css sass/stylesheets/hc-dark.css
 
 css_icons:
