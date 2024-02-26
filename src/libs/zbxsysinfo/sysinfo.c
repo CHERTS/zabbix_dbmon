@@ -29,6 +29,7 @@
 #include "zbxregexp.h"
 
 extern int	CONFIG_TIMEOUT;
+extern int	CONFIG_DB_TIMEOUT;
 
 #ifdef WITH_AGENT_METRICS
 #	include "agent/agent.h"
@@ -1846,7 +1847,7 @@ int	zbx_execute_dbmon_threaded_metric(zbx_metric_func_t metric_func, AGENT_REQUE
 		ret = metric_func(request, result);
 		serialize_agent_result(&data, &data_alloc, &data_offset, ret, result);
 
-		ret = write_all(fds[1], data, data_offset);
+		ret = zbx_write_all(fds[1], data, data_offset);
 
 		zbx_free(data);
 		free_result(result);
