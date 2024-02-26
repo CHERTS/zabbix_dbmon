@@ -54,7 +54,7 @@ jobs:
         apt-get install -q -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
         apt-get install -q -y libmysqlclient-dev libpq-dev libsqlite3-dev
         sudo wget https://github.com/sass/dart-sass/releases/download/1.71.1/dart-sass-1.71.1-linux-x64.tar.gz -O /tmp/dart-sass-linux-x64.tar.gz
-        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
+        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo cp -r /tmp/dart-sass/src /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
     - name: Code checkout
       uses: actions/checkout@v2
     - name: Delete old binary
@@ -137,7 +137,7 @@ jobs:
         apt-get install -q -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
         apt-get install -q -y libmysqlclient-dev libpq-dev libsqlite3-dev
         sudo wget https://github.com/sass/dart-sass/releases/download/1.71.1/dart-sass-1.71.1-linux-x64.tar.gz -O /tmp/dart-sass-linux-x64.tar.gz
-        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
+        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo cp -r /tmp/dart-sass/src /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
     - name: Code checkout
       uses: actions/checkout@v2
     - name: Delete old binary
@@ -220,7 +220,7 @@ jobs:
         apt-get install -q -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
         apt-get install -q -y libmysqlclient-dev libpq-dev libsqlite3-dev
         sudo wget https://github.com/sass/dart-sass/releases/download/1.71.1/dart-sass-1.71.1-linux-x64.tar.gz -O /tmp/dart-sass-linux-x64.tar.gz
-        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
+        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo cp -r /tmp/dart-sass/src /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
     - name: Code checkout
       uses: actions/checkout@v2
     - name: Delete old binary
@@ -303,7 +303,7 @@ jobs:
         apt-get install -q -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
         apt-get install -q -y libmysqlclient-dev libpq-dev libsqlite3-dev
         sudo wget https://github.com/sass/dart-sass/releases/download/1.71.1/dart-sass-1.71.1-linux-x64.tar.gz -O /tmp/dart-sass-linux-x64.tar.gz
-        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
+        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo cp -r /tmp/dart-sass/src /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
     - name: Code checkout
       uses: actions/checkout@v2
     - name: Delete old binary
@@ -386,7 +386,7 @@ jobs:
         apt-get install -q -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
         apt-get install -q -y libmysqlclient-dev libpq-dev libsqlite3-dev
         sudo wget https://github.com/sass/dart-sass/releases/download/1.71.1/dart-sass-1.71.1-linux-x64.tar.gz -O /tmp/dart-sass-linux-x64.tar.gz
-        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
+        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo cp -r /tmp/dart-sass/src /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
     - name: Code checkout
       uses: actions/checkout@v2
     - name: Delete old binary
