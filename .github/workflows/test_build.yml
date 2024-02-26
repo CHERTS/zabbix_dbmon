@@ -72,7 +72,7 @@ jobs:
     - name: Build
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+        ./configure --with-openssl --with-libpthread --with-libpcre2 --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
         make
     - name: Show build version
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}

@@ -58,7 +58,7 @@ jobs:
           sudo apt-get install libsnmp-dev snmp libopenipmi-dev libevent-dev libcurl4-openssl-dev libconfig-dev libmysqlclient-dev libpq-dev
           cd $GITHUB_WORKSPACE
           sh bootstrap.sh
-          ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix --prefix=$(pwd)
+          ./configure --with-openssl --with-libpthread --with-libpcre2 --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix --prefix=$(pwd)
           make
           make clean
       - name: Download and set up build-wrapper
