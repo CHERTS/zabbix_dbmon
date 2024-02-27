@@ -49,15 +49,14 @@
 #
 # ADAPTATION
 #
-#   Macro adapted for ZABBIX usage by Eugene Grigorjev
+#   Macro adapted for ZABBIX usage
 #
 
 AC_DEFUN([AX_LIB_ORACLE_OCI],
 [
     AC_ARG_WITH([oracle],
-        AC_HELP_STRING([--with-oracle@<:@=ARG@:>@],
-            [use Oracle OCI API from given Oracle home (ARG=path); use existing ORACLE_HOME (ARG=yes); disable Oracle OCI support (ARG=no)]
-        ),
+        AS_HELP_STRING([--with-oracle@<:@=ARG@:>@],[use Oracle OCI API from given Oracle home (ARG=path); use existing ORACLE_HOME (ARG=yes); disable Oracle OCI support (ARG=no)
+        ]),
         [
         if test "$withval" = "no"; then
             want_oracle_oci="no"
@@ -76,9 +75,8 @@ AC_DEFUN([AX_LIB_ORACLE_OCI],
     )
 
     AC_ARG_WITH([oracle-include],
-        AC_HELP_STRING([--with-oracle-include@<:@=DIR@:>@],
-            [use Oracle OCI API headers from given path]
-        ),
+        AS_HELP_STRING([--with-oracle-include@<:@=DIR@:>@],[use Oracle OCI API headers from given path
+        ]),
         [
         if test "$withval" != "no"; then
             want_oracle_oci="yes"
@@ -88,9 +86,8 @@ AC_DEFUN([AX_LIB_ORACLE_OCI],
         [oracle_home_include_dir=""]
     )
     AC_ARG_WITH([oracle-lib],
-        AC_HELP_STRING([--with-oracle-lib@<:@=DIR@:>@],
-            [use Oracle OCI API libraries from given path]
-        ),
+        AS_HELP_STRING([--with-oracle-lib@<:@=DIR@:>@],[use Oracle OCI API libraries from given path
+        ]),
         [
         if test "$withval" != "no"; then
             want_oracle_oci="yes"
@@ -291,7 +288,7 @@ Please, locate Oracle directories using --with-oracle or \
             AC_LINK_IFELSE([
                 AC_LANG_PROGRAM([[@%:@include <oci.h>]],
                     [[
-OCIEnv* envh = 0;
+OCIEnv *envh = 0;
 OCIEnvNlsCreate(&envh, OCI_DEFAULT, 0, 0, 0, 0, 0, 0, 0, 0);
 if (envh) OCIHandleFree(envh, OCI_HTYPE_ENV);
                     ]]
@@ -305,6 +302,33 @@ if (envh) OCIHandleFree(envh, OCI_HTYPE_ENV);
                 [
                 oci_lib_found="no"
                 AC_MSG_RESULT([not found])
+                ]
+            )
+        fi
+
+        dnl
+        dnl Check OCIServerRelease2() API
+        dnl
+        if test "$oci_header_found" = "yes"; then
+
+            AC_MSG_CHECKING([for Oracle OCIServerRelease2() API in $oracle_lib_dir])
+
+            AC_LINK_IFELSE([
+                AC_LANG_PROGRAM([[@%:@include <oci.h>]],
+                    [[
+OCIEnv *envh = 0;
+OCIError *errh = 0;
+OraText buf[256];
+ub4 version;
+sword ret = OCIServerRelease2(envh, errh, buf, (ub4)sizeof(buf), OCI_HTYPE_SVCCTX, &version, OCI_DEFAULT);
+                    ]]
+                )],
+                [
+                AC_DEFINE(HAVE_OCI_SERVER_RELEASE2, 1, [Define to 1 if OCIServerRelease2 API are supported.])
+                AC_MSG_RESULT(yes)
+                ],
+                [
+                AC_MSG_RESULT([no])
                 ]
             )
         fi

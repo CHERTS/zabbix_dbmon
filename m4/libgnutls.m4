@@ -1,8 +1,6 @@
 # GnuTLS LIBGNUTLS_CHECK_CONFIG ([DEFAULT-ACTION])
 # ----------------------------------------------------------
-# Derived from libssh2.m4 written by
-#    Alexander Vladishev                      Oct-26-2009
-#    Dmitry Borovikov                         Feb-13-2010
+# Derived from libssh2.m4
 #
 # Checks for GnuTLS library libgnutls.  DEFAULT-ACTION is the string
 # yes or no to specify whether to default to --with-gnutls or
@@ -21,14 +19,11 @@
 
 AC_DEFUN([LIBGNUTLS_TRY_LINK],
 [
-AC_TRY_LINK(
-[
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <gnutls/gnutls.h>
-],
-[
+]], [[
 	gnutls_global_init();
-],
-found_gnutls="yes",)
+]])],[found_gnutls="yes"],[])
 ])dnl
 
 AC_DEFUN([LIBGNUTLS_ACCEPT_VERSION],
@@ -62,7 +57,7 @@ AC_DEFUN([LIBGNUTLS_CHECK_CONFIG],
 [
   AC_ARG_WITH(gnutls,[
 If you want to use encryption provided by GnuTLS library:
-AC_HELP_STRING([--with-gnutls@<:@=DIR@:>@],[use GnuTLS package @<:@default=no@:>@, DIR is the libgnutls install directory.])],
+AS_HELP_STRING([--with-gnutls@<:@=DIR@:>@],[use GnuTLS package @<:@default=no@:>@, DIR is the libgnutls install directory.])],
     [
 	if test "$withval" = "no"; then
 	    want_gnutls="no"

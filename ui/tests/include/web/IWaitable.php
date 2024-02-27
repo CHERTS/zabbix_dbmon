@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,6 +29,13 @@ interface IWaitable {
 	 * @return callable
 	 */
 	public function getReadyCondition();
+
+	/**
+	 * Condition describing state when object is not ready.
+	 *
+	 * @return callable
+	 */
+	public function getNotReadyCondition();
 
 	/**
 	 * Condition describing state when object is present.
@@ -100,13 +107,31 @@ interface IWaitable {
 	public function getAttributesPresentCondition($attributes);
 
 	/**
-	 * Condition describing state when text is not present within the object.
+	 * Condition describing state when attribute is not present within the object.
 	 *
 	 * @param array $attributes    attributes to not be present
 	 *
 	 * @return callable
 	 */
 	public function getAttributesNotPresentCondition($attributes);
+
+	/**
+	 * Condition describing state when classes is present within the object.
+	 *
+	 * @param array $classes    classes to be present
+	 *
+	 * @return callable
+	 */
+	public function getClassesPresentCondition($classes);
+
+	/**
+	 * Condition describing state when classes is not present within the object.
+	 *
+	 * @param array $classes    classes to not be present
+	 *
+	 * @return callable
+	 */
+	public function getClassesNotPresentCondition($classes);
 
 	/**
 	 * Condition describing state when object is selected.

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -44,24 +44,21 @@ class testTemplateInheritance extends CLegacyWebTest {
 	protected $hostName = 'Template inheritance test host';
 
 	public function testTemplateInheritance_linkHost(){
-		$sql = "select hostid from hosts where host='Template Module Zabbix agent';";
+		$sql = "select hostid from hosts where host='Zabbix agent';";
 		$this->assertEquals(1, CDBHelper::getCount($sql));
 		$row = DBfetch(DBselect($sql));
 		$hostid = $row['hostid'];
 
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
 		$this->zbxTestCheckTitle('Configuration of hosts');
-		$this->zbxTestClickLinkTextWait($this->hostName);
-
-		$this->zbxTestTabSwitch('Templates');
-
+		$this->filterEntriesAndOpenObjects($this->hostName, 'Name', $this->hostName);
+		$form = COverlayDialogElement::find()->asForm()->one()->waitUntilVisible();
 		$this->zbxTestClickButtonMultiselect('add_templates_');
 		$this->zbxTestLaunchOverlayDialog('Templates');
-		COverlayDialogElement::find()->one()->setDataContext('Templates');
-		$this->zbxTestClickLinkTextWait('Template Module Zabbix agent');
-
-		$this->zbxTestTextPresent('Template Module Zabbix agent');
-		$this->zbxTestClickWait('update');
+		COverlayDialogElement::find()->all()->last()->setDataContext('Templates');
+		$this->zbxTestClickLinkTextWait('Zabbix agent');
+		$this->zbxTestTextPresent('Zabbix agent');
+		$form->submit();
 
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Host updated');
 
@@ -105,7 +102,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 	 * @dataProvider dataCreate
 	 */
 	public function testTemplateInheritance_Create($result, $template, $itemName, $keyName, $errorMsgs) {
-		$this->zbxTestLogin('templates.php');
+		$this->zbxTestLogin('templates.php?page=2');
 		$this->zbxTestCheckHeader('Templates');
 
 		$this->zbxTestClickLinkTextWait($template);
@@ -149,10 +146,8 @@ class testTemplateInheritance extends CLegacyWebTest {
 		switch ($result) {
 			case TEST_GOOD:
 				// check that the inherited item matches the original
-				$this->zbxTestOpen('hosts.php');
-				$this->zbxTestCheckHeader('Hosts');
-				$this->zbxTestClickLinkTextWait($this->hostName);
-				$this->zbxTestClickLinkTextWait('Items');
+				$this->zbxTestOpen(self::HOST_LIST_PAGE);
+				$this->filterEntriesAndOpenObjects($this->hostName, 'Items', 'Items');
 				$this->zbxTestCheckHeader('Items');
 				$this->zbxTestAssertElementText("//a[text()='".$itemName."']/parent::td", "$template: $itemName");
 				$this->zbxTestClickLinkTextWait($itemName);
@@ -174,22 +169,20 @@ class testTemplateInheritance extends CLegacyWebTest {
 	}
 
 	public function testTemplateInheritance_unlinkHost(){
-
+		$template = 'Inheritance test template for unlink';
 		$sql = "select hostid from hosts where host='Inheritance test template for unlink';";
 		$this->assertEquals(1, CDBHelper::getCount($sql));
 		$row = DBfetch(DBselect($sql));
 		$hostid = $row['hostid'];
 
-		$this->zbxTestLogin('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->hostName);
-
-		$this->zbxTestTabSwitch('Templates');
-		$this->zbxTestWaitUntilElementVisible(WebDriverBy::xpath("//button[contains(@onclick, 'unlink_and_clear[".$hostid."]')]"));
-		$this->zbxTestTextPresent('Inheritance test template for unlink');
-		$this->zbxTestClickXpathWait("//button[contains(@onclick, 'unlink_and_clear[".$hostid."]') and text()='Unlink and clear']");
-		$this->zbxTestTextNotPresent('Inheritance test template for unlink');
-
-		$this->zbxTestClickWait('update');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
+		$this->filterEntriesAndOpenObjects($this->hostName, 'Name', $this->hostName);
+		$form = COverlayDialogElement::find()->asForm()->one()->waitUntilVisible();
+		$table = $form->query('id:linked-templates')->asTable()->one()->waitUntilVisible();
+		$table->findRow('Name', $template)
+				->getColumn('Action')->query('button:Unlink and clear')->one()->click();
+		$this->assertFalse($table->findRow('Name', $template)->isValid());
+		$form->submit();
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Host updated');
 
 		$sql = 'select hosttemplateid from hosts_templates where templateid='.$hostid.'';
@@ -201,7 +194,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 	 *
 	 */
 	public function testTemplateInheritance_CreateTrigger() {
-		$this->zbxTestLogin('templates.php');
+		$this->zbxTestLogin('templates.php?page=2');
 
 		// create a trigger
 		$this->zbxTestClickLinkTextWait($this->templateName);
@@ -209,7 +202,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestContentControlButtonClickTextWait('Create trigger');
 
 		$this->zbxTestInputTypeWait('description', 'Test LLD trigger1');
-		$this->zbxTestInputType('expression', '{Inheritance test template:key-item-inheritance-test.last(0)}=0');
+		$this->zbxTestInputType('expression', 'last(/Inheritance test template/key-item-inheritance-test,#1)=0');
 		$this->zbxTestCheckboxSelect('type_1');
 		$this->zbxTestInputType('comments', 'comments');
 		$this->zbxTestInputType('url', 'zabbix.php');
@@ -220,15 +213,13 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Trigger added');
 
 		// check that the inherited trigger matches the original
-		$this->zbxTestOpen('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->hostName);
-		$this->zbxTestClickLinkTextWait('Triggers');
-
+		$this->zbxTestOpen(self::HOST_LIST_PAGE);
+		$this->filterEntriesAndOpenObjects($this->hostName, 'Triggers', 'Triggers');
 		$this->zbxTestAssertElementText("//a[text()='Test LLD trigger1']/parent::td", "$this->templateName: Test LLD trigger1");
 		$this->zbxTestClickLinkTextWait('Test LLD trigger1');
 
 		$this->zbxTestAssertElementValue('description', 'Test LLD trigger1');
-		$this->zbxTestAssertElementValue('expression', '{Template inheritance test host:key-item-inheritance-test.last(0)}=0');
+		$this->zbxTestAssertElementValue('expression', 'last(/Template inheritance test host/key-item-inheritance-test,#1)=0');
 		$this->assertTrue($this->zbxTestCheckboxSelected('recovery_mode_0'));
 		$this->zbxTestAssertElementPresentXpath("//input[@id='recovery_mode_0'][@disabled]");
 		$this->zbxTestAssertElementText('//*[@name="comments"]', 'comments');
@@ -243,7 +234,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 	 *
 	 */
 	public function testTemplateInheritance_CreateGraph() {
-		$this->zbxTestLogin('templates.php');
+		$this->zbxTestLogin('templates.php?page=2');
 
 		// create a graph
 		$this->zbxTestClickLinkTextWait($this->templateName);
@@ -272,10 +263,8 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestTextPresent('Graph added');
 
 		// check that the inherited graph matches the original
-		$this->zbxTestOpen('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->hostName);
-		$this->zbxTestClickLinkTextWait('Graphs');
-
+		$this->zbxTestOpen(self::HOST_LIST_PAGE);
+		$this->filterEntriesAndOpenObjects($this->hostName, 'Graphs', 'Graphs');
 		$this->zbxTestAssertElementText("//a[text()='Test LLD graph1']/parent::td", "$this->templateName: Test LLD graph1");
 		$this->zbxTestClickLinkTextWait('Test LLD graph1');
 
@@ -301,7 +290,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 	 *
 	 */
 	public function testTemplateInheritance_CreateDiscovery() {
-		$this->zbxTestLogin('templates.php');
+		$this->zbxTestLogin('templates.php?page=2');
 
 		// create an LLD rule
 		$this->zbxTestClickLinkTextWait($this->templateName);
@@ -323,9 +312,8 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good' ,'Discovery rule created');
 
 		// check that the inherited rule matches the original
-		$this->zbxTestOpen('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->hostName);
-		$this->zbxTestClickLinkTextWait('Discovery rules');
+		$this->zbxTestOpen(self::HOST_LIST_PAGE);
+		$this->filterEntriesAndOpenObjects($this->hostName, 'Discovery', 'Discovery');
 		$this->zbxTestAssertElementText("//a[text()='Test LLD']/parent::td", "$this->templateName: Test LLD");
 		$this->zbxTestClickLinkTextWait('Test LLD');
 
@@ -348,7 +336,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 	 *
 	 */
 	public function testTemplateInheritance_CreateItemPrototype() {
-		$this->zbxTestLogin('templates.php');
+		$this->zbxTestLogin('templates.php?page=2');
 
 		// create an item prototype
 		$this->zbxTestClickLinkTextWait($this->templateName);
@@ -366,7 +354,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestInputType('history', '54d');
 		$this->zbxTestInputType('trends', '55d');
 		$this->zbxTestInputType('description', 'description');
-		$this->zbxTestDropdownSelect('valuemapid', 'APC Battery Status');
+		$this->query('id:item-prototype-form')->asForm()->one()->getField('Value mapping')->fill('Template value mapping');
 		$this->zbxTestCheckboxSelect('status', false);
 		$this->zbxTestInputType('delay_flex_0_delay', '50s');
 		$this->zbxTestInputType('delay_flex_0_period', '1-7,00:00-24:00');
@@ -377,9 +365,8 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestTextPresent('Test LLD item');
 
 		// check that the inherited item prototype matches the original
-		$this->zbxTestOpen('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->hostName);
-		$this->zbxTestCheckHeader('Hosts');
+		$this->zbxTestOpen(self::HOST_LIST_PAGE);
+		$this->filterEntriesAndOpenObjects($this->hostName, 'Discovery', 'Discovery');
 		$this->zbxTestClickLinkTextWait('Discovery rules');
 		$this->zbxTestCheckHeader('Discovery rules');
 		$this->zbxTestClickLinkTextWait('testInheritanceDiscoveryRule');
@@ -397,7 +384,8 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestAssertElementValue('trends', '55d');
 		$this->zbxTestAssertElementValue('delay_flex_0_delay', '50s');
 		$this->zbxTestAssertElementValue('delay_flex_0_period', '1-7,00:00-24:00');
-		$this->zbxTestDropdownAssertSelected('valuemapid', 'APC Battery Status');
+		$this->assertEquals(['Template value mapping'], $this->query('id:item-prototype-form')->asForm()->one()->
+				getField('Value mapping')->getValue());
 		$this->zbxTestAssertElementText('//*[@name="description"]', 'description');
 		$this->zbxTestTextPresent('Parent items');
 		$this->zbxTestTextPresent($this->templateName);
@@ -409,7 +397,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 	 *
 	 */
 	public function testTemplateInheritance_CreateTriggerPrototype() {
-		$this->zbxTestLogin('templates.php');
+		$this->zbxTestLogin('templates.php?page=2');
 
 		// create a trigger prototype
 		$this->zbxTestClickLinkTextWait($this->templateName);
@@ -419,7 +407,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestContentControlButtonClickTextWait('Create trigger prototype');
 
 		$this->zbxTestInputTypeByXpath("//input[@name='description']", 'Test LLD trigger');
-		$this->zbxTestInputType('expression', '{Inheritance test template:item-discovery-prototype.last(0)}=0');
+		$this->zbxTestInputType('expression', 'last(/Inheritance test template/item-discovery-prototype,#1)=0');
 		$this->zbxTestCheckboxSelect('type_1');
 		$this->zbxTestInputType('comments', 'comments');
 		$this->zbxTestInputType('url', 'zabbix.php');
@@ -437,9 +425,8 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->assertEquals(1, CDBHelper::getCount($sql), 'Trigger prototype has not been added into Zabbix DB');
 
 		// check that the inherited trigger prototype matches the original
-		$this->zbxTestOpen('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->hostName);
-		$this->zbxTestClickLinkTextWait('Discovery rules');
+		$this->zbxTestOpen(self::HOST_LIST_PAGE);
+		$this->filterEntriesAndOpenObjects($this->hostName, 'Discovery', 'Discovery');
 		$this->zbxTestClickLinkTextWait('testInheritanceDiscoveryRule');
 		$this->zbxTestClickLinkTextWait('Trigger prototypes');
 		$this->zbxTestCheckHeader('Trigger prototypes');
@@ -449,7 +436,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestWaitUntilElementVisible(WebDriverBy::id('description'));
 		$getName = $this->zbxTestGetValue("//input[@name='description']");
 		$this->assertEquals($getName, 'Test LLD trigger');
-		$this->zbxTestAssertElementValue('expression', '{Template inheritance test host:item-discovery-prototype.last(0)}=0');
+		$this->zbxTestAssertElementValue('expression', 'last(/Template inheritance test host/item-discovery-prototype,#1)=0');
 		$this->assertTrue($this->zbxTestCheckboxSelected('recovery_mode_0'));
 		$this->zbxTestAssertElementPresentXpath("//input[@id='recovery_mode_0'][@disabled]");
 		$this->zbxTestAssertElementText('//*[@name="comments"]', 'comments');
@@ -465,7 +452,7 @@ class testTemplateInheritance extends CLegacyWebTest {
 	 *
 	 */
 	public function testTemplateInheritance_CreateGraphPrototype() {
-		$this->zbxTestLogin('templates.php');
+		$this->zbxTestLogin('templates.php?page=2');
 
 		// create a graph
 		$this->zbxTestClickLinkTextWait($this->templateName);
@@ -510,9 +497,8 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestTextPresent('Test LLD graph');
 
 		// check that the inherited graph matches the original
-		$this->zbxTestOpen('hosts.php');
-		$this->zbxTestClickLinkTextWait($this->hostName);
-		$this->zbxTestClickLinkTextWait('Discovery rules');
+		$this->zbxTestOpen(self::HOST_LIST_PAGE);
+		$this->filterEntriesAndOpenObjects($this->hostName, 'Discovery', 'Discovery');
 		$this->zbxTestClickLinkTextWait('testInheritanceDiscoveryRule');
 		$this->zbxTestClickLinkTextWait('Graph prototypes');
 
@@ -536,6 +522,22 @@ class testTemplateInheritance extends CLegacyWebTest {
 		$this->zbxTestTextPresent($this->hostName.': testInheritanceItem1');
 		$this->zbxTestTextPresent('Parent graphs');
 		$this->zbxTestTextPresent($this->templateName);
+	}
 
+	/**
+	 * Function for filtering necessary hosts and opening their objects.
+	 *
+	 * @param string    $host	    name of a host where objects are opened
+	 * @param string    $column     name of a column which is clicked for particular host
+	 * @param string    $objects    objects of host: items, triggers, graphs, discovery rules or it can be host itself
+	 */
+	private function filterEntriesAndOpenObjects($host, $column, $objects) {
+		$this->query('button:Reset')->one()->click();
+		$filter = $this->query('name:zbx_filter')->asForm()->waitUntilReady()->one();
+		$filter->fill(['Name' => $host]);
+		$this->query('button:Apply')->one()->waitUntilClickable()->click();
+
+		$this->query('xpath://table[@class="list-table"]')->asTable()->one()->findRow('Name', $host)
+				->getColumn($column)->query('link', $objects)->one()->click();
 	}
 }

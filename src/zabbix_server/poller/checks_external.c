@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,17 +17,14 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
+#include "checks_external.h"
+
 #include "log.h"
 #include "zbxexec.h"
-
-#include "checks_external.h"
 
 extern char	*CONFIG_EXTERNALSCRIPTS;
 
 /******************************************************************************
- *                                                                            *
- * Function: get_value_external                                               *
  *                                                                            *
  * Purpose: retrieve data from script executed on Zabbix server               *
  *                                                                            *
@@ -36,8 +33,6 @@ extern char	*CONFIG_EXTERNALSCRIPTS;
  * Return value: SUCCEED - data successfully retrieved and stored in result   *
  *                         and result_str (as string)                         *
  *               NOTSUPPORTED - requested item is not supported               *
- *                                                                            *
- * Author: Mike Nestor, rewritten by Alexander Vladishev                      *
  *                                                                            *
  ******************************************************************************/
 int	get_value_external(const DC_ITEM *item, AGENT_RESULT *result)
@@ -79,7 +74,7 @@ int	get_value_external(const DC_ITEM *item, AGENT_RESULT *result)
 	}
 
 	if (SUCCEED == (ret = zbx_execute(cmd, &buf, error, sizeof(error), CONFIG_TIMEOUT,
-			ZBX_EXIT_CODE_CHECKS_DISABLED)))
+			ZBX_EXIT_CODE_CHECKS_DISABLED, NULL)))
 	{
 		zbx_rtrim(buf, ZBX_WHITESPACE);
 

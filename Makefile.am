@@ -62,18 +62,34 @@ if DBSCHEMA
 dbschema_mysql:
 	cd database/mysql && \
 	$(MAKE) $(AM_MAKEFLAGS) data.sql && \
-	$(MAKE) $(AM_MAKEFLAGS) schema.sql
+	$(MAKE) $(AM_MAKEFLAGS) schema.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) history_pk_prepare.sql
 
 dbschema_oracle:
 	cd database/oracle && \
 	$(MAKE) $(AM_MAKEFLAGS) data.sql && \
-	$(MAKE) $(AM_MAKEFLAGS) schema.sql
+	$(MAKE) $(AM_MAKEFLAGS) schema.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) history_pk_prepare.sql
+
+export tsdb_wcompr_dir = tsdb_history_pk_upgrade_with_compression
+export tsdb_nocompr_dir = tsdb_history_pk_upgrade_no_compression
 
 dbschema_postgresql:
 	cd database/postgresql && \
 	$(MAKE) $(AM_MAKEFLAGS) data.sql && \
 	$(MAKE) $(AM_MAKEFLAGS) schema.sql && \
-	$(MAKE) $(AM_MAKEFLAGS) timescaledb.sql
+	$(MAKE) $(AM_MAKEFLAGS) timescaledb.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) $(tsdb_wcompr_dir)/history_pk.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) $(tsdb_wcompr_dir)/history_pk_uint.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) $(tsdb_wcompr_dir)/history_pk_log.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) $(tsdb_wcompr_dir)/history_pk_str.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) $(tsdb_wcompr_dir)/history_pk_text.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) $(tsdb_nocompr_dir)/history_pk.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) $(tsdb_nocompr_dir)/history_pk_uint.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) $(tsdb_nocompr_dir)/history_pk_log.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) $(tsdb_nocompr_dir)/history_pk_str.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) $(tsdb_nocompr_dir)/history_pk_text.sql && \
+	$(MAKE) $(AM_MAKEFLAGS) history_pk_prepare.sql
 
 dbschema_sqlite3:
 	cd database/sqlite3 && \
@@ -135,14 +151,17 @@ WRAP_IO_FUNCS = \
 	-Wl,--wrap=fopen \
 	-Wl,--wrap=fclose \
 	-Wl,--wrap=fgets \
-	-Wl,--wrap=open
+	-Wl,--wrap=fstat \
+	-Wl,--wrap=open \
+	-Wl,--wrap=lseek \
+	-Wl,--wrap=close
 
 WRAP_FS_FUNCS = \
 	-Wl,--wrap=opendir \
 	-Wl,--wrap=readdir \
-	-Wl,--wrap=stat \
 	-Wl,--wrap=__xstat \
-	-Wl,--wrap=__fxstat
+	-Wl,--wrap=__fxstat \
+	-Wl,--wrap=stat
 
 WRAP_EXIT = \
 	-Wl,--wrap=exit
@@ -169,6 +188,25 @@ tests_build:
 
 tests: tests_build
 	tests/tests_run.pl
+
+clean: clean-recursive
+	cd tests && $(MAKE) clean
 endif
 
-.PHONY: test tests
+sbom: sbom-ui
+
+sbom-ui: ui/sbom.json
+
+ui/sbom.json:
+	(cd ${@D} && \
+		composer CycloneDX:make-sbom --omit=dev --no-interaction \
+		--spec-version=1.4 \
+		--output-reproducible --output-format=JSON --output-file="${@F}")
+
+ui/sbom.xml:
+	(cd ${@D} && \
+		composer CycloneDX:make-sbom --omit=dev --no-interaction \
+		--spec-version=1.4 \
+		--output-reproducible --output-format=XML --output-file="${@F}")
+
+.PHONY: test tests clean sbom sbom-ui

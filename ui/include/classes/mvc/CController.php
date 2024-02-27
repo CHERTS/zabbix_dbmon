@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,9 +21,19 @@
 
 abstract class CController {
 
-	const VALIDATION_OK = 0;
-	const VALIDATION_ERROR = 1;
-	const VALIDATION_FATAL_ERROR = 2;
+	protected const POST_CONTENT_TYPE_FORM = 0;
+	protected const POST_CONTENT_TYPE_JSON = 1;
+
+	protected const VALIDATION_OK = 0;
+	protected const VALIDATION_ERROR = 1;
+	protected const VALIDATION_FATAL_ERROR = 2;
+
+	/**
+	 * Content type of the POST request.
+	 *
+	 * @var int
+	 */
+	private $post_content_type = self::POST_CONTENT_TYPE_FORM;
 
 	/**
 	 * Action name, so that controller knows what action he is executing.
@@ -44,31 +54,56 @@ abstract class CController {
 	 *
 	 * @var int
 	 */
-	private $validationResult;
+	private $validation_result;
 
 	/**
-	 * Input parameters retrieved from global $_REQUEST after validation.
+	 * Non-validated input parameters.
+	 *
+	 * @var array|null
+	 */
+	private $raw_input;
+
+	/**
+	 * Validated input parameters.
 	 *
 	 * @var array
 	 */
-	public $input = [];
+	protected $input = [];
 
 	/**
 	 * SID validation flag, if true SID must be validated.
 	 *
 	 * @var bool
 	 */
-	private $validateSID = true;
+	private $validate_sid = true;
 
 	public function __construct() {
-		CSession::start();
 		$this->init();
+		$this->populateRawInput();
 	}
 
 	/**
 	 * Initialization function that can be overridden later.
 	 */
 	protected function init() {
+	}
+
+	/**
+	 * Get content type of the POST request.
+	 *
+	 * @return int
+	 */
+	protected function getPostContentType(): int {
+		return $this->post_content_type;
+	}
+
+	/**
+	 * Set content type of the POST request.
+	 *
+	 * @param int $post_content_type
+	 */
+	protected function setPostContentType(int $post_content_type): void {
+		$this->post_content_type = $post_content_type;
 	}
 
 	/**
@@ -103,7 +138,7 @@ abstract class CController {
 	 *
 	 * @param CControllerResponse $response
 	 */
-	public function setResponse($response) {
+	protected function setResponse($response) {
 		$this->response = $response;
 	}
 
@@ -112,7 +147,7 @@ abstract class CController {
 	 *
 	 * @return bool
 	 */
-	public function getDebugMode() {
+	protected function getDebugMode() {
 		return CWebUser::getDebugMode();
 	}
 
@@ -121,8 +156,19 @@ abstract class CController {
 	 *
 	 * @return int
 	 */
-	public function getUserType() {
+	protected function getUserType() {
 		return CWebUser::getType();
+	}
+
+	/**
+	 * Checks access of current user to specific access rule.
+	 *
+	 * @param string $rule_name  Rule name.
+	 *
+	 * @return bool  Returns true if user has access to rule, false - otherwise.
+	 */
+	protected function checkAccess(string $rule_name): bool {
+		return CWebUser::checkAccess($rule_name);
 	}
 
 	/**
@@ -130,8 +176,8 @@ abstract class CController {
 	 *
 	 * @return string
 	 */
-	public function getUserSID() {
-		$sessionid = CWebUser::getSessionCookie();
+	protected function getUserSID() {
+		$sessionid = CSessionHelper::getId();
 
 		if ($sessionid === null || strlen($sessionid) < 16) {
 			return null;
@@ -141,40 +187,98 @@ abstract class CController {
 	}
 
 	/**
+	 * @throws Exception
+	 *
+	 * @return array
+	 */
+	private static function getFormInput(): array {
+		static $input;
+
+		if ($input === null) {
+			$input = $_REQUEST;
+
+			if (hasRequest('formdata')) {
+				if (!hasRequest('data') || !is_string(getRequest('data'))
+						|| !hasRequest('sign') || !is_string(getRequest('sign'))) {
+					throw new Exception(_('Operation cannot be performed due to unauthorized request.'));
+				}
+
+				$data = base64_decode(getRequest('data'));
+				$sign = base64_decode(getRequest('sign'));
+				$request_sign = CEncryptHelper::sign($data);
+
+				if (CEncryptHelper::checkSign($sign, $request_sign)) {
+					$data = json_decode($data, true);
+
+					if ($data['messages']) {
+						CMessageHelper::setScheduleMessages($data['messages']);
+					}
+
+					$input = array_replace($input, $data['form']);
+				}
+				else {
+					info(_('Operation cannot be performed due to unauthorized request.'));
+				}
+
+				// Replace window.history to avoid resubmission warning dialog.
+				zbx_add_post_js("history.replaceState({}, '');");
+			}
+		}
+
+		return $input;
+	}
+
+	/**
+	 * @return array
+	 */
+	private static function getJsonInput(): array {
+		static $input;
+
+		if ($input === null) {
+			$input = $_REQUEST;
+
+			$json_input = json_decode(file_get_contents('php://input'), true);
+
+			if (is_array($json_input)) {
+				$input += $json_input;
+			}
+			else {
+				info(_('JSON array input is expected.'));
+			}
+		}
+
+		return $input;
+	}
+
+	/**
 	 * Validate input parameters.
 	 *
-	 * @param array $validationRules
+	 * @param array $validation_rules
 	 *
 	 * @return bool
 	 */
-	public function validateInput($validationRules) {
-		if (CSession::keyExists('formData')) {
-			$input = array_merge($_REQUEST, CSession::getValue('formData'));
-			CSession::unsetValue(['formData']);
-		}
-		else {
-			$input = $_REQUEST;
+	protected function validateInput(array $validation_rules): bool {
+		if ($this->raw_input === null) {
+			$this->validation_result = self::VALIDATION_FATAL_ERROR;
+
+			return false;
 		}
 
-		$validator = new CNewValidator($input, $validationRules);
+		$validator = new CNewValidator($this->raw_input, $validation_rules);
 
 		foreach ($validator->getAllErrors() as $error) {
 			info($error);
 		}
 
 		if ($validator->isErrorFatal()) {
-			$this->validationResult = self::VALIDATION_FATAL_ERROR;
-		}
-		else if ($validator->isError()) {
-			$this->input = $validator->getValidInput();
-			$this->validationResult = self::VALIDATION_ERROR;
+			$this->validation_result = self::VALIDATION_FATAL_ERROR;
 		}
 		else {
 			$this->input = $validator->getValidInput();
-			$this->validationResult = self::VALIDATION_OK;
+			$this->validation_result = $validator->isError() ? self::VALIDATION_ERROR : self::VALIDATION_OK;
 		}
 
-		return ($this->validationResult == self::VALIDATION_OK);
+		return $this->validation_result == self::VALIDATION_OK;
 	}
 
 	/**
@@ -182,20 +286,36 @@ abstract class CController {
 	 *
 	 * @return bool
 	 */
-	public function validateTimeSelectorPeriod() {
+	protected function validateTimeSelectorPeriod() {
 		if (!$this->hasInput('from') || !$this->hasInput('to')) {
 			return true;
 		}
 
+		try {
+			$max_period = 'now-'.CSettingsHelper::get(CSettingsHelper::MAX_PERIOD);
+		}
+		catch (Exception $x) {
+			access_deny(ACCESS_DENY_PAGE);
+
+			return false;
+		}
+
 		$ts = [];
+		$ts['now'] = time();
 		$range_time_parser = new CRangeTimeParser();
 
 		foreach (['from', 'to'] as $field) {
 			$range_time_parser->parse($this->getInput($field));
-			$ts[$field] = $range_time_parser->getDateTime($field === 'from')->getTimestamp();
+			$ts[$field] = $range_time_parser
+				->getDateTime($field === 'from')
+				->getTimestamp();
 		}
 
 		$period = $ts['to'] - $ts['from'] + 1;
+		$range_time_parser->parse($max_period);
+		$max_period = 1 + $ts['now'] - $range_time_parser
+			->getDateTime(true)
+			->getTimestamp();
 
 		if ($period < ZBX_MIN_PERIOD) {
 			info(_n('Minimum time period to display is %1$s minute.',
@@ -204,9 +324,9 @@ abstract class CController {
 
 			return false;
 		}
-		elseif ($period > ZBX_MAX_PERIOD) {
+		elseif ($period > $max_period) {
 			info(_n('Maximum time period to display is %1$s day.',
-				'Maximum time period to display is %1$s days.', (int) (ZBX_MAX_PERIOD / SEC_PER_DAY)
+				'Maximum time period to display is %1$s days.', (int) round($max_period / SEC_PER_DAY)
 			));
 
 			return false;
@@ -220,8 +340,8 @@ abstract class CController {
 	 *
 	 * @return int
 	 */
-	public function getValidationError() {
-		return $this->validationResult;
+	protected function getValidationError() {
+		return $this->validation_result;
 	}
 
 	/**
@@ -231,7 +351,7 @@ abstract class CController {
 	 *
 	 * @return bool
 	 */
-	public function hasInput($var) {
+	protected function hasInput($var) {
 		return array_key_exists($var, $this->input);
 	}
 
@@ -243,7 +363,7 @@ abstract class CController {
 	 *
 	 * @return mixed
 	 */
-	public function getInput($var, $default = null) {
+	protected function getInput($var, $default = null) {
 		if ($default === null) {
 			return $this->input[$var];
 		}
@@ -258,7 +378,7 @@ abstract class CController {
 	 * @param array $var
 	 * @param array $names
 	 */
-	public function getInputs(&$var, $names) {
+	protected function getInputs(&$var, $names) {
 		foreach ($names as $name) {
 			if ($this->hasInput($name)) {
 				$var[$name] = $this->getInput($name);
@@ -271,7 +391,7 @@ abstract class CController {
 	 *
 	 * @return array
 	 */
-	public function getInputAll() {
+	protected function getInputAll() {
 		return $this->input;
 	}
 
@@ -296,8 +416,8 @@ abstract class CController {
 	/**
 	 * Validate session ID (SID).
 	 */
-	public function disableSIDvalidation() {
-		$this->validateSID = false;
+	protected function disableSIDvalidation() {
+		$this->validate_sid = false;
 	}
 
 	/**
@@ -305,14 +425,18 @@ abstract class CController {
 	 *
 	 * @return bool
 	 */
-	protected function checkSID() {
-		$sessionid = CWebUser::getSessionCookie();
+	private function checkSID(): bool {
+		$sessionid = $this->getUserSID();
 
-		if ($sessionid === null || !isset($_REQUEST['sid'])) {
+		if ($sessionid === null) {
 			return false;
 		}
 
-		return ($_REQUEST['sid'] === substr($sessionid, 16, 16));
+		if (!is_array($this->raw_input) || !array_key_exists('sid', $this->raw_input)) {
+			return false;
+		}
+
+		return $this->raw_input['sid'] === $sessionid;
 	}
 
 	/**
@@ -322,13 +446,28 @@ abstract class CController {
 	 */
 	abstract protected function doAction();
 
+	private function populateRawInput(): void {
+		switch ($this->getPostContentType()) {
+			case self::POST_CONTENT_TYPE_FORM:
+				$this->raw_input = self::getFormInput();
+				break;
+
+			case self::POST_CONTENT_TYPE_JSON:
+				$this->raw_input = self::getJsonInput();
+				break;
+
+			default:
+				$this->raw_input = null;
+		}
+	}
+
 	/**
 	 * Main controller processing routine. Returns response object: data, redirect or fatal redirect.
 	 *
 	 * @return CControllerResponse
 	 */
 	final public function run() {
-		if ($this->validateSID && !$this->checkSID()) {
+		if ($this->validate_sid && !$this->checkSID()) {
 			access_deny(ACCESS_DENY_PAGE);
 		}
 
@@ -336,6 +475,7 @@ abstract class CController {
 			if ($this->checkPermissions() !== true) {
 				access_deny(ACCESS_DENY_PAGE);
 			}
+
 			$this->doAction();
 		}
 

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,13 +17,12 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
 #include "checks_internal.h"
-#include "checks_java.h"
-#include "dbcache.h"
-#include "zbxself.h"
-#include "proxy.h"
 
+#include "checks_java.h"
+#include "zbxself.h"
+#include "preproc.h"
+#include "zbxtrends.h"
 #include "../vmware/vmware.h"
 #include "../../libs/zbxserver/zabbix_stats.h"
 #include "../../libs/zbxsysinfo/common/zabbix_stats.h"
@@ -56,8 +55,6 @@ static int	compare_interfaces(const void *p1, const void *p2)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_host_interfaces_discovery                                    *
  *                                                                            *
  * Purpose: get data of all network interfaces for a host from configuration  *
  *          cache and pack into JSON for LLD                                  *
@@ -171,16 +168,12 @@ static int	zbx_host_interfaces_discovery(zbx_uint64_t hostid, struct zbx_json *j
 
 /******************************************************************************
  *                                                                            *
- * Function: get_value_internal                                               *
- *                                                                            *
  * Purpose: retrieve data from Zabbix server (internally supported items)     *
  *                                                                            *
  * Parameters: item - item we are interested in                               *
  *                                                                            *
  * Return value: SUCCEED - data successfully retrieved and stored in result   *
  *               NOTSUPPORTED - requested item is not supported               *
- *                                                                            *
- * Author: Alexei Vladishev                                                   *
  *                                                                            *
  ******************************************************************************/
 int	get_value_internal(const DC_ITEM *item, AGENT_RESULT *result)
@@ -329,16 +322,24 @@ int	get_value_internal(const DC_ITEM *item, AGENT_RESULT *result)
 
 		if (0 == strcmp(tmp, "available"))		/* zabbix["host",<type>,"available"] */
 		{
+			zbx_agent_availability_t	agents[ZBX_AGENT_MAX];
+			int				i;
+
+			zbx_get_host_interfaces_availability(item->host.hostid, agents);
+
+			for (i = 0; i < ZBX_AGENT_MAX; i++)
+				zbx_free(agents[i].error);
+
 			tmp = get_rparam(&request, 1);
 
 			if (0 == strcmp(tmp, "agent"))
-				SET_UI64_RESULT(result, item->host.available);
+				SET_UI64_RESULT(result, agents[ZBX_AGENT_ZABBIX].available);
 			else if (0 == strcmp(tmp, "snmp"))
-				SET_UI64_RESULT(result, item->host.snmp_available);
+				SET_UI64_RESULT(result, agents[ZBX_AGENT_SNMP].available);
 			else if (0 == strcmp(tmp, "ipmi"))
-				SET_UI64_RESULT(result, item->host.ipmi_available);
+				SET_UI64_RESULT(result, agents[ZBX_AGENT_IPMI].available);
 			else if (0 == strcmp(tmp, "jmx"))
-				SET_UI64_RESULT(result, item->host.jmx_available);
+				SET_UI64_RESULT(result, agents[ZBX_AGENT_JMX].available);
 			else
 			{
 				SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter."));
@@ -830,6 +831,83 @@ int	get_value_internal(const DC_ITEM *item, AGENT_RESULT *result)
 		}
 
 		SET_UI64_RESULT(result, zbx_preprocessor_get_queue_size());
+	}
+	else if (0 == strcmp(tmp, "tcache"))			/* zabbix[tcache,cache,<parameter>] */
+	{
+		char		*error = NULL;
+		zbx_tfc_stats_t	stats;
+
+		if (0 == (program_type & ZBX_PROGRAM_TYPE_SERVER))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid first parameter."));
+			goto out;
+		}
+
+		if (2 > nparams || 3 < nparams)
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid number of parameters."));
+			goto out;
+		}
+
+		tmp1 = get_rparam(&request, 1);
+
+		if (0 != strcmp(tmp1, "cache"))
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid second parameter."));
+			goto out;
+		}
+
+		tmp = get_rparam(&request, 2);
+
+		if (FAIL == zbx_tfc_get_stats(&stats, &error))
+		{
+			SET_MSG_RESULT(result, error);
+			goto out;
+		}
+
+		if (NULL == tmp || 0 == strcmp(tmp, "all"))
+		{
+			SET_UI64_RESULT(result, stats.hits + stats.misses);
+		}
+		else if (0 == strcmp(tmp, "hits"))
+		{
+			SET_UI64_RESULT(result, stats.hits);
+		}
+		else if (0 == strcmp(tmp, "misses"))
+		{
+			SET_UI64_RESULT(result, stats.misses);
+		}
+		else if (0 == strcmp(tmp, "items"))
+		{
+			SET_UI64_RESULT(result, stats.items_num);
+		}
+		else if (0 == strcmp(tmp, "requests"))
+		{
+			SET_UI64_RESULT(result, stats.requests_num);
+		}
+		else if (0 == strcmp(tmp, "pmisses"))
+		{
+			zbx_uint64_t	total = stats.hits + stats.misses;
+
+			SET_DBL_RESULT(result, (0 == total ? 0 : (double)stats.misses / total * 100));
+		}
+		else if (0 == strcmp(tmp, "phits"))
+		{
+			zbx_uint64_t	total = stats.hits + stats.misses;
+
+			SET_DBL_RESULT(result, (0 == total ? 0 : (double)stats.hits / total * 100));
+		}
+		else if (0 == strcmp(tmp, "pitems"))
+		{
+			zbx_uint64_t	total = stats.items_num + stats.requests_num;
+
+			SET_DBL_RESULT(result, (0 == total ? 0 : (double)stats.items_num / total * 100));
+		}
+		else
+		{
+			SET_MSG_RESULT(result, zbx_strdup(NULL, "Invalid third parameter."));
+			goto out;
+		}
 	}
 	else
 	{

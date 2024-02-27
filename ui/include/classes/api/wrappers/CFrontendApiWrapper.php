@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -108,6 +108,7 @@ class CFrontendApiWrapper extends CApiWrapper {
 	protected function requiresAuthentication($api, $method) {
 		return !(($api === 'user' && $method === 'login')
 			|| ($api === 'user' && $method === 'checkAuthentication')
-			|| ($api === 'apiinfo' && $method === 'version'));
+			|| ($api === 'apiinfo' && $method === 'version')
+			|| ($api === 'settings' && $method === 'getGlobal'));
 	}
 }

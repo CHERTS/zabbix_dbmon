@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,8 +26,10 @@ $fields = $data['dialogue']['fields'];
 
 $form = CWidgetHelper::createForm();
 
+$rf_rate_field = ($data['templateid'] === null) ? $fields['rf_rate'] : null;
+
 $form_list = CWidgetHelper::createFormList($data['dialogue']['name'], $data['dialogue']['type'],
-	$data['dialogue']['view_mode'], $data['known_widget_types'], $fields['rf_rate']
+	$data['dialogue']['view_mode'], $data['known_widget_types'], $rf_rate_field
 );
 
 $form->addItem($form_list);
@@ -44,21 +46,24 @@ $form->addItem(
 );
 
 // Stick preview to the top of configuration window when scroll.
-$scripts[] =
-	'jQuery(".overlay-dialogue-body").on("scroll", function() {'.
-		'if (jQuery("#svg-graph-preview").length) {'.
-			'var $dialogue_body = jQuery(this),'.
-				'$preview_container = jQuery(".'.ZBX_STYLE_SVG_GRAPH_PREVIEW.'");'.
-				'jQuery("#svg-graph-preview").css("top",'.
-					'($preview_container.offset().top < $dialogue_body.offset().top && $dialogue_body.height() > 500)'.
-						' ? $dialogue_body.offset().top - $preview_container.offset().top'.
-						' : 0'.
-				');'.
-		'}'.
-		'else {'.
-			'jQuery(".overlay-dialogue-body").off("scroll");'.
-		'}'.
-	'})';
+$scripts[] = '
+	jQuery(".overlay-dialogue-body").on("scroll", function() {
+		if (jQuery("#svg-graph-preview").length) {
+			var $dialogue_body = jQuery(this),
+			$preview_container = jQuery(".'.ZBX_STYLE_SVG_GRAPH_PREVIEW.'");
+			if ($preview_container.offset().top < $dialogue_body.offset().top && $dialogue_body.height() > 500) {
+				jQuery("#svg-graph-preview").css("top", $dialogue_body.offset().top - $preview_container.offset().top);
+				jQuery(".graph-widget-config-tabs .ui-tabs-nav").css("top", $preview_container.height());
+			}
+			else {
+				jQuery("#svg-graph-preview").css("top", 0);
+				jQuery(".graph-widget-config-tabs .ui-tabs-nav").css("top", 0);
+			}
+		}
+		else {
+			jQuery(".overlay-dialogue-body").off("scroll");
+		}
+	})';
 
 $scripts[] =
 	'function onLeftYChange() {'.
@@ -146,7 +151,8 @@ $scripts[] =
 		'preview_data.xhr = jQuery.ajax({'.
 			'url: url.getUrl(),'.
 			'method: "POST",'.
-			'data: data,'.
+			'contentType: "application/json",'.
+			'data: JSON.stringify(data),'.
 			'dataType: "json",'.
 			'success: function(r) {'.
 				'if (preview_data.timeoutid) {'.
@@ -164,6 +170,9 @@ $scripts[] =
 			'}'.
 		'});'.
 		'$preview_container.data(preview_data);'.
+
+		// Trigger event to update tab indicators.
+		'document.getElementById("tabs").dispatchEvent(new Event(TAB_INDICATOR_UPDATE_EVENT));'.
 	'}';
 
 $scripts[] =
@@ -212,8 +221,18 @@ $tab_displaying_opt = (new CFormList())
 // Create 'Time period' tab.
 $tab_time_period = (new CFormList())
 	->addRow(CWidgetHelper::getLabel($fields['graph_time']), CWidgetHelper::getCheckBox($fields['graph_time']))
-	->addRow(CWidgetHelper::getLabel($fields['time_from']), CWidgetHelper::getDatePicker($fields['time_from']))
-	->addRow(CWidgetHelper::getLabel($fields['time_to']), CWidgetHelper::getDatePicker($fields['time_to']));
+	->addRow(
+		CWidgetHelper::getLabel($fields['time_from']),
+		CWidgetHelper::getDatePicker($fields['time_from'])
+			->setDateFormat(ZBX_FULL_DATE_TIME)
+			->setPlaceholder(_('YYYY-MM-DD hh:mm:ss'))
+	)
+	->addRow(
+		CWidgetHelper::getLabel($fields['time_to']),
+		CWidgetHelper::getDatePicker($fields['time_to'])
+			->setDateFormat(ZBX_FULL_DATE_TIME)
+			->setPlaceholder(_('YYYY-MM-DD hh:mm:ss'))
+	);
 
 // Create 'Axes' tab.
 $tab_axes = (new CFormList())->addRow('',
@@ -285,13 +304,13 @@ $jq_templates['overrides-row'] = CWidgetHelper::getGraphOverrideTemplate($fields
 
 // Create CTabView.
 $form_tabs = (new CTabView())
-	->addTab('data_set',  _('Data set'), $tab_data_set)
-	->addTab('displaying_options',  _('Displaying options'), $tab_displaying_opt)
-	->addTab('time_period',  _('Time period'), $tab_time_period)
-	->addTab('axes',  _('Axes'), $tab_axes)
-	->addTab('legendtab',  _('Legend'), $tab_legend)
-	->addTab('problems',  _('Problems'), $tab_problems)
-	->addTab('overrides',  _('Overrides'), $tab_overrides)
+	->addTab('data_set', _('Data set'), $tab_data_set, TAB_INDICATOR_GRAPH_DATASET)
+	->addTab('displaying_options', _('Displaying options'), $tab_displaying_opt, TAB_INDICATOR_GRAPH_OPTIONS)
+	->addTab('time_period', _('Time period'), $tab_time_period, TAB_INDICATOR_GRAPH_TIME)
+	->addTab('axes', _('Axes'), $tab_axes, TAB_INDICATOR_GRAPH_AXES)
+	->addTab('legendtab', _('Legend'), $tab_legend, TAB_INDICATOR_GRAPH_LEGEND)
+	->addTab('problems', _('Problems'), $tab_problems, TAB_INDICATOR_GRAPH_PROBLEMS)
+	->addTab('overrides', _('Overrides'), $tab_overrides, TAB_INDICATOR_GRAPH_OVERRIDES)
 	->addClass('graph-widget-config-tabs') // Add special style used for graph widget tabs only.
 	->onTabChange('jQuery.colorpicker("hide");jQuery(window).trigger("resize");')
 	->setSelected(0);

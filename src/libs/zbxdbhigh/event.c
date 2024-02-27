@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,13 +18,10 @@
 **/
 
 #include "common.h"
+
 #include "db.h"
-#include "log.h"
-#include "dbcache.h"
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_get_events_by_eventids                                       *
  *                                                                            *
  * Purpose: get events and flags that indicate what was filled in DB_EVENT    *
  *          structure                                                         *
@@ -32,7 +29,7 @@
  * Parameters: eventids   - [IN] requested event ids                          *
  *             events     - [OUT] the array of events                         *
  *                                                                            *
- * Comments: use 'free_db_event' function to release allocated memory         *
+ * Comments: use 'zbx_db_free_event' function to release allocated memory     *
  *                                                                            *
  ******************************************************************************/
 void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr_t *events)
@@ -41,10 +38,10 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 	DB_ROW			row;
 	char			*sql = NULL;
 	size_t			sql_alloc = 0, sql_offset = 0;
-	zbx_vector_uint64_t	trigger_eventids, triggerids;
+	zbx_vector_uint64_t	tagged_eventids, triggerids;
 	int			i, index;
 
-	zbx_vector_uint64_create(&trigger_eventids);
+	zbx_vector_uint64_create(&tagged_eventids);
 	zbx_vector_uint64_create(&triggerids);
 
 	zbx_vector_uint64_sort(eventids, ZBX_DEFAULT_UINT64_COMPARE_FUNC);
@@ -80,10 +77,11 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 
 		event->trigger.triggerid = 0;
 
-		if (EVENT_SOURCE_TRIGGERS == event->source)
+		if (EVENT_SOURCE_TRIGGERS == event->source || EVENT_SOURCE_INTERNAL == event->source ||
+				EVENT_SOURCE_SERVICE == event->source)
 		{
 			zbx_vector_ptr_create(&event->tags);
-			zbx_vector_uint64_append(&trigger_eventids, event->eventid);
+			zbx_vector_uint64_append(&tagged_eventids, event->eventid);
 		}
 
 		if (EVENT_OBJECT_TRIGGER == event->object)
@@ -92,6 +90,8 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 		zbx_vector_ptr_append(events, event);
 	}
 	DBfree_result(result);
+
+	zbx_vector_ptr_sort(events, ZBX_DEFAULT_UINT64_PTR_COMPARE_FUNC);
 
 	/* read event_suppress data */
 
@@ -118,13 +118,14 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 	}
 	DBfree_result(result);
 
-	if (0 != trigger_eventids.values_num)	/* EVENT_SOURCE_TRIGGERS */
+	/* EVENT_SOURCE_TRIGGERS || EVENT_SOURCE_INTERNAL || EVENT_SOURCE_SERVICE */
+	if (0 != tagged_eventids.values_num)
 	{
 		DB_EVENT	*event = NULL;
 
 		sql_offset = 0;
-		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "eventid", trigger_eventids.values,
-				trigger_eventids.values_num);
+		DBadd_condition_alloc(&sql, &sql_alloc, &sql_offset, "eventid", tagged_eventids.values,
+				tagged_eventids.values_num);
 
 		result = DBselect("select eventid,tag,value from event_tag where%s order by eventid", sql);
 
@@ -166,7 +167,7 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 
 		result = DBselect(
 				"select triggerid,description,expression,priority,comments,url,recovery_expression,"
-					"recovery_mode,value,opdata"
+					"recovery_mode,value,opdata,event_name"
 				" from triggers"
 				" where%s",
 				sql);
@@ -196,6 +197,9 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 					ZBX_STR2UCHAR(event->trigger.recovery_mode, row[7]);
 					ZBX_STR2UCHAR(event->trigger.value, row[8]);
 					event->trigger.opdata = zbx_strdup(NULL, row[9]);
+					event->trigger.event_name = ('\0' != *row[10] ? zbx_strdup(NULL, row[10]) :
+							NULL);
+					event->trigger.cache = NULL;
 				}
 			}
 		}
@@ -204,41 +208,21 @@ void	zbx_db_get_events_by_eventids(zbx_vector_uint64_t *eventids, zbx_vector_ptr
 
 	zbx_free(sql);
 
-	zbx_vector_uint64_destroy(&trigger_eventids);
+	zbx_vector_uint64_destroy(&tagged_eventids);
 	zbx_vector_uint64_destroy(&triggerids);
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_db_trigger_clean                                             *
- *                                                                            *
- * Purpose: frees resources allocated to store trigger data                   *
- *                                                                            *
- * Parameters: trigger -                                                      *
- *                                                                            *
- ******************************************************************************/
-void	zbx_db_trigger_clean(DB_TRIGGER *trigger)
-{
-	zbx_free(trigger->description);
-	zbx_free(trigger->expression);
-	zbx_free(trigger->recovery_expression);
-	zbx_free(trigger->comments);
-	zbx_free(trigger->url);
-	zbx_free(trigger->opdata);
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: zbx_free_event                                                   *
- *                                                                            *
- * Purpose: deallocate memory allocated in function 'get_db_events_info'      *
+ * Purpose: free the event with its resources                                 *
  *                                                                            *
  * Parameters: event - [IN] event data                                        *
  *                                                                            *
  ******************************************************************************/
 void	zbx_db_free_event(DB_EVENT *event)
 {
-	if (EVENT_SOURCE_TRIGGERS == event->source)
+	if (EVENT_SOURCE_TRIGGERS == event->source || EVENT_SOURCE_INTERNAL == event->source ||
+			EVENT_SOURCE_SERVICE == event->source)
 	{
 		zbx_vector_ptr_clear_ext(&event->tags, (zbx_clean_func_t)zbx_free_tag);
 		zbx_vector_ptr_destroy(&event->tags);
@@ -252,8 +236,6 @@ void	zbx_db_free_event(DB_EVENT *event)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: get_db_eventid_r_eventid_pairs                                   *
  *                                                                            *
  * Purpose: get recovery event IDs by event IDs then map them together also   *
  *          additional create a separate array of recovery event IDs          *

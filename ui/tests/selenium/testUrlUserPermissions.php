@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,26 +43,6 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				'url' => 'zabbix.php?action=problem.view',
 				'title' =>	'Problems',
 				'header' =>	'Problems',
-				'users' => [
-					'guest' => true,
-					'user-zabbix' => true,
-					'admin-zabbix' => true
-				]
-			]],
-			[[
-				'url' => 'overview.php',
-				'title' =>	'Overview [refreshed every 30 sec.]',
-				'header' =>	'Trigger overview',
-				'users' => [
-					'guest' => true,
-					'user-zabbix' => true,
-					'admin-zabbix' => true
-				]
-			]],
-			[[
-				'url' => 'overview.php?form_refresh=1&groupid=0&type=0&view_style=0',
-				'title' =>	'Overview [refreshed every 30 sec.]',
-				'header' =>	'Trigger overview',
 				'users' => [
 					'guest' => true,
 					'user-zabbix' => true,
@@ -120,59 +100,9 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'zabbix.php?view_as=showgraph&action=charts.view&filter_search_type=0&filter_graphids%5B%5D=523&filter_set=1',
+				'url' => 'zabbix.php?action=charts.view&filter_hostids%5B0%5D=10084&filter_show=1&filter_set=1',
 				'title' =>	'Custom graphs',
 				'no_permissions_to_object' => true,
-				'users' => [
-					'guest' => true,
-					'user-zabbix' => true,
-					'admin-zabbix' => true
-				]
-			]],
-			[[
-				'url' => 'screens.php',
-				'title' =>	'Configuration of screens',
-				'header' =>	'Screens',
-				'users' => [
-					'guest' => true,
-					'user-zabbix' => true,
-					'admin-zabbix' => true
-				]
-			]],
-			[[
-				'url' => 'screenconf.php',
-				'title' =>	'Configuration of screens',
-				'header' =>	'Screens',
-				'users' => [
-					'guest' => true,
-					'user-zabbix' => true,
-					'admin-zabbix' => true
-				]
-			]],
-			[[
-				'url' => 'screens.php?elementid=200001',
-				'title' =>	'Custom screens [refreshed every 30 sec.]',
-				'header' =>	'Screens',
-				'users' => [
-					'guest' => true,
-					'user-zabbix' => true,
-					'admin-zabbix' => true
-				]
-			]],
-			[[
-				'url' => 'screens.php?elementid=200000',
-				'title' =>	'Custom screens [refreshed every 30 sec.]',
-				'no_permissions_to_object' => true,
-				'users' => [
-					'guest' => true,
-					'user-zabbix' => true,
-					'admin-zabbix' => true
-				]
-			]],
-			[[
-				'url' => 'slideconf.php',
-				'title' =>	'Configuration of slide shows',
-				'header' =>	'Slide shows',
 				'users' => [
 					'guest' => true,
 					'user-zabbix' => true,
@@ -218,8 +148,8 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'srv_status.php',
-				'title' =>	'Services [refreshed every 30 sec.]',
+				'url' => 'zabbix.php?action=service.list',
+				'title' =>	'Services',
 				'header' =>	'Services',
 				'users' => [
 					'guest' => true,
@@ -358,7 +288,7 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'hosts.php',
+				'url' => self::HOST_LIST_PAGE,
 				'title' =>	'Configuration of hosts',
 				'header' => 'Hosts',
 				'users' => [
@@ -368,9 +298,9 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'hosts.php?groupid=0&form=Create+host',
-				'title' =>	'Configuration of hosts',
-				'header' => 'Hosts',
+				'url' => 'zabbix.php?action=host.edit',
+				'title' =>	'Configuration of host',
+				'header' => 'New host',
 				'users' => [
 					'guest' => false,
 					'user-zabbix' => false,
@@ -378,17 +308,7 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'applications.php',
-				'title' =>	'Configuration of applications',
-				'header' => 'Applications',
-				'users' => [
-					'guest' => false,
-					'user-zabbix' => false,
-					'admin-zabbix' => true
-				]
-			]],
-			[[
-				'url' => 'items.php',
+				'url' => 'items.php?context=host',
 				'title' =>	'Configuration of items',
 				'header' => 'Items',
 				'users' => [
@@ -398,7 +318,7 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'triggers.php',
+				'url' => 'triggers.php?context=host',
 				'title' =>	'Configuration of triggers',
 				'header' => 'Triggers',
 				'users' => [
@@ -408,7 +328,7 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'graphs.php',
+				'url' => 'graphs.php?context=host',
 				'title' =>	'Configuration of graphs',
 				'header' => 'Graphs',
 				'users' => [
@@ -418,7 +338,7 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'host_discovery.php?hostid=10084',
+				'url' => 'host_discovery.php?context=host&hostid=10084',
 				'title' =>	'Configuration of discovery rules',
 				'no_permissions_to_object' => true,
 				'users' => [
@@ -428,7 +348,7 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'httpconf.php',
+				'url' => 'httpconf.php?context=host',
 				'title' =>	'Configuration of web monitoring',
 				'header' => 'Web monitoring',
 				'users' => [
@@ -498,7 +418,7 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'correlation.php',
+				'url' => 'zabbix.php?action=correlation.list',
 				'title' =>	'Event correlation rules',
 				'header' => 'Event correlation',
 				'users' => [
@@ -508,7 +428,7 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'correlation.php?form=Create+correlation',
+				'url' => 'zabbix.php?action=correlation.edit',
 				'title' =>	'Event correlation rules',
 				'users' => [
 					'guest' => false,
@@ -517,7 +437,7 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'discoveryconf.php',
+				'url' => 'zabbix.php?action=discovery.list',
 				'title' =>	'Configuration of discovery rules',
 				'header' => 'Discovery rules',
 				'users' => [
@@ -527,8 +447,8 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'services.php',
-				'title' =>	'Configuration of services',
+				'url' => 'zabbix.php?action=service.list.edit',
+				'title' =>	'Services',
 				'header' => 'Services',
 				'users' => [
 					'guest' => false,
@@ -585,33 +505,6 @@ class testUrlUserPermissions extends CLegacyWebTest {
 			[[
 				'url' => 'zabbix.php?action=macros.edit',
 				'title' =>	'Configuration of macros',
-				'users' => [
-					'guest' => false,
-					'user-zabbix' => false,
-					'admin-zabbix' => false
-				]
-			]],
-			[[
-				'url' => 'zabbix.php?action=valuemap.list',
-				'title' =>	'Configuration of value mapping',
-				'users' => [
-					'guest' => false,
-					'user-zabbix' => false,
-					'admin-zabbix' => false
-				]
-			]],
-			[[
-				'url' => 'zabbix.php?action=workingtime.edit',
-				'title' =>	'Configuration of working time',
-				'users' => [
-					'guest' => false,
-					'user-zabbix' => false,
-					'admin-zabbix' => false
-				]
-			]],
-			[[
-				'url' => 'zabbix.php?action=trigseverity.edit',
-				'title' =>	'Configuration of trigger severities',
 				'users' => [
 					'guest' => false,
 					'user-zabbix' => false,
@@ -691,7 +584,7 @@ class testUrlUserPermissions extends CLegacyWebTest {
 				]
 			]],
 			[[
-				'url' => 'queue.php',
+				'url' => 'zabbix.php?action=queue.overview',
 				'title' =>	'Queue [refreshed every 30 sec.]',
 				'users' => [
 					'guest' => false,
@@ -718,15 +611,6 @@ class testUrlUserPermissions extends CLegacyWebTest {
 					'guest' => false,
 					'user-zabbix' => true,
 					'admin-zabbix' => true
-				]
-			]],
-			[[
-				'url' => 'conf.import.php',
-				'title' =>	'Configuration import',
-				'no_permissions_to_object' => true,
-				'users' => [
-					'guest' => false,
-					'user-zabbix' => false
 				]
 			]]
 		];

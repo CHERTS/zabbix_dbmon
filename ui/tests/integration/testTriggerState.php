@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ class testTriggerState extends CIntegrationTest {
 		// Create trigger
 		$response = $this->call('trigger.create', [
 			'description' => 'Trapper received 1',
-			'expression' => '{'.self::HOST_NAME.':'.self::TRAPPER_ITEM_NAME.'.last()}=1'
+			'expression' => 'last(/'.self::HOST_NAME.'/'.self::TRAPPER_ITEM_NAME.')=1'
 		]);
 		$this->assertArrayHasKey('triggerids', $response['result']);
 		$this->assertEquals(1, count($response['result']['triggerids']));

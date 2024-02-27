@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 					->addClass('macro')
 					->setWidth(ZBX_TEXTAREA_MACRO_WIDTH)
 					->setAttribute('placeholder', '{$MACRO}')
+					->disableSpellcheck()
 			))->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT),
 			(new CCol(
 				new CMacroValue(ZBX_MACRO_TYPE_TEXT, 'macros[#{rowNum}]', '', false)
@@ -53,36 +54,37 @@
 </script>
 
 <script type="text/javascript">
-	jQuery(function() {
-		const table = jQuery('#tbl_macros');
+	$(function() {
+		const table = $('#tbl_macros');
 		let removed = 0;
 
 		table
 			.on('click', 'button.element-table-remove', function() {
 				// check if the macro has an hidden ID element, if it does - increment the deleted macro counter
-				removed += jQuery('#macros_' + jQuery(this).attr('id').split('_')[1] + '_globalmacroid').length;
+				removed += $('#macros_' + $(this).attr('id').split('_')[1] + '_globalmacroid').length;
 			})
 			.dynamicRows({template: '#macro-row-tmpl'})
 			.on('afteradd.dynamicRows', function() {
-				jQuery('.input-group', table).macroValue();
+				$('.macro-input-group', table).macroValue();
+				$('.<?= ZBX_STYLE_TEXTAREA_FLEXIBLE ?>', table).textareaFlexible();
 			})
-			.find('.input-group')
+			.find('.macro-input-group')
 			.macroValue();
 
 		table
 			.on('change keydown', '.<?= ZBX_STYLE_TEXTAREA_FLEXIBLE ?>.macro', function(event) {
 				if (event.type === 'change' || event.which === 13) {
-					jQuery(this)
-						.val(jQuery(this).val().replace(/([^:]+)/, (value) => value.toUpperCase('$1')))
+					$(this)
+						.val($(this).val().replace(/([^:]+)/, (value) => value.toUpperCase('$1')))
 						.textareaFlexible();
 				}
 			})
 			.find('.<?= ZBX_STYLE_TEXTAREA_FLEXIBLE ?>')
 			.textareaFlexible();
 
-		jQuery('#update').click(function() {
+		$('#update').click(function() {
 			if (removed) {
-				return confirm(<?= json_encode(_('Are you sure you want to delete')) ?> + ' ' + removed + ' '
+				return confirm(<?= json_encode(_('Are you sure you want to delete?')) ?> + ' ' + removed + ' '
 					+ <?= json_encode(_('macro(s)')) ?> + '?'
 				);
 			}

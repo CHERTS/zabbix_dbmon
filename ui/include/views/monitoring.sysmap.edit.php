@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,12 +29,14 @@ $widget = (new CWidget())->setTitle(_('Network maps'));
 
 $tabs = new CTabView();
 
-if (!$data['form_refresh']) {
+if ($data['form_refresh'] == 0) {
 	$tabs->setSelected(0);
 }
 
 // Create sysmap form.
 $form = (new CForm())
+	->addItem((new CVar('form_refresh', $data['form_refresh'] + 1))->removeId())
+	->setId('sysmap-form')
 	->setName('map.edit.php')
 	->addVar('form', getRequest('form', 1))
 	->addVar('current_user_userid', $data['current_user_userid'])
@@ -135,7 +137,7 @@ $icon_mapping_link = (new CLink(_('show icon mappings'), (new CUrl('zabbix.php')
 	))
 	->setTarget('_blank');
 $map_tab->addRow(new CLabel(_('Automatic icon mapping'), $icon_mapping->getFocusableElementId()),
-	[$icon_mapping, SPACE, $icon_mapping_link]
+	[$icon_mapping, NBSP(), $icon_mapping_link]
 );
 
 // Append multiple checkboxes to form list.
@@ -170,6 +172,7 @@ $map_tab
 	->addRow(null,
 		(new CTextArea('label_string_hostgroup', $data['sysmap']['label_string_hostgroup']))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+			->disableSpellcheck()
 	);
 
 // Append host to form list.
@@ -184,6 +187,7 @@ $map_tab
 	->addRow(null,
 		(new CTextArea('label_string_host', $data['sysmap']['label_string_host']))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+			->disableSpellcheck()
 	);
 
 // Append trigger to form list.
@@ -198,6 +202,7 @@ $map_tab
 	->addRow(null,
 		(new CTextArea('label_string_trigger', $data['sysmap']['label_string_trigger']))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+			->disableSpellcheck()
 	);
 
 // Append map to form list.
@@ -212,6 +217,7 @@ $map_tab
 	->addRow(null,
 		(new CTextArea('label_string_map', $data['sysmap']['label_string_map']))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+			->disableSpellcheck()
 	);
 
 // Append image to form list.
@@ -226,6 +232,7 @@ $map_tab
 	->addRow(null,
 		(new CTextArea('label_string_image', $data['sysmap']['label_string_image']))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+			->disableSpellcheck()
 	);
 
 // Append map element label to form list.
@@ -264,7 +271,7 @@ $map_tab->addRow(new CLabel(_('Problem display'), 'label-show-unack'),
 );
 
 $map_tab->addRow(_('Minimum severity'),
-	new CSeverity(['name' => 'severity_min', 'value' => (int) $data['sysmap']['severity_min']])
+	new CSeverity('severity_min', (int) $data['sysmap']['severity_min'])
 );
 
 $map_tab->addRow(_('Show suppressed problems'),
@@ -317,18 +324,19 @@ $tabs->addTab('sysmap_tab', _('Map'), $map_tab);
 
 // User group sharing table.
 $user_group_shares_table = (new CTable())
+	->setId('user-group-share-table')
 	->setHeader([_('User groups'), _('Permissions'), _('Action')])
 	->setAttribute('style', 'width: 100%;');
 
 $add_user_group_btn = ([(new CButton(null, _('Add')))
-	->onClick('return PopUp("popup.generic",'.
-		json_encode([
+	->onClick(
+		'return PopUp("popup.generic", '.json_encode([
 			'srctbl' => 'usrgrp',
 			'srcfld1' => 'usrgrpid',
 			'srcfld2' => 'name',
 			'dstfrm' => $form->getName(),
 			'multiselect' => '1'
-		]).', null, this);'
+		]).', {dialogue_class: "modal-popup-generic"});'
 	)
 	->addClass(ZBX_STYLE_BTN_LINK)]);
 
@@ -342,29 +350,30 @@ $user_groups = [];
 
 foreach ($data['sysmap']['userGroups'] as $user_group) {
 	$user_groupid = $user_group['usrgrpid'];
-	$user_groups[$user_groupid] = [
+	$user_groups[] = [
 		'usrgrpid' => $user_groupid,
 		'name' => $data['user_groups'][$user_groupid]['name'],
 		'permission' => $user_group['permission']
 	];
 }
 
-$js_insert = 'addPopupValues('.zbx_jsvalue(['object' => 'usrgrpid', 'values' => $user_groups]).');';
+$js_insert = 'window.addPopupValues('.json_encode(['object' => 'usrgrpid', 'values' => $user_groups]).');';
 
 // User sharing table.
 $user_shares_table = (new CTable())
+	->setId('user-share-table')
 	->setHeader([_('Users'), _('Permissions'), _('Action')])
 	->setAttribute('style', 'width: 100%;');
 
 $add_user_btn = ([(new CButton(null, _('Add')))
-	->onClick('return PopUp("popup.generic",'.
-		json_encode([
+	->onClick(
+		'return PopUp("popup.generic", '.json_encode([
 			'srctbl' => 'users',
 			'srcfld1' => 'userid',
 			'srcfld2' => 'fullname',
 			'dstfrm' => $form->getName(),
 			'multiselect' => '1'
-		]).', null, this);'
+		]).', {dialogue_class: "modal-popup-generic"});'
 	)
 	->addClass(ZBX_STYLE_BTN_LINK)]);
 
@@ -378,14 +387,14 @@ $users = [];
 
 foreach ($data['sysmap']['users'] as $user) {
 	$userid = $user['userid'];
-	$users[$userid] = [
+	$users[] = [
 		'id' => $userid,
 		'name' => getUserFullname($data['users'][$userid]),
 		'permission' => $user['permission']
 	];
 }
 
-$js_insert .= 'addPopupValues('.zbx_jsvalue(['object' => 'userid', 'values' => $users]).');';
+$js_insert .= 'window.addPopupValues('.json_encode(['object' => 'userid', 'values' => $users]).');';
 
 zbx_add_post_js($js_insert);
 
@@ -408,7 +417,7 @@ $sharing_tab = (new CFormList('sharing_form'))
 	);
 
 // Append data to form.
-$tabs->addTab('sharing_tab', _('Sharing'), $sharing_tab);
+$tabs->addTab('sharing_tab', _('Sharing'), $sharing_tab, TAB_INDICATOR_SHARING);
 
 // Append buttons to form.
 if (hasRequest('sysmapid') && getRequest('sysmapid') > 0 && getRequest('form') !== 'full_clone') {

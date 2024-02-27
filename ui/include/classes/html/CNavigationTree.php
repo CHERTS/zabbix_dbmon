@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 
 class CNavigationTree extends CDiv {
+
 	private $error;
 	private $data;
 
@@ -37,28 +38,23 @@ class CNavigationTree extends CDiv {
 		return $this;
 	}
 
-	public function getScriptRun() {
-		return ($this->error === null)
-			? 'jQuery(function($) {'.
-				'$("#'.$this->getId().'").zbx_navtree({'.
-					'problems: '.json_encode($this->data['problems']).','.
-					'severity_levels: '.json_encode($this->data['severity_config']).','.
-					'navtree: '.json_encode($this->data['navtree']).','.
-					'navtree_items_opened: "'.implode(',', $this->data['navtree_items_opened']).'",'.
-					'navtree_item_selected: '.intval($this->data['navtree_item_selected']).','.
-					'maps_accessible: '.json_encode(array_map('strval', $this->data['maps_accessible'])).','.
-					'show_unavailable: '.$this->data['show_unavailable'].','.
-					'initial_load: '.$this->data['initial_load'].','.
-					'uniqueid: "'.$this->data['uniqueid'].'",'.
-					'max_depth: '.WIDGET_NAVIGATION_TREE_MAX_DEPTH.
-				'});'.
-			'});'
-			: '';
+	public function getScriptData() {
+		return [
+			'problems' => $this->data['problems'],
+			'severity_levels' => $this->data['severity_config'],
+			'navtree' => $this->data['navtree'],
+			'navtree_items_opened' => $this->data['navtree_items_opened'],
+			'navtree_item_selected' => $this->data['navtree_item_selected'],
+			'maps_accessible' => array_map('strval', $this->data['maps_accessible']),
+			'show_unavailable' => $this->data['show_unavailable'],
+			'initial_load' => $this->data['initial_load'],
+			'max_depth' => WIDGET_NAVIGATION_TREE_MAX_DEPTH
+		];
 	}
 
 	private function build() {
 		if ($this->error !== null) {
-			$span->addClass(ZBX_STYLE_DISABLED);
+			$this->addClass(ZBX_STYLE_DISABLED);
 		}
 
 		$this->addItem((new CDiv())->addClass('tree'));

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,26 +53,11 @@ class testItemState extends CIntegrationTest {
 	private static $scenarios = [
 		[
 			'name' => 'zbx_psv_01',
-			'delay_s' => 5,
-			'refresh_unsupported' => 8,
-			'after_sync' => false
-		],
-		[
-			'name' => 'zbx_psv_01',
-			'delay_s' => 8,
-			'refresh_unsupported' => 5,
-			'after_sync' => false
-		],
-		[
-			'name' => 'zbx_psv_01',
-			'delay_s' => 5,
-			'refresh_unsupported' => 8,
-			'after_sync' => true
+			'delay_s' => 5
 		],
 		[
 			'name' => 'zbx_act_01',
-			'delay_s' => 5,
-			'refresh_unsupported' => 65
+			'delay_s' => 5
 		]
 	];
 
@@ -152,11 +137,12 @@ class testItemState extends CIntegrationTest {
 		return [
 			self::COMPONENT_SERVER => [
 				'DebugLevel' => 4,
-				'LogFileSize' => 20
+				'LogFileSize' => 20,
+				'ListenPort' => self::getConfigurationValue(self::COMPONENT_SERVER, 'ListenPort', 10051)
 			],
 			self::COMPONENT_AGENT => [
 				'Hostname' => 'test_host',
-				'ServerActive' => '127.0.0.1:'.self::getConfigurationValue(self::COMPONENT_SERVER, 'ListenPort'),
+				'ServerActive' => '127.0.0.1:'.self::getConfigurationValue(self::COMPONENT_SERVER, 'ListenPort', 10051),
 				'RefreshActiveChecks' => self::REFRESH_ACT_CHKS_INTERVAL,
 				'BufferSend' => 1
 			]
@@ -264,9 +250,7 @@ class testItemState extends CIntegrationTest {
 	 * Routine to check item state and intervals.
 	 */
 	protected function checkItemStatePassive($scenario, $state) {
-		$delay = ($scenario['after_sync'] === true || $state === ITEM_STATE_NORMAL)
-				? $scenario['delay_s']
-				: $scenario['refresh_unsupported'];
+		$delay = $scenario['delay_s'];
 
 		$wait = $delay + self::LOG_LINE_WAIT_TIME;
 		$key = self::$items[$scenario['name']]['key'];
@@ -298,8 +282,8 @@ class testItemState extends CIntegrationTest {
 	 * Routine to check item state and intervals (active agent items).
 	 */
 	protected function checkItemStateActive($scenario, $state, &$refresh) {
-		$wait = max($scenario['delay_s'], $scenario['refresh_unsupported'], self::REFRESH_ACT_CHKS_INTERVAL) +
-				self::PROCESS_ACT_CHKS_DELAY + self::LOG_LINE_WAIT_TIME;
+		$wait = max($scenario['delay_s'], self::REFRESH_ACT_CHKS_INTERVAL) + self::PROCESS_ACT_CHKS_DELAY
+			+ self::LOG_LINE_WAIT_TIME;
 		$key = self::$items[$scenario['name']]['key'];
 
 		// Wait for item to be checked
@@ -333,33 +317,9 @@ class testItemState extends CIntegrationTest {
 			$refresh += self::REFRESH_ACT_CHKS_INTERVAL;
 		}
 
-		if ($state === ITEM_STATE_NOTSUPPORTED) {
-			$exp_nextcheck_item = $check + $scenario['refresh_unsupported'];
-			while ($refresh < $exp_nextcheck_item) {
-				$refresh += self::REFRESH_ACT_CHKS_INTERVAL;
-			}
-
-			$exp_nextcheck_process = $check;
-			while ($exp_nextcheck_process < $refresh) {
-				$exp_nextcheck_process += self::PROCESS_ACT_CHKS_DELAY;
-			}
-
-			if ($scenario['delay_s'] > self::PROCESS_ACT_CHKS_DELAY) {
-				$exp_nextcheck_item = $check;
-
-				while ($exp_nextcheck_item < $exp_nextcheck_process) {
-					$exp_nextcheck_item += $scenario['delay_s'];
-				}
-			} else {
-				$exp_nextcheck_item = $exp_nextcheck_process;
-			}
-
-			$this->assertTrue($next_check <= $exp_nextcheck_item + 1 && $next_check >= $exp_nextcheck_item - 1);
-		} else {
-			$this->assertTrue($next_check <= $check + $scenario['delay_s'] + 1
-					&& $next_check >= $check + $scenario['delay_s'] - 1
-			);
-		}
+		$this->assertTrue($next_check <= $check + $scenario['delay_s'] + 1
+				&& $next_check >= $check + $scenario['delay_s'] - 1
+		);
 
 		return $refresh;
 	}
@@ -407,11 +367,6 @@ class testItemState extends CIntegrationTest {
 	 * @dataProvider getDataPassive
 	 */
 	public function testItemState_checkPassive($data) {
-		// Set refresh unsupported items interval
-		$this->assertTrue(DBexecute('UPDATE config SET refresh_unsupported='.
-				zbx_dbstr($data['refresh_unsupported'].'s').' WHERE configid=1')
-		);
-
 		// Prepare item
 		$this->prepareItem(self::$items[$data['name']]['itemid'], $data['delay_s'].'s');
 
@@ -419,11 +374,7 @@ class testItemState extends CIntegrationTest {
 		$this->checkItemStatePassive($data, ITEM_STATE_NORMAL);
 
 		// Make item not supported
-		if ($data['after_sync'] === true) {
-			$this->assertTrue(@file_put_contents(self::PSV_FILE_NAME, 'text') !== false);
-		} else {
-			$this->assertTrue(@unlink(self::PSV_FILE_NAME) !== false);
-		}
+		$this->assertTrue(@unlink(self::PSV_FILE_NAME) !== false);
 
 		// Check item state and intervals
 		$this->checkItemStatePassive($data, ITEM_STATE_NOTSUPPORTED);
@@ -441,11 +392,6 @@ class testItemState extends CIntegrationTest {
 	 * @dataProvider getDataActive
 	 */
 	public function testItemState_checkActive($data) {
-		// Set refresh unsupported items interval
-		$this->assertTrue(DBexecute('UPDATE config SET refresh_unsupported='.
-				zbx_dbstr($data['refresh_unsupported'].'s').' WHERE configid=1')
-		);
-
 		// Prepare item
 		$this->prepareItem(self::$items[$data['name']]['itemid'], $data['delay_s'].'s');
 

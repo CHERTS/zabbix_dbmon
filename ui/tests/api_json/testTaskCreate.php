@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -166,7 +166,7 @@ class testTaskCreate extends CAPITest {
 				'task' => [
 					'type' => '6',
 					'request' => [
-						'itemid' => '29207'
+						'itemid' => '42276'
 					]
 				],
 				'expected_error' => null
@@ -273,7 +273,7 @@ class testTaskCreate extends CAPITest {
 				'item' => [
 					'itemid' => '90004',
 					'type' => '18',
-					'master_itemid' => '23287'
+					'master_itemid' => '42237'
 				],
 				'expected_error' => 'Cannot send request: wrong item type.'
 			],
@@ -329,10 +329,10 @@ class testTaskCreate extends CAPITest {
 				'task' => [
 					'type' => '6',
 					'request' => [
-						'itemid' => '23287'
+						'itemid' => '42237'
 					]
 				],
-				'expected_error' => 'No permissions to referred object or it does not exist!'
+				'expected_error' => 'No permissions to call "task.create".'
 			],
 			[
 				'user' => ['user' => 'zabbix-admin', 'password' => 'zabbix'],
@@ -342,17 +342,17 @@ class testTaskCreate extends CAPITest {
 						'itemid' => '23279'
 					]
 				],
-				'expected_error' => 'No permissions to referred object or it does not exist!'
+				'expected_error' => 'No permissions to call "task.create".'
 			],
 			[
 				'user' => ['user' => 'zabbix-user', 'password' => 'zabbix'],
 				'task' => [
 					'type' => '6',
 					'request' => [
-						'itemid' => '23287'
+						'itemid' => '42237'
 					]
 				],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "task.create".'
 			],
 			[
 				'user' => ['user' => 'zabbix-user', 'password' => 'zabbix'],
@@ -362,7 +362,7 @@ class testTaskCreate extends CAPITest {
 						'itemid' => '23279'
 					]
 				],
-				'expected_error' => 'You do not have permission to perform this operation.'
+				'expected_error' => 'No permissions to call "task.create".'
 			]
 		];
 	}

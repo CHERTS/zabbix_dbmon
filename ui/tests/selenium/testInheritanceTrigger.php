@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -28,22 +28,20 @@ require_once dirname(__FILE__).'/behaviors/CMessageBehavior.php';
  */
 class testInheritanceTrigger extends CLegacyWebTest {
 
+	private $templateid = 15000;	// 'Inheritance test template'
+	private $template = 'Inheritance test template';
+
+	private $hostid = 15001;		// 'Template inheritance test host'
+	private $host = 'Template inheritance test host';
+
 	/**
 	 * Attach MessageBehavior to the test.
 	 *
 	 * @return array
 	 */
 	public function getBehaviors() {
-		return [
-			'class' => CMessageBehavior::class
-		];
+		return [CMessageBehavior::class];
 	}
-
-	private $templateid = 15000;	// 'Inheritance test template'
-	private $template = 'Inheritance test template';
-
-	private $hostid = 15001;		// 'Template inheritance test host'
-	private $host = 'Template inheritance test host';
 
 	// return list of triggers from a template
 	public static function update() {
@@ -69,7 +67,7 @@ class testInheritanceTrigger extends CLegacyWebTest {
 		$sqlTriggers = 'SELECT * FROM triggers ORDER BY triggerid';
 		$oldHashTriggers = CDBHelper::getHash($sqlTriggers);
 
-		$this->zbxTestLogin('triggers.php?form=update&triggerid='.$data['triggerid']);
+		$this->zbxTestLogin('triggers.php?form=update&triggerid='.$data['triggerid'].'&context=host');
 		$this->zbxTestCheckTitle('Configuration of triggers');
 		$this->zbxTestClickWait('update');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Trigger updated');
@@ -83,14 +81,14 @@ class testInheritanceTrigger extends CLegacyWebTest {
 				[
 					'expected' => TEST_GOOD,
 					'description' => 'testInheritanceTrigger',
-					'expression' => '{Inheritance test template:test-inheritance-item1.last()}=0'
+					'expression' => 'last(/Inheritance test template/test-inheritance-item1)=0'
 				]
 			],
 			[
 				[
 					'expected' => TEST_BAD,
 					'description' => 'testInheritanceTrigger1',
-					'expression' => '{Inheritance test template:key-item-inheritance-test.last()}=0',
+					'expression' => 'last(/Inheritance test template/key-item-inheritance-test)=0',
 					'errors' => [
 						'Trigger "testInheritanceTrigger1" already exists on "Inheritance test template".'
 					]
@@ -103,7 +101,7 @@ class testInheritanceTrigger extends CLegacyWebTest {
 	 * @dataProvider create
 	 */
 	public function testInheritanceTrigger_SimpleCreate($data) {
-		$this->zbxTestLogin('triggers.php?filter_set=1&filter_hostids[0]='.$this->templateid);
+		$this->zbxTestLogin('triggers.php?filter_set=1&context=template&filter_hostids[0]='.$this->templateid);
 		$this->zbxTestContentControlButtonClickTextWait('Create trigger');
 
 		$this->zbxTestInputType('description', $data['description']);

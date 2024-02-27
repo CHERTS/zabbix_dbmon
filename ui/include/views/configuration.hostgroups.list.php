@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@
  * @var CView $this
  */
 
+$this->includeJsFile('configuration.hostgroups.list.js.php');
+
 $widget = (new CWidget())
 	->setTitle(_('Host groups'))
 	->setControls((new CTag('nav', true, (new CList())
@@ -36,7 +38,8 @@ $widget = (new CWidget())
 			)
 		))->setAttribute('aria-label', _('Content controls'))
 	)
-	->addItem((new CFilter(new CUrl('hostgroups.php')))
+	->addItem((new CFilter())
+		->setResetUrl(new CUrl('hostgroups.php'))
 		->setProfile($data['profileIdx'])
 		->setActiveTab($data['active_tab'])
 		->addFilterTab(_('Filter'), [
@@ -76,8 +79,8 @@ foreach ($this->data['groups'] as $group) {
 	foreach ($group['templates'] as $template) {
 		$n++;
 
-		if ($n > $this->data['config']['max_in_table']) {
-			$hostsOutput[] = ' &hellip;';
+		if ($n > $data['config']['max_in_table']) {
+			$hostsOutput[] = [' ', HELLIP()];
 
 			break;
 		}
@@ -86,12 +89,16 @@ foreach ($this->data['groups'] as $group) {
 			$hostsOutput[] = ', ';
 		}
 
-		$url = (new CUrl('templates.php'))
-			->setArgument('form', 'update')
-			->setArgument('templateid', $template['templateid']);
-		$hostsOutput[] = (new CLink($template['name'], $url))
-			->addClass(ZBX_STYLE_LINK_ALT)
-			->addClass(ZBX_STYLE_GREY);
+		if ($data['allowed_ui_conf_templates']) {
+			$hostsOutput[] = (new CLink($template['name'], (new CUrl('templates.php'))
+				->setArgument('form', 'update')
+				->setArgument('templateid', $template['templateid'])))
+				->addClass(ZBX_STYLE_LINK_ALT)
+				->addClass(ZBX_STYLE_GREY);
+		}
+		else {
+			$hostsOutput[] = (new CSpan($template['name']))->addClass(ZBX_STYLE_GREY);
+		}
 	}
 
 	if ($group['templates'] && $group['hosts']) {
@@ -104,8 +111,8 @@ foreach ($this->data['groups'] as $group) {
 	foreach ($group['hosts'] as $host) {
 		$n++;
 
-		if ($n > $this->data['config']['max_in_table']) {
-			$hostsOutput[] = ' &hellip;';
+		if ($n > $data['config']['max_in_table']) {
+			$hostsOutput[] = [' ', HELLIP()];
 
 			break;
 		}
@@ -114,12 +121,20 @@ foreach ($this->data['groups'] as $group) {
 			$hostsOutput[] = ', ';
 		}
 
-		$url = (new CUrl('hosts.php'))
-			->setArgument('form', 'update')
-			->setArgument('hostid', $host['hostid']);
-		$hostsOutput[] = (new CLink($host['name'], $url))
-			->addClass(ZBX_STYLE_LINK_ALT)
-			->addClass($host['status'] == HOST_STATUS_MONITORED ? ZBX_STYLE_GREEN : ZBX_STYLE_RED);
+		if ($data['allowed_ui_conf_hosts']) {
+			$host_output = (new CLink($host['name'], (new CUrl('zabbix.php'))
+				->setArgument('action', 'host.edit')
+				->setArgument('hostid', $host['hostid'])
+			))
+				->onClick('view.editHost(event, '.json_encode($host['hostid']).')')
+				->addClass(ZBX_STYLE_LINK_ALT);
+		}
+		else {
+			$host_output = new CSpan($host['name']);
+		}
+
+		$host_output->addClass($host['status'] == HOST_STATUS_MONITORED ? ZBX_STYLE_GREEN : ZBX_STYLE_RED);
+		$hostsOutput[] = $host_output;
 	}
 
 	$hostCount = $this->data['groupCounts'][$group['groupid']]['hosts'];
@@ -130,7 +145,7 @@ foreach ($this->data['groups'] as $group) {
 
 	if ($group['flags'] == ZBX_FLAG_DISCOVERY_CREATED) {
 		if ($group['discoveryRule']) {
-			if ($group['is_discovery_rule_editable']) {
+			if ($data['allowed_ui_conf_hosts'] && $group['is_discovery_rule_editable']) {
 				$lld_name = (new CLink($group['discoveryRule']['name'],
 					(new CUrl('host_prototypes.php'))
 						->setArgument('form', 'update')
@@ -167,14 +182,24 @@ foreach ($this->data['groups'] as $group) {
 	$hostGroupTable->addRow([
 		new CCheckBox('groups['.$group['groupid'].']', $group['groupid']),
 		(new CCol($name))->addClass(ZBX_STYLE_NOWRAP),
-		[new CLink(_('Hosts'), (new CUrl('hosts.php'))
-			->setArgument('filter_set', '1')
-			->setArgument('filter_groups', [$group['groupid']])
-		), CViewHelper::showNum($hostCount)],
-		[new CLink(_('Templates'), (new CUrl('templates.php'))
-			->setArgument('filter_set', '1')
-			->setArgument('filter_groups', [$group['groupid']])
-		), CViewHelper::showNum($templateCount)
+		[
+			$data['allowed_ui_conf_hosts']
+				? new CLink(_('Hosts'), (new CUrl('zabbix.php'))
+					->setArgument('action', 'host.list')
+					->setArgument('filter_set', '1')
+					->setArgument('filter_groups', [$group['groupid']])
+				)
+				: _('Hosts'),
+			CViewHelper::showNum($hostCount)
+		],
+		[
+			$data['allowed_ui_conf_templates']
+				? new CLink(_('Templates'), (new CUrl('templates.php'))
+					->setArgument('filter_set', '1')
+					->setArgument('filter_groups', [$group['groupid']])
+				)
+				: _('Templates'),
+			CViewHelper::showNum($templateCount)
 		],
 		empty($hostsOutput) ? '' : $hostsOutput,
 		makeInformationList($info_icons)

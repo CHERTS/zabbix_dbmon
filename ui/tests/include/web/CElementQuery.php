@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ require_once dirname(__FILE__).'/CElementCollection.php';
 require_once dirname(__FILE__).'/CElementFilter.php';
 require_once dirname(__FILE__).'/elements/CNullElement.php';
 require_once dirname(__FILE__).'/elements/CFormElement.php';
+require_once dirname(__FILE__).'/elements/CGridFormElement.php';
 require_once dirname(__FILE__).'/elements/CCheckboxFormElement.php';
 require_once dirname(__FILE__).'/elements/CTableElement.php';
 require_once dirname(__FILE__).'/elements/CTableRowElement.php';
@@ -34,6 +35,7 @@ require_once dirname(__FILE__).'/elements/CListElement.php';
 require_once dirname(__FILE__).'/elements/CDropdownElement.php';
 require_once dirname(__FILE__).'/elements/CCheckboxElement.php';
 require_once dirname(__FILE__).'/elements/COverlayDialogElement.php';
+require_once dirname(__FILE__).'/elements/CMainMenuElement.php';
 require_once dirname(__FILE__).'/elements/CMessageElement.php';
 require_once dirname(__FILE__).'/elements/CMultiselectElement.php';
 require_once dirname(__FILE__).'/elements/CSegmentedRadioElement.php';
@@ -46,6 +48,7 @@ require_once dirname(__FILE__).'/elements/CPopupMenuElement.php';
 require_once dirname(__FILE__).'/elements/CPopupButtonElement.php';
 require_once dirname(__FILE__).'/elements/CInputGroupElement.php';
 require_once dirname(__FILE__).'/elements/CHostInterfaceElement.php';
+require_once dirname(__FILE__).'/elements/CFilterElement.php';
 
 require_once dirname(__FILE__).'/IWaitable.php';
 require_once dirname(__FILE__).'/WaitableTrait.php';
@@ -74,6 +77,11 @@ class CElementQuery implements IWaitable {
 	 * Wait iteration step duration.
 	 */
 	const WAIT_ITERATION = 50;
+
+	/**
+	 * Timeout in seconds.
+	 */
+	const WAIT_TIMEOUT = 20;
 
 	/**
 	 * Element selector.
@@ -155,11 +163,14 @@ class CElementQuery implements IWaitable {
 		if ($locator === null) {
 			if (!is_array($type)) {
 				$parts = explode(':', $type, 2);
-				if (count($parts) !== 2) {
-					throw new Exception('Element selector "'.$type.'" is not well formatted.');
-				}
+				if ($type !== 'button') {
+					$parts = explode(':', $type, 2);
+					if (count($parts) !== 2) {
+						throw new Exception('Element selector "'.$type.'" is not well formatted.');
+					}
 
-				list($type, $locator) = $parts;
+					list($type, $locator) = $parts;
+				}
 			}
 			else {
 				$selectors = [];
@@ -186,6 +197,10 @@ class CElementQuery implements IWaitable {
 			'tag' => 'tagName',
 			'link' => 'linkText',
 			'button' => function () use ($locator) {
+				if ($locator === null) {
+					return WebDriverBy::tagName('button');
+				}
+
 				return WebDriverBy::xpath('.//button[normalize-space(text())='.CXPathHelper::escapeQuotes($locator).']');
 			}
 		];
@@ -310,12 +325,15 @@ class CElementQuery implements IWaitable {
 	 *
 	 * @return WebDriverWait
 	 */
-	public static function wait($timeout = 20, $iteration = null) {
+	public static function wait($timeout = null, $iteration = null) {
 		if ($iteration === null) {
 			$iteration = self::WAIT_ITERATION;
 		}
+		if ($timeout === null) {
+			$timeout = self::WAIT_TIMEOUT;
+		}
 
-		return static::getDriver()->wait($timeout, self::WAIT_ITERATION);
+		return static::getDriver()->wait($timeout, $iteration);
 	}
 
 	/**
@@ -324,15 +342,16 @@ class CElementQuery implements IWaitable {
 	 * @param IWaitable $target       target for wait operation
 	 * @param string    $condition    condition to be waited for
 	 * @param array     $params       condition params
+	 * @param integer   $timeout	  timeout in seconds
 	 */
-	public static function waitUntil($target, $condition, $params = []) {
+	public static function waitUntil($target, $condition, $params = [], $timeout = null) {
 		$selector = $target->getSelectorAsText();
 		if ($selector !== null) {
 			$selector = ' located by '.$selector;
 		}
 
 		$callable = call_user_func_array([$target, CElementFilter::getConditionCallable($condition)], $params);
-		self::wait()->until($callable, 'Failed to wait for element'.$selector.' to be '.$condition.'.');
+		self::wait($timeout)->until($callable, 'Failed to wait for element'.$selector.' to be '.$condition.'.');
 	}
 
 	/**
@@ -354,7 +373,7 @@ class CElementQuery implements IWaitable {
 				else {
 					$elements = $this->context->findElements($this->by);
 					if (!$elements) {
-						throw new NoSuchElementException(null);
+						throw new NoSuchElementException('');
 					}
 
 					$element = end($elements);
@@ -368,12 +387,6 @@ class CElementQuery implements IWaitable {
 				}
 
 				throw $exception;
-			}
-			// Workaround for communication errors present on Jenkins
-			catch (WebDriverException $exception) {
-				if (strpos($exception->getMessage(), 'START_MAP') === false) {
-					throw $exception;
-				}
 			}
 		}
 
@@ -391,17 +404,7 @@ class CElementQuery implements IWaitable {
 	public function all() {
 		$class = $this->class;
 
-		try {
-			$elements = $this->context->findElements($this->by);
-		}
-		// Workaround for communication errors present on Jenkins
-		catch (WebDriverException $exception) {
-			if (strpos($exception->getMessage(), 'START_MAP') === false) {
-				throw $exception;
-			}
-
-			$elements = $this->context->findElements($this->by);
-		}
+		$elements = $this->context->findElements($this->by);
 
 		if ($this->reverse_order) {
 			$elements = array_reverse($elements);
@@ -498,20 +501,22 @@ class CElementQuery implements IWaitable {
 
 		return function () use ($target, $attributes) {
 			$element = $target->one(false);
-			if (!$element->isValid()) {
+			if (!$element->isValid() || !$element->isAttributePresent($attributes)) {
 				return false;
 			}
 
-			foreach ($attributes as $key => $value) {
-				if (is_numeric($key) && $element->getAttribute($value) === null) {
-					return false;
-				}
-				elseif ($element->getAttribute($key) !== $value) {
-					return false;
-				}
-			}
-
 			return true;
+		};
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function getClassesPresentCondition($classes) {
+		$target = $this;
+
+		return function () use ($target, $classes) {
+			return $target->one(false)->hasClass($classes);
 		};
 	}
 
@@ -566,30 +571,33 @@ class CElementQuery implements IWaitable {
 			'CDropdownElement'			=> '/z-select[@name]',
 			'CCheckboxElement'			=> '/input[@name][@type="checkbox" or @type="radio"]',
 			'CMultiselectElement'		=> [
-				'/div[contains(@class, "multiselect-control")]',
-				'/div/div[contains(@class, "multiselect-control")]' // TODO: remove after fix DEV-1071.
+				'/div[contains(@class, "multiselect-control")]'
 			],
 			'CSegmentedRadioElement'	=> [
 				'/ul[contains(@class, "radio-list-control")]',
-				'/ul/li/ul[contains(@class, "radio-list-control")]',
-				'/div/ul[contains(@class, "radio-list-control")]' // TODO: remove after fix DEV-1071.
+				'/ul/li/ul[contains(@class, "radio-list-control")]'
 			],
 			'CCheckboxListElement'		=> [
 				'/ul[contains(@class, "checkbox-list")]',
 				'/ul[contains(@class, "list-check-radio")]'
 			],
+			'CHostInterfaceElement'		=> [
+				'/div/div[contains(@class, "interface-container")]/../..'
+			],
 			'CMultifieldTableElement'	=> [
 				'/table',
-				'/div/table', // TODO: remove after fix DEV-1071.
 				'/*[contains(@class, "table-forms-separator")]/table'
 			],
 			'CCompositeInputElement'	=> [
 				'/div[contains(@class, "range-control")]',
 				'/div[contains(@class, "calendar-control")]'
 			],
-			'CColorPickerElement'		=> '/div[contains(@class, "input-color-picker")]',
+			'CColorPickerElement'        => [
+				'/div[contains(@class, "color-picker")]',
+				'/div[contains(@class, "form-field")]/div[contains(@class, "color-picker")]'
+			],
 			'CMultilineElement'			=> '/div[contains(@class, "multilineinput-control")]',
-			'CInputGroupElement'		=> '/div[contains(@class, "input-group")]'
+			'CInputGroupElement'		=> '/div[contains(@class, "macro-input-group")]'
 		];
 
 		if ($class !== null) {

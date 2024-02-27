@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -97,25 +97,25 @@ class CAPITest extends CTest {
 	/**
 	 * Enable authorization/session for the following API calls.
 	 */
-	public function enableAuthorization() {
+	public static function enableAuthorization() {
 		CAPIHelper::setSessionId(null);
 	}
 
 	/**
 	 * Disable authorization/session for the following API calls.
 	 */
-	public function disableAuthorization() {
+	public static function disableAuthorization() {
 		CAPIHelper::setSessionId(false);
 	}
 
 	/**
 	 * Authorize as user.
 	 *
-	 * @param string $user        username to be used for authorization.
-	 * @param string $password    password.
+	 * @param string $username
+	 * @param string $password
 	 */
-	public function authorize($user, $password) {
-		CAPIHelper::authorize($user, $password);
+	public function authorize(string $username, string $password) {
+		CAPIHelper::authorize($username, $password);
 	}
 
 	/**

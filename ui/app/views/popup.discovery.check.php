@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,6 +31,9 @@ $form = (new CForm())
 	->setName('dcheck_form')
 	->addVar('action', 'popup.discovery.check')
 	->addVar('validate', 1);
+
+// Enable form submitting on Enter.
+$form->addItem((new CSubmitButton(null))->addClass(ZBX_STYLE_FORM_SUBMIT_HIDDEN));
 
 if (array_key_exists('dcheckid', $data['params']) && $data['params']['dcheckid']) {
 	$form->addVar('dcheckid', $data['params']['dcheckid']);
@@ -93,11 +96,11 @@ $form_list = (new CFormList())
 		$select_snmpv3_securitylevel,
 		'row_dcheck_snmpv3_securitylevel'
 	)
-	->addRow(new CLabel(_('Authentication protocol'), 'snmpv3_authprotocol'),
-		(new CRadioButtonList('snmpv3_authprotocol', (int) $data['params']['snmpv3_authprotocol']))
-			->addValue(_('MD5'), ITEM_AUTHPROTOCOL_MD5, 'snmpv3_authprotocol_'.ITEM_AUTHPROTOCOL_MD5)
-			->addValue(_('SHA'), ITEM_AUTHPROTOCOL_SHA, 'snmpv3_authprotocol_'.ITEM_AUTHPROTOCOL_SHA)
-			->setModern(true),
+	->addRow(new CLabel(_('Authentication protocol'), 'label-authprotocol'),
+		(new CSelect('snmpv3_authprotocol'))
+			->setValue((int) $data['params']['snmpv3_authprotocol'])
+			->setFocusableElementId('label-authprotocol')
+			->addOptions(CSelect::createOptionsFromArray(getSnmpV3AuthProtocols())),
 		'row_dcheck_snmpv3_authprotocol'
 	)
 	->addRow(new CLabel(_('Authentication passphrase'), 'snmpv3_authpassphrase'),
@@ -107,11 +110,11 @@ $form_list = (new CFormList())
 			->disableAutocomplete(),
 		'row_dcheck_snmpv3_authpassphrase'
 	)
-	->addRow(new CLabel(_('Privacy protocol'), 'snmpv3_privprotocol'),
-		(new CRadioButtonList('snmpv3_privprotocol', (int) $data['params']['snmpv3_privprotocol']))
-			->addValue(_('DES'), ITEM_PRIVPROTOCOL_DES, 'snmpv3_privprotocol_'.ITEM_PRIVPROTOCOL_DES)
-			->addValue(_('AES'), ITEM_PRIVPROTOCOL_AES, 'snmpv3_privprotocol_'.ITEM_PRIVPROTOCOL_AES)
-			->setModern(true),
+	->addRow(new CLabel(_('Privacy protocol'), 'label-privprotocol'),
+		(new CSelect('snmpv3_privprotocol'))
+			->setValue((int) $data['params']['snmpv3_privprotocol'])
+			->setFocusableElementId('label-privprotocol')
+			->addOptions(CSelect::createOptionsFromArray(getSnmpV3PrivProtocols())),
 		'row_dcheck_snmpv3_privprotocol'
 	)
 	->addRow((new CLabel(_('Privacy passphrase'), 'snmpv3_privpassphrase'))->setAsteriskMark(),
@@ -123,10 +126,7 @@ $form_list = (new CFormList())
 		'row_dcheck_snmpv3_privpassphrase'
 	);
 
-$form->addItem([
-	$form_list,
-	(new CInput('submit', 'submit'))->addStyle('display: none;')
-]);
+$form->addItem($form_list);
 
 $output = [
 	'header' => $data['title'],

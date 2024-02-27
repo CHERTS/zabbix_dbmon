@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -98,13 +98,18 @@ class CControllerWidgetWebView extends CControllerWidget {
 		unset($group);
 
 		// Fetch links between HTTP tests and host groups.
-		$result = DbFetchArray(DBselect(
+		$where_tags = (array_key_exists('tags', $fields) && $fields['tags'])
+			? CApiTagHelper::addWhereCondition($fields['tags'], $fields['evaltype'], 'ht', 'httptest_tag', 'httptestid')
+			: '';
+
+		$result = DbFetchArray(DBselect($s=
 			'SELECT DISTINCT ht.httptestid,hg.groupid'.
 			' FROM httptest ht,hosts_groups hg'.
 			' WHERE ht.hostid=hg.hostid'.
 				' AND '.dbConditionInt('hg.hostid', array_keys($hosts)).
 				' AND '.dbConditionInt('hg.groupid', $groupids).
-				' AND ht.status='.HTTPTEST_STATUS_ACTIVE
+				' AND ht.status='.HTTPTEST_STATUS_ACTIVE.
+				(($where_tags !== '') ? ' AND '.$where_tags : '')
 		));
 
 		// Fetch HTTP test execution data.
@@ -124,11 +129,12 @@ class CControllerWidgetWebView extends CControllerWidget {
 		}
 
 		$this->setResponse(new CControllerResponseData([
-			'name' => $this->getInput('name', $this->getDefaultHeader()),
+			'name' => $this->getInput('name', $this->getDefaultName()),
 			'groups' => $groups,
 			'user' => [
 				'debug_mode' => $this->getDebugMode()
-			]
+			],
+			'allowed_ui_hosts' => $this->checkAccess(CRoleHelper::UI_MONITORING_HOSTS)
 		]));
 	}
 }

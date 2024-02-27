@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ foreach ($data['tag_filters'] as $key => $tag_filter) {
 
 	$action = [
 		(new CSimpleButton(_('Remove')))->addClass(ZBX_STYLE_BTN_LINK)
-			->onClick('javascript: jQuery(this).closest("tr").remove();'),
+			->onClick('javascript: usergroups.removeTagFilterRow($(this));'),
 		(new CVar('tag_filters['.$key.'][groupid]', $tag_filter['groupid']))->removeId(),
 		(new CVar('tag_filters['.$key.'][tag]', $tag_filter['tag']))->removeId(),
 		(new CVar('tag_filters['.$key.'][value]', $tag_filter['value']))->removeId(),

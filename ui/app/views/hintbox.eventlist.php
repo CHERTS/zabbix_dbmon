@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,13 +41,11 @@ if (array_key_exists('problems', $data)) {
 	if ($data['trigger']['url'] !== '') {
 		$trigger_url = CHtmlUrlValidator::validate($data['trigger']['url'], ['allow_user_macro' => false])
 			? $data['trigger']['url']
-			: 'javascript: alert(\''._s('Provided URL "%1$s" is invalid.',
-				json_encode($data['trigger']['url'])).
-			'\');';
+			: 'javascript: alert('.json_encode(_s('Provided URL "%1$s" is invalid.', $data['trigger']['url'])).');';
 
 		$div->addItem(
 			(new CDiv())
-				->addItem(new CLink(CHtml::encode($data['trigger']['url']), $trigger_url))
+				->addItem(new CLink($data['trigger']['url'], $trigger_url))
 				->addClass(ZBX_STYLE_OVERLAY_DESCR_URL)
 				->addStyle('max-width: 500px')
 		);
@@ -74,27 +72,32 @@ if (array_key_exists('problems', $data)) {
 			_('Status'),
 			_('Duration'),
 			_('Ack'),
-			($data['show_tags'] != PROBLEMS_SHOW_TAGS_NONE) ? _('Tags') : null
+			($data['show_tags'] != SHOW_TAGS_NONE) ? _('Tags') : null
 		]));
 
 	$today = strtotime('today');
 	$last_clock = 0;
 
-	if ($data['problems'] && $data['show_tags'] != PROBLEMS_SHOW_TAGS_NONE) {
-		$tags = makeTags($data['problems'], true, 'eventid', $data['show_tags'], $data['filter_tags'],
+	if ($data['problems'] && $data['show_tags'] != SHOW_TAGS_NONE) {
+		$tags = makeTags($data['problems'], true, 'eventid', $data['show_tags'], $data['filter_tags'], null,
 			$data['tag_name_format'], $data['tag_priority']
 		);
 	}
 
-	$url_details = (new CUrl('tr_events.php'))
-		->setArgument('triggerid', $data['trigger']['triggerid'])
-		->setArgument('eventid', '');
+	$url_details = $data['allowed_ui_problems']
+		? (new CUrl('tr_events.php'))
+			->setArgument('triggerid', $data['trigger']['triggerid'])
+			->setArgument('eventid', '')
+		: null;
 
 	foreach ($data['problems'] as $problem) {
+		$can_be_closed = $data['allowed_close'];
+
 		if ($problem['r_eventid'] != 0) {
 			$value = TRIGGER_VALUE_FALSE;
 			$value_str = _('RESOLVED');
 			$value_clock = $problem['r_clock'];
+			$can_be_closed = false;
 		}
 		else {
 			$in_closing = false;
@@ -102,6 +105,7 @@ if (array_key_exists('problems', $data)) {
 			foreach ($problem['acknowledges'] as $acknowledge) {
 				if (($acknowledge['action'] & ZBX_PROBLEM_UPDATE_CLOSE) == ZBX_PROBLEM_UPDATE_CLOSE) {
 					$in_closing = true;
+					$can_be_closed = false;
 					break;
 				}
 			}
@@ -111,17 +115,26 @@ if (array_key_exists('problems', $data)) {
 			$value_clock = $in_closing ? time() : $problem['clock'];
 		}
 
-		$url_details->setArgument('eventid', $problem['eventid']);
-
 		$cell_clock = ($problem['clock'] >= $today)
 			? zbx_date2str(TIME_FORMAT_SECONDS, $problem['clock'])
 			: zbx_date2str(DATE_TIME_FORMAT_SECONDS, $problem['clock']);
-		$cell_clock = new CCol(new CLink($cell_clock, $url_details));
+
+		if ($url_details !== null) {
+			$url_details->setArgument('eventid', $problem['eventid']);
+			$cell_clock = new CCol(new CLink($cell_clock, $url_details));
+		}
+		else {
+			$cell_clock = new CCol($cell_clock);
+		}
+
 		if ($problem['r_eventid'] != 0) {
 			$cell_r_clock = ($problem['r_clock'] >= $today)
 				? zbx_date2str(TIME_FORMAT_SECONDS, $problem['r_clock'])
 				: zbx_date2str(DATE_TIME_FORMAT_SECONDS, $problem['r_clock']);
-			$cell_r_clock = (new CCol(new CLink($cell_r_clock, $url_details)))
+			$cell_r_clock = (new CCol(($url_details !== null)
+				? new CLink($cell_r_clock, $url_details)
+				: $cell_r_clock
+			))
 				->addClass(ZBX_STYLE_NOWRAP)
 				->addClass(ZBX_STYLE_RIGHT);
 		}
@@ -158,10 +171,15 @@ if (array_key_exists('problems', $data)) {
 		}
 
 		// Create acknowledge link.
-		$problem_update_link = (new CLink($is_acknowledged ? _('Yes') : _('No')))
-			->addClass($is_acknowledged ? ZBX_STYLE_GREEN : ZBX_STYLE_RED)
-			->addClass(ZBX_STYLE_LINK_ALT)
-			->onClick('acknowledgePopUp('.json_encode(['eventids' => [$problem['eventid']]]).', this);');
+		$problem_update_link = ($data['allowed_add_comments'] || $data['allowed_change_severity']
+			|| $data['allowed_acknowledge'] || $can_be_closed)
+			? (new CLink($is_acknowledged ? _('Yes') : _('No')))
+				->addClass($is_acknowledged ? ZBX_STYLE_GREEN : ZBX_STYLE_RED)
+				->addClass(ZBX_STYLE_LINK_ALT)
+				->onClick('acknowledgePopUp('.json_encode(['eventids' => [$problem['eventid']]]).', this);')
+			: (new CSpan($is_acknowledged ? _('Yes') : _('No')))->addClass(
+				$is_acknowledged ? ZBX_STYLE_GREEN : ZBX_STYLE_RED
+			);
 
 		$table->addRow(array_merge($row, [
 			$cell_r_clock,
@@ -173,7 +191,7 @@ if (array_key_exists('problems', $data)) {
 			))
 				->addClass(ZBX_STYLE_NOWRAP),
 			$problem_update_link,
-			($data['show_tags'] != PROBLEMS_SHOW_TAGS_NONE) ? $tags[$problem['eventid']] : null
+			($data['show_tags'] != SHOW_TAGS_NONE) ? $tags[$problem['eventid']] : null
 		]));
 	}
 

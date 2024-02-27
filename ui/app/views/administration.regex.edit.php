@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,14 +29,14 @@ $widget = (new CWidget())
 	->setTitle(_('Regular expressions'))
 	->setTitleSubmenu(getAdministrationGeneralSubmenu());
 
-$action = (new CUrl('zabbix.php'))
-	->setArgument('action', ($data['regexid'] == 0) ? 'regex.create' : 'regex.update');
+$action = (new CUrl('zabbix.php'))->setArgument('action', ($data['regexid'] == 0) ? 'regex.create' : 'regex.update');
 
 if ($data['regexid'] != 0) {
 	$action->setArgument('regexid', $data['regexid']);
 }
 
 $form = (new CForm())
+	->addItem((new CVar('form_refresh', $data['form_refresh'] + 1))->removeId())
 	->setId('regex')
 	->setAction($action->getUrl())
 	->setAttribute('aria-labelledby', ZBX_STYLE_PAGE_TITLE);
@@ -57,7 +57,8 @@ foreach ($data['expressions'] as $i => $expression) {
 		->setValue($expression['exp_delimiter'])
 		->setId('expressions_'.$i.'_exp_delimiter')
 		->addClass('js-expression-delimiter-select')
-		->addOptions(CSelect::createOptionsFromArray(expressionDelimiters()));
+		->addOptions(CSelect::createOptionsFromArray(CRegexHelper::expressionDelimiters()))
+		->setDisabled($expression['expression_type'] != EXPRESSION_TYPE_ANY_INCLUDED);
 
 	if ($expression['expression_type'] != EXPRESSION_TYPE_ANY_INCLUDED) {
 		$exp_delimiter->addStyle('display: none;');
@@ -67,7 +68,7 @@ foreach ($data['expressions'] as $i => $expression) {
 		(new CSelect('expressions['.$i.'][expression_type]'))
 			->setId('expressions_'.$i.'_expression_type')
 			->addClass('js-expression-type-select')
-			->addOptions(CSelect::createOptionsFromArray(expression_type2str()))
+			->addOptions(CSelect::createOptionsFromArray(CRegexHelper::expression_type2str()))
 			->setValue($expression['expression_type']),
 		(new CTextBox('expressions['.$i.'][expression]', $expression['expression'], false, 255))
 			->setWidth(ZBX_TEXTAREA_MEDIUM_WIDTH)
@@ -117,7 +118,9 @@ $expr_tab = (new CFormList('exprTab'))
 
 $test_tab = (new CFormList())
 	->addRow(_('Test string'),
-		(new CTextArea('test_string', $data['test_string']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+		(new CTextArea('test_string', $data['test_string']))
+			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
+			->disableSpellcheck()
 	)
 	->addRow('', (new CButton('testExpression', _('Test expressions')))->addClass(ZBX_STYLE_BTN_ALT))
 	->addRow(_('Result'),
@@ -132,7 +135,7 @@ $test_tab = (new CFormList())
 	);
 
 $reg_exp_view = new CTabView();
-if (!$data['form_refresh']) {
+if ($data['form_refresh'] == 0) {
 	$reg_exp_view->setSelected(0);
 }
 

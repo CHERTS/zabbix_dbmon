@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,11 +21,11 @@
 
 class CControllerResponseRedirect extends CControllerResponse {
 
-	private $location;
-	private $messageOk = null;
-	private $messageError = null;
-	private $formData = null;
+	protected $formData = [];
 
+	/**
+	 * @param string|CUrl $location
+	 */
 	public function __construct($location) {
 		if ($location instanceof CUrl) {
 			$location = $location->getUrl();
@@ -34,31 +34,11 @@ class CControllerResponseRedirect extends CControllerResponse {
 		$this->location = $location;
 	}
 
-	public function getLocation() {
-		return $this->location;
-	}
-
-	public function getFormData() {
-		return $this->formData;
-	}
-
-	public function setFormData($formData) {
+	public function setFormData(array $formData): void {
 		$this->formData = $formData;
 	}
 
-	public function setMessageOk($messageOk) {
-		$this->messageOk = $messageOk;
-	}
-
-	public function getMessageOk() {
-		return $this->messageOk;
-	}
-
-	public function setMessageError($messageError) {
-		$this->messageError = $messageError;
-	}
-
-	public function getMessageError() {
-		return $this->messageError;
+	public function getFormData(): array {
+		return $this->formData;
 	}
 }

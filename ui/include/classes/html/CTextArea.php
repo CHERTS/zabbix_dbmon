@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,13 +20,6 @@
 
 
 class CTextArea extends CTag {
-
-	/**
-	 * The "&" symbol in the textarea should be encoded.
-	 *
-	 * @var int
-	 */
-	protected $encStrategy = self::ENC_ALL;
 
 	/**
 	 * Init textarea.
@@ -81,27 +74,23 @@ class CTextArea extends CTag {
 
 	public function setMaxlength($maxlength) {
 		$this->setAttribute('maxlength', $maxlength);
+		return $this;
+	}
 
-		if (!defined('IS_TEXTAREA_MAXLENGTH_JS_INSERTED')) {
-			define('IS_TEXTAREA_MAXLENGTH_JS_INSERTED', true);
+	public function disableSpellcheck(): self {
+		$this->setAttribute('spellcheck', 'false');
 
-			// firefox and google chrome have own implementations of maxlength validation on textarea
-			insert_js('
-				if (!CR && !GK) {
-					jQuery("textarea[maxlength]").bind("paste contextmenu change keydown keypress keyup", function() {
-						var elem = jQuery(this);
-						if (elem.val().length > elem.attr("maxlength")) {
-							elem.val(elem.val().substr(0, elem.attr("maxlength")));
-						}
-					});
-				}',
-			true);
-		}
 		return $this;
 	}
 
 	public function setWidth($value) {
 		$this->addStyle('width: '.$value.'px;');
+		return $this;
+	}
+
+	public function setAdaptiveWidth($value) {
+		$this->addStyle('max-width: '.$value.'px;');
+		$this->addStyle('width: 100%;');
 		return $this;
 	}
 

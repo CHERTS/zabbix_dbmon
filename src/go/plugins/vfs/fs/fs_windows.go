@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,9 +22,22 @@ package vfsfs
 import (
 	"syscall"
 
+	"git.zabbix.com/ap/plugin-support/plugin"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 	"golang.org/x/sys/windows"
-	"zabbix.com/pkg/plugin"
 )
+
+func init() {
+	err := plugin.RegisterMetrics(
+		&impl, "VfsFs",
+		"vfs.fs.discovery", "List of mounted filesystems. Used for low-level discovery.",
+		"vfs.fs.get", "List of mounted filesystems with statistics.",
+		"vfs.fs.size", "Disk space in bytes or in percentage from total.",
+	)
+	if err != nil {
+		panic(zbxerr.New("failed to register metrics").Wrap(err))
+	}
+}
 
 func getMountPaths() (paths []string, err error) {
 	buffer := make([]uint16, windows.MAX_PATH+1)
@@ -71,7 +84,7 @@ func getMountPaths() (paths []string, err error) {
 	return result, nil
 }
 
-func getFsInfo(path string) (fsname, fstype, drivetype string, err error) {
+func getFsInfo(path string) (fsname, fstype, drivetype, drivelabel string, err error) {
 	fsname = path
 	if len(fsname) > 0 && fsname[len(fsname)-1] == '\\' {
 		fsname = fsname[:len(fsname)-1]
@@ -82,11 +95,14 @@ func getFsInfo(path string) (fsname, fstype, drivetype string, err error) {
 	}
 
 	wpath := windows.StringToUTF16Ptr(path)
-	buf := make([]uint16, windows.MAX_PATH+1)
-	if err = windows.GetVolumeInformation(wpath, nil, 0, nil, nil, nil, &buf[0], uint32(len(buf))); err != nil {
+	bufType := make([]uint16, windows.MAX_PATH+1)
+	bufLabel := make([]uint16, windows.MAX_PATH+1)
+	if err = windows.GetVolumeInformation(wpath, &bufLabel[0], uint32(len(bufLabel)),
+		nil, nil, nil, &bufType[0], uint32(len(bufType))); err != nil {
 		fstype = "UNKNOWN"
 	} else {
-		fstype = windows.UTF16ToString(buf)
+		fstype = windows.UTF16ToString(bufType)
+		drivelabel = windows.UTF16ToString(bufLabel)
 	}
 
 	dt := windows.GetDriveType(wpath)
@@ -133,11 +149,12 @@ func (p *Plugin) getFsInfo() (data []*FsInfo, err error) {
 		return
 	}
 	for _, path := range paths {
-		if fsname, fstype, drivetype, fserr := getFsInfo(path); fserr == nil {
+		if fsname, fstype, drivetype, drivelabel, fserr := getFsInfo(path); fserr == nil {
 			data = append(data, &FsInfo{
-				FsName:    &fsname,
-				FsType:    &fstype,
-				DriveType: &drivetype,
+				FsName:     &fsname,
+				FsType:     &fstype,
+				DriveType:  &drivetype,
+				DriveLabel: &drivelabel,
 			})
 		} else {
 			p.Debugf(`cannot obtain file system information for "%s": %s`, path, fserr)
@@ -154,10 +171,11 @@ func (p *Plugin) getFsInfoStats() (data []*FsInfoNew, err error) {
 	fsmap := make(map[string]*FsInfoNew)
 	for _, path := range paths {
 		var info FsInfoNew
-		if fsname, fstype, drivetype, fserr := getFsInfo(path); fserr == nil {
+		if fsname, fstype, drivetype, drivelabel, fserr := getFsInfo(path); fserr == nil {
 			info.FsName = &fsname
 			info.FsType = &fstype
 			info.DriveType = &drivetype
+			info.DriveLabel = &drivelabel
 		} else {
 			p.Debugf(`cannot obtain file system information for "%s": %s`, path, fserr)
 			continue
@@ -183,12 +201,4 @@ func (p *Plugin) getFsInfoStats() (data []*FsInfoNew, err error) {
 
 func getFsInode(string) (*FsStats, error) {
 	return nil, plugin.UnsupportedMetricError
-}
-
-func init() {
-	plugin.RegisterMetrics(&impl, "VfsFs",
-		"vfs.fs.discovery", "List of mounted filesystems. Used for low-level discovery.",
-		"vfs.fs.get", "List of mounted filesystems with statistics.",
-		"vfs.fs.size", "Disk space in bytes or in percentage from total.",
-	)
 }

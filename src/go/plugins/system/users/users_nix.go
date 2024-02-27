@@ -3,7 +3,7 @@
 
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ import (
 
 func (p *Plugin) getUsersNum() (num int, err error) {
 	var out string
-	out, err = zbxcmd.Execute("who | wc -l", time.Second*time.Duration(p.options.Timeout))
+	out, err = zbxcmd.Execute("who | wc -l", time.Second*time.Duration(p.options.Timeout), "")
 	if err != nil {
 		return
 	}

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,8 +24,8 @@
  */
 class CWidgetFormMap extends CWidgetForm {
 
-	public function __construct($data) {
-		parent::__construct($data, WIDGET_MAP);
+	public function __construct($data, $templateid) {
+		parent::__construct($data, $templateid, WIDGET_MAP);
 
 		// Widget reference field.
 		$field_reference = (new CWidgetFieldReference())->setDefault('');
@@ -42,7 +42,7 @@ class CWidgetFormMap extends CWidgetForm {
 			WIDGET_SYSMAP_SOURCETYPE_FILTER => _('Map navigation tree')
 		]))
 			->setDefault(WIDGET_SYSMAP_SOURCETYPE_MAP)
-			->setAction('updateWidgetConfigDialogue()')
+			->setAction('ZABBIX.Dashboard.reloadWidgetProperties()')
 			->setModern(true);
 
 		if (array_key_exists('source_type', $this->data)) {
@@ -54,7 +54,7 @@ class CWidgetFormMap extends CWidgetForm {
 		if ($field_source_type->getValue() === WIDGET_SYSMAP_SOURCETYPE_FILTER) {
 			// Select filter widget field.
 			$field_filter_widget = (new CWidgetFieldWidgetSelect('filter_widget_reference', _('Filter'),
-				'type', 'navtree'
+				WIDGET_NAV_TREE
 			))
 				->setDefault('')
 				->setFlags(CWidgetField::FLAG_NOT_EMPTY | CWidgetField::FLAG_LABEL_ASTERISK);
@@ -67,8 +67,9 @@ class CWidgetFormMap extends CWidgetForm {
 		}
 		else {
 			// Select sysmap field.
-			$field_map = (new CWidgetFieldSelectResource('sysmapid', _('Map'), WIDGET_FIELD_SELECT_RES_SYSMAP))
-				->setFlags(CWidgetField::FLAG_NOT_EMPTY | CWidgetField::FLAG_LABEL_ASTERISK);
+			$field_map = (new CWidgetFieldMsSysmap('sysmapid', _('Map')))
+				->setFlags(CWidgetField::FLAG_NOT_EMPTY | CWidgetField::FLAG_LABEL_ASTERISK)
+				->setMultiple(false);
 
 			if (array_key_exists('sysmapid', $this->data)) {
 				$field_map->setValue($this->data['sysmapid']);

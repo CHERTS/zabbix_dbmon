@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,24 +17,22 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+#include "proxypoller.h"
+
 #include "common.h"
 #include "daemon.h"
-#include "comms.h"
 #include "zbxself.h"
-
-#include "proxypoller.h"
 #include "zbxserver.h"
-#include "dbcache.h"
 #include "db.h"
-#include "zbxjson.h"
 #include "log.h"
 #include "proxy.h"
 #include "zbxcrypto.h"
 #include "../trapper/proxydata.h"
 #include "zbxcompress.h"
 
-extern unsigned char	process_type, program_type;
-extern int		server_num, process_num;
+extern ZBX_THREAD_LOCAL unsigned char	process_type;
+extern unsigned char			program_type;
+extern ZBX_THREAD_LOCAL int		server_num, process_num;
 
 static int	connect_to_proxy(const DC_PROXY *proxy, zbx_socket_t *sock, int timeout)
 {
@@ -133,8 +131,6 @@ static void	disconnect_proxy(zbx_socket_t *sock)
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: get_data_from_proxy                                              *
  *                                                                            *
  * Purpose: get historical data from proxy                                    *
  *                                                                            *
@@ -242,8 +238,6 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: proxy_send_configuration                                         *
- *                                                                            *
  * Purpose: sends configuration data to proxy                                 *
  *                                                                            *
  * Parameters: proxy - [IN/OUT] proxy data                                    *
@@ -347,8 +341,6 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: proxy_process_proxy_data                                         *
- *                                                                            *
  * Purpose: processes proxy data request                                      *
  *                                                                            *
  * Parameters: proxy  - [IN/OUT] proxy data                                   *
@@ -413,8 +405,6 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: proxy_get_data                                                   *
- *                                                                            *
  * Purpose: gets data from proxy ('proxy data' request)                       *
  *                                                                            *
  * Parameters: proxy  - [IN] proxy data                                       *
@@ -461,8 +451,6 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: proxy_get_tasks                                                  *
- *                                                                            *
  * Purpose: gets data from proxy ('proxy data' request)                       *
  *                                                                            *
  * Parameters: proxy - [IN/OUT] the proxy data                                *
@@ -501,17 +489,7 @@ out:
 
 /******************************************************************************
  *                                                                            *
- * Function: process_proxy                                                    *
- *                                                                            *
  * Purpose: retrieve values of metrics from monitored hosts                   *
- *                                                                            *
- * Parameters:                                                                *
- *                                                                            *
- * Return value:                                                              *
- *                                                                            *
- * Author: Alexei Vladishev                                                   *
- *                                                                            *
- * Comments:                                                                  *
  *                                                                            *
  ******************************************************************************/
 static int	process_proxy(void)
@@ -552,7 +530,7 @@ static int	process_proxy(void)
 			proxy.addr = proxy.addr_orig;
 
 			port = zbx_strdup(port, proxy.port_orig);
-			substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+			substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 					&port, MACRO_TYPE_COMMON, NULL, 0);
 			if (FAIL == is_ushort(port, &proxy.port))
 			{
@@ -574,6 +552,7 @@ static int	process_proxy(void)
 
 			if (proxy.proxy_data_nextcheck <= now)
 			{
+
 				int	more;
 
 				do
@@ -639,7 +618,7 @@ ZBX_THREAD_ENTRY(proxypoller_thread, args)
 	while (ZBX_IS_RUNNING())
 	{
 		sec = zbx_time();
-		zbx_update_env(sec);
+		zbx_update_env(get_process_type_string(process_type), sec);
 
 		if (0 != sleeptime)
 		{

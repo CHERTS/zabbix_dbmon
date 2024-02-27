@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,10 @@ require_once dirname(__FILE__).'/../../include/blocks.inc.php';
 
 class CControllerDashboardWidgetRfRate extends CController {
 
+	protected function init() {
+		$this->setPostContentType(self::POST_CONTENT_TYPE_JSON);
+	}
+
 	protected function checkInput() {
 		$fields = [
 			'widgetid' =>	'required|db widget.widgetid',
@@ -43,7 +47,7 @@ class CControllerDashboardWidgetRfRate extends CController {
 	}
 
 	protected function doAction() {
-		CProfile::update('web.dashbrd.widget.rf_rate', $this->getInput('rf_rate'), PROFILE_TYPE_INT,
+		CProfile::update('web.dashboard.widget.rf_rate', $this->getInput('rf_rate'), PROFILE_TYPE_INT,
 			$this->getInput('widgetid')
 		);
 

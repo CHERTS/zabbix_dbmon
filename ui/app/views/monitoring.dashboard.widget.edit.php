@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,16 +25,38 @@
 
 $widget_view = include('include/classes/widgets/views/widget.'.$data['dialogue']['type'].'.form.view.php');
 
-$form = $widget_view['form'];
+$form = $widget_view['form']
+	->addClass('dashboard-grid-widget-'.$data['dialogue']['type']);
 
-// Submit button is needed to enable submit event on Enter on inputs.
-$form->addItem((new CInput('submit', 'dashboard_widget_config_submit'))->addStyle('display: none;'));
+// Enable form submitting on Enter.
+$form->addItem((new CSubmitButton(null))->addClass(ZBX_STYLE_FORM_SUBMIT_HIDDEN));
 
 $output = [
-	'type' => $data['dialogue']['type'],
-	'body' => $form->toString(),
-	'options' => $data['dialogue']['options']
+	'header' => $data['unique_id'] !== null ? _s('Edit widget') : _s('Add widget'),
+	'body' => '',
+	'buttons' => [
+		[
+			'title' => $data['unique_id'] !== null ? _s('Apply') : _s('Add'),
+			'class' => 'dialogue-widget-save',
+			'keepOpen' => true,
+			'isSubmit' => true,
+			'action' => 'ZABBIX.Dashboard.applyWidgetProperties();'
+		]
+	],
+	'data' => [
+		'original_properties' => [
+			'type' => $data['dialogue']['type'],
+			'unique_id' => $data['unique_id'],
+			'dashboard_page_unique_id' => $data['dashboard_page_unique_id']
+		]
+	]
 ];
+
+if (($messages = getMessages()) !== null) {
+	$output['body'] .= $messages->toString();
+}
+
+$output['body'] .= $form->toString();
 
 if (array_key_exists('jq_templates', $widget_view)) {
 	foreach ($widget_view['jq_templates'] as $id => $jq_template) {
@@ -44,10 +66,6 @@ if (array_key_exists('jq_templates', $widget_view)) {
 
 if (array_key_exists('scripts', $widget_view)) {
 	$output['body'] .= get_js(implode("\n", $widget_view['scripts']));
-}
-
-if (($messages = getMessages()) !== null) {
-	$output['messages'] = $messages->toString();
 }
 
 if ($data['user']['debug_mode'] == GROUP_DEBUG_MODE_ENABLED) {

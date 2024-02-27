@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 **/
 
 
-jQuery(function($) {
+(function($) {
 	var ZBX_STYLE_CLASS = 'multiselect-control';
 	const MS_ACTION_POPUP = 0;
 	const MS_ACTION_AUTOSUGGEST = 1;
@@ -245,6 +245,47 @@ jQuery(function($) {
 			});
 
 			return ret;
+		},
+
+		/**
+		 * @return HTMLElement
+		 */
+		getSelectButton: function() {
+			var ret = null;
+
+			this.each(function() {
+				var $obj = $(this);
+
+				if ($obj.data('multiSelect') !== undefined) {
+					ret = $obj.data('multiSelect').select_button[0];
+
+					return false;
+				}
+			});
+
+			return ret;
+		},
+
+		/**
+		 * @param array entries  IDs to mark disabled.
+		 */
+		setDisabledEntries: function (entries) {
+			this.each(function() {
+				const $obj = $(this);
+				const ms_parameters = $obj.data('multiSelect');
+
+				if (typeof ms_parameters === 'undefined') {
+					return;
+				}
+
+				const link = new Curl(ms_parameters.options.url, false);
+				link.setArgument('disabledids', entries);
+
+				ms_parameters.options.url = link.getUrl();
+				ms_parameters.options.popup.parameters.disableids = entries;
+
+				$obj.data('multiSelect', ms_parameters);
+			});
 		}
 	};
 
@@ -253,6 +294,7 @@ jQuery(function($) {
 	 *
 	 * @param string options['url']					backend url
 	 * @param string options['name']				input element name
+	 * @param string options['multiselect_id']		multiselect wrapper id (optional)
 	 * @param object options['labels']				translated labels (optional)
 	 * @param object options['data']				preload data {id, name, prefix} (optional)
 	 * @param string options['data'][id]
@@ -288,27 +330,27 @@ jQuery(function($) {
 		}
 
 		var defaults = {
-				url: '',
-				name: '',
-				labels: {
-					'No matches found': t('No matches found'),
-					'More matches found...': t('More matches found...'),
-					'type here to search': t('type here to search'),
-					'new': t('new'),
-					'Select': t('Select')
-				},
-				placeholder: t('type here to search'),
-				data: [],
-				only_hostid: 0,
-				excludeids: [],
-				addNew: false,
-				defaultValue: null,
-				disabled: false,
-				selectedLimit: 0,
-				limit: 20,
-				popup: {},
-				styles: {}
-			};
+			url: '',
+			name: '',
+			multiselect_id: '',
+			labels: {
+				'No matches found': t('No matches found'),
+				'More matches found...': t('More matches found...'),
+				'type here to search': t('type here to search'),
+				'new': t('new'),
+				'Select': t('Select')
+			},
+			placeholder: t('type here to search'),
+			data: [],
+			excludeids: [],
+			addNew: false,
+			defaultValue: null,
+			disabled: false,
+			selectedLimit: 0,
+			limit: 20,
+			popup: {},
+			styles: {}
+		};
 
 		options = $.extend({}, defaults, options);
 
@@ -337,7 +379,8 @@ jQuery(function($) {
 						 * In such case the "focusout" event (IE) of the search input should not be processed.
 						 */
 						available_false_click: false
-					}
+					},
+					select_button: null
 				};
 
 			ms.values.available_div.on('mousedown', 'li', function() {
@@ -352,7 +395,8 @@ jQuery(function($) {
 
 			$obj.wrap($('<div>', {
 				'class': ZBX_STYLE_CLASS,
-				css: ms.options.styles
+				css: ms.options.styles,
+				id: ms.options.multiselect_id !== '' ? ms.options.multiselect_id : null
 			}));
 
 			var $selected_div = $('<div>', {'class': 'selected'}).on('click', function() {
@@ -399,34 +443,40 @@ jQuery(function($) {
 				});
 			}
 
-			if (ms.options.popup.parameters != null) {
-				if (typeof ms.options.popup.parameters['only_hostid'] !== 'undefined') {
-					ms.options.only_hostid = ms.options.popup.parameters['only_hostid'];
-				}
-
-				var popup_button = $('<button>', {
-						type: 'button',
-						'class': 'btn-grey',
-						text: ms.options.labels['Select']
-					});
-
-				if (ms.options.disabled) {
-					popup_button.prop('disabled', true);
-				}
-
-				popup_button.on('click', function(event) {
-					var popup_options = ms.options.popup.parameters;
-
-					if (ms.options.popup.filter_preselect_fields) {
-						popup_options = jQuery.extend(popup_options, getFilterPreselectField($obj, MS_ACTION_POPUP));
-					}
-
-					// Click used instead focus because in patternselect listen only click.
-					$('input[type="text"]', $obj).click();
-					return PopUp('popup.generic', popup_options, null, event.target);
+			if (ms.options.custom_select || ms.options.popup.parameters !== undefined) {
+				ms.select_button = $('<button>', {
+					type: 'button',
+					'class': 'btn-grey',
+					text: ms.options.labels['Select']
 				});
 
-				$obj.after($('<div>', {'class': 'multiselect-button'}).append(popup_button));
+				if (ms.options.disabled) {
+					ms.select_button.prop('disabled', true);
+				}
+
+				if (ms.options.popup.parameters !== undefined) {
+					ms.select_button.on('click', function(event) {
+						var parameters = ms.options.popup.parameters;
+
+						if (ms.options.popup.filter_preselect_fields) {
+							parameters = jQuery.extend(parameters, getFilterPreselectField($obj, MS_ACTION_POPUP));
+						}
+
+						if (typeof parameters['disable_selected'] !== 'undefined' && parameters['disable_selected']) {
+							parameters['disableids'] = Object.keys(ms.values.selected);
+						}
+
+						// Click used instead focus because in patternselect only click is listened for.
+						$('input[type="text"]', $obj).click();
+
+						return PopUp('popup.generic', parameters, {
+							dialogue_class: 'modal-popup-generic',
+							trigger_element: event.target
+						});
+					});
+				}
+
+				$obj.after($('<div>', {'class': 'multiselect-button'}).append(ms.select_button));
 			}
 		});
 	};
@@ -560,7 +610,13 @@ jQuery(function($) {
 					switch (e.which) {
 						case KEY_TAB:
 						case KEY_ESCAPE:
-							hideAvailable($obj);
+							var $available = ms.values.available_div;
+
+							if ($available.parent().is(document.body)) {
+								hideAvailable($obj);
+								e.stopPropagation();
+							}
+
 							cleanSearchInput($obj);
 							break;
 
@@ -664,7 +720,7 @@ jQuery(function($) {
 										$aria_live.text(aria_text);
 									}
 									else {
-										$aria_live.text(t('Can not be removed'));
+										$aria_live.text(t('Cannot be removed'));
 									}
 								}
 								else if (e.which == KEY_BACKSPACE) {
@@ -807,8 +863,8 @@ jQuery(function($) {
 				$(this).remove();
 			}
 		});
-		$('input', $obj).each(function(){
-			if ($(this).val() == id) {
+		$('input', $obj).each(function() {
+			if ($(this).val() !== '' && $(this).val() == id) {
 				$(this).remove();
 			}
 		});
@@ -1216,4 +1272,4 @@ jQuery(function($) {
 			? ms.options.limit + objectSize(ms.values.selected) + ms.options.excludeids.length + 1
 			: null;
 	}
-});
+})(jQuery);

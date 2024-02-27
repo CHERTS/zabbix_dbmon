@@ -1,6 +1,7 @@
 // Notification & alert
 $red: #e33734 !default;
 $light-red: #ed9898 !default;
+$lighter-red: #e3c5c5 !default;
 
 $orange: #f24f1d !default;
 
@@ -50,6 +51,7 @@ $font-selected-color: #ffffff !default;
 $font-alt-color: #768d99 !default;
 $body-bg-color: #ebeef0 !default;
 $overlay-bg-color: #ffffff !default;
+$overlay-border-color: #ccd5d9 !default;
 
 // Main menu
 $menu-main-color: #ebeef0 !default;
@@ -73,9 +75,31 @@ $menu-main-submenu-selected-color: #ffffff !default;
 $menu-main-submenu-selected-bg-color: #0b2d42 !default;
 $menu-main-submenu-selected-border-color: #87d1ff !default;
 
+$menu-main-submenu-next-level-bg: #0a466a !default;
+$menu-main-submenu-next-level-shadow: rgba(#768D99, .35) !default;
+
 $menu-user-color: #cedae1 !default;
 $menu-user-hover-color: #ffffff !default;
 $menu-user-disabled-color: $disabled-item-color !default;
+$menu-user-selected-color: $menu-main-selected-color !default;
+$menu-user-selected-bg-color: $menu-main-selected-bg-color !default;
+$menu-user-selected-border-color: $menu-main-selected-border-color !default;
+$menu-user-expanded-color: $menu-main-expanded-color !default;
+$menu-user-expanded-bg-color: $menu-main-expanded-bg-color !default;
+$menu-user-expanded-border-color: $menu-main-expanded-border-color !default;
+
+$menu-user-submenu-color: $menu-main-submenu-color !default;
+$menu-user-submenu-bg-color: $menu-main-submenu-bg-color !default;
+$menu-user-submenu-border-color: $menu-main-submenu-border-color !default;
+$menu-user-submenu-hover-color: $menu-main-submenu-hover-color !default;
+$menu-user-submenu-hover-bg-color: $menu-main-submenu-hover-bg-color !default;
+$menu-user-submenu-hover-border-color: $menu-main-submenu-hover-border-color !default;
+$menu-user-submenu-selected-color: $menu-main-submenu-selected-color !default;
+$menu-user-submenu-selected-bg-color: $menu-main-submenu-selected-bg-color !default;
+$menu-user-submenu-selected-border-color: $menu-main-submenu-selected-border-color !default;
+
+$menu-user-submenu-next-level-bg: $menu-main-submenu-next-level-bg !default;
+$menu-user-submenu-next-level-shadow: $menu-main-submenu-next-level-shadow !default;
 
 // Sidebar
 $sidebar-server-name-color: rgba($menu-user-color, 0.5) !default;
@@ -97,6 +121,7 @@ $action-shadow-color: rgba(#768d99, .5) !default;
 $table-border-color: #ebeef0 !default;
 
 $ui-tab-bg-selected-color: #0275b8 !default;
+$ui-tabfilter-item-border-color: #768d99 !default;
 
 // Forms
 $form-font-color: #1f2c33 !default;
@@ -110,10 +135,12 @@ $form-disabled-bg-color: #ebebeb !default;
 $form-disabled-border-color: #ccd5d9 !default;
 
 $input-placeholder-color: #9d9d9d !default;
+$input-disabled-placeholder-color: lighten($input-placeholder-color, 15%) !default;
 
 // Error messages
 $msg-bad-color: darken(desaturate($red, 10%), 20%) !default;
 $msg-bad-border-color: $light-red !default;
+$msg-btn-text-color: darken(desaturate($red, 10%), 20%) !default;
 $msg-good-color: darken(desaturate($green, 10%), 20%) !default;
 $msg-good-border-color: $light-green !default;
 $msg-warning-color: #9a7938 !default;
@@ -123,6 +150,7 @@ $msg-warning-border-color: #ffd788 !default;
 $btn-font-color: #ffffff !default;
 $btn-bg-color: #0275b8 !default;
 $btn-border-color: #0275b8 !default;
+$btn-border-focus-color: rgba(#1e87e3, .35) !default;
 
 $btn-alt-font-color: #0275b8 !default;
 $btn-alt-bg-color: transparent !default;
@@ -131,7 +159,6 @@ $btn-form-font-color: #1f2c33 !default;
 $btn-form-bg-color: $form-bg-color !default;
 $btn-form-hover-color: #e8f5ff !default;
 $btn-form-border-color: $form-border-color !default;
-$btn-border-focus-color: rgba(#1e87e3, .35) !default;
 
 $btn-disabled-font-color: #acbbc2 !default;
 $btn-disabled-bg-color: #ebebeb !default;
@@ -160,6 +187,10 @@ $clock-hand-color: #1f2c33 !default;
 $clock-hand-sec-color: #0275b8 !default;
 $clock-lines-color: #acbbc2 !default;
 
+// Indicators
+$indicator-count-color: #768d99;
+$indicator-mark-color: #009900;
+
 // Statuses
 $problem-unack-fg-color: #cc0000 !default;
 $problem-ack-fg-color: #cc0000 !default;
@@ -179,7 +210,26 @@ $host-avail-unknown-bg-color: $alt-blue-grey !default;
 $host-avail-total-bg-color: $transparent !default;
 
 // Preloader
-$preloader-bg-color: $body-bg-color !default;
+$preloader-bg-color: $ui-bg-color !default;
 $preloader-color: #ccd5d9 !default;
 $preloader-disabled-color: #fdfdfd !default;
 $preloader-accent-color: #0275b8 !default;
+
+// Dashboard list table.
+$dashboard-shared-bg-color: darken(desaturate($alt-yellow, 9%), 20%) !default;
+$dashboard-my-bg-color: darken(desaturate($alt-green, 10%), 20%) !default;
+
+// Import compare.
+$toc-title-color: #ffffff !default;
+$toc-title-bg-color: #768d99 !default;
+$diff-added-bg-color: $lighter-green !default;
+$diff-removed-bg-color: $lighter-red !default;
+
+// Text
+$text-placeholder-color: #ffffff !default;
+$text-placeholder-bg-color: $ui-bg-selected-color !default;
+
+// Change indicators.
+$arrow-fill-up: #3DC51D;
+$arrow-fill-down: #FC5A5A;
+$arrow-fill-up-down: #3DC51D;

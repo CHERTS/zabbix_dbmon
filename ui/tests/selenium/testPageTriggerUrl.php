@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,11 +35,11 @@ class testPageTriggerUrl extends CWebTest {
 				[
 					'trigger' => '1_trigger_High',
 					'links' => [
-						'Problems' => 'zabbix.php?action=problem.view&filter_triggerids%5B%5D=100035&filter_set=1',
+						'Problems' => 'zabbix.php?action=problem.view&filter_set=1&triggerids%5B%5D=100035',
 						'Configuration' => 'triggers.php?form=update&triggerid=100035',
 						'Trigger URL' => 'tr_events.php?triggerid=100035&eventid=9003',
-						'Webhook url for all' => 'zabbix.php?action=mediatype.edit&mediatypeid=101',
 						'Unique webhook url' => 'zabbix.php?action=mediatype.list&ddreset=1',
+						'Webhook url for all' => 'zabbix.php?action=mediatype.edit&mediatypeid=101',
 						'1_item' => 'history.php?action=showgraph&itemids%5B%5D=99086'
 					],
 					'background' => "high-bg"
@@ -49,7 +49,7 @@ class testPageTriggerUrl extends CWebTest {
 				[
 					'trigger' => '1_trigger_Not_classified',
 					'links' => [
-						'Problems' => 'zabbix.php?action=problem.view&filter_triggerids%5B%5D=100032&filter_set=1',
+						'Problems' => 'zabbix.php?action=problem.view&filter_set=1&triggerids%5B%5D=100032',
 						'Configuration' => 'triggers.php?form=update&triggerid=100032',
 						'Trigger URL' => 'tr_events.php?triggerid=100032&eventid=9000',
 						'Webhook url for all' => 'zabbix.php?action=mediatype.edit&mediatypeid=101',
@@ -73,7 +73,7 @@ class testPageTriggerUrl extends CWebTest {
 
 		// Find trigger and open trigger overlay dialogue.
 		$table->query('link', $data['trigger'])->one()->click();
-		$this->checkTriggerUrl(false, $data, false);
+		$this->checkTriggerUrl(false, $data);
 	}
 
 	/**
@@ -81,7 +81,7 @@ class testPageTriggerUrl extends CWebTest {
 	 * Check trigger url in Trigger overview widget.
 	 */
 	public function testPageTriggerUrl_TriggerOverviewWidget($data) {
-		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=102');
+		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=10220');
 		$dashboard = CDashboardElement::find()->one();
 		$widget = $dashboard->getWidget('Group to check Overview');
 
@@ -105,139 +105,8 @@ class testPageTriggerUrl extends CWebTest {
 		$this->checkTriggerUrl(false, $data);
 	}
 
-	/**
-	 * @dataProvider getTriggerLinkData
-	 * Check trigger url on Overview page.
-	 */
-	public function testPageTriggerUrl_OverviewPage($data) {
-		$this->page->login()->open('overview.php');
-
-		$table = $this->query('class:list-table')->asTable()->one();
-		// Get row of trigger "1_trigger_Not_classified".
-		$row = $table->findRow('Triggers', $data['trigger']);
-
-		// Open trigger context menu.
-		$row->query('xpath://td[contains(@class, "'.$data['background'].'")]')->one()->click();
-		$this->checkTriggerUrl(true, $data);
-	}
-
-	/**
-	 * Check resolved trigger context menu on overview page, when {EVENT.ID} macro can't be resolved.
-	 *
-	 * @onAfter resetFilter
-	 */
-	public function testPageTriggerUrl_OverviewPageResolvedTrigger() {
-		$filter = [
-			'Show' => 'Any',
-			'Name' => '1_trigger_Average'
-		];
-
-		// Make trigger in resolved state.
-		CDBHelper::setTriggerProblem($filter['Name'], TRIGGER_VALUE_FALSE);
-		$this->page->login()->open('overview.php');
-		// Apply filter options.
-		$form = $this->query('xpath://form[@name="zbx_filter"]')->asForm()->one();
-		$form->fill($filter);
-		$form->submit();
-		$this->page->waitUntilReady();
-
-		$table = $this->query('class:list-table')->asTable()->one();
-		// Get row of trigger "1_trigger_Average".
-		$row = $table->findRow('Triggers', '1_trigger_Average');
-
-		// Open trigger context menu.
-		$row->query('xpath://td[contains(@class, "normal-bg")]')->one()->click();
-		$popup = CPopupMenuElement::find()->waitUntilVisible()->one();
-
-		// Make sure trigger url not visible, when EVENT.ID macro can't be resolved.
-		$this->assertEquals(['TRIGGER', 'HISTORY'], $popup->getTitles()->asText());
-	}
-
 	public function resetFilter() {
 		DBexecute('DELETE FROM profiles WHERE idx LIKE \'%web.overview.filter%\'');
-	}
-
-	/*
-	 * Check resolved trigger context menu on overview page, if trigger url without {EVENT.ID} macro.
-	 */
-	public function testPageTriggerUrl_OverviewPageTriggerWithoutEventId() {
-		$url = 'triggers.php?form=update&triggerid=100039';
-		$filter = [
-			'Show' => 'Any',
-			'Name' => '3_trigger_Disaster'
-		];
-
-		$this->page->login()->open('overview.php');
-		// Apply filter options.
-		$form = $this->query('xpath://form[@name="zbx_filter"]')->asForm()->one();
-		$form->fill($filter);
-		$form->submit();
-		$this->page->waitUntilReady();
-
-		$table = $this->query('class:list-table')->asTable()->one();
-		// Get row of trigger "3_trigger_Disaster".
-		$row = $table->findRow('Triggers', '3_trigger_Disaster');
-
-		// Open trigger context menu.
-		$row->query('xpath://td[contains(@class, "normal-bg")]')->one()->click();
-		$popup = CPopupMenuElement::find()->waitUntilVisible()->one();
-
-		// Make sure trigger url is visible.
-		$this->assertTrue($popup->hasTitles(['TRIGGER', 'LINKS', 'HISTORY']));
-		$popup->fill('Trigger URL');
-		// Check opened page.
-		$this->assertEquals('Triggers', $this->query('tag:h1')->waitUntilVisible()->one()->getText());
-		$this->assertStringContainsString($url, $this->page->getCurrentUrl());
-	}
-
-	/**
-	 * @dataProvider getTriggerLinkData
-	 * Check trigger url in screen item Trigger overview.
-	 */
-	public function testPageTriggerUrl_ScreensTriggerOverview($data) {
-		$name = 'Trigger overview';
-		$this->page->login()->open('screens.php?elementid=200021');
-		$screen_item = $this->query('xpath://div[contains(@class, "dashbrd-widget-head")]/h4[text()='.
-				CXPathHelper::escapeQuotes($name).']/../../..')->one()->waitUntilPresent();
-		$table = $screen_item->query('class:list-table')->asTable()->one();
-		// Get row of trigger "1_trigger_Not_classified".
-		$row = $table->findRow('Triggers', $data['trigger']);
-
-		// Open trigger context menu.
-		$row->query('xpath://td[contains(@class, "'.$data['background'].'")]')->one()->click();
-		$this->checkTriggerUrl(true, $data);
-	}
-
-	/**
-	 * @dataProvider getTriggerLinkData
-	 * Check trigger url in screen item Host issues.
-	 */
-	public function testPageTriggerUrl_ScreensHostIssues($data) {
-		$name = 'Host issues';
-		$this->page->login()->open('screens.php?elementid=200021');
-		$screen_item = $this->query('xpath://div[contains(@class, "dashbrd-widget-head")]/h4[text()='.
-				CXPathHelper::escapeQuotes($name).']/../../..')->one()->waitUntilPresent();
-		$table = $screen_item->query('class:list-table')->asTable()->one();
-
-		// Find trigger and open trigger overlay.
-		$table->query('link', $data['trigger'])->one()->click();
-		$this->checkTriggerUrl(false, $data, false);
-	}
-
-	/**
-	 * @dataProvider getTriggerLinkData
-	 * Check trigger url in screen item Host group issues.
-	 */
-	public function testPageTriggerUrl_ScreensHostGroupIssues($data) {
-		$name = 'Host issues';
-		$this->page->login()->open('screens.php?elementid=200021');
-		$screen_item = $this->query('xpath://div[contains(@class, "dashbrd-widget-head")]/h4[text()='.
-				CXPathHelper::escapeQuotes($name).']/../../..')->one()->waitUntilPresent();
-		$table = $screen_item->query('class:list-table')->asTable()->one();
-
-		// Find trigger and open trigger overlay.
-		$table->query('link', $data['trigger'])->one()->click();
-		$this->checkTriggerUrl(false, $data, false);
 	}
 
 	/**

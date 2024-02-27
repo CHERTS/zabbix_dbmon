@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -91,10 +91,6 @@ class CJsonRpc {
 	}
 
 	public function validate(&$call) {
-		if (is_array($call)) {
-			$call = array_intersect_key($call, array_flip(['jsonrpc', 'method', 'params', 'auth', 'id']));
-		}
-
 		$api_input_rules = ['type' => API_OBJECT, 'fields' => [
 			'jsonrpc' =>	['type' => API_STRING_UTF8, 'flags' => API_REQUIRED, 'in' => self::VERSION],
 			'method' =>		['type' => API_STRING_UTF8, 'flags' => API_REQUIRED],
@@ -177,8 +173,8 @@ class CJsonRpc {
 			],
 			'-32600' => [
 				'code' => -32600,
-				'message' => _('Invalid Request.'),
-				'data' => _('The received JSON is not a valid JSON-RPC Request.')
+				'message' => _('Invalid request.'),
+				'data' => _('The received JSON is not a valid JSON-RPC request.')
 			],
 			'-32601' => [
 				'code' => -32601,

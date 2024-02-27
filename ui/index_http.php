@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,18 +20,12 @@
 
 
 require_once dirname(__FILE__).'/include/classes/user/CWebUser.php';
-CWebUser::disableSessionCookie();
 require_once dirname(__FILE__).'/include/config.inc.php';
 
-$config = select_config();
 $redirect_to = (new CUrl('index.php'))->setArgument('form', 'default');
-
 $request = getRequest('request', '');
-$test_request = [];
-preg_match('/^\/?(?<filename>[a-z0-9\_\.]+\.php)(\?.*)?$/i', $request, $test_request);
 
-if (!array_key_exists('filename', $test_request) || !file_exists('./'.$test_request['filename'])
-		|| $test_request['filename'] == basename(__FILE__)) {
+if ($request !== '' && !CHtmlUrlValidator::validateSameSite($request)) {
 	$request = '';
 }
 
@@ -39,10 +33,8 @@ if ($request !== '') {
 	$redirect_to->setArgument('request', $request);
 }
 
-if ($config['http_auth_enabled'] != ZBX_AUTH_HTTP_ENABLED) {
+if (CAuthenticationHelper::get(CAuthenticationHelper::HTTP_AUTH_ENABLED) != ZBX_AUTH_HTTP_ENABLED) {
 	redirect($redirect_to->toString());
-
-	exit;
 }
 
 $http_user = '';
@@ -57,7 +49,7 @@ if ($http_user) {
 	$parser = new CADNameAttributeParser(['strict' => true]);
 
 	if ($parser->parse($http_user) === CParser::PARSE_SUCCESS) {
-		$strip_domain = explode(',', $config['http_strip_domains']);
+		$strip_domain = explode(',', CAuthenticationHelper::get(CAuthenticationHelper::HTTP_STRIP_DOMAINS));
 		$strip_domain = array_map('trim', $strip_domain);
 
 		if ($strip_domain && in_array($parser->getDomainName(), $strip_domain)) {
@@ -66,16 +58,17 @@ if ($http_user) {
 	}
 
 	try {
-		$user = API::getApiService('user')->loginByAlias($http_user,
-			($config['http_case_sensitive'] == ZBX_AUTH_CASE_SENSITIVE), $config['authentication_type']
+		CWebUser::$data = API::getApiService('user')->loginByUsername($http_user,
+			(CAuthenticationHelper::get(CAuthenticationHelper::HTTP_CASE_SENSITIVE) == ZBX_AUTH_CASE_SENSITIVE),
+			CAuthenticationHelper::get(CAuthenticationHelper::AUTHENTICATION_TYPE)
 		);
 
-		if ($user) {
-			CWebUser::setSessionCookie($user['sessionid']);
-			$redirect = array_filter([$request, $user['url'], ZBX_DEFAULT_URL]);
-			redirect(reset($redirect));
+		if (!empty(CWebUser::$data)) {
+			CSessionHelper::set('sessionid', CWebUser::$data['sessionid']);
+			API::getWrapper()->auth = CWebUser::$data['sessionid'];
 
-			exit;
+			$redirect = array_filter([$request, CWebUser::$data['url'], CMenuHelper::getFirstUrl()]);
+			redirect(reset($redirect));
 		}
 	}
 	catch (APIException $e) {
@@ -88,10 +81,12 @@ else {
 
 echo (new CView('general.warning', [
 	'header' => _('You are not logged in'),
-	'messages' => zbx_objectValues(clear_messages(), 'message'),
+	'messages' => array_column(get_and_clear_messages(), 'message'),
 	'buttons' => [
 		(new CButton('login', _('Login')))->onClick('document.location = '.
 			json_encode($redirect_to->getUrl()).';')
 	],
 	'theme' => getUserTheme(CWebUser::$data)
 ]))->getOutput();
+
+session_write_close();

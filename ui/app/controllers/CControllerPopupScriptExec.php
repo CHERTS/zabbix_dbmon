@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,8 +23,9 @@ class CControllerPopupScriptExec extends CController {
 
 	protected function checkInput() {
 		$fields = [
+			'scriptid' =>		'db scripts.scriptid',
 			'hostid' =>			'db hosts.hostid',
-			'scriptid' =>		'db scripts.scriptid'
+			'eventid' =>		'db events.eventid'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -44,59 +45,82 @@ class CControllerPopupScriptExec extends CController {
 	}
 
 	protected function checkPermissions() {
-		return (bool) API::Host()->get([
-			'output' => [],
-			'hostids' => $this->getInput('hostid')
-		]);
+		if (!$this->checkAccess(CRoleHelper::ACTIONS_EXECUTE_SCRIPTS)) {
+			return false;
+		}
+
+		if ($this->hasInput('hostid')) {
+			return (bool) API::Host()->get([
+				'output' => [],
+				'hostids' => $this->getInput('hostid')
+			]);
+		}
+
+		if ($this->hasInput('eventid')) {
+			return (bool) API::Event()->get([
+				'output' => [],
+				'eventids' => $this->getInput('eventid')
+			]);
+		}
+
+		return false;
 	}
 
 	protected function doAction() {
 		$scriptid = $this->getInput('scriptid');
-		$hostid = $this->getInput('hostid');
+		$hostid = $this->getInput('hostid', '');
+		$eventid = $this->getInput('eventid', '');
 
 		$data = [
 			'title' => _('Scripts'),
-			'command' => '',
-			'message' => '',
-			'errors' => null,
+			'type' => ZBX_SCRIPT_TYPE_WEBHOOK,
+			'output' => '',
+			'debug' => [],
+			'messages' => null,
+			'success' => false,
 			'user' => [
 				'debug_mode' => $this->getDebugMode()
 			]
 		];
 
 		$scripts = API::Script()->get([
-			'output' => ['name', 'command'],
+			'output' => ['name', 'type'],
 			'scriptids' => $scriptid
 		]);
 
 		if ($scripts) {
 			$script = $scripts[0];
-
-			$macros_data = CMacrosResolverHelper::resolve([
-				'config' => 'scriptConfirmation',
-				'data' => [$hostid => [$scriptid => $script['command']]]
-			]);
-
 			$data['title'] = $script['name'];
-			$data['command'] = $macros_data[$hostid][$scriptid];
+			$data['type'] =  $script['type'];
 
-			$result = API::Script()->execute([
-				'hostid' => $hostid,
-				'scriptid' => $scriptid
-			]);
+			$execution_params = ['scriptid' => $scriptid];
 
-			if (!$result) {
-				error(_('Cannot execute script'));
+			if ($hostid) {
+				$execution_params['hostid'] = $hostid;
 			}
-			else {
-				$data['message'] = $result['value'];
+			elseif ($eventid) {
+				$execution_params['eventid'] = $eventid;
+			}
+
+			$result = API::Script()->execute($execution_params);
+
+			if ($result) {
+				if ($data['type'] == ZBX_SCRIPT_TYPE_WEBHOOK) {
+					$value = json_decode($result['value']);
+					$result['value'] = json_last_error() ? $result['value'] : json_encode($value, JSON_PRETTY_PRINT);
+				}
+
+				$data['output'] = $result['value'];
+				$data['debug'] = $result['debug'];
+				$data['success'] = true;
+				info(_('Script execution successful.'));
 			}
 		}
 		else {
 			error(_('No permissions to referred object or it does not exist!'));
 		}
 
-		$data['errors'] = getMessages();
+		$data['messages'] = getMessages($data['success'], $data['success'] ? null : _('Cannot execute script.'));
 
 		$this->setResponse(new CControllerResponseData($data));
 	}

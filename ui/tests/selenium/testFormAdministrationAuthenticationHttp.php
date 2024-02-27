@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,12 +24,67 @@ require_once dirname(__FILE__).'/../include/CLegacyWebTest.php';
 /**
  * @onBefore removeGuestFromDisabledGroup
  * @onAfter addGuestToDisabledGroup
+ * @dataSource LoginUsers
  */
 class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 
 	const LOGIN_GUEST	= 1;
 	const LOGIN_USER		= 2;
 	const LOGIN_HTTP		= 3;
+
+	public function testFormAdministrationAuthenticationHttp_Layout() {
+		$this->page->login()->open('zabbix.php?action=authentication.edit');
+		$form = $this->query('name:form_auth')->asForm()->one();
+		$form->selectTab('HTTP settings');
+
+		// Check default values.
+		$default_values = [
+			'Enable HTTP authentication' => false,
+			'Default login form' => 'Zabbix login form',
+			'Remove domain name' => '',
+			'Case-sensitive login' => true
+		];
+		$form->checkValue($default_values);
+
+		// Check disabled fields.
+		$fields = ['Default login form', 'Remove domain name', 'Case-sensitive login'];
+		foreach ($fields as $field) {
+			$this->assertTrue($form->getField($field)->isEnabled(false));
+		}
+
+		// Check dropdown options.
+		$this->assertEquals(['Zabbix login form', 'HTTP login form'], $form->getField('Default login form')
+				->getOptions()->asText());
+
+		// Check input field maxlength.
+		$this->assertEquals('2048', $form->getField('Remove domain name')->getAttribute('maxlength'));
+
+		// Check hintbox.
+		$form->getLabel('Enable HTTP authentication')->query('class:icon-help-hint')->one()->click();
+		$hintbox = $form->query('xpath://div[@class="overlay-dialogue"]')->waitUntilPresent();
+		$this->assertEquals('If HTTP authentication is enabled, all users (even with frontend access set to LDAP/Internal)'.
+			' will be authenticated by the web server, not by Zabbix.', $hintbox->one()->getText());
+
+		// Close the hintbox.
+		$hintbox->query('class:overlay-close-btn')->one()->click()->waitUntilNotPresent();
+
+		// Check confirmation popup.
+		foreach (['button:Cancel', 'class:overlay-close-btn', 'button:Ok'] as $button) {
+			$form->fill(['Enable HTTP authentication' => true]);
+			$dialog = COverlayDialogElement::find()->one();
+			$this->assertEquals('Confirm changes', $dialog->getTitle());
+			$this->assertEquals('Enable HTTP authentication for all users.', $dialog->getContent()->getText());
+			$dialog->query($button)->one()->click();
+			COverlayDialogElement::ensureNotPresent();
+
+			// Check disabled fields and checkbox status.
+			$status = ($button === 'button:Ok') ? true : false;
+			foreach ($fields as $field) {
+				$this->assertTrue($form->getField($field)->isEnabled($status));
+			}
+			$this->assertEquals($status, $form->getField('Enable HTTP authentication')->getValue());
+		}
+	}
 
 	public function getHttpData() {
 		return [
@@ -172,7 +227,7 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 						],
 						// Couldn't open Hosts page due access.
 						[
-							'page' => 'hosts.php',
+							'page' => self::HOST_LIST_PAGE,
 							'error' => 'Access denied'
 						],
 						// Couldn't open GUI page due access.
@@ -210,7 +265,7 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 //						// wait for ZBX-14774.
 //						// Redirect to HTTP login form and user is signed on hosts page.
 //						[
-//							'page' => 'hosts.php',
+//							'page' => self::HOST_LIST_PAGE,
 //							'action' => self::LOGIN_HTTP,
 //							'target' => 'Hosts'
 //						],
@@ -318,7 +373,7 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 //						// Redirect to HTTP login form and user is signed on hosts page.
 //						// wait for ZBX-14774.
 //						[
-//							'page' => 'hosts.php',
+//							'page' => self::HOST_LIST_PAGE,
 //							'action' => self::LOGIN_HTTP,
 //							'target' => 'Hosts'
 //						],
@@ -353,7 +408,7 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 			[
 				[
 					'user' => 'local.com\\test-user',
-					'password' => 'zabbix',
+					'password' => 'zabbix12345',
 					'file' => 'htaccess',
 					'http_authentication' => [
 						'Enable HTTP authentication' => true,
@@ -372,7 +427,7 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 						],
 //						// wait for ZBX-14774.
 //						[
-//							'page' => 'hosts.php',
+//							'page' => self::HOST_LIST_PAGE,
 //							'action' => self::LOGIN_HTTP,
 //							'target' => 'hosts'
 //						],
@@ -414,7 +469,7 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 					'http_authentication' => [
 						'Enable HTTP authentication' => true,
 						'Default login form' => 'Zabbix login form',
-						'Case sensitive login' => true
+						'Case-sensitive login' => true
 					],
 					'pages' => [
 						[
@@ -439,7 +494,7 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 					'http_authentication' => [
 						'Enable HTTP authentication' => true,
 						'Default login form' => 'Zabbix login form',
-						'Case sensitive login' => false
+						'Case-sensitive login' => false
 					],
 					'pages' => [
 						[
@@ -538,18 +593,21 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 			}
 
 			// Check user data in DB after login.
-			$session = $this->webDriver->manage()->getCookieNamed(ZBX_SESSION_NAME);
+			$session_cookie = $this->webDriver->manage()->getCookieNamed(ZBX_SESSION_NAME);
+			$session_cookie = json_decode(base64_decode(urldecode($session_cookie['value'])), true);
+			$session = $session_cookie['sessionid'];
+
 			$user_data = CDBHelper::getRow(
-				'SELECT u.alias'.
+				'SELECT u.username'.
 				' FROM users u,sessions s'.
 				' WHERE u.userid=s.userid'.
-					' AND sessionid='.zbx_dbstr($session['value'])
+					' AND sessionid='.zbx_dbstr($session)
 			);
 			if (array_key_exists('user_case_sensitive', $data)) {
-				$this->assertEquals($user_data['alias'], $data['user_case_sensitive']);
+				$this->assertEquals($user_data['username'], $data['user_case_sensitive']);
 			}
 			else {
-				$this->assertEquals($user_data['alias'], $alias);
+				$this->assertEquals($user_data['username'], $alias);
 			}
 
 			$this->page->logout();
@@ -600,10 +658,16 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 		$form = $this->query('name:form_auth')->asForm()->one();
 		$http_options = CTestArrayHelper::get($data, 'http_authentication', ['Enable HTTP authentication' => false]);
 		$form->selectTab('HTTP settings');
+
+		if (CTestArrayHelper::get($data, 'http_authentication.Enable HTTP authentication', false) === true) {
+			$form->fill(['Enable HTTP authentication' => true]);
+			$this->query('button:Ok')->one()->click();
+		}
+
 		$form->fill($http_options);
 
 		// Check disabled or enabled fields.
-		$fields = ['Default login form', 'Remove domain name', 'Case sensitive login'];
+		$fields = ['Default login form', 'Remove domain name', 'Case-sensitive login'];
 		foreach ($fields as $field) {
 			$this->assertTrue($form->getField($field)->isEnabled($http_options['Enable HTTP authentication']));
 		}
@@ -612,7 +676,7 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 		$form->submit();
 
 		// Check DB configuration.
-		$defautl_values = [
+		$default_values = [
 			'authentication_type' => '0',
 			'ldap_host' => '',
 			'ldap_port' => '389',
@@ -628,7 +692,7 @@ class testFormAdministrationAuthenticationHttp extends CLegacyWebTest {
 				'http_strip_domains,http_case_sensitive'.
 				' FROM config';
 		$result = CDBHelper::getRow($sql);
-		$this->assertEquals(array_merge($defautl_values, $data['db_check']), $result);
+		$this->assertEquals(array_merge($default_values, $data['db_check']), $result);
 
 		$this->page->logout();
 	}

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -298,21 +298,26 @@ int	zbx_default_uint64_compare_func(const void *d1, const void *d2)
 
 int	zbx_default_uint64_ptr_compare_func(const void *d1, const void *d2)
 {
-	const zbx_uint64_t	*p1 = *(const zbx_uint64_t **)d1;
-	const zbx_uint64_t	*p2 = *(const zbx_uint64_t **)d2;
+	const zbx_uint64_t	*p1 = *(const zbx_uint64_t * const *)d1;
+	const zbx_uint64_t	*p2 = *(const zbx_uint64_t * const *)d2;
 
 	return zbx_default_uint64_compare_func(p1, p2);
 }
 
 int	zbx_default_str_compare_func(const void *d1, const void *d2)
 {
-	return strcmp(*(const char **)d1, *(const char **)d2);
+	return strcmp(*(const char * const *)d1, *(const char * const *)d2);
+}
+
+int	zbx_natural_str_compare_func(const void *d1, const void *d2)
+{
+	return zbx_strcmp_natural(*(const char * const *)d1, *(const char * const *)d2);
 }
 
 int	zbx_default_ptr_compare_func(const void *d1, const void *d2)
 {
-	const void	*p1 = *(const void **)d1;
-	const void	*p2 = *(const void **)d2;
+	const void	*p1 = *(const void * const *)d1;
+	const void	*p2 = *(const void * const *)d2;
 
 	ZBX_RETURN_IF_NOT_EQUAL(p1, p2);
 
@@ -326,6 +331,16 @@ int	zbx_default_uint64_pair_compare_func(const void *d1, const void *d2)
 
 	ZBX_RETURN_IF_NOT_EQUAL(p1->first, p2->first);
 	ZBX_RETURN_IF_NOT_EQUAL(p1->second, p2->second);
+
+	return 0;
+}
+
+int	zbx_default_dbl_compare_func(const void *d1, const void *d2)
+{
+	const double	*p1 = (const double *)d1;
+	const double	*p2 = (const double *)d2;
+
+	ZBX_RETURN_IF_DBL_NOT_EQUAL(*p1, *p2);
 
 	return 0;
 }
@@ -377,8 +392,6 @@ int	next_prime(int n)
 
 /******************************************************************************
  *                                                                            *
- * Function: zbx_isqrt32                                                      *
- *                                                                            *
  * Purpose: calculate integer part of square root of a 32 bit integer value   *
  *                                                                            *
  * Parameters: value     - [IN] the value to calculate square root for        *
@@ -408,4 +421,44 @@ unsigned int	zbx_isqrt32(unsigned int value)
 	}
 
 	return result;
+}
+
+/******************************************************************************
+ *                                                                            *
+ * Purpose: calculate UUID version 4 as string of 32 symbols                  *
+ *                                                                            *
+ * Parameters: seed    - [IN] string for seed calculation                     *
+ *                                                                            *
+ * Return value: uuid string                                                  *
+ *                                                                            *
+ ******************************************************************************/
+char	*zbx_gen_uuid4(const char *seed)
+{
+	size_t		i;
+	const char	*hex = "0123456789abcdef";
+	char		*ptr, *uuid;
+	md5_state_t	state;
+	md5_byte_t	hash[MD5_DIGEST_SIZE];
+
+#define ZBX_UUID_VERSION	4
+#define ZBX_UUID_VARIANT	2
+
+	ptr = uuid = (char *)zbx_malloc(NULL, 2 * MD5_DIGEST_SIZE + 1);
+
+	zbx_md5_init(&state);
+	zbx_md5_append(&state, (const md5_byte_t *)seed, (int)strlen(seed));
+	zbx_md5_finish(&state, hash);
+
+	hash[6] = (md5_byte_t)((hash[6] & 0xf) | (ZBX_UUID_VERSION << 4));
+	hash[8] = (md5_byte_t)((hash[8] & 0x3f) | (ZBX_UUID_VARIANT << 6));
+
+	for (i = 0; i < MD5_DIGEST_SIZE; i++)
+	{
+		*ptr++ = hex[(hash[i] >> 4) & 0xf];
+		*ptr++ = hex[hash[i] & 0xf];
+	}
+
+	*ptr = '\0';
+
+	return uuid;
 }

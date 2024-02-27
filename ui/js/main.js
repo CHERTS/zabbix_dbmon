@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,6 +22,9 @@
 
 // Sync with SASS variable: $ui-transition-duration.
 const UI_TRANSITION_DURATION = 300;
+
+const PROFILE_TYPE_INT = 2;
+const PROFILE_TYPE_STR = 3;
 
 // Array indexOf method for javascript<1.6 compatibility
 if (!Array.prototype.indexOf) {
@@ -80,7 +83,7 @@ var PageRefresh = {
 
 		if (this.delayLeft < 0 && !overlays_stack.length) {
 			if (ED) {
-				sessionStorage.scrollTop = jQuery(window).scrollTop();
+				sessionStorage.scrollTop = $('.wrapper').scrollTop();
 			}
 
 			location.reload();
@@ -208,7 +211,6 @@ var AudioControl = {
  * Elements with class 'blink' will blink for 'data-seconds-to-blink' seconds
  * If 'data-seconds-to-blink' is omitted, element will blink forever.
  * For elements with class 'blink' and attribute 'data-toggle-class' class will be toggled.
- * @author Konstantin Buravcov
  */
 var jqBlink = {
 	shown: true, // are objects currently shown or hidden?
@@ -254,7 +256,6 @@ var jqBlink = {
  */
 var hintBox = {
 
-	preload_hint_timer: null,
 	show_hint_timer: null,
 
 	/**
@@ -283,41 +284,10 @@ var hintBox = {
 				e.preventDefault();
 			}
 
-			if ($target.data('hintbox-preload') && $target.next('.hint-box').children().length == 0) {
-				clearTimeout(hintBox.preload_hint_timer);
-
-				// Manually trigger preloaderCloseHandler for the previous preloader.
-				if (jQuery('#hintbox-preloader').length) {
-
-					// Prevent loading restart on repetitive click and keydown events.
-					if (e.type === 'click' || e.type === 'keydown') {
-						return false;
-					}
-
-					jQuery(document).trigger('click');
-				}
-
-				if (e.type === 'mouseleave') {
-					$target.blur();
-
-					return false;
-				}
-
-				var preloadHintHandler = function() {
-					hintBox.preloadHint(e, $target);
-				}
-
-				if (e.type === 'mouseenter') {
-					hintBox.preload_hint_timer = setTimeout(preloadHintHandler, 400);
-				}
-				else {
-					preloadHintHandler();
-				}
-
-				return false;
-			}
-
-			hintBox.displayHint(e, $target, 400);
+			hintBox.displayHint(e, $target, $target.data('hintbox-delay') !== undefined
+				? $target.data('hintbox-delay')
+				: 400
+			);
 
 			return false;
 		});
@@ -368,33 +338,26 @@ var hintBox = {
 		}
 	},
 
-	preloadHint: function(e, $target) {
-		var url = new Curl('zabbix.php'),
-			data = $target.data('hintbox-preload');
+	preloadHint: function(e, target, box) {
+		const url = new Curl('zabbix.php');
+		const data = jQuery(target).data('hintbox-preload');
 
 		url.setArgument('action', hintBox.getHintboxAction(data.type));
 
-		var xhr = jQuery.ajax({
+		const xhr = jQuery.ajax({
 			url: url.getUrl(),
 			method: 'POST',
 			data: data.data,
 			dataType: 'json'
 		});
 
-		var $preloader = hintBox.createPreloader();
-
-		var preloader_timer = setTimeout(function() {
-			$preloader.fadeIn(200);
-			hintBox.positionElement(e, $target[0], $preloader);
-		}, 500);
-
-		addToOverlaysStack($preloader.prop('id'), $target[0], 'preloader', xhr);
+		const $preloader = jQuery('<div>', {
+			'id': 'hintbox-preloader',
+			'class': 'is-loading hintbox-preloader'
+		}).appendTo(box);
 
 		xhr.done(function(resp) {
-			clearTimeout(preloader_timer);
-			overlayPreloaderDestroy($preloader.prop('id'));
-
-			var $hint_box = $target.next('.hint-box').empty();
+			const $hint_box = jQuery(target).next('.hint-box').empty();
 
 			if (resp.messages) {
 				$hint_box.append(resp.messages);
@@ -403,34 +366,23 @@ var hintBox = {
 				$hint_box.append(resp.data);
 			}
 
-			hintBox.displayHint(e, $target);
+			$preloader.remove();
+
+			if (target.hintBoxItem !== undefined) {
+				box.append($hint_box.html());
+
+				// Reset hintbox position.
+				box.css({
+					width: '',
+					height: '',
+					top: '',
+					right: '',
+					left: ''
+				});
+
+				hintBox.positionElement(e, target, target.hintBoxItem);
+			}
 		});
-
-		jQuery(document)
-			.off('click', hintBox.preloaderCloseHandler)
-			.on('click', {id: $preloader.prop('id')}, hintBox.preloaderCloseHandler);
-	},
-
-	/**
-	 * Create preloader elements for the hint box.
-	 */
-	createPreloader: function() {
-		return jQuery('<div>', {
-			'id': 'hintbox-preloader',
-			'class': 'is-loading hintbox-preloader'
-		})
-			.appendTo($('.wrapper'))
-			.on('click', function(e) {
-				e.stopPropagation();
-			})
-			.hide();
-	},
-
-	/**
-	 * Event handler for the preloader elements destroy.
-	 */
-	preloaderCloseHandler: function(event) {
-		overlayPreloaderDestroy(event.data.id);
 	},
 
 	createBox: function(e, target, hintText, className, isStatic, styles, appendTo) {
@@ -479,15 +431,26 @@ var hintBox = {
 			box.prepend(close_link);
 		}
 
+		if (jQuery(target).data('hintbox-preload') && jQuery(target).next('.hint-box').children().length === 0) {
+			hintBox.preloadHint(e, target, box);
+		}
+
 		jQuery(appendTo).append(box);
 
-		var removeHandler = function() {
-			hintBox.deleteHint(target);
-		};
+		target.observer = new MutationObserver(() => {
+			const element = target instanceof jQuery ? target[0] : target;
 
-		jQuery(target)
-			.off('remove', removeHandler)
-			.on('remove', removeHandler);
+			if (!isVisible(element)) {
+				hintBox.deleteHint(target);
+			}
+		});
+
+		target.observer.observe(document.body, {
+			attributes: true,
+			attributeFilter: ['style', 'class'],
+			subtree: true,
+			childList: true
+		});
 
 		return box;
 	},
@@ -610,10 +573,26 @@ var hintBox = {
 			delete target.hintBoxItem;
 
 			if (target.isStatic) {
-				if (jQuery(target).data('return-control') !== 'undefined') {
+				if (jQuery(target).data('return-control') !== undefined) {
 					jQuery(target).data('return-control').focus();
 				}
 				delete target.isStatic;
+			}
+		}
+
+		if (target.observer !== undefined) {
+			target.observer.disconnect();
+
+			delete target.observer;
+		}
+	},
+
+	deleteAll: () => {
+		for (let i = overlays_stack.length - 1; i >= 0; i--) {
+			const overlay = overlays_stack.getById(overlays_stack.stack[i]);
+
+			if (overlay.type === 'hintbox') {
+				hintBox.deleteHint(overlay.element);
 			}
 		}
 	},
@@ -656,14 +635,20 @@ function rm4favorites(object, objectid) {
  * Toggles filter state and updates title and icons accordingly.
  *
  * @param {string} 	idx					User profile index
- * @param {string} 	value_int			Integer value
+ * @param {string} 	value				Value
  * @param {object} 	idx2				An array of IDs
+ * @param {integer} profile_type		Profile type
  */
-function updateUserProfile(idx, value_int, idx2) {
+function updateUserProfile(idx, value, idx2, profile_type = PROFILE_TYPE_INT) {
+	const value_fields = {
+		[PROFILE_TYPE_INT]: 'value_int',
+		[PROFILE_TYPE_STR]: 'value_str'
+	};
+
 	return sendAjaxData('zabbix.php?action=profile.update', {
 		data: {
 			idx: idx,
-			value_int: value_int,
+			[value_fields[profile_type]]: value,
 			idx2: idx2
 		}
 	});
@@ -676,11 +661,11 @@ function changeWidgetState(obj, widgetId, idx) {
 
 	if (css === 'btn-widget-expand') {
 		jQuery('.body', widgetObj).slideUp(50);
-		jQuery('.dashbrd-widget-foot', widgetObj).slideUp(50);
+		jQuery('.dashboard-widget-foot', widgetObj).slideUp(50);
 	}
 	else {
 		jQuery('.body', widgetObj).slideDown(50);
-		jQuery('.dashbrd-widget-foot', widgetObj).slideDown(50);
+		jQuery('.dashboard-widget-foot', widgetObj).slideDown(50);
 
 		state = 1;
 	}
@@ -830,6 +815,7 @@ function getConditionFormula(conditions, evalType) {
 	 * - row					- element row selector
 	 * - add					- add row button selector
 	 * - remove					- remove row button selector
+	 * - rows					- array of rows objects data
 	 * - counter 				- number to start row enumeration from
 	 * - dataCallback			- function to generate the data passed to the template
 	 * - remove_next_sibling	- remove also next element
@@ -852,6 +838,7 @@ function getConditionFormula(conditions, evalType) {
 			disable: '.element-table-disable',
 			counter: null,
 			beforeRow: null,
+			rows: [],
 			dataCallback: function(data) {
 				return {};
 			}
@@ -889,8 +876,51 @@ function getConditionFormula(conditions, evalType) {
 				// disable the parent row
 				disableRow($(this).closest(options.row));
 			});
+
+			if (typeof options.rows === 'object') {
+				var before_row = (options['beforeRow'] !== null)
+					? $(options['beforeRow'], table)
+					: $(options.add, table).closest('tr');
+
+				initRows(table, before_row, options);
+			}
 		});
 	};
+
+	/**
+	 * Renders options.rows array as HTML rows during initialization.
+	 *
+	 * @param {jQuery} table       Table jquery node.
+	 * @param {jQuery} before_row  Rendered rows will be inserted before this node.
+	 * @param {object} options     Object with options.
+	 */
+	function initRows(table, before_row, options) {
+		var template = new Template($(options.template).html()),
+			counter = table.data('dynamicRows').counter,
+			$row;
+
+		options.rows.forEach((data) => {
+			data.rowNum = counter;
+			$row = $(template.evaluate($.extend(data, options.dataCallback(data))));
+
+			for (const name in data) {
+				// Set 'z-select' value.
+				$row
+					.find(`z-select[name$="[${counter}][${name}]"]`)
+					.val(data[name]);
+
+				// Set 'radio' value.
+				$row
+					.find(`[type="radio"][name$="[${counter}][${name}]"][value="${$.escapeSelector(data[name])}"]`)
+					.attr('checked', 'checked');
+			}
+
+			before_row.before($row);
+			++counter;
+		});
+
+		table.data('dynamicRows').counter = counter;
+	}
 
 	/**
 	 * Adds a row before the given row.
@@ -942,74 +972,8 @@ function getConditionFormula(conditions, evalType) {
 }(jQuery));
 
 jQuery(function ($) {
-	var verticalHeaderTables = {};
-
-	$.fn.makeVerticalRotation = function() {
-		this.each(function(i) {
-			var table = $(this);
-
-			if (table.data('rotated') == 1) {
-				return;
-			}
-			table.data('rotated', 1);
-
-			var cellsToRotate = $('.vertical_rotation', table),
-				betterCells = [];
-
-			// insert spans
-			cellsToRotate.each(function() {
-				var cell = $(this),
-					text = $('<span>', {
-						text: cell.html()
-					}).css({'white-space': 'nowrap'});
-
-				cell.text('').append(text);
-			});
-
-			// rotate cells
-			cellsToRotate.each(function() {
-				var cell = $(this),
-					span = cell.children(),
-					height = cell.height(),
-					width = span.width(),
-					transform = (width / 2) + 'px ' + (width / 2) + 'px';
-
-				var css = {};
-
-				css['transform-origin'] = transform;
-				css['-webkit-transform-origin'] = transform;
-				css['-moz-transform-origin'] = transform;
-				css['-o-transform-origin'] = transform;
-
-				var divInner = $('<div>', {
-					'class': 'vertical_rotation_inner'
-				})
-					.css(css)
-					.append(span.text());
-
-				var div = $('<div>', {
-					height: width,
-					width: height
-				})
-					.append(divInner);
-
-				betterCells.push(div);
-			});
-
-			cellsToRotate.each(function(i) {
-				$(this).html(betterCells[i]);
-			});
-
-			table.on('remove', function() {
-				delete verticalHeaderTables[table.attr('id')];
-			});
-
-			verticalHeaderTables[table.attr('id')] = table;
-		});
-	};
-
 	if (ED && typeof sessionStorage.scrollTop !== 'undefined') {
-		$(window).scrollTop(sessionStorage.scrollTop);
+		$('.wrapper').scrollTop(sessionStorage.scrollTop);
 		sessionStorage.removeItem('scrollTop');
 	}
 });

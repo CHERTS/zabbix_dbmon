@@ -1,6 +1,5 @@
 # LIBUNIXODBC_CHECK_CONFIG ([DEFAULT-ACTION])
 # ----------------------------------------------------------
-#    Eugene Grigorjev <eugene@zabbix.com>   June-07-2007
 #
 # Checks for unixodbc.  DEFAULT-ACTION is the string yes or no to
 # specify whether to default to --with-unixodbc
@@ -22,8 +21,7 @@ AC_DEFUN([LIBUNIXODBC_CHECK_CONFIG],
   AC_ARG_WITH(unixodbc,
      [
 If you want to use unixODBC library:
-AC_HELP_STRING([--with-unixodbc@<:@=ARG@:>@],
-		[use ODBC driver against unixODBC package @<:@default=no@:>@, optionally specify full path to odbc_config binary.])
+AS_HELP_STRING([--with-unixodbc@<:@=ARG@:>@],[use ODBC driver against unixODBC package @<:@default=no@:>@, optionally specify full path to odbc_config binary.])
     ],[ if test "x$withval" = "xno"; then
             want_unixodbc="no"
         elif test "x$withval" = "xyes"; then

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@ class CControllerImageCreate extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'name'      => 'required | not_empty | db images.name',
-			'imagetype' => 'required | fatal | db images.imagetype'
+			'name'      => 'required|not_empty|db images.name',
+			'imagetype' => 'required|fatal|db images.imagetype'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -38,7 +38,7 @@ class CControllerImageCreate extends CController {
 
 					$response = new CControllerResponseRedirect($url);
 					$response->setFormData($this->getInputAll());
-					$response->setMessageError(_('Cannot add image'));
+					CMessageHelper::setErrorTitle(_('Cannot add image'));
 					$this->setResponse($response);
 					break;
 
@@ -52,15 +52,9 @@ class CControllerImageCreate extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_GENERAL)) {
 			return false;
 		}
-
-		$this->image = [
-			'imageid'   => 0,
-			'imagetype' => $this->getInput('imagetype'),
-			'name'      => $this->getInput('name', '')
-		];
 
 		return true;
 	}
@@ -104,37 +98,41 @@ class CControllerImageCreate extends CController {
 			$response = new CControllerResponseRedirect($url);
 			error($error);
 			$response->setFormData($this->getInputAll());
-			$response->setMessageError(_('Cannot add image'));
+			CMessageHelper::setErrorTitle(_('Cannot add image'));
 
 			$this->setResponse($response);
 			return;
 		}
 
-		$result = API::Image()->create([
+		$options = [
 			'imagetype' => $this->getInput('imagetype'),
-			'name'      => $this->getInput('name'),
-			'image'     => $image
-		]);
+			'name' => $this->getInput('name')
+		];
+
+		if ($image != null) {
+			$options['image'] = $image;
+		}
+
+		$result = API::Image()->create($options);
 
 		if ($result) {
-			add_audit(AUDIT_ACTION_UPDATE, AUDIT_RESOURCE_IMAGE, 'Image ['.$this->getInput('name').'] created');
-
-			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))
-				->setArgument('action', 'image.list')
-				->setArgument('imagetype', $this->getInput('imagetype'))
+			$response = new CControllerResponseRedirect(
+				(new CUrl('zabbix.php'))
+					->setArgument('action', 'image.list')
+					->setArgument('imagetype', $this->getInput('imagetype'))
 			);
-			$response->setMessageOk(_('Image added'));
+			CMessageHelper::setSuccessTitle(_('Image added'));
 		}
 		else {
-			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))
-				->setArgument('action', 'image.edit')
-				->setArgument('imagetype', $this->getInput('imagetype'))
+			$response = new CControllerResponseRedirect(
+				(new CUrl('zabbix.php'))
+					->setArgument('action', 'image.edit')
+					->setArgument('imagetype', $this->getInput('imagetype'))
 			);
 			$response->setFormData($this->getInputAll());
-			$response->setMessageError(_('Cannot add image'));
+			CMessageHelper::setErrorTitle(_('Cannot add image'));
 		}
 
 		$this->setResponse($response);
 	}
 }
-

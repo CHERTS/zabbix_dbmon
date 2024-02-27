@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -195,38 +195,33 @@ class CItemManager {
 			CTriggerPrototypeManager::delete($del_triggerids[ZBX_FLAG_DISCOVERY_PROTOTYPE]);
 		}
 
-		DB::delete('screens_items', [
-			'resourceid' => $del_itemids,
-			'resourcetype' => [SCREEN_RESOURCE_SIMPLE_GRAPH, SCREEN_RESOURCE_PLAIN_TEXT, SCREEN_RESOURCE_CLOCK]
-		]);
-
 		DB::delete('profiles', [
 			'idx' => 'web.favorite.graphids',
 			'source' => 'itemid',
 			'value_id' => $del_itemids
 		]);
 
-		$config = select_config();
-
 		$table_names = ['events'];
 
-		if ($config['hk_history_mode'] != 0) {
+		if (CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_MODE) != 0) {
 			array_push($table_names, 'history', 'history_str', 'history_uint', 'history_log', 'history_text');
 		}
 
-		if ($config['hk_trends_mode'] != 0) {
+		if (CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS_MODE) != 0) {
 			array_push($table_names,'trends', 'trends_uint');
 		}
 
 		if ($DB['TYPE'] === ZBX_DB_POSTGRESQL) {
-			if ($config['db_extension'] === ZBX_DB_EXTENSION_TIMESCALEDB) {
-				if ($config['hk_history_mode'] != 0 && $config['hk_history_global'] == 1) {
+			if (CHousekeepingHelper::get(CHousekeepingHelper::DB_EXTENSION) === ZBX_DB_EXTENSION_TIMESCALEDB) {
+				if (CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_MODE) != 0
+						&& CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL) == 1) {
 					$table_names = array_diff($table_names,
 						['history', 'history_str', 'history_uint', 'history_log', 'history_text']
 					);
 				}
 
-				if ($config['hk_trends_mode'] != 0 && $config['hk_trends_global'] == 1) {
+				if (CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS_MODE) != 0
+						&& CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS_GLOBAL) == 1) {
 					$table_names = array_diff($table_names, ['trends', 'trends_uint']);
 				}
 			}

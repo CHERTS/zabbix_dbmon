@@ -5,8 +5,6 @@ noinst_LIBRARIES = libzbxpoller.a libzbxpoller_server.a libzbxpoller_proxy.a
 libzbxpoller_a_SOURCES = \
 	checks_agent.c \
 	checks_agent.h \
-	checks_aggregate.c \
-	checks_aggregate.h \
 	checks_calculated.c \
 	checks_calculated.h \
 	checks_db.c \
@@ -19,6 +17,8 @@ libzbxpoller_a_SOURCES = \
 	checks_internal.h \
 	checks_java.c \
 	checks_java.h \
+	checks_script.c \
+	checks_script.h \
 	checks_simple.c \
 	checks_simple.h \
 	checks_simple_vmware.c \
@@ -27,13 +27,22 @@ libzbxpoller_a_SOURCES = \
 	checks_snmp.h \
 	checks_ssh.c \
 	checks_ssh.h \
+	ssh_run.h \
 	checks_telnet.c \
 	checks_telnet.h \
 	poller.c \
 	poller.h
-	
+
+if HAVE_SSH
+libzbxpoller_a_SOURCES += ssh_run.c
+endif
+
+if HAVE_SSH2
+libzbxpoller_a_SOURCES += ssh2_run.c
+endif
+
 libzbxpoller_server_a_SOURCES = \
- 	checks_internal.h \
+	checks_internal.h \
 	checks_internal_server.c
 
 libzbxpoller_proxy_a_SOURCES = \

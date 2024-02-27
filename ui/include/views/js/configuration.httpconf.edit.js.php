@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 
 /**
  * @var CView $this
+ * @var array $data
  */
 ?>
 
@@ -41,7 +42,9 @@
 
 <script type="text/x-jquery-tmpl" id="scenario-step-row">
 	<?= (new CRow([
-			(new CCol((new CDiv())->addClass(ZBX_STYLE_DRAG_ICON)))->addClass(ZBX_STYLE_TD_DRAG_ICON),
+			(new CCol(
+				(new CDiv())->addClass(ZBX_STYLE_DRAG_ICON)
+			))->addClass(ZBX_STYLE_TD_DRAG_ICON),
 			(new CSpan('1:'))->setAttribute('data-row-num', ''),
 			(new CLink('#{name}', 'javascript:httpconf.steps.open(#{no});')),
 			'#{timeout}',
@@ -54,7 +57,8 @@
 				->addClass('element-table-remove')
 			))->addClass(ZBX_STYLE_NOWRAP)
 		]))
-			->addClass('sortable')
+			->addClass('form_row')
+			->addClass(CSortable::ZBX_STYLE_SORTABLE)
 			->toString()
 	?>
 </script>
@@ -68,7 +72,7 @@
 				->setAttribute('placeholder', _('name'))
 				->setAttribute('data-type', 'name')
 				->setWidth(ZBX_TEXTAREA_HTTP_PAIR_NAME_WIDTH),
-			'&rArr;',
+			RARR(),
 			(new CTextBox(null, '#{value}'))
 				->setAttribute('placeholder', _('value'))
 				->setAttribute('data-type', 'value')
@@ -79,12 +83,88 @@
 					->addClass('element-table-remove')
 			))->addClass(ZBX_STYLE_NOWRAP)
 		]))
-			->addClass('sortable')
+			->addClass('form_row')
+			->addClass(CSortable::ZBX_STYLE_SORTABLE)
 			->toString()
 	?>
 </script>
 
-<script type="text/javascript">
+<script>
+	const view = {
+		form_name: null,
+
+		init({form_name}) {
+			this.form_name = form_name;
+		},
+
+		editHost(e, hostid) {
+			e.preventDefault();
+			const host_data = {hostid};
+
+			this.openHostPopup(host_data);
+		},
+
+		openHostPopup(host_data) {
+			const original_url = location.href;
+			const overlay = PopUp('popup.host.edit', host_data, {
+				dialogueid: 'host_edit',
+				dialogue_class: 'modal-popup-large'
+			});
+
+			overlay.$dialogue[0].addEventListener('dialogue.create', this.events.hostSuccess, {once: true});
+			overlay.$dialogue[0].addEventListener('dialogue.update', this.events.hostSuccess, {once: true});
+			overlay.$dialogue[0].addEventListener('dialogue.delete', this.events.hostDelete, {once: true});
+			overlay.$dialogue[0].addEventListener('overlay.close', () => {
+				history.replaceState({}, '', original_url);
+			}, {once: true});
+		},
+
+		refresh() {
+			const url = new Curl('', false);
+			const form = document.getElementsByName(this.form_name)[0].cloneNode(true);
+
+			form.append(httpconf.scenario.toFragment());
+			form.append(httpconf.steps.toFragment());
+
+			const fields = getFormFields(form);
+
+			post(url.getUrl(), fields);
+		},
+
+		events: {
+			hostSuccess(e) {
+				const data = e.detail;
+
+				if ('success' in data) {
+					postMessageOk(data.success.title);
+
+					if ('messages' in data.success) {
+						postMessageDetails('success', data.success.messages);
+					}
+				}
+
+				view.refresh();
+			},
+
+			hostDelete(e) {
+				const data = e.detail;
+
+				if ('success' in data) {
+					postMessageOk(data.success.title);
+
+					if ('messages' in data.success) {
+						postMessageDetails('success', data.success.messages);
+					}
+				}
+
+				const curl = new Curl('zabbix.php', false);
+				curl.setArgument('action', 'host.list');
+
+				location.href = curl.getUrl();
+			}
+		}
+	};
+
 	jQuery(function($) {
 		window.httpconf = {
 			templated:                           <?= $data['templated'] ? 1 : 0 ?>,
@@ -117,7 +197,7 @@
 		window.httpconf.steps = new Steps($('#stepTab'), <?= json_encode(array_values($data['steps'])) ?>);
 		window.httpconf.authentication = new Authentication($('#authenticationTab'));
 
-		window.httpconf.$form = $('#httpForm').on('submit', function(e) {
+		window.httpconf.$form = $('#http-form').on('submit', function(e) {
 			var hidden_form = this.querySelector('#hidden-form');
 
 			hidden_form && hidden_form.remove();
@@ -504,7 +584,6 @@
 		};
 
 		jQuery('.httpconf-dynamic-row', $tab).each(function(index, table) {
-
 			var $table = jQuery(table),
 				type = $table.data('type');
 
@@ -514,14 +593,15 @@
 			dynamicRowsBindRemoveDisable($table);
 			dynamicRowsBindNewRow($table);
 
-			$table.on('dynamic_rows.beforeadd', function(e, dynamic_rows) {
-
+			$table.on('dynamic_rows.beforeadd', function(e) {
 				if (type === 'variables') {
+					e.new_node.classList.remove('<?= CSortable::ZBX_STYLE_SORTABLE ?>');
 					e.new_node.querySelector('.' + httpconf.ZBX_STYLE_DRAG_ICON).remove();
 				}
 
 				if (type === 'variables' || type === 'headers') {
-					e.new_node.querySelector('[data-type="value"]').setAttribute('maxlength', 2000);
+					e.new_node.querySelector('[data-type="value"]')
+						.setAttribute('maxlength', <?= DB::getFieldLength('httptest_field', 'value') ?>);
 				}
 			});
 
@@ -774,10 +854,10 @@
 	 * Opens step popup - edit or create form.
 	 * Note: a callback this.onStepOverlayReadyCb is called from within popup form once it is parsed.
 	 *
-	 * @param {int}  no       Step index.
-	 * @param {Node} refocus  A node to set focus to, when popup is closed.
+	 * @param {int}  no               Step index.
+	 * @param {Node} trigger_element  A node to set focus to, when popup is closed.
 	 */
-	Step.prototype.open = function(no, refocus) {
+	Step.prototype.open = function(no, trigger_element) {
 		return PopUp('popup.httpstep', {
 			no:               no,
 			httpstepid:       this.data.httpstepid,
@@ -793,7 +873,7 @@
 			retrieve_mode:    this.data.retrieve_mode,
 			follow_redirects: this.data.follow_redirects,
 			steps_names:      httpconf.steps.getStepNames()
-		}, null, refocus);
+		}, {dialogue_class: 'modal-popup-generic', trigger_element});
 	};
 
 	/**
@@ -826,14 +906,16 @@
 				data = this.step.data.pairs[type];
 
 			if (type === 'variables') {
-				$node.on('dynamic_rows.beforeadd', function(e, dynamic_rows) {
+				$node.on('dynamic_rows.beforeadd', function(e) {
+					e.new_node.classList.remove('<?= CSortable::ZBX_STYLE_SORTABLE ?>');
 					e.new_node.querySelector('.' + httpconf.ZBX_STYLE_DRAG_ICON).remove();
 				});
 			}
 
 			if (type === 'variables' || type === 'headers' || type === 'post_fields') {
-				$node.on('dynamic_rows.beforeadd', function(e, dynamic_rows) {
-					e.new_node.querySelector('[data-type="value"]').setAttribute('maxlength', 2000);
+				$node.on('dynamic_rows.beforeadd', function(e) {
+					e.new_node.querySelector('[data-type="value"]')
+						.setAttribute('maxlength', <?= DB::getFieldLength('httptest_field', 'value') ?>);
 				});
 			}
 
@@ -921,6 +1003,7 @@
 	StepEditForm.prototype.errorDialog = function(msg, trigger_elmnt) {
 		overlayDialogue({
 			'title': httpconf.msg.error,
+			'class': 'modal-popup position-middle',
 			'content': jQuery('<span>').html(msg),
 			'buttons': [{
 				title: httpconf.msg.ok,

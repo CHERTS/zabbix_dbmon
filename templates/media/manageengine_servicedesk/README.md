@@ -1,6 +1,6 @@
 # ManageEngine ServiceDesk webhook
 
-This guide describes how to integrate Zabbix 5.0 installation with ManageEngine ServiceDesk (both on-premise and on-demand) using the Zabbix webhook feature. This guide provides instructions on setting up a media type, a user and an action in Zabbix.<br>
+This guide describes how to integrate Zabbix 6.0 installation with ManageEngine ServiceDesk (both on-premise and on-demand) using the Zabbix webhook feature. This guide provides instructions on setting up a media type, a user and an action in Zabbix.<br>
 Please note that recovery and update operations are supported only for trigger-based events.
 
 ## Setting up ManageEngine ServiceDesk
@@ -10,7 +10,7 @@ At first, create a user for API or use an existing one.
 1\. Go to *Admin -> Technicians*.<br>
 2\. Click the *Add New Technician* link, enter the Technician details and provide login permission.<br>
 3\. Click *Generate link* under the API key details block. Select a time frame for the key to expire using the Calendar icon, or simply retain the same key perpetually.<br>
-4\. Save TEHNICAN_KEY for use in Zabbix later.<br>
+4\. Save TECHNICIAN_KEY for use in Zabbix later.<br>
 
 ### Setting up the on-demand installation
 1\. Go to [Zoho Developer Console](https://api-console.zoho.com/).<br>
@@ -51,7 +51,7 @@ Save the *refresh_token* for using in Zabbix later.
 The following parameters are required for on-premise ServiceDesk:<br>
 **sd_on_premise** - *true*.<br>
 **sd_url** - the URL of your instance.<br>
-**sd_on_premise_auth_token** - the TEHNICAN_KEY generated earlier.<br>
+**sd_on_premise_auth_token** - the TECHNICIAN_KEY generated earlier.<br>
 **field_ref:requester** - login of the account used for request creation.<br>
 
 The following parameters are required for on-demand ServiceDesk:<br>
@@ -83,7 +83,7 @@ Examples:<br>
 `udf_field_string:udf_char1`
 
 
-For more information see [Zabbix](https://www.zabbix.com/documentation/5.0/manual/config/notifications) and [ManageEngine ServiceDesk](https://www.manageengine.com/products/service-desk/support.html) documentations.
+For more information see [Zabbix](https://www.zabbix.com/documentation/6.0/manual/config/notifications) and [ManageEngine ServiceDesk](https://www.manageengine.com/products/service-desk/support.html) documentations.
 
 ## Supported versions
-Zabbix 5.0 and higher
+Zabbix 6.0 and higher

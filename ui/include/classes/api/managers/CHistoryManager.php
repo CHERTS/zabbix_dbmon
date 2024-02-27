@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,24 @@
  * Class to perform low level history related actions.
  */
 class CHistoryManager {
+
+	/**
+	 * @var bool
+	 */
+	private $primary_keys_enabled = false;
+
+	/**
+	 * Whether to enable optimizations that make use of PRIMARY KEY (itemid, clock, ns) on the history tables.
+	 *
+	 * @param bool $enabled
+	 *
+	 * @return CHistoryManager
+	 */
+	public function setPrimaryKeysEnabled(bool $enabled = true): CHistoryManager {
+		$this->primary_keys_enabled = $enabled;
+
+		return $this;
+	}
 
 	/**
 	 * Returns a subset of $items having history data within the $period of time.
@@ -57,7 +75,12 @@ class CHistoryManager {
 	private function getItemsHavingValuesFromSql(array $items, $period = null) {
 		$results = [];
 
-		if ($period) {
+		if (CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL) == 1) {
+			$hk_history = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY));
+			$period = $period !== null ? min($period, $hk_history) : $hk_history;
+		}
+
+		if ($period !== null) {
 			$period = time() - $period;
 		}
 
@@ -71,11 +94,10 @@ class CHistoryManager {
 
 		foreach ($itemids_by_type as $type => $type_itemids) {
 			$type_results = DBfetchColumn(DBselect(
-				'SELECT itemid'.
+				'SELECT DISTINCT itemid'.
 				' FROM '.self::getTableName($type).
 				' WHERE '.dbConditionInt('itemid', $type_itemids).
-					($period ? ' AND clock>'.$period : '').
-				' GROUP BY itemid'
+					($period !== null ? ' AND clock>'.$period : '')
 			), 'itemid');
 
 			$results += array_intersect_key($items, array_flip($type_results));
@@ -104,7 +126,12 @@ class CHistoryManager {
 		}
 
 		if (array_key_exists(ZBX_HISTORY_SOURCE_SQL, $grouped_items)) {
-			$results += $this->getLastValuesFromSql($grouped_items[ZBX_HISTORY_SOURCE_SQL], $limit, $period);
+			if ($this->primary_keys_enabled) {
+				$results += $this->getLastValuesFromSqlWithPk($grouped_items[ZBX_HISTORY_SOURCE_SQL], $limit, $period);
+			}
+			else {
+				$results += $this->getLastValuesFromSql($grouped_items[ZBX_HISTORY_SOURCE_SQL], $limit, $period);
+			}
 		}
 
 		return $results;
@@ -193,6 +220,95 @@ class CHistoryManager {
 	}
 
 	/**
+	 * SQL specific implementation of getLastValues that makes use of primary key existence in history tables.
+	 *
+	 * @see CHistoryManager::getLastValues
+	 *
+	 * @return array  Of itemid => [up to $limit values].
+	 */
+	private function getLastValuesFromSqlWithPk(array $items, int $limit, ?int $period): array {
+		$results = [];
+
+		if (CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL) == 1) {
+			$hk_history = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY));
+			$period = $period !== null ? min($period, $hk_history) : $hk_history;
+		}
+
+		if ($period !== null) {
+			$period = time() - $period;
+		}
+
+		$items_by_type = [];
+
+		foreach ($items as $key => $item) {
+			$value_type = $item['value_type'];
+
+			if (!array_key_exists($value_type, $items_by_type)) {
+				$items_by_type[$value_type] = [];
+			}
+
+			$items_by_type[$value_type][] = $item;
+			unset($items[$key]);
+		}
+
+		if ($limit == 1) {
+			foreach ($items_by_type as $value_type => $items) {
+				$history_table = self::getTableName($value_type);
+
+				$max_clock_per_item = DBselect(
+					'SELECT h.itemid, MAX(h.clock) AS clock'.
+					' FROM '.$history_table.' h'.
+					' WHERE '.dbConditionId('h.itemid', array_column($items, 'itemid')).
+						($period !== null ? ' AND h.clock>'.$period : '').
+					' GROUP BY h.itemid'
+				);
+
+				while ($itemid_clock = DBfetch($max_clock_per_item, false)) {
+					$db_value = DBfetchArray(DBselect(
+						'SELECT *'.
+						' FROM '.$history_table.' h'.
+						' WHERE h.itemid='.zbx_dbstr($itemid_clock['itemid']).
+							' AND h.clock='.zbx_dbstr($itemid_clock['clock']).
+						' ORDER BY h.ns DESC',
+						$limit
+					));
+
+					if ($db_value) {
+						$results[$itemid_clock['itemid']] = $db_value;
+					}
+				}
+			}
+		}
+		else {
+			foreach ($items_by_type as $value_type => $items) {
+				$history_table = self::getTableName($value_type);
+
+				foreach ($items as $item) {
+					$db_values = DBselect('SELECT *'.
+						' FROM '.$history_table.' h'.
+						' WHERE h.itemid='.zbx_dbstr($item['itemid']).
+							($period !== null ? ' AND h.clock>'.$period : '').
+						' ORDER BY h.clock DESC, h.ns DESC',
+						$limit
+					);
+
+					$values = [];
+
+					while ($db_value = DBfetch($db_values, false)) {
+						$values[] = $db_value;
+					}
+
+					if ($values) {
+						$results[$item['itemid']] = $values;
+					}
+				}
+			}
+		}
+
+		return $results;
+	}
+
+	/**
 	 * SQL specific implementation of getLastValues.
 	 *
 	 * @see CHistoryManager::getLastValues
@@ -200,7 +316,12 @@ class CHistoryManager {
 	private function getLastValuesFromSql($items, $limit, $period) {
 		$results = [];
 
-		if ($period) {
+		if (CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL) == 1) {
+			$hk_history = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY));
+			$period = $period !== null ? min($period, $hk_history) : $hk_history;
+		}
+
+		if ($period !== null) {
 			$period = time() - $period;
 		}
 
@@ -212,7 +333,7 @@ class CHistoryManager {
 					'SELECT MAX(h.clock)'.
 					' FROM '.self::getTableName($item['value_type']).' h'.
 					' WHERE h.itemid='.zbx_dbstr($item['itemid']).
-						($period ? ' AND h.clock>'.$period : '')
+						($period !== null ? ' AND h.clock>'.$period : '')
 				), false);
 
 				if ($clock_max) {
@@ -242,7 +363,7 @@ class CHistoryManager {
 					'SELECT *'.
 					' FROM '.self::getTableName($item['value_type']).' h'.
 					' WHERE h.itemid='.zbx_dbstr($item['itemid']).
-						($period ? ' AND h.clock>'.$period : '').
+						($period !== null ? ' AND h.clock>'.$period : '').
 					' ORDER BY h.clock DESC',
 					$limit + 1
 				));
@@ -315,7 +436,9 @@ class CHistoryManager {
 				return $this->getValueAtFromElasticsearch($item, $clock, $ns);
 
 			default:
-				return $this->getValueAtFromSql($item, $clock, $ns);
+				return $this->primary_keys_enabled
+					? $this->getValueAtFromSqlWithPk($item, $clock, $ns)
+					: $this->getValueAtFromSql($item, $clock, $ns);
 		}
 	}
 
@@ -362,8 +485,9 @@ class CHistoryManager {
 				[
 					'range' => [
 						'clock' => [
-							'lt' => $clock
-						] + (ZBX_HISTORY_PERIOD ? ['gte' => $clock - ZBX_HISTORY_PERIOD] : [])
+							'lt' => $clock,
+							'gte' => $clock - timeUnitToSeconds(CSettingsHelper::get(CSettingsHelper::HISTORY_PERIOD))
+						]
 					]
 				]
 			]
@@ -388,11 +512,70 @@ class CHistoryManager {
 	}
 
 	/**
+	 * Implementation that uses existence of primary key in history tables.
+	 * @see CHistoryManager->getValueAtFromSql()
+	 *
+	 * @param string $item['itemid']
+	 * @param int    $item['value_type']
+	 * @param int    $clock
+	 * @param int    $ns
+	 *
+	 * @return array|null  Item data at specified time of first data before specified time. null if data is not found.
+	 */
+	private function getValueAtFromSqlWithPk(array $item, $clock, $ns): ?array {
+		$hk_history_global = CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL);
+		$hk_history = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY));
+
+		if ($hk_history_global == 1 && $clock <= time() - $hk_history) {
+			return null;
+		}
+
+		$history_table = self::getTableName($item['value_type']);
+
+		$sql = 'SELECT *'.
+			' FROM '.$history_table.
+			' WHERE itemid='.zbx_dbstr($item['itemid']).
+				' AND clock='.zbx_dbstr($clock).
+				' AND ns<='.zbx_dbstr($ns).
+			' ORDER BY ns DESC';
+
+		if (($row = DBfetch(DBselect($sql, 1))) !== false) {
+			return $row;
+		}
+
+		$time_from = $clock - timeUnitToSeconds(CSettingsHelper::get(CSettingsHelper::HISTORY_PERIOD));
+
+		if ($hk_history_global == 1) {
+			$time_from = max($time_from, time() - $hk_history + 1);
+		}
+
+		$sql = 'SELECT *'.
+			' FROM '.$history_table.
+			' WHERE itemid='.zbx_dbstr($item['itemid']).
+				' AND clock<'.zbx_dbstr($clock).
+				' AND clock>='.zbx_dbstr($time_from).
+			' ORDER BY clock DESC, ns DESC';
+
+		if (($row = DBfetch(DBselect($sql, 1))) !== false) {
+			return $row;
+		}
+
+		return null;
+	}
+
+	/**
 	 * SQL specific implementation of getValueAt.
 	 *
 	 * @see CHistoryManager::getValueAt
 	 */
 	private function getValueAtFromSql(array $item, $clock, $ns) {
+		$hk_history_global = CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL);
+		$hk_history = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY));
+
+		if ($hk_history_global == 1 && $clock <= time() - $hk_history) {
+			return null;
+		}
+
 		$result = null;
 		$table = self::getTableName($item['value_type']);
 
@@ -422,11 +605,17 @@ class CHistoryManager {
 		}
 
 		if ($max_clock == 0) {
+			$time_from = $clock - timeUnitToSeconds(CSettingsHelper::get(CSettingsHelper::HISTORY_PERIOD));
+
+			if ($hk_history_global == 1) {
+				$time_from = max($time_from, time() - $hk_history + 1);
+			}
+
 			$sql = 'SELECT MAX(clock) AS clock'.
 					' FROM '.$table.
 					' WHERE itemid='.zbx_dbstr($item['itemid']).
 						' AND clock<'.zbx_dbstr($clock).
-						(ZBX_HISTORY_PERIOD ? ' AND clock>='.zbx_dbstr($clock - ZBX_HISTORY_PERIOD) : '');
+						' AND clock>='.zbx_dbstr($time_from);
 
 			if (($row = DBfetch(DBselect($sql))) !== false) {
 				$max_clock = $row['clock'];
@@ -460,7 +649,7 @@ class CHistoryManager {
 	}
 
 	/**
-	 * Returns history value aggregation for graphs.
+	 * Returns history value aggregation.
 	 *
 	 * The $item parameter must have the value_type, itemid and source properties set.
 	 *
@@ -470,20 +659,20 @@ class CHistoryManager {
 	 * @param string $function   Function for data aggregation.
 	 * @param string $interval   Aggregation interval in seconds.
 	 *
-	 * @return array  History value aggregation for graphs.
+	 * @return array  History value aggregation.
 	 */
-	public function getGraphAggregationByInterval(array $items, $time_from, $time_to, $function, $interval) {
+	public function getAggregationByInterval(array $items, $time_from, $time_to, $function, $interval) {
 		$grouped_items = $this->getItemsGroupedByStorage($items);
 
 		$results = [];
 		if (array_key_exists(ZBX_HISTORY_SOURCE_ELASTIC, $grouped_items)) {
-			$results = $this->getGraphAggregationByIntervalFromElasticsearch($grouped_items[ZBX_HISTORY_SOURCE_ELASTIC],
+			$results = $this->getAggregationByIntervalFromElasticsearch($grouped_items[ZBX_HISTORY_SOURCE_ELASTIC],
 				$time_from, $time_to, $function, $interval
 			);
 		}
 
 		if (array_key_exists(ZBX_HISTORY_SOURCE_SQL, $grouped_items)) {
-			$results += $this->getGraphAggregationByIntervalFromSql($grouped_items[ZBX_HISTORY_SOURCE_SQL],
+			$results += $this->getAggregationByIntervalFromSql($grouped_items[ZBX_HISTORY_SOURCE_SQL],
 				$time_from, $time_to, $function, $interval
 			);
 		}
@@ -492,11 +681,11 @@ class CHistoryManager {
 	}
 
 	/**
-	 * Elasticsearch specific implementation of getGraphAggregationByInterval.
+	 * Elasticsearch specific implementation of getAggregationByInterval.
 	 *
-	 * @see CHistoryManager::getGraphAggregationByInterval
+	 * @see CHistoryManager::getAggregationByInterval
 	 */
-	private function getGraphAggregationByIntervalFromElasticsearch(array $items, $time_from, $time_to, $function,
+	private function getAggregationByIntervalFromElasticsearch(array $items, $time_from, $time_to, $function,
 			$interval) {
 		$terms = [];
 
@@ -507,23 +696,23 @@ class CHistoryManager {
 		$aggs = ['clock' => ['max' => ['field' => 'clock']]];
 
 		switch ($function) {
-			case GRAPH_AGGREGATE_MIN:
+			case AGGREGATE_MIN:
 				$aggs['value'] = ['min' => ['field' => 'value']];
 				break;
-			case GRAPH_AGGREGATE_MAX:
+			case AGGREGATE_MAX:
 				$aggs['value'] = ['max' => ['field' => 'value']];
 				break;
-			case GRAPH_AGGREGATE_AVG:
+			case AGGREGATE_AVG:
 				$aggs['value'] = ['avg' => ['field' => 'value']];
 				break;
-			case GRAPH_AGGREGATE_SUM:
+			case AGGREGATE_SUM:
 				$aggs['value'] = ['sum' => ['field' => 'value']];
 				break;
-			case GRAPH_AGGREGATE_FIRST:
+			case AGGREGATE_FIRST:
 				$aggs['value'] = ['top_hits' => ['size' => 1, 'sort' => ['clock' => ['order' => 'asc']]]];
 				$aggs['clock'] = ['min' => ['field' => 'clock']];
 				break;
-			case GRAPH_AGGREGATE_LAST:
+			case AGGREGATE_LAST:
 				$aggs['value'] = ['top_hits' => ['size' => 1, 'sort' => ['clock' => ['order' => 'desc']]]];
 				break;
 		}
@@ -542,7 +731,7 @@ class CHistoryManager {
 		];
 
 		// Clock value is divided by 1000 as it is stored as milliseconds.
-		$formula = '((doc[\'clock\'].date.getMillis()/1000) - ((doc[\'clock\'].date.getMillis()/1000)%params.interval))';
+		$formula = "doc['clock'].value.getMillis()/1000-doc['clock'].value.getMillis()/1000%params.interval";
 
 		$query['aggs']['group_by_itemid']['aggs'] = [
 			'group_by_script' => [
@@ -593,7 +782,7 @@ class CHistoryManager {
 						'clock' => (int)$point['clock']['value_as_string']
 					];
 
-					if ($function == GRAPH_AGGREGATE_FIRST || $function == GRAPH_AGGREGATE_LAST) {
+					if ($function == AGGREGATE_FIRST || $function == AGGREGATE_LAST) {
 						$row['value'] = $point['value']['hits']['hits'][0]['_source']['value'];
 					}
 					else {
@@ -613,17 +802,22 @@ class CHistoryManager {
 	}
 
 	/**
-	 * SQL specific implementation of getGraphAggregationByWidth.
+	 * SQL specific implementation of getAggregationByInterval.
 	 *
-	 * @see CHistoryManager::getGraphAggregationByInterval
+	 * @see CHistoryManager::getAggregationByInterval
 	 */
-	private function getGraphAggregationByIntervalFromSql(array $items, $time_from, $time_to, $function, $interval) {
+	private function getAggregationByIntervalFromSql(array $items, $time_from, $time_to, $function, $interval) {
 		$items_by_table = [];
 		foreach ($items as $item) {
 			$items_by_table[$item['value_type']][$item['source']][] = $item['itemid'];
 		}
 
 		$result = [];
+
+		$hk_history_global = CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL);
+		$hk_history = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY));
+		$hk_trends_global = CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS_GLOBAL);
+		$hk_trends = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS));
 
 		foreach ($items_by_table as $value_type => $items_by_source) {
 			foreach ($items_by_source as $source => $itemids) {
@@ -636,66 +830,74 @@ class CHistoryManager {
 
 				if ($source === 'history') {
 					switch ($function) {
-						case GRAPH_AGGREGATE_MIN:
+						case AGGREGATE_MIN:
 							$sql_select[] = 'MIN(value) AS value, MAX(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_MAX:
+						case AGGREGATE_MAX:
 							$sql_select[] = 'MAX(value) AS value, MAX(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_AVG:
+						case AGGREGATE_AVG:
 							$sql_select[] = 'AVG(value) AS value, MAX(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_COUNT:
+						case AGGREGATE_COUNT:
 							$sql_select[] = 'COUNT(*) AS count, MAX(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_SUM:
+						case AGGREGATE_SUM:
 							$sql_select[] = 'SUM(value) AS value, MAX(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_FIRST:
+						case AGGREGATE_FIRST:
 							$sql_select[] = 'MIN(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_LAST:
+						case AGGREGATE_LAST:
 							$sql_select[] = 'MAX(clock) AS clock';
 							break;
 					}
 					$sql_from = ($value_type == ITEM_VALUE_TYPE_UINT64) ? 'history_uint' : 'history';
+
+					$_time_from = $hk_history_global == 1
+						? max($time_from, time() - $hk_history + 1)
+						: $time_from;
 				}
 				else {
 					switch ($function) {
-						case GRAPH_AGGREGATE_MIN:
+						case AGGREGATE_MIN:
 							$sql_select[] = 'MIN(value_min) AS value, MAX(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_MAX:
+						case AGGREGATE_MAX:
 							$sql_select[] = 'MAX(value_max) AS value, MAX(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_AVG:
+						case AGGREGATE_AVG:
 							$sql_select[] = 'AVG(value_avg) AS value, MAX(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_COUNT:
+						case AGGREGATE_COUNT:
 							$sql_select[] = 'SUM(num) AS count, MAX(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_SUM:
+						case AGGREGATE_SUM:
 							$sql_select[] = '(value_avg * num) AS value, MAX(clock) AS clock';
 							$sql_group_by = array_merge($sql_group_by, ['value_avg', 'num']);
 							break;
-						case GRAPH_AGGREGATE_FIRST:
+						case AGGREGATE_FIRST:
 							$sql_select[] = 'MIN(clock) AS clock';
 							break;
-						case GRAPH_AGGREGATE_LAST:
+						case AGGREGATE_LAST:
 							$sql_select[] = 'MAX(clock) AS clock';
 							break;
 					}
 					$sql_from = ($value_type == ITEM_VALUE_TYPE_UINT64) ? 'trends_uint' : 'trends';
+
+					$_time_from = $hk_trends_global == 1
+						? max($time_from, time() - $hk_trends + 1)
+						: $time_from;
 				}
 
 				$sql = 'SELECT '.implode(', ', $sql_select).
 					' FROM '.$sql_from.
 					' WHERE '.dbConditionInt('itemid', $itemids).
-					' AND clock >= '.zbx_dbstr($time_from).
-					' AND clock <= '.zbx_dbstr($time_to).
+					' AND clock>='.zbx_dbstr($_time_from).
+					' AND clock<='.zbx_dbstr($time_to).
 					' GROUP BY '.implode(', ', $sql_group_by);
 
-				if ($function == GRAPH_AGGREGATE_FIRST || $function == GRAPH_AGGREGATE_LAST) {
+				if ($function == AGGREGATE_FIRST || $function == AGGREGATE_LAST) {
 					$sql = 'SELECT DISTINCT h.itemid, h.'.($source === 'history' ? 'value' : 'value_avg').' AS value, h.clock, hi.tick'.
 						' FROM '.$sql_from.' h'.
 						' JOIN('.$sql.') hi ON h.itemid = hi.itemid AND h.clock = hi.clock';
@@ -812,8 +1014,7 @@ class CHistoryManager {
 		];
 
 		if ($width !== null) {
-			$size = $time_to - $time_from;
-			$delta = $size - $time_from % $size;
+			$period = $time_to - $time_from;
 
 			// Additional grouping for line graphs.
 			$aggs['max_clock'] = [
@@ -823,15 +1024,14 @@ class CHistoryManager {
 			];
 
 			// Clock value is divided by 1000 as it is stored as milliseconds.
-			$formula = 'Math.floor((params.width*((doc[\'clock\'].value.getMillis()/1000+params.delta)%params.size))'.
-					'/params.size)';
+			$formula = "Math.round(params.width*(doc['clock'].value.getMillis()/1000-params.time_from)/params.period)";
 
 			$script = [
 				'inline' => $formula,
 				'params' => [
 					'width' => (int)$width,
-					'delta' => $delta,
-					'size' => $size
+					'time_from' => $time_from,
+					'period' => $period
 				]
 			];
 			$aggs = [
@@ -920,12 +1120,10 @@ class CHistoryManager {
 		$sql_select_extra = '';
 
 		if ($width !== null) {
-			$size = $time_to - $time_from;
-			$delta = $size - $time_from % $size;
+			$period = $time_to - $time_from;
 
 			// Required for 'group by' support of Oracle.
-			$calc_field = 'round('.$width.'*'.zbx_sql_mod(zbx_dbcast_2bigint('clock').'+'.$delta, $size)
-					.'/('.$size.'),0)';
+			$calc_field = 'round('.$width.'*('.zbx_dbcast_2bigint('clock').'-'.$time_from.')/'.$period.',0)';
 
 			$sql_select_extra = ','.$calc_field.' AS i';
 			$group_by .= ','.$calc_field;
@@ -933,28 +1131,44 @@ class CHistoryManager {
 
 		$results = [];
 
+		$hk_history_global = CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL);
+		$hk_history = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY));
+		$hk_trends_global = CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS_GLOBAL);
+		$hk_trends = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_TRENDS));
+
 		foreach ($items as $item) {
 			if ($item['source'] === 'history') {
 				$sql_select = 'COUNT(*) AS count,AVG(value) AS avg,MIN(value) AS min,MAX(value) AS max';
-				$sql_from = ($item['value_type'] == ITEM_VALUE_TYPE_UINT64) ? 'history_uint' : 'history';
+				$sql_from = $item['value_type'] == ITEM_VALUE_TYPE_UINT64 ? 'history_uint' : 'history';
+
+				$_time_from = $hk_history_global == 1
+					? max($time_from, time() - $hk_history + 1)
+					: $time_from;
 			}
 			else {
 				$sql_select = 'SUM(num) AS count,AVG(value_avg) AS avg,MIN(value_min) AS min,MAX(value_max) AS max';
 				$sql_from = ($item['value_type'] == ITEM_VALUE_TYPE_UINT64) ? 'trends_uint' : 'trends';
+
+				$_time_from = $hk_trends_global == 1
+					? max($time_from, time() - $hk_trends + 1)
+					: $time_from;
 			}
 
-			$result = DBselect(
-				'SELECT itemid,'.$sql_select.$sql_select_extra.',MAX(clock) AS clock'.
-				' FROM '.$sql_from.
-				' WHERE itemid='.zbx_dbstr($item['itemid']).
-					' AND clock>='.zbx_dbstr($time_from).
-					' AND clock<='.zbx_dbstr($time_to).
-				' GROUP BY '.$group_by
-			);
-
 			$data = [];
-			while (($row = DBfetch($result)) !== false) {
-				$data[] = $row;
+
+			if ($_time_from <= $time_to) {
+				$result = DBselect(
+					'SELECT itemid,'.$sql_select.$sql_select_extra.',MAX(clock) AS clock'.
+					' FROM '.$sql_from.
+					' WHERE itemid='.zbx_dbstr($item['itemid']).
+						' AND clock>='.zbx_dbstr($_time_from).
+						' AND clock<='.zbx_dbstr($time_to).
+					' GROUP BY '.$group_by
+				);
+
+				while (($row = DBfetch($result)) !== false) {
+					$data[] = $row;
+				}
 			}
 
 			$results[$item['itemid']]['source'] = $item['source'];
@@ -1040,6 +1254,11 @@ class CHistoryManager {
 	 * @see CHistoryManager::getAggregatedValue
 	 */
 	private function getAggregatedValueFromSql(array $item, $aggregation, $time_from) {
+		if (CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY_GLOBAL) == 1) {
+			$hk_history = timeUnitToSeconds(CHousekeepingHelper::get(CHousekeepingHelper::HK_HISTORY));
+			$time_from = max($time_from, time() - $hk_history);
+		}
+
 		$result = DBselect(
 			'SELECT '.$aggregation.'(value) AS value'.
 			' FROM '.self::getTableName($item['value_type']).
@@ -1108,7 +1327,7 @@ class CHistoryManager {
 	private function deleteHistoryFromSql(array $items) {
 		global $DB;
 
-		$item_tables = array_map('self::getTableName', array_unique($items));
+		$item_tables = array_map([self::class, 'getTableName'], array_unique($items));
 		$table_names = array_flip(self::getTableName());
 
 		if (in_array(ITEM_VALUE_TYPE_UINT64, $items)) {
@@ -1226,7 +1445,7 @@ class CHistoryManager {
 
 			if (!is_array($HISTORY) || !array_key_exists('url', $HISTORY)) {
 				$invalid[$value_name] = true;
-				error(_s('Elasticsearch url is not set for type: %1$s.', $value_name));
+				error(_s('Elasticsearch URL is not set for type: %1$s.', $value_name));
 
 				return null;
 			}
@@ -1235,7 +1454,7 @@ class CHistoryManager {
 			if (is_array($url)) {
 				if (!array_key_exists($value_name, $url)) {
 					$invalid[$value_name] = true;
-					error(_s('Elasticsearch url is not set for type: %1$s.', $value_name));
+					error(_s('Elasticsearch URL is not set for type: %1$s.', $value_name));
 
 					return null;
 				}

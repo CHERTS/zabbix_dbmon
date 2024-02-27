@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 #
 # Zabbix
-# Copyright (C) 2001-2022 Zabbix SIA
+# Copyright (C) 2001-2024 Zabbix SIA
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
@@ -22,7 +22,7 @@ use File::Basename;
 my $file = dirname($0)."/../src/schema.tmpl";	# name the file
 
 my ($state, %output, $eol, $fk_bol, $fk_eol, $ltab, $pkey, $table_name);
-my ($szcol1, $szcol2, $szcol3, $szcol4, $sequences, $sql_suffix);
+my ($szcol1, $szcol2, $szcol3, $szcol4, $sequences, $sql_suffix, $triggers);
 my ($fkeys, $fkeys_prefix, $fkeys_suffix, $uniq);
 
 my %c = (
@@ -40,12 +40,13 @@ my %c = (
 	"t_serial"	=>	"ZBX_TYPE_UINT",
 	"t_shorttext"	=>	"ZBX_TYPE_SHORTTEXT",
 	"t_time"	=>	"ZBX_TYPE_INT",
-	"t_varchar"	=>	"ZBX_TYPE_CHAR"
+	"t_varchar"	=>	"ZBX_TYPE_CHAR",
+	"t_cuid"	=>	"ZBX_TYPE_CUID"
 );
 
 $c{"before"} = "/*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,10 +63,10 @@ $c{"before"} = "/*
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include \"common.h\"
 #include \"dbschema.h\"
+#include \"common.h\"
 
-const ZBX_TABLE\ttables[] = {
+ZBX_TABLE\ttables[] = {
 
 #if defined(HAVE_ORACLE)
 #	define ZBX_TYPE_SHORTTEXT_LEN	2048
@@ -95,7 +96,8 @@ my %mysql = (
 	"t_serial"	=>	"bigint unsigned",
 	"t_shorttext"	=>	"text",
 	"t_time"	=>	"integer",
-	"t_varchar"	=>	"varchar"
+	"t_varchar"	=>	"varchar",
+	"t_cuid"	=>	"varchar(25)"
 );
 
 my %oracle = (
@@ -115,7 +117,8 @@ my %oracle = (
 	"t_serial"	=>	"number(20)",
 	"t_shorttext"	=>	"nvarchar2(2048)",
 	"t_time"	=>	"number(10)",
-	"t_varchar"	=>	"nvarchar2"
+	"t_varchar"	=>	"nvarchar2",
+	"t_cuid"	=>	"nvarchar2(25)"
 );
 
 my %postgresql = (
@@ -135,7 +138,8 @@ my %postgresql = (
 	"t_serial"	=>	"bigserial",
 	"t_shorttext"	=>	"text",
 	"t_time"	=>	"integer",
-	"t_varchar"	=>	"varchar"
+	"t_varchar"	=>	"varchar",
+	"t_cuid"	=>	"varchar(25)"
 );
 
 my %sqlite3 = (
@@ -155,7 +159,8 @@ my %sqlite3 = (
 	"t_serial"	=>	"integer",
 	"t_shorttext"	=>	"text",
 	"t_time"	=>	"integer",
-	"t_varchar"	=>	"varchar"
+	"t_varchar"	=>	"varchar",
+	"t_cuid"	=>	"varchar(25)"
 );
 
 sub rtrim($)
@@ -249,7 +254,6 @@ sub process_field
 {
 	my $line = $_[0];
 	my $type_2;
-
 	newstate("field");
 
 	my $name = "";
@@ -263,12 +267,16 @@ sub process_field
 	my $fk_flags = "";
 
 	($name, $type, $default, $null, $flags, $relN, $fk_table, $fk_field, $fk_flags) = split(/\|/, $line, 9);
-	my ($type_short, $length) = split(/\(/, $type, 2);
 
 	if ($output{"type"} eq "code")
 	{
-		$type = $output{$type_short};
+		if ($table_name eq "triggers" && $name eq "description" && $type eq "t_shorttext") {
+			$type = "t_varchar(255)";
+		}
 
+		my ($type_short, $length) = split(/\(/, $type, 2);
+
+		$type = $output{$type_short};
 		if ($type eq "ZBX_TYPE_CHAR")
 		{
 			for ($length)
@@ -287,6 +295,10 @@ sub process_field
 		elsif ($type eq "ZBX_TYPE_LONGTEXT")
 		{
 			$length = "ZBX_TYPE_LONGTEXT_LEN";
+		}
+		elsif ($type eq "ZBX_TYPE_CUID")
+		{
+			$length = 0;
 		}
 		else
 		{
@@ -360,6 +372,7 @@ sub process_field
 	}
 	else
 	{
+		my ($type_short, $length) = split(/\(/, $type, 2);
 		my @text_fields;
 		$a = $output{$type_short};
 		$_ = $type;
@@ -596,24 +609,88 @@ sub process_row
 
 sub timescaledb
 {
+	print<<EOF
+DO \$\$
+DECLARE
+	minimum_postgres_version_major		INTEGER;
+	minimum_postgres_version_minor		INTEGER;
+	current_postgres_version_major		INTEGER;
+	current_postgres_version_minor		INTEGER;
+	current_postgres_version_full		VARCHAR;
+
+	minimum_timescaledb_version_major	INTEGER;
+	minimum_timescaledb_version_minor	INTEGER;
+	current_timescaledb_version_major	INTEGER;
+	current_timescaledb_version_minor	INTEGER;
+	current_timescaledb_version_full	VARCHAR;
+BEGIN
+	SELECT 10 INTO minimum_postgres_version_major;
+	SELECT 2 INTO minimum_postgres_version_minor;
+	SELECT 1 INTO minimum_timescaledb_version_major;
+	SELECT 5 INTO minimum_timescaledb_version_minor;
+
+	SHOW server_version INTO current_postgres_version_full;
+
+	IF NOT found THEN
+		RAISE EXCEPTION 'Cannot determine PostgreSQL version, aborting';
+	END IF;
+
+	SELECT substring(current_postgres_version_full, '^(\\d+).') INTO current_postgres_version_major;
+	SELECT substring(current_postgres_version_full, '^\\d+.(\\d+)') INTO current_postgres_version_minor;
+
+	IF (current_postgres_version_major < minimum_postgres_version_major OR
+			(current_postgres_version_major = minimum_postgres_version_major AND
+			current_postgres_version_minor < minimum_postgres_version_minor)) THEN
+			RAISE EXCEPTION 'PostgreSQL version % is NOT SUPPORTED (with TimescaleDB)! Minimum is %.%.0 !',
+					current_postgres_version_full, minimum_postgres_version_major,
+					minimum_postgres_version_minor;
+	ELSE
+		RAISE NOTICE 'PostgreSQL version % is valid', current_postgres_version_full;
+	END IF;
+
+	SELECT extversion INTO current_timescaledb_version_full FROM pg_extension WHERE extname = 'timescaledb';
+
+	IF NOT found THEN
+		RAISE EXCEPTION 'TimescaleDB extension is not installed';
+	ELSE
+		RAISE NOTICE 'TimescaleDB extension is detected';
+	END IF;
+
+	SELECT substring(current_timescaledb_version_full, '^(\\d+).') INTO current_timescaledb_version_major;
+	SELECT substring(current_timescaledb_version_full, '^\\d+.(\\d+)') INTO current_timescaledb_version_minor;
+
+	IF (current_timescaledb_version_major < minimum_timescaledb_version_major OR
+			(current_timescaledb_version_major = minimum_timescaledb_version_major AND
+			current_timescaledb_version_minor < minimum_timescaledb_version_minor)) THEN
+		RAISE EXCEPTION 'TimescaleDB version % is UNSUPPORTED! Minimum is %.%.0!',
+				current_timescaledb_version_full, minimum_timescaledb_version_major,
+				minimum_timescaledb_version_minor;
+	ELSE
+		RAISE NOTICE 'TimescaleDB version % is valid', current_timescaledb_version_full;
+	END IF;
+EOF
+	;
+
 	for ("history", "history_uint", "history_log", "history_text", "history_str")
 	{
 		print<<EOF
-SELECT create_hypertable('$_', 'clock', chunk_time_interval => 86400, migrate_data => true);
+	PERFORM create_hypertable('$_', 'clock', chunk_time_interval => 86400, migrate_data => true);
 EOF
-		;
+	;
 	}
 
 	for ("trends", "trends_uint")
 	{
 		print<<EOF
-SELECT create_hypertable('$_', 'clock', chunk_time_interval => 2592000, migrate_data => true);
+	PERFORM create_hypertable('$_', 'clock', chunk_time_interval => 2592000, migrate_data => true);
 EOF
-		;
+	;
 	}
 	print<<EOF
-UPDATE config SET db_extension='timescaledb',hk_history_global=1,hk_trends_global=1;
-UPDATE config SET compression_status=1,compress_older='7d';
+	UPDATE config SET db_extension='timescaledb',hk_history_global=1,hk_trends_global=1;
+	UPDATE config SET compression_status=1,compress_older='7d';
+	RAISE NOTICE 'TimescaleDB is configured successfully';
+END \$\$;
 EOF
 	;
 	exit;
@@ -626,6 +703,72 @@ sub usage
 	exit;
 }
 
+sub process_update_trigger_function($)
+{
+	my $line = shift;
+	my $out = "";
+
+	if ($output{"database"} eq "c" || $output{"database"} eq "sqlite3")
+	{
+		return;
+	}
+
+	my ($original_column_name, $indexed_column_name, $idname, $func_name) = split(/\|/, $line, 4);
+
+	if ($output{"database"} eq "oracle")
+	{
+		$out .= "create trigger ${table_name}_${indexed_column_name}_insert${eol}\n";
+		$out .= "before insert on ${table_name} for each row${eol}\n";
+		$out .= "begin${eol}\n";
+		$out .=		":new.${indexed_column_name}:=${func_name}(:new.${original_column_name});${eol}\n";
+		$out .= "end;${eol}\n/${eol}\n";
+
+		$out .= "create trigger ${table_name}_${indexed_column_name}_update${eol}\n";
+		$out .= "before update on ${table_name} for each row${eol}\n";
+		$out .= "begin${eol}\n";
+		$out .= 	"if :new.${original_column_name}<>:old.${original_column_name}${eol}\n";
+		$out .= 	"then${eol}\n";
+		$out .= 		":new.${indexed_column_name}:=${func_name}(:new.${original_column_name});${eol}\n";
+		$out .=		"end if;${eol}\n";
+		$out .= "end;${eol}\n/${eol}\n";
+	}
+	elsif ($output{"database"} eq "mysql")
+	{
+		$out .= "create trigger ${table_name}_${indexed_column_name}_insert${eol}\n";
+		$out .= "before insert on ${table_name} for each row${eol}\n";
+		$out .= "set new.${indexed_column_name}=${func_name}(new.${original_column_name})${eol}\n";
+		$out .= "\$\$${eol}\n";
+
+		$out .= "create trigger ${table_name}_${indexed_column_name}_update${eol}\n";
+		$out .= "before update on ${table_name} for each row${eol}\n";
+		$out .= "begin${eol}\n";
+		$out .= 	"if new.${original_column_name}<>old.${original_column_name}${eol}\n";
+		$out .= 	"then${eol}\n";
+		$out .= 		"set new.${indexed_column_name}=${func_name}(new.${original_column_name});${eol}\n";
+		$out .= 	"end if;${eol}\n";
+		$out .= "end;\$\$${eol}\n";
+	}
+	elsif ($output{"database"} eq "postgresql")
+	{
+		$out .= "";
+		$out .= "create or replace function ${table_name}_${indexed_column_name}_${func_name}()${eol}\n";
+		$out .= "returns trigger language plpgsql as \$func\$${eol}\n";
+		$out .= "begin${eol}\n";
+		$out .=		"update ${table_name} set ${indexed_column_name}=${func_name}(${original_column_name})${eol}\n";
+		$out .= 	"where ${idname}=new.${idname};${eol}\n";
+		$out .= 	"return null;${eol}\n";
+		$out .= "end \$func\$;${eol}\n";
+
+		$out .= "create trigger ${table_name}_${indexed_column_name}_insert after insert ${eol}\n";
+		$out .= "on ${table_name} ${eol}\n";
+		$out .= "for each row execute function ${table_name}_${indexed_column_name}_${func_name}();${eol}\n";
+		$out .= "create trigger ${table_name}_${indexed_column_name}_update after update ${eol}\n";
+		$out .= "of ${original_column_name} on ${table_name} ${eol}\n";
+		$out .= "for each row execute function ${table_name}_${indexed_column_name}_${func_name}();${eol}\n";
+	}
+	$triggers .= $out;
+}
+
 sub process
 {
 	print $output{"before"};
@@ -633,6 +776,7 @@ sub process
 	$state = "bof";
 	$fkeys = "";
 	$sequences = "";
+	$triggers = "";
 	$uniq = "";
 	my ($type, $line);
 
@@ -653,13 +797,28 @@ sub process
 			elsif ($type eq 'INDEX')	{ process_index($line, 0); }
 			elsif ($type eq 'TABLE')	{ process_table($line); }
 			elsif ($type eq 'UNIQUE')	{ process_index($line, 1); }
+			elsif ($type eq 'UPD_TRIG_FUNC')
+			{
+				process_update_trigger_function($line);
+			}
 			elsif ($type eq 'ROW' && $output{"type"} ne "code")		{ process_row($line); }
 		}
 	}
 
 	newstate("table");
 
-	print $sequences.$sql_suffix;
+	if ($output{"database"} eq "mysql")
+	{
+		print "DELIMITER \$\$${eol}\n";
+	}
+
+	print $sequences . $triggers . $sql_suffix;
+
+	if ($output{"database"} eq "mysql")
+	{
+		print "DELIMITER ;${eol}\n";
+	}
+
 	print $fkeys_prefix.$fkeys.$fkeys_suffix;
 	print $output{"after"};
 }

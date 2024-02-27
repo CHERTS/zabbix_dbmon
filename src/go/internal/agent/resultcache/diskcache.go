@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,16 +21,18 @@ package resultcache
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"git.zabbix.com/ap/plugin-support/log"
+	"git.zabbix.com/ap/plugin-support/plugin"
 	"zabbix.com/internal/agent"
 	"zabbix.com/internal/monitor"
 	"zabbix.com/pkg/itemutil"
-	"zabbix.com/pkg/log"
-	"zabbix.com/pkg/plugin"
 	"zabbix.com/pkg/version"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -167,10 +169,16 @@ func (c *DiskCache) resultsGet() (results []*AgentData, maxDataId uint64, maxLog
 
 	if rows, err = c.database.Query(fmt.Sprintf("SELECT "+
 		"id,itemid,lastlogsize,mtime,state,value,eventsource,eventid,eventseverity,eventtimestamp,clock,ns"+
-		" FROM data_%d ORDER BY id LIMIT ?", c.serverID), DataLimit); err != nil {
+		" FROM data_%d"+
+		" UNION ALL"+
+		" SELECT "+
+		"id,itemid,lastlogsize,mtime,state,value,eventsource,eventid,eventseverity,eventtimestamp,clock,ns"+
+		" FROM log_%d"+
+		" ORDER BY id LIMIT ?", c.serverID, c.serverID), DataLimit); err != nil {
 		c.Errf("cannot select from data table: %s", err.Error())
 		return nil, 0, 0, err
 	}
+
 	for rows.Next() {
 		if result, err = c.resultFetch(rows); err != nil {
 			rows.Close()
@@ -178,36 +186,14 @@ func (c *DiskCache) resultsGet() (results []*AgentData, maxDataId uint64, maxLog
 		}
 		result.persistent = false
 		results = append(results, result)
+		if result.LastLogsize == nil {
+			maxDataId = result.Id
+		} else {
+			maxLogId = result.Id
+		}
 	}
 	if err = rows.Err(); err != nil {
 		return nil, 0, 0, err
-	}
-	dataLen := len(results)
-	if dataLen != 0 {
-		maxDataId = results[dataLen-1].Id
-	}
-
-	if dataLen != DataLimit {
-		if rows, err = c.database.Query(fmt.Sprintf("SELECT "+
-			"id,itemid,lastlogsize,mtime,state,value,eventsource,eventid,eventseverity,eventtimestamp,clock,ns"+
-			" FROM log_%d ORDER BY id LIMIT ?", c.serverID), DataLimit-len(results)); err != nil {
-			c.Errf("cannot select from log table: %s", err.Error())
-			return nil, 0, 0, err
-		}
-		for rows.Next() {
-			if result, err = c.resultFetch(rows); err != nil {
-				rows.Close()
-				return nil, 0, 0, err
-			}
-			result.persistent = true
-			results = append(results, result)
-		}
-		if err = rows.Err(); err != nil {
-			return nil, 0, 0, err
-		}
-		if len(results) != dataLen {
-			maxLogId = results[len(results)-1].Id
-		}
 	}
 
 	return results, maxDataId, maxLogId, nil
@@ -216,11 +202,17 @@ func (c *DiskCache) resultsGet() (results []*AgentData, maxDataId uint64, maxLog
 func (c *DiskCache) upload(u Uploader) (err error) {
 	var results []*AgentData
 	var maxDataId, maxLogId uint64
+	var errs []error
 
 	defer func() {
-		if err != nil && (c.lastError == nil || err.Error() != c.lastError.Error()) {
+		if nil == err || errs != nil { // report errors not related to Write
+			return
+		}
+
+		errs = append(errs, err)
+		if !reflect.DeepEqual(errs, c.lastErrors) {
 			c.Warningf("cannot upload history data: %s", err)
-			c.lastError = err
+			c.lastErrors = errs
 		}
 	}()
 
@@ -236,7 +228,7 @@ func (c *DiskCache) upload(u Uploader) (err error) {
 		Request: "agent data",
 		Data:    results,
 		Session: c.token,
-		Host:    agent.Options.Hostname,
+		Host:    u.Hostname(),
 		Version: version.Short(),
 	}
 
@@ -251,17 +243,21 @@ func (c *DiskCache) upload(u Uploader) (err error) {
 	if timeout > 60 {
 		timeout = 60
 	}
-	if err = u.Write(data, time.Duration(timeout)*time.Second); err != nil {
-		if c.lastError == nil || err.Error() != c.lastError.Error() {
-			c.Warningf("history upload to [%s] started to fail: %s", u.Addr(), err)
-			c.lastError = err
+	if errs = u.Write(data, time.Duration(timeout)*time.Second); errs != nil {
+		if !reflect.DeepEqual(errs, c.lastErrors) {
+			for i := 0; i < len(errs); i++ {
+				c.Warningf("%s", errs[i])
+			}
+			c.Warningf("history upload to [%s] [%s] started to fail", u.Addr(), u.Hostname())
+			c.lastErrors = errs
 		}
+		err = errors.New("history upload failed")
 		return
 	}
 
-	if c.lastError != nil {
-		c.Warningf("history upload to [%s] is working again", u.Addr())
-		c.lastError = nil
+	if c.lastErrors != nil {
+		c.Warningf("history upload to [%s] [%s] is working again", u.Addr(), u.Hostname())
+		c.lastErrors = nil
 	}
 	cacheLock.Lock()
 	defer cacheLock.Unlock()
@@ -454,7 +450,8 @@ func (c *DiskCache) init(options *agent.AgentOptions) {
 		return
 	}
 
-	rows, err := c.database.Query(fmt.Sprintf("SELECT id FROM registry WHERE address = '%s'", c.uploader.Addr()))
+	rows, err := c.database.Query(fmt.Sprintf("SELECT "+
+		"id FROM registry WHERE address = '%s' AND hostname = '%s'", c.uploader.Addr(), c.uploader.Hostname()))
 
 	if err == nil {
 		defer rows.Close()

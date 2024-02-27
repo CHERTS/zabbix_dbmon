@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -214,7 +214,6 @@ typedef struct
 }
 zbx_object_events_t;
 
-
 /* source events hashset support */
 static zbx_hash_t	DBpatch_3010021_trigger_events_hash_func(const void *data)
 {
@@ -241,10 +240,7 @@ static int	DBpatch_3010021_trigger_events_compare_func(const void *d1, const voi
 	return 0;
 }
 
-
 /******************************************************************************
- *                                                                            *
- * Function: DBpatch_3010021_update_event_recovery                            *
  *                                                                            *
  * Purpose: set events.r_eventid field with corresponding recovery event id   *
  *                                                                            *
@@ -280,7 +276,7 @@ static int	DBpatch_3010021_update_event_recovery(zbx_hashset_t *events, zbx_uint
 	if (NULL == (result = DBselectN(sql, 10000)))
 		goto out;
 
-	zbx_db_insert_prepare(&db_insert, "event_recovery", "eventid", "r_eventid", NULL);
+	zbx_db_insert_prepare(&db_insert, "event_recovery", "eventid", "r_eventid", (char *)NULL);
 
 	while (NULL != (row = DBfetch(result)))
 	{
@@ -343,7 +339,7 @@ static int	DBpatch_3010021(void)
 
 	zbx_hashset_create(&events, 1024, DBpatch_3010021_trigger_events_hash_func,
 			DBpatch_3010021_trigger_events_compare_func);
-	zbx_db_insert_prepare(&db_insert, "problem", "eventid", "source", "object", "objectid", NULL);
+	zbx_db_insert_prepare(&db_insert, "problem", "eventid", "source", "object", "objectid", (char *)NULL);
 
 	do
 	{
@@ -371,7 +367,7 @@ static int	DBpatch_3010021(void)
 				goto out;
 
 			zbx_db_insert_clean(&db_insert);
-			zbx_db_insert_prepare(&db_insert, "problem", "eventid", "source", "object", "objectid", NULL);
+			zbx_db_insert_prepare(&db_insert, "problem", "eventid", "source", "object", "objectid", (char *)NULL);
 		}
 
 		zbx_vector_uint64_destroy(&object_events->eventids);
@@ -412,8 +408,8 @@ static int	DBpatch_3010023(void)
 
 	operationid = DBget_maxid_num("operations", actions_num);
 
-	zbx_db_insert_prepare(&db_insert, "operations", "operationid", "actionid", "operationtype", "recovery", NULL);
-	zbx_db_insert_prepare(&db_insert_msg, "opmessage", "operationid", "default_msg", "subject", "message", NULL);
+	zbx_db_insert_prepare(&db_insert, "operations", "operationid", "actionid", "operationtype", "recovery", (char *)NULL);
+	zbx_db_insert_prepare(&db_insert_msg, "opmessage", "operationid", "default_msg", "subject", "message", (char *)NULL);
 
 	DBfree_result(result);
 	result = DBselect("select actionid,r_shortdata,r_longdata from actions where recovery_msg=1");
@@ -447,8 +443,6 @@ out:
 #define	ZBX_3010024_ACTION_CONVERT	2
 
 /******************************************************************************
- *                                                                            *
- * Function: DBpatch_3010024_validate_action                                  *
  *                                                                            *
  * Purpose: checks if the action must be disabled or its operations converted *
  *          to recovery operations                                            *
@@ -678,8 +672,6 @@ static int	DBpatch_3010025(void)
 
 /******************************************************************************
  *                                                                            *
- * Function: DBpatch_3010026_get_conditionids                                 *
- *                                                                            *
  * Purpose: get success condition identifiers                                 *
  *                                                                            *
  * Parameters: actionid     - [IN] the action identifier                      *
@@ -759,8 +751,6 @@ static void	DBpatch_3010026_get_conditionids(zbx_uint64_t actionid, const char *
 
 /******************************************************************************
  *                                                                            *
- * Function: DBpatch_3010026_expression_skip_whitespace                       *
- *                                                                            *
  * Purpose: skips whitespace characters                                       *
  *                                                                            *
  * Parameters: expression - [IN] the expression to process                    *
@@ -778,8 +768,6 @@ static size_t	DBpatch_3010026_expression_skip_whitespace(const char *expression,
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: DBpatch_3010026_expression_get_token                             *
  *                                                                            *
  * Purpose: gets the next expression token starting with offset               *
  *                                                                            *
@@ -843,8 +831,6 @@ static int	DBpatch_3010026_expression_get_token(const char *expression, int offs
 
 /******************************************************************************
  *                                                                            *
- * Function: DBpatch_3010026_expression_validate_value                        *
- *                                                                            *
  * Purpose: checks if the value does not match any filter value               *
  *                                                                            *
  * Parameters: expression - [IN] the expression to process                    *
@@ -871,8 +857,6 @@ static int	DBpatch_3010026_expression_validate_value(const char *expression, zbx
 
 /******************************************************************************
  *                                                                            *
- * Function: DBpatch_3010026_expression_cut_substring                         *
- *                                                                            *
  * Purpose: cuts substring from the expression                                *
  *                                                                            *
  * Parameters: expression - [IN] the expression to process                    *
@@ -887,8 +871,6 @@ static void	DBpatch_3010026_expression_cut_substring(char *expression, zbx_strlo
 
 /******************************************************************************
  *                                                                            *
- * Function: DBpatch_3010026_expression_move_location                         *
- *                                                                            *
  * Purpose: location by the specified offset                                  *
  *                                                                            *
  * Parameters: location  - [IN] the location to adjust                        *
@@ -902,8 +884,6 @@ static void	DBpatch_3010026_expression_move_location(zbx_strloc_t *location, int
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: DBpatch_3010026_expression_remove_values_impl                    *
  *                                                                            *
  * Purpose: removes values specified in filter from the location              *
  *                                                                            *
@@ -1015,8 +995,6 @@ static int	DBpatch_3010026_expression_remove_values_impl(char *expression, zbx_s
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: DBpatch_3010026_expression_remove_values                         *
  *                                                                            *
  * Purpose: removes values specified in filter from the location              *
  *                                                                            *

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,20 +25,6 @@ require_once dirname(__FILE__).'/../../include/items.inc.php';
 require_once dirname(__FILE__).'/../../include/users.inc.php';
 require_once dirname(__FILE__).'/../../include/js.inc.php';
 require_once dirname(__FILE__).'/../../include/discovery.inc.php';
-
-function get_window_opener($field, $value) {
-	if ($field === '') {
-		return '';
-	}
-
-	return '
-		try {'.
-			"document.getElementById(".zbx_jsvalue($field).").value=".zbx_jsvalue($value)."; ".
-		'} catch(e) {'.
-			'throw("Error: Target not found")'.
-		'}'."\n";
-}
-
 class CControllerPopupGeneric extends CController {
 
 	/**
@@ -47,7 +33,7 @@ class CControllerPopupGeneric extends CController {
 	 * @var array
 	 */
 	const ALLOWED_ITEM_TYPES = [ITEM_TYPE_ZABBIX, ITEM_TYPE_ZABBIX_ACTIVE, ITEM_TYPE_SIMPLE, ITEM_TYPE_INTERNAL,
-		ITEM_TYPE_AGGREGATE, ITEM_TYPE_IPMI, ITEM_TYPE_SNMPTRAP, ITEM_TYPE_DB_MONITOR, ITEM_TYPE_JMX
+		ITEM_TYPE_IPMI, ITEM_TYPE_SNMPTRAP, ITEM_TYPE_DB_MONITOR, ITEM_TYPE_JMX
 	];
 
 	/**
@@ -62,7 +48,7 @@ class CControllerPopupGeneric extends CController {
 	 *
 	 * @array
 	 */
-	const POPUPS_HAVING_HOST_FILTER = ['triggers', 'items', 'applications', 'graphs', 'graph_prototypes',
+	const POPUPS_HAVING_HOST_FILTER = ['triggers', 'items', 'graphs', 'graph_prototypes',
 		'item_prototypes'
 	];
 
@@ -107,6 +93,18 @@ class CControllerPopupGeneric extends CController {
 	 * @var bool
 	 */
 	protected $group_preselect_required;
+
+	/**
+	 * Set of disabled options.
+	 *
+	 * @var array
+	 */
+	protected $disableids = [];
+
+	/**
+	 * @var array
+	 */
+	private $page_options = [];
 
 	protected function init() {
 		$this->disableSIDvalidation();
@@ -172,30 +170,6 @@ class CControllerPopupGeneric extends CController {
 					_('Name')
 				]
 			],
-			'applications' => [
-				'title' => _('Applications'),
-				'min_user_type' => USER_TYPE_ZABBIX_USER,
-				'allowed_src_fields' => 'applicationid,name',
-				'form' => [
-					'name' => 'applicationform',
-					'id' => 'applications'
-				],
-				'table_columns' => [
-					_('Name')
-				]
-			],
-			'application_prototypes' => [
-				'title' => _('Application prototypes'),
-				'min_user_type' => USER_TYPE_ZABBIX_ADMIN,
-				'allowed_src_fields' => 'application_prototypeid,name',
-				'form' => [
-					'name' => 'application_prototype_form',
-					'id' => 'application_prototypes'
-				],
-				'table_columns' => [
-					_('Name')
-				]
-			],
 			'triggers' => [
 				'title' => _('Triggers'),
 				'min_user_type' => USER_TYPE_ZABBIX_USER,
@@ -239,15 +213,15 @@ class CControllerPopupGeneric extends CController {
 			'users' => [
 				'title' => _('Users'),
 				'min_user_type' => USER_TYPE_ZABBIX_USER,
-				'allowed_src_fields' => 'usergrpid,alias,fullname,userid',
+				'allowed_src_fields' => 'usergrpid,username,fullname,userid',
 				'form' => [
 					'name' => 'userform',
 					'id' => 'users'
 				],
 				'table_columns' => [
-					_('Alias'),
+					_('Username'),
 					_x('Name', 'user first name'),
-					_('Surname')
+					_('Last name')
 				]
 			],
 			'items' => [
@@ -272,18 +246,6 @@ class CControllerPopupGeneric extends CController {
 				'allowed_src_fields' => 'key',
 				'table_columns' => [
 					_('Key'),
-					_('Name')
-				]
-			],
-			'screens' => [
-				'title' => _('Screens'),
-				'min_user_type' => USER_TYPE_ZABBIX_USER,
-				'allowed_src_fields' => 'screenid',
-				'form' => [
-					'name' => 'screenform',
-					'id' => 'screens'
-				],
-				'table_columns' => [
 					_('Name')
 				]
 			],
@@ -360,18 +322,77 @@ class CControllerPopupGeneric extends CController {
 					_('Name')
 				]
 			],
-			'scripts' => [
-				'title' => _('Global scripts'),
-				'min_user_type' => USER_TYPE_ZABBIX_ADMIN,
-				'allowed_src_fields' => 'scriptid,name',
+			'roles' => [
+				'title' => _('User roles'),
+				'min_user_type' => USER_TYPE_ZABBIX_USER,
+				'allowed_src_fields' => 'roleid,name',
 				'form' => [
-					'name' => 'scriptform',
-					'id' => 'scripts'
+					'name' => 'rolesform',
+					'id' => 'roles'
+				],
+				'table_columns' => [
+					_('Name')
+				]
+			],
+			'api_methods' => [
+				'title' => _('API methods'),
+				'min_user_type' => USER_TYPE_SUPER_ADMIN,
+				'allowed_src_fields' => 'name',
+				'form' => [
+					'name' => 'apimethodform',
+					'id' => 'apimethods'
+				],
+				'table_columns' => [
+					_('Name')
+				]
+			],
+			'valuemap_names' => [
+				'title' => _('Value mapping'),
+				'min_user_type' => USER_TYPE_ZABBIX_ADMIN,
+				'allowed_src_fields' => 'valuemapid,name',
+				'form' => [
+					'name' => 'valuemapform',
+					'id' => 'valuemaps'
+				],
+				'table_columns' => [
+					_('Name')
+				]
+			],
+			'valuemaps' => [
+				'title' => _('Value mapping'),
+				'min_user_type' => USER_TYPE_ZABBIX_ADMIN,
+				'allowed_src_fields' => 'valuemapid,name',
+				'form' => [
+					'name' => 'valuemapform',
+					'id' => 'valuemaps'
 				],
 				'table_columns' => [
 					_('Name'),
-					_('Execute on'),
-					_('Commands')
+					_('Mapping')
+				]
+			],
+			'dashboard' => [
+				'title' => _('Dashboards'),
+				'min_user_type' => USER_TYPE_ZABBIX_USER,
+				'allowed_src_fields' => 'dashboardid,name',
+				'form' => [
+					'name' => 'dashboardform',
+					'id' => 'dashboards'
+				],
+				'table_columns' => [
+					_('Name')
+				]
+			],
+			'sla' => [
+				'title' => _('SLA'),
+				'min_user_type' => USER_TYPE_ZABBIX_USER,
+				'allowed_src_fields' => 'slaid,name',
+				'form' => [
+					'name' => 'slaform',
+					'id' => 'sla'
+				],
+				'table_columns' => [
+					_('Name')
 				]
 			]
 		];
@@ -397,7 +418,6 @@ class CControllerPopupGeneric extends CController {
 			'hostid' =>								'db hosts.hostid',
 			'host' =>								'string',
 			'parent_discoveryid' =>					'db items.itemid',
-			'screenid' =>							'db screens.screenid',
 			'templates' =>							'string|not_empty',
 			'host_templates' =>						'string|not_empty',
 			'multiselect' =>						'in 1',
@@ -410,7 +430,6 @@ class CControllerPopupGeneric extends CController {
 			'templated_hosts' =>					'in 1',
 			'real_hosts' =>							'in 1',
 			'normal_only' =>						'in 1',
-			'with_applications' =>					'in 1',
 			'with_graphs' =>						'in 1',
 			'with_graph_prototypes' =>				'in 1',
 			'with_items' =>							'in 1',
@@ -422,17 +441,22 @@ class CControllerPopupGeneric extends CController {
 			'with_httptests' => 					'in 1',
 			'with_hosts_and_templates' =>			'in 1',
 			'with_webitems' =>						'in 1',
+			'with_inherited' =>						'in 1',
 			'itemtype' =>							'in '.implode(',', self::ALLOWED_ITEM_TYPES),
 			'value_types' =>						'array',
+			'context' =>							'string|in host,template,audit',
+			'enabled_only' =>						'in 1',
+			'disable_names' =>						'array',
 			'numeric' =>							'in 1',
 			'reference' =>							'string',
-			'orig_names' =>							'in 1',
 			'writeonly' =>							'in 1',
 			'noempty' =>							'in 1',
 			'submit_parent' =>						'in 1',
 			'enrich_parent_groups' =>				'in 1',
 			'filter_groupid_rst' =>					'in 1',
-			'filter_hostid_rst' =>					'in 1'
+			'filter_hostid_rst' =>					'in 1',
+			'user_type' =>							'in '.implode(',', [USER_TYPE_ZABBIX_USER, USER_TYPE_ZABBIX_ADMIN, USER_TYPE_SUPER_ADMIN]),
+			'hostids' => 							'array'
 		];
 
 		// Set destination and source field validation roles.
@@ -447,6 +471,11 @@ class CControllerPopupGeneric extends CController {
 		}
 
 		$ret = $this->validateInput($fields);
+
+		// Set disabled options to property for ability to modify them in result fetching.
+		if ($ret && $this->hasInput('disableids')) {
+			$this->disableids = $this->getInput('disableids');
+		}
 
 		if ($ret && $this->getInput('value_types', [])) {
 			foreach ($this->getInput('value_types') as $value_type) {
@@ -599,12 +628,11 @@ class CControllerPopupGeneric extends CController {
 			$group_options['groupid'] = $this->getInput('groupid');
 		}
 
-		if ($this->hasInput('enrich_parent_groups')
-				|| in_array($this->source_table, self::POPUPS_HAVING_GROUP_FILTER)) {
+		if ($this->hasInput('enrich_parent_groups') || $this->group_preselect_required) {
 			$group_options['enrich_parent_groups'] = 1;
 		}
 
-		foreach (['with_applications', 'with_graphs', 'with_graph_prototypes', 'with_simple_graph_items',
+		foreach (['with_graphs', 'with_graph_prototypes', 'with_simple_graph_items',
 				'with_simple_graph_item_prototypes', 'with_triggers', 'with_monitored_triggers'] as $name) {
 			if ($this->hasInput($name)) {
 				$group_options[$name] = 1;
@@ -614,7 +642,7 @@ class CControllerPopupGeneric extends CController {
 		}
 
 		// Host group dropdown.
-		if (in_array($this->source_table, self::POPUPS_HAVING_GROUP_FILTER)
+		if ($this->group_preselect_required
 				&& ($this->source_table !== 'item_prototypes' || !$this->page_options['parent_discoveryid'])) {
 			$groups = $this->groupids
 				? API::HostGroup()->get([
@@ -701,7 +729,7 @@ class CControllerPopupGeneric extends CController {
 	 */
 	protected function getPageOptions(): array {
 		$option_fields_binary = ['noempty', 'real_hosts', 'submit_parent', 'with_items', 'writeonly'];
-		$option_fields_value = ['host_templates', 'screenid'];
+		$option_fields_value = ['host_templates'];
 
 		$page_options = [
 			'srcfld1' => $this->getInput('srcfld1', ''),
@@ -740,7 +768,7 @@ class CControllerPopupGeneric extends CController {
 	 * Main controller action.
 	 */
 	protected function doAction() {
-		$popup = $this->popup_properties[$this->source_table];
+		$popup = $this->getPopupProperties();
 
 		// Update or read profile.
 		if ($this->groupids) {
@@ -765,7 +793,8 @@ class CControllerPopupGeneric extends CController {
 
 		// Set popup options.
 		$this->host_preselect_required = in_array($this->source_table, self::POPUPS_HAVING_HOST_FILTER);
-		$this->group_preselect_required = in_array($this->source_table, self::POPUPS_HAVING_GROUP_FILTER);
+		$this->group_preselect_required = in_array($this->source_table, self::POPUPS_HAVING_GROUP_FILTER)
+			|| ($this->source_table === 'valuemaps' && !$this->hasInput('hostids'));
 		$this->page_options = $this->getPageOptions();
 
 		// Make control filters. Must be called before extending groupids.
@@ -796,10 +825,6 @@ class CControllerPopupGeneric extends CController {
 			]
 		];
 
-		if ($this->source_table === 'triggers' || $this->source_table === 'trigger_prototypes') {
-			$data['options']['config'] = select_config();
-		}
-
 		if (($messages = getMessages()) !== null) {
 			$data['messages'] = $messages;
 		}
@@ -808,6 +833,25 @@ class CControllerPopupGeneric extends CController {
 		}
 
 		$this->setResponse(new CControllerResponseData($data));
+	}
+
+	/**
+	 * Customize and return popup properties.
+	 *
+	 * @return array
+	 */
+	protected function getPopupProperties(): array {
+		$popup_properties = $this->popup_properties[$this->source_table];
+
+		switch ($this->source_table) {
+			case 'sla':
+				if (!$this->hasInput('enabled_only')) {
+					$popup_properties['table_columns'] = array_merge($popup_properties['table_columns'], [_('Status')]);
+				}
+				break;
+		}
+
+		return $popup_properties;
 	}
 
 	/**
@@ -831,9 +875,7 @@ class CControllerPopupGeneric extends CController {
 	 * @param array $records
 	 */
 	protected function applyDisableids(array &$records) {
-		$disableids = $this->getInput('disableids', []);
-
-		foreach ($disableids as $disableid) {
+		foreach ($this->disableids as $disableid) {
 			if (array_key_exists($disableid, $records)) {
 				$records[$disableid]['_disabled'] = true;
 			}
@@ -864,9 +906,9 @@ class CControllerPopupGeneric extends CController {
 				break;
 
 			case 'items':
-				foreach ($records as $itmeid => $row) {
-					$records[$row['name_expanded']] = ['itemid' => $row['name_expanded']] + $row;
-					unset($records[$itmeid]);
+				foreach ($records as $itemid => $row) {
+					$records[$row['name']] = ['pattern' => $row['name']] + $row;
+					unset($records[$itemid]);
 				}
 				break;
 
@@ -896,9 +938,7 @@ class CControllerPopupGeneric extends CController {
 			'preservekeys' => true
 		];
 
-		$popups_support_templated_entries = ['applications', 'triggers', 'trigger_prototypes', 'graphs',
-			'graph_prototypes'
-		];
+		$popups_support_templated_entries = ['triggers', 'trigger_prototypes', 'graphs', 'graph_prototypes'];
 
 		if (in_array($this->source_table, $popups_support_templated_entries)) {
 			if (!$this->hasInput('monitored_hosts') && $this->hasInput('real_hosts')) {
@@ -926,11 +966,16 @@ class CControllerPopupGeneric extends CController {
 
 			case 'users':
 				$options += [
-					'output' => ['alias', 'name', 'surname', 'type', 'theme', 'lang']
+					'output' => ['username', 'name', 'surname', 'type', 'theme', 'lang']
 				];
 
 				$records = API::User()->get($options);
-				CArrayHelper::sort($records, ['alias']);
+
+				if ($this->hasInput('context')) {
+					$records[0] = ['userid' => 0, 'username' => 'System', 'name' => '', 'surname' => ''];
+				}
+
+				CArrayHelper::sort($records, ['username']);
 				break;
 
 			case 'templates':
@@ -1037,7 +1082,7 @@ class CControllerPopupGeneric extends CController {
 				break;
 
 			case 'help_items':
-				$records = (new CHelpItems())->getByType($this->page_options['itemtype']);
+				$records = CItemData::getByType($this->page_options['itemtype']);
 				break;
 
 			case 'triggers':
@@ -1096,7 +1141,7 @@ class CControllerPopupGeneric extends CController {
 			case 'items':
 			case 'item_prototypes':
 				$options += [
-					'output' => ['itemid', 'hostid', 'name', 'key_', 'flags', 'type', 'value_type', 'status'],
+					'output' => ['itemid', 'name', 'key_', 'flags', 'type', 'value_type', 'status'],
 					'selectHosts' => ['name'],
 					'templated' => $this->hasInput('templated_hosts') ? true : null
 				];
@@ -1141,56 +1186,7 @@ class CControllerPopupGeneric extends CController {
 						: [];
 				}
 
-				// Resolve item names by default.
-				$records = $this->hasInput('orig_names')
-					? CArrayHelper::copyObjectsKeys($records, ['name' => 'name_expanded'])
-					: CMacrosResolverHelper::resolveItemNames($records);
-
-				CArrayHelper::sort($records, ['name_expanded']);
-				break;
-
-			case 'applications':
-				$options += [
-					'output' => ['applicationid', 'name'],
-					'hostids' => $this->hostids ? $this->hostids : null
-				];
-
-				if (!$this->host_preselect_required || $this->hostids) {
-					$records = API::Application()->get($options);
-				}
-				else {
-					$records = [];
-				}
-
 				CArrayHelper::sort($records, ['name']);
-				$records = CArrayHelper::renameObjectsKeys($records, ['applicationid' => 'id']);
-				break;
-
-			case 'application_prototypes':
-				$parent_discoveryid = $this->getInput('parent_discoveryid');
-
-				$discovery_rules = API::DiscoveryRule()->get([
-					'output' => [],
-					'selectApplicationPrototypes' => ['application_prototypeid', 'name'],
-					'itemids' => [$parent_discoveryid]
-				]);
-
-				if ($discovery_rules) {
-					$discovery_rule = $discovery_rules[0];
-
-					if ($discovery_rule['applicationPrototypes']) {
-						CArrayHelper::sort($discovery_rule['applicationPrototypes'], [
-							['field' => 'name', 'order' => ZBX_SORT_UP]
-						]);
-
-						foreach ($discovery_rule['applicationPrototypes'] as $application_prototype) {
-							$records[$application_prototype['application_prototypeid']] = [
-								'id' => $application_prototype['application_prototypeid'],
-								'name' => $application_prototype['name']
-							];
-						}
-					}
-				}
 				break;
 
 			case 'graphs':
@@ -1218,28 +1214,26 @@ class CControllerPopupGeneric extends CController {
 				break;
 
 			case 'sysmaps':
-				$options += [
-					'output' => API_OUTPUT_EXTEND
-				];
+				$records = API::Map()->get([
+					'output' => ['sysmapid', 'name'],
+					'preservekeys' => true
+				]);
 
-				$records = API::Map()->get($options);
+				$records = CArrayHelper::renameObjectsKeys($records, ['sysmapid' => 'id']);
 
-				CArrayHelper::sort($records, ['name']);
-				break;
-
-			case 'screens':
-				$options += [
-					'output' => ['screenid', 'name']
-				];
-
-				$records = API::Screen()->get($options);
 				CArrayHelper::sort($records, ['name']);
 				break;
 
 			case 'drules':
+				$filter = [];
+
+				if ($this->getInput('enabled_only', 0)) {
+					$filter['status'] = DRULE_STATUS_ACTIVE;
+				}
+
 				$records = API::DRule()->get([
 					'output' => ['druleid', 'name'],
-					'filter' => ['status' => DRULE_STATUS_ACTIVE],
+					'filter' => $filter,
 					'preservekeys' => true
 				]);
 
@@ -1266,21 +1260,173 @@ class CControllerPopupGeneric extends CController {
 				$records = CArrayHelper::renameObjectsKeys($records, ['proxyid' => 'id', 'host' => 'name']);
 				break;
 
-			case 'scripts':
+			case 'roles':
 				$options += [
-					'output' => ['scriptid', 'name', 'type', 'execute_on', 'command'],
-					'groupids' => (!$this->hostids && $this->groupids) ? $this->groupids : null
+					'output' => ['roleid', 'name'],
+					'preservekeys' => true
 				];
 
-				if ((!$this->host_preselect_required && $this->hostids)
-						|| (!$this->group_preselect_required || $this->groupids)) {
-					$records = API::Script()->get($options);
+				$records = API::Role()->get($options);
+				CArrayHelper::sort($records, ['name']);
+				$records = CArrayHelper::renameObjectsKeys($records, ['roleid' => 'id']);
+				break;
+
+			case 'api_methods':
+				$user_type = $this->getInput('user_type', USER_TYPE_ZABBIX_USER);
+				$api_methods = CRoleHelper::getApiMethods($user_type);
+				$api_mask_methods = CRoleHelper::getApiMaskMethods($user_type);
+				$modified_disableids = [];
+
+				foreach ($this->disableids as $disableid) {
+					if (array_key_exists($disableid, $api_mask_methods)) {
+						$modified_disableids = array_merge($modified_disableids, $api_mask_methods[$disableid]);
+					}
+					else if (!in_array($disableid, $modified_disableids)) {
+						$modified_disableids[] = $disableid;
+					}
 				}
-				else {
-					$records = [];
+
+				$this->disableids = $modified_disableids;
+
+				foreach ($api_methods as $api_method) {
+					$records[$api_method] = ['id' => $api_method, 'name' => $api_method];
 				}
 
 				CArrayHelper::sort($records, ['name']);
+				break;
+
+			case 'valuemap_names':
+				/**
+				 * Show list of value maps with unique names for defined hosts or templates.
+				 *
+				 * hostids           (required) Array of host or template ids to get value maps from.
+				 * context           (required) Define context for inherited value maps: host, template
+				 * with_inherited    Include value maps from inherited templates.
+				 */
+				$records = [];
+				$hostids = $this->getInput('hostids', []);
+				$context = $this->getInput('context', '');
+
+				if (!$hostids || $context === '') {
+					break;
+				}
+
+				if ($this->hasInput('with_inherited')) {
+					$hostids = CTemplateHelper::getParentTemplatesRecursive($hostids, $context);
+				}
+
+				$records = CArrayHelper::renameObjectsKeys(API::ValueMap()->get([
+					'output' => ['valuemapid', 'name'],
+					'hostids' => $hostids
+				]), ['valuemapid' => 'id']);
+				// Remove value maps with duplicate names.
+				$records = array_column($records, null, 'name');
+				$records = array_column($records, null, 'id');
+				CArrayHelper::sort($records, ['name']);
+				break;
+
+			case 'valuemaps':
+				/**
+				 * Show list of value maps with their mappings for defined hosts or templates.
+				 *
+				 * context  Define context for hostids value maps: host, template. Required together with "hostids".
+				 * hostids  Array of host or template ids to get value maps from. Filter by groups will be displayed if
+				 *          this parameter is not set;
+				 */
+				$records = [];
+
+				if (($this->hasInput('hostids') && !$this->hasInput('context'))
+						|| (!$this->hasInput('hostids') && !$this->groupids)) {
+					break;
+				}
+
+				$limit = CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT);
+
+				if ($this->hasInput('hostids')) {
+					$hostids = $this->getInput('hostids');
+					$context = $this->getInput('context');
+
+					if ($context === 'host') {
+						$hosts = API::Host()->get([
+							'output' => ['name'],
+							'hostids' => $hostids,
+							'preservekeys' => true
+						]);
+					}
+					else {
+						$hosts = API::Template()->get([
+							'output' => ['name'],
+							'templateids' => $hostids,
+							'preservekeys' => true
+						]);
+					}
+				}
+				else {
+					$hosts = API::Host()->get([
+						'output' => ['name'],
+						'groupids' => $this->groupids,
+						'preservekeys' => true,
+						'limit' => $limit
+					]) + API::Template()->get([
+						'output' => ['name'],
+						'groupids' => $this->groupids,
+						'preservekeys' => true,
+						'limit' => $limit
+					]);
+
+					$hostids = array_keys($hosts);
+				}
+
+				$db_valuemaps = API::ValueMap()->get([
+					'output' => ['valuemapid', 'name', 'hostid'],
+					'selectMappings' => ['type', 'value', 'newvalue'],
+					'hostids' => $hostids,
+					'limit' => $limit
+				]);
+
+				$disable_names = $this->getInput('disable_names', []);
+
+				foreach ($db_valuemaps as $db_valuemap) {
+					$valuemap = [
+						'id' => $db_valuemap['valuemapid'],
+						'hostname' => $hosts[$db_valuemap['hostid']]['name'],
+						'name' => $db_valuemap['name'],
+						'mappings' => array_values($db_valuemap['mappings']),
+						'_disabled' => in_array($db_valuemap['name'], $disable_names)
+					];
+
+					$records[$db_valuemap['valuemapid']] = $valuemap;
+				}
+
+				$records = array_column($records, null, 'id');
+				CArrayHelper::sort($records, ['name', 'hostname']);
+				break;
+
+			case 'dashboard':
+				$options += [
+					'output' => ['dashboardid', 'name']
+				];
+
+				$records = API::Dashboard()->get($options);
+				CArrayHelper::sort($records, ['name']);
+				$records = CArrayHelper::renameObjectsKeys($records, ['dashboardid' => 'id']);
+				break;
+
+			case 'sla':
+				$options += $this->hasInput('enabled_only')
+					? [
+						'output' => ['slaid', 'name'],
+						'filter' => [
+							'status' => ZBX_SLA_STATUS_ENABLED
+						]
+					]
+					: [
+						'output' => ['slaid', 'name', 'status']
+					];
+
+				$records = API::Sla()->get($options);
+				CArrayHelper::sort($records, ['name']);
+				$records = CArrayHelper::renameObjectsKeys($records, ['slaid' => 'id']);
 				break;
 		}
 

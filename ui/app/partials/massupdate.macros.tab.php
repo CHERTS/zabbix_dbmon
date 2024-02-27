@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,8 +31,9 @@ $table = (new CTable())
 foreach ($data['macros'] as $i => $macro) {
 	$macro_input = (new CTextAreaFlexible('macros['.$i.'][macro]', $macro['macro']))
 		->addClass('macro')
-		->setWidth(ZBX_TEXTAREA_MACRO_WIDTH)
-		->setAttribute('placeholder', '{$MACRO}');
+		->setAdaptiveWidth(ZBX_TEXTAREA_MACRO_WIDTH)
+		->setAttribute('placeholder', '{$MACRO}')
+		->disableSpellcheck();
 
 	if ($i == 0) {
 		$macro_input->setAttribute('autofocus', 'autofocus');
@@ -52,7 +53,7 @@ foreach ($data['macros'] as $i => $macro) {
 	}
 
 	$description_input = (new CTextAreaFlexible('macros['.$i.'][description]', $macro['description']))
-		->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH)
+		->setAdaptiveWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH)
 		->setMaxlength(DB::getFieldLength('globalmacro', 'description'))
 		->setAttribute('placeholder', _('description'));
 
@@ -69,7 +70,9 @@ foreach ($data['macros'] as $i => $macro) {
 		(new CCol($macro_input))->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT),
 		(new CCol($macro_value))->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT),
 		(new CCol($description_input))->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT),
-		(new CCol($button_cell))->addClass(ZBX_STYLE_NOWRAP)
+		(new CCol($button_cell))
+			->addClass(ZBX_STYLE_NOWRAP)
+			->addClass(ZBX_STYLE_TOP)
 	], 'form_row');
 }
 
@@ -114,11 +117,11 @@ $checkbox_remove_all = (new CDiv(
 
 $form_list = (new CFormList('macros-form-list'))
 	->addRow(
-		(new CVisibilityBox('visible[macros]', 'macros-div', _('Original')))
+		(new CVisibilityBox('visible[macros]', 'macros-field', _('Original')))
 			->setLabel(_('Macros'))
 			->setChecked(array_key_exists('macros', $data['visible'])),
 		(new CDiv([
-			(new CRadioButtonList('mass_update_macros', (int) $data['macros_visible']))
+			(new CRadioButtonList('mass_update_macros', ZBX_ACTION_ADD))
 				->addValue(_('Add'), ZBX_ACTION_ADD)
 				->addValue(_('Update'), ZBX_ACTION_REPLACE)
 				->addValue(_('Remove'), ZBX_ACTION_REMOVE)
@@ -130,9 +133,7 @@ $form_list = (new CFormList('macros-form-list'))
 			$checkbox_update,
 			$checkbox_remove,
 			$checkbox_remove_all
-		]))->setId('macros-div')
+		]))->setId('macros-field')
 	);
 
 $form_list->show();
-
-$this->includeJsFile('massupdate.macros.tab.js.php');

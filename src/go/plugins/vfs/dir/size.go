@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2021 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"strings"
 
-	"zabbix.com/pkg/zbxerr"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 )
 
 const (
@@ -136,6 +136,7 @@ func (sp *sizeParams) skip(path string, d fs.DirEntry) (bool, error) {
 
 func getSizeParams(params []string) (out sizeParams, err error) {
 	out.maxDepth = -1
+	out.files = make(map[inodeData]bool)
 
 	switch len(params) {
 	case sixthParam:

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -154,8 +154,8 @@ abstract class DbBackend {
 	/**
 	 * Create INSERT SQL query for MySQL, PostgreSQL.
 	 * Creation example:
-	 *	INSERT INTO applications (name,hostid,templateid,applicationid)
-	 *	VALUES ('CPU','10113','13','868'),('Filesystems','10113','5','869'),('General','10113','21','870');
+	 *	INSERT INTO items (itemid,name,key_,type)
+	 *	VALUES ('10201','agent.hostname','agent.hostname',1),('10202','agent.ping','agent.ping',1);
 	 *
 	 * @param string $table
 	 * @param array $fields
@@ -206,6 +206,16 @@ abstract class DbBackend {
 	* @return bool
 	*/
 	abstract public function isDoubleIEEE754();
+
+	/**
+	 * Check that a field is present in a database table.
+	 *
+	 * @param string $table_name
+	 * @param string $field_name
+	 *
+	 * @return bool
+	 */
+	abstract public function dbFieldExists(string $table_name, string $field_name): bool;
 
 	/**
 	 * Set warning message.

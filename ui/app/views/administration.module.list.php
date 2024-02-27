@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,8 @@ $widget = (new CWidget())
 		))->setAttribute('aria-label', _('Content controls'))
 	)
 	->addItem(
-		(new CFilter((new CUrl('zabbix.php'))->setArgument('action', 'module.list')))
+		(new CFilter())
+			->setResetUrl((new CUrl('zabbix.php'))->setArgument('action', 'module.list'))
 			->addVar('action', 'module.list')
 			->setProfile($data['filter_profile'])
 			->setActiveTab($data['filter_active_tab'])

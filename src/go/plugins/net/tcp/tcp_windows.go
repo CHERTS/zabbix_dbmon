@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,9 +23,24 @@ import (
 	"encoding/binary"
 	"unsafe"
 
-	"zabbix.com/pkg/plugin"
+	"git.zabbix.com/ap/plugin-support/plugin"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 	"zabbix.com/pkg/win32"
 )
+
+func init() {
+	err := plugin.RegisterMetrics(
+		&impl, "TCP",
+		"net.tcp.listen", "Checks if this TCP port is in LISTEN state.",
+		"net.tcp.port", "Checks if it is possible to make TCP connection to specified port.",
+		"net.tcp.service", "Checks if service is running and accepting TCP connections.",
+		"net.tcp.service.perf", "Checks performance of TCP service.",
+		"net.tcp.socket.count", "Returns number of TCP sockets that match parameters.",
+	)
+	if err != nil {
+		panic(zbxerr.New("failed to register metrics").Wrap(err))
+	}
+}
 
 func exportSystemTcpListen(port uint16) (result interface{}, err error) {
 	var tcpTable *win32.MIB_TCPTABLE
@@ -54,12 +69,4 @@ func exportSystemTcpListen(port uint16) (result interface{}, err error) {
 		}
 	}
 	return 0, nil
-}
-
-func init() {
-	plugin.RegisterMetrics(&impl, "TCP",
-		"net.tcp.listen", "Checks if this TCP port is in LISTEN state.",
-		"net.tcp.port", "Checks if it is possible to make TCP connection to specified port.",
-		"net.tcp.service", "Checks if service is running and accepting TCP connections.",
-		"net.tcp.service.perf", "Checks performance of TCP service.")
 }

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,9 +36,27 @@ class CLdap {
 	 */
 	public $error;
 
-	public function __construct($arg = []) {
-		$this->ds = false;
-		$this->info = [];
+	/**
+	 * @var mixed
+	 */
+	private $ds = false;
+
+	/**
+	 * @var mixed
+	 */
+	private $info = [];
+
+	/**
+	 * @var array
+	 */
+	private $cnf = [];
+
+	/**
+	 * @var int
+	 */
+	private $bound = 0;
+
+	public function __construct(array $arg = []) {
 		$this->cnf = [
 			'host' => 'ldap://localhost',
 			'port' => '389',
@@ -49,7 +67,7 @@ class CLdap {
 			'userfilter' => '(%{attr}=%{user})',
 			'groupkey' => 'cn',
 			'mapping' => [
-				'alias' => 'uid',
+				'username' => 'uid',
 				'userid' => 'uidnumbera',
 				'passwd' => 'userpassword'
 			],
@@ -225,7 +243,7 @@ class CLdap {
 			$filter = '(ObjectClass=*)';
 		}
 		$sr = @ldap_search($this->ds, $base, $filter);
-		$result = is_resource($sr) ? @ldap_get_entries($this->ds, $sr) : [];
+		$result = $sr !== false ? @ldap_get_entries($this->ds, $sr) : [];
 
 		// don't accept more or less than one response
 		if (!$result || $result['count'] != 1) {
@@ -242,7 +260,7 @@ class CLdap {
 		$info['name'] = $user_result['cn'][0];
 		$info['grps'] = [];
 
-		// overwrite if other attribs are specified.
+		// overwrite if other attributes are specified.
 		if (is_array($this->cnf['mapping'])) {
 			foreach ($this->cnf['mapping'] as $localkey => $key) {
 				$info[$localkey] = isset($user_result[$key])?$user_result[$key][0]:null;

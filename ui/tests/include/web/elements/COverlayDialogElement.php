@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@ class COverlayDialogElement extends CElement {
 	/**
 	 * @inheritdoc
 	 */
-	public function waitUntilReady() {
-		$this->query('xpath:.//div[contains(@class, "is-loading")]')->waitUntilNotPresent();
+	public function waitUntilReady($timeout = null) {
+		$this->query('xpath:.//div[contains(@class, "is-loading")]')->waitUntilNotPresent($timeout);
 
 		return $this;
 	}
@@ -45,7 +45,7 @@ class COverlayDialogElement extends CElement {
 	 * @return string
 	 */
 	public function getTitle() {
-		return $this->query('xpath:./div[@class="dashbrd-widget-head"]/h4')->one()->getText();
+		return $this->query('xpath:./div[@class="dashboard-widget-head"]/h4')->one()->getText();
 	}
 
 	/**
@@ -95,10 +95,24 @@ class COverlayDialogElement extends CElement {
 
 	/**
 	 * Close overlay dialog.
+	 *
+	 * @param boolean $cancel    true if cancel button, false if close (x) button
 	 */
-	public function close() {
-		$this->query('class:overlay-close-btn')->one()->click();
-		$this->ensureNotPresent();
+	public function close($cancel = false) {
+		$count = COverlayDialogElement::find()->all()->count();
+		if ($cancel) {
+			$this->getFooter()->query('button:Cancel')->one()->click();
+		}
+		else {
+			$this->query('class:overlay-close-btn')->one()->click();
+		}
+
+		if ($count === 1) {
+			self::ensureNotPresent();
+		}
+		else {
+			$this->waitUntilNotPresent();
+		}
 	}
 
 	/**

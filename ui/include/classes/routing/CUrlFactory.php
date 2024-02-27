@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,15 +32,9 @@ class CUrlFactory {
 		'actionconf.php' => [
 			'remove' => ['actionid']
 		],
-		'applications.php' => [
-			'remove' => ['applicationid']
-		],
 		'disc_prototypes.php' => [
 			'remove' => ['itemid'],
 			'add' => ['hostid', 'parent_discoveryid']
-		],
-		'discoveryconf.php' => [
-			'remove' => ['druleid']
 		],
 		'graphs.php' => [
 			'remove' => ['graphid'],
@@ -57,9 +51,6 @@ class CUrlFactory {
 		'hostgroups.php' => [
 			'remove' => ['groupid']
 		],
-		'hosts.php' => [
-			'remove' => ['hostid']
-		],
 		'httpconf.php' => [
 			'remove' => ['httptestid']
 		],
@@ -68,13 +59,6 @@ class CUrlFactory {
 		],
 		'maintenance.php' => [
 			'remove' => ['maintenanceid']
-		],
-		'screenconf.php' => [
-			'remove' => ['screenid'],
-			'add' => ['templateid']
-		],
-		'slideconf.php' => [
-			'remove' => ['slideshowid']
 		],
 		'sysmaps.php' => [
 			'remove' => ['sysmapid']

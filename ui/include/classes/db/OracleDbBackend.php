@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -71,6 +71,9 @@ class OracleDbBackend extends DbBackend {
 
 		if ($host) {
 			$connect = '//'.$host.(($port) ? ':'.$port : '').(($dbname) ? '/'.$dbname : '');
+		}
+		elseif ($dbname) {
+			$connect = $dbname;
 		}
 
 		$resource = @oci_connect($user, $password, $connect, 'UTF8');
@@ -163,5 +166,17 @@ class OracleDbBackend extends DbBackend {
 		$result = DBfetch(DBselect($sql));
 
 		return (is_array($result) && array_key_exists('cnt', $result) && $result['cnt'] == 4);
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function dbFieldExists(string $table_name, string $field_name): bool {
+		return (bool) DBFetch(DBselect(
+			'SELECT 1'.
+			' FROM col'.
+			' WHERE lower(tname)='.zbx_dbstr($table_name).
+				' AND lower(cname)='.zbx_dbstr($field_name)
+		));
 	}
 }

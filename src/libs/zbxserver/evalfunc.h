@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,8 +20,11 @@
 #ifndef ZABBIX_EVALFUNC_H
 #define ZABBIX_EVALFUNC_H
 
-int	evaluate_macro_function(char **result, const char *host, const char *key, const char *function,
-		const char *parameter);
-int	evaluatable_for_notsupported(const char *fn);
+#include "zbxtypes.h"
+#include "dbcache.h"
+
+int	zbx_evaluatable_for_notsupported(const char *fn);
+int	zbx_evaluate_RATE(zbx_variant_t *value, DC_ITEM *item, const char *parameters, const zbx_timespec_t *ts,
+		char **error);
 
 #endif

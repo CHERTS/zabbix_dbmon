@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,9 +22,10 @@ package redis
 import (
 	"time"
 
-	"zabbix.com/pkg/plugin"
-	"zabbix.com/pkg/uri"
-	"zabbix.com/pkg/zbxerr"
+	"git.zabbix.com/ap/plugin-support/metric"
+	"git.zabbix.com/ap/plugin-support/plugin"
+	"git.zabbix.com/ap/plugin-support/uri"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 )
 
 const pluginName = "Redis"
@@ -41,7 +42,12 @@ var impl Plugin
 
 // Export implements the Exporter interface.
 func (p *Plugin) Export(key string, rawParams []string, ctx plugin.ContextProvider) (result interface{}, err error) {
-	params, _, err := metrics[key].EvalParams(rawParams, p.options.Sessions)
+	params, _, hc, err := metrics[key].EvalParams(rawParams, p.options.Sessions)
+	if err != nil {
+		return nil, err
+	}
+
+	err = metric.SetDefaults(params, hc, p.options.Default)
 	if err != nil {
 		return nil, err
 	}

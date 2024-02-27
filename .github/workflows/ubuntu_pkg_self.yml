@@ -20,7 +20,7 @@ jobs:
         rm -rf ./bin/* 2>/dev/null
         rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
-      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
+      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles; chmod a+x ./create/bin/*.{sh,pl}
     - name: Build zabbix dist
       run: |
         ./bootstrap.sh
@@ -74,7 +74,7 @@ jobs:
         rm -rf ./bin/* 2>/dev/null
         rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
-      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
+      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles; chmod a+x ./create/bin/*.{sh,pl}
     - name: Build zabbix dist
       run: |
         ./bootstrap.sh
@@ -128,7 +128,7 @@ jobs:
         rm -rf ./bin/* 2>/dev/null
         rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
-      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
+      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles; chmod a+x ./create/bin/*.{sh,pl}
     - name: Build zabbix dist
       run: |
         ./bootstrap.sh
@@ -182,7 +182,7 @@ jobs:
         rm -rf ./bin/* 2>/dev/null
         rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
-      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
+      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles; chmod a+x ./create/bin/*.{sh,pl}
     - name: Build zabbix dist
       run: |
         ./bootstrap.sh

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,20 +37,20 @@ class CControllerWidgetIteratorGraphPrototypeView extends CControllerWidgetItera
 		$fields = $this->getForm()->getFieldsData();
 
 		if ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_GRAPH_PROTOTYPE) {
-			$return = $this->doGraphPrototype($fields);
+			$data = $this->doGraphPrototype($fields);
 		}
 		elseif ($fields['source_type'] == ZBX_WIDGET_FIELD_RESOURCE_SIMPLE_GRAPH_PROTOTYPE) {
-			$return = $this->doSimpleGraphPrototype($fields);
+			$data = $this->doSimpleGraphPrototype($fields);
 		}
 		else {
 			error(_('Page received incorrect data'));
 		}
 
 		if (($messages = getMessages()) !== null) {
-			$return = ['messages' => $messages->toString()];
+			$data = ['messages' => $messages->toString()];
 		}
 
-		$this->setResponse(new CControllerResponseData(['main_block' => json_encode($return)]));
+		$this->setResponse(new CControllerResponseData(['main_block' => json_encode($data)]));
 	}
 
 	/**
@@ -67,9 +67,12 @@ class CControllerWidgetIteratorGraphPrototypeView extends CControllerWidgetItera
 			'selectDiscoveryRule' => ['hostid']
 		];
 
+		$is_template_dashboard = ($this->getContext() === CWidgetConfig::CONTEXT_TEMPLATE_DASHBOARD);
+		$is_dynamic_item = ($is_template_dashboard || $fields['dynamic'] == WIDGET_DYNAMIC_ITEM);
+
 		$dynamic_hostid = $this->getInput('dynamic_hostid', 0);
 
-		if ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid) {
+		if ($is_dynamic_item && $dynamic_hostid != 0) {
 			// The key of the actual graph prototype selected on widget's edit form.
 			$graph_prototype = API::GraphPrototype()->get([
 				'output' => ['name'],
@@ -102,7 +105,8 @@ class CControllerWidgetIteratorGraphPrototypeView extends CControllerWidgetItera
 
 		$graphs_collected = [];
 
-		if ($graph_prototype) {
+		// Do not collect graphs while editing a template dashboard.
+		if (!$is_template_dashboard || $this->hasInput('dynamic_hostid')) {
 			$graphs_created_all = API::Graph()->get([
 				'output' => ['graphid', 'name'],
 				'hostids' => [$graph_prototype['discoveryRule']['hostid']],
@@ -115,12 +119,13 @@ class CControllerWidgetIteratorGraphPrototypeView extends CControllerWidgetItera
 			// Collect graphs based on the graph prototype.
 			foreach ($graphs_created_all as $graph) {
 				if ($graph['graphDiscovery']['parent_graphid'] === $graph_prototype['graphid']) {
-					if (count($graph['hosts']) == 1 || $fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid) {
-						$graphs_collected[$graph['graphid']] = $graph['hosts'][0]['name'].NAME_DELIMITER.$graph['name'];
-					}
-					else {
-						$graphs_collected[$graph['graphid']] = $graph['name'];
-					}
+					$prepend_host_name = $is_template_dashboard
+						? false
+						: (count($graph['hosts']) == 1 || $is_dynamic_item && $dynamic_hostid != 0);
+
+					$graphs_collected[$graph['graphid']] = $prepend_host_name
+						? $graph['hosts'][0]['name'].NAME_DELIMITER.$graph['name']
+						: $graph['name'];
 				}
 			}
 			natsort($graphs_collected);
@@ -144,25 +149,28 @@ class CControllerWidgetIteratorGraphPrototypeView extends CControllerWidgetItera
 
 			$children[] = [
 				'widgetid' => (string) $graphid,
-				'type' => 'graph',
-				'header' => $name,
+				'type' => WIDGET_GRAPH,
+				'name' => $name,
 				'fields' => $child_fields,
-				'configuration' => CWidgetConfig::getConfiguration(WIDGET_GRAPH, $fields, $this->getInput('view_mode'))
+				'configuration' => CWidgetConfig::getConfiguration(WIDGET_GRAPH, $fields, $this->getInput('view_mode')),
+				'defaults' => CWidgetConfig::getDefaults($this->getContext())[WIDGET_GRAPH]
 			];
 		}
 
 		if ($this->hasInput('name')) {
-			$widget_header = $this->getInput('name');
+			$widget_name = $this->getInput('name');
 		}
 		else {
 			$host_names = array_column($graph_prototype['hosts'], 'name', 'hostid');
 			$host_name = $host_names[$graph_prototype['discoveryRule']['hostid']];
 
-			$widget_header = $host_name.NAME_DELIMITER.$graph_prototype['name'];
+			$widget_name = $is_template_dashboard
+				? $graph_prototype['name']
+				: $host_name.NAME_DELIMITER.$graph_prototype['name'];
 		}
 
 		return [
-			'header' => $widget_header,
+			'name' => $widget_name,
 			'children' => $children,
 			'page' => $page,
 			'page_count' => $page_count
@@ -183,9 +191,12 @@ class CControllerWidgetIteratorGraphPrototypeView extends CControllerWidgetItera
 			'selectDiscoveryRule' => ['hostid']
 		];
 
+		$is_template_dashboard = ($this->getContext() === CWidgetConfig::CONTEXT_TEMPLATE_DASHBOARD);
+		$is_dynamic_item = ($is_template_dashboard || $fields['dynamic'] == WIDGET_DYNAMIC_ITEM);
+
 		$dynamic_hostid = $this->getInput('dynamic_hostid', 0);
 
-		if ($fields['dynamic'] == WIDGET_DYNAMIC_ITEM && $dynamic_hostid) {
+		if ($is_dynamic_item && $dynamic_hostid != 0) {
 			// The key of the actual item prototype selected on widget's edit form.
 			$item_prototype = API::ItemPrototype()->get([
 				'output' => ['key_'],
@@ -218,9 +229,10 @@ class CControllerWidgetIteratorGraphPrototypeView extends CControllerWidgetItera
 
 		$items_collected = [];
 
-		if ($item_prototype) {
+		// Do not collect items while editing a template dashboard.
+		if (!$is_template_dashboard || $this->hasInput('dynamic_hostid')) {
 			$items_created_all = API::Item()->get([
-				'output' => ['itemid', 'name', 'key_', 'hostid'],
+				'output' => ['itemid', 'name'],
 				'hostids' => [$item_prototype['discoveryRule']['hostid']],
 				'selectItemDiscovery' => ['itemid', 'parent_itemid'],
 				'filter' => ['flags' => ZBX_FLAG_DISCOVERY_CREATED]
@@ -233,9 +245,10 @@ class CControllerWidgetIteratorGraphPrototypeView extends CControllerWidgetItera
 					$items_created[] = $item;
 				}
 			}
-			foreach (CMacrosResolverHelper::resolveItemNames($items_created) as $item) {
-				$items_collected[$item['itemid']] =
-					$item_prototype['hosts'][0]['name'].NAME_DELIMITER.$item['name_expanded'];
+			foreach ($items_created as $item) {
+				$items_collected[$item['itemid']] = $is_template_dashboard
+					? $item['name']
+					: $item_prototype['hosts'][0]['name'].NAME_DELIMITER.$item['name'];
 			}
 			natsort($items_collected);
 		}
@@ -258,19 +271,25 @@ class CControllerWidgetIteratorGraphPrototypeView extends CControllerWidgetItera
 
 			$children[] = [
 				'widgetid' => (string) $itemid,
-				'type' => 'graph',
-				'header' => $name,
+				'type' => WIDGET_GRAPH,
+				'name' => $name,
 				'fields' => $child_fields,
-				'configuration' => CWidgetConfig::getConfiguration(WIDGET_GRAPH, $fields, $this->getInput('view_mode'))
+				'configuration' => CWidgetConfig::getConfiguration(WIDGET_GRAPH, $fields, $this->getInput('view_mode')),
+				'defaults' => CWidgetConfig::getDefaults($this->getContext())[WIDGET_GRAPH]
 			];
 		}
 
-		$widget_header = $this->hasInput('name')
-			? $this->getInput('name')
-			: $item_prototype['hosts'][0]['name'].NAME_DELIMITER.$item_prototype['name'];
+		if ($this->hasInput('name')) {
+			$widget_name = $this->getInput('name');
+		}
+		else {
+			$widget_name = $is_template_dashboard
+				? $item_prototype['name']
+				: $item_prototype['hosts'][0]['name'].NAME_DELIMITER.$item_prototype['name'];
+		}
 
 		return [
-			'header' => $widget_header,
+			'name' => $widget_name,
 			'children' => $children,
 			'page' => $page,
 			'page_count' => $page_count
@@ -284,7 +303,7 @@ class CControllerWidgetIteratorGraphPrototypeView extends CControllerWidgetItera
 	 */
 	protected function inaccessibleError() {
 		return [
-			'header' => $this->getInput('name', $this->getDefaultHeader()),
+			'name' => $this->getInput('name', $this->getDefaultName()),
 			'body' => (new CTableInfo())
 				->setNoDataMessage(_('No permissions to referred object or it does not exist!'))
 				->toString()

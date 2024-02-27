@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,14 +26,14 @@ class testTriggerExpressions extends CWebTest {
 
 	public function testTriggerExpressions_SimpleTest() {
 		// Open advanced editor for testing trigger expression results.
-		$this->page->login()->open('triggers.php?form=update&triggerid='.self::TRIGGER_ID);
+		$this->page->login()->open('triggers.php?form=update&context=host&triggerid='.self::TRIGGER_ID);
 		$this->query('button:Expression constructor')->waitUntilPresent()->one()->click();
 		$this->query('button:Test')->waitUntilPresent()->one()->click();
 
 		$dialog = COverlayDialogElement::find()->one()->waitUntilReady();
 
 		// Check table headers presence in tesing dialog.
-		$table_headers = ['Expression Variable Elements', 'Result type', 'Value',
+		$table_headers = ['Expression variable elements', 'Result type', 'Value',
 						'Expression', 'Result', 'Error'];
 
 		foreach ($table_headers as $header) {

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,24 +30,15 @@ class testGeneric extends CLegacyWebTest {
 			// monitoring
 			['zabbix.php?action=dashboard.view',					'Dashboard'],
 
-			['overview.php',												'Overview [refreshed every 30 sec.]'],
-			['overview.php?form_refresh=1&groupid=0&type=0&view_style=0',	'Overview [refreshed every 30 sec.]'],
-
-			['overview.php?form_refresh=1&groupid=0&type=0&view_style=1',	'Overview [refreshed every 30 sec.]'],
-			['overview.php?form_refresh=1&groupid=0&type=1&view_style=0',	'Overview [refreshed every 30 sec.]'],
-			['overview.php?form_refresh=1&groupid=0&type=1&view_style=1',	'Overview [refreshed every 30 sec.]'],
-
 			['zabbix.php?action=web.view',					'Web monitoring'],
 			['zabbix.php?action=latest.view',	'Latest data'],
 
 			['zabbix.php?action=problem.view',	'Problems'],
 
 			['zabbix.php?action=charts.view',		'Custom graphs'],
-			['screens.php',							'Configuration of screens'],
-			['slides.php',							'Configuration of slide shows'],
 			['zabbix.php?action=map.view',			'Configuration of network maps'],
 			['zabbix.php?action=discovery.view',	'Status of discovery'],
-			['srv_status.php',						'Services [refreshed every 30 sec.]'],
+			['zabbix.php?action=service.list',		'Services'],
 
 			// inventory
 			['hostinventoriesoverview.php',	'Host inventory overview'],
@@ -67,7 +58,7 @@ class testGeneric extends CLegacyWebTest {
 			// configuration
 			['hostgroups.php',					'Configuration of host groups'],
 			['templates.php',					'Configuration of templates'],
-			['hosts.php',						'Configuration of hosts'],
+			[self::HOST_LIST_PAGE,				'Configuration of hosts'],
 			['maintenance.php',				'Configuration of maintenance periods'],
 			['httpconf.php',					'Configuration of web monitoring'],
 
@@ -77,11 +68,9 @@ class testGeneric extends CLegacyWebTest {
 			['actionconf.php?eventsource=2',	'Configuration of actions'],
 			['actionconf.php?eventsource=3',	'Configuration of actions'],
 
-			['screenconf.php',					'Configuration of screens'],
-			['slideconf.php',					'Configuration of slide shows'],
-			['sysmaps.php',					'Configuration of network maps'],
-			['discoveryconf.php',				'Configuration of discovery rules'],
-			['services.php',					'Configuration of services'],
+			['sysmaps.php',							'Configuration of network maps'],
+			['zabbix.php?action=discovery.list',	'Configuration of discovery rules'],
+			['zabbix.php?action=service.list.edit',	'Services'],
 
 			// Administration
 			['zabbix.php?action=gui.edit',	'Configuration of GUI'],
@@ -90,9 +79,6 @@ class testGeneric extends CLegacyWebTest {
 			['zabbix.php?action=iconmap.list',	'Configuration of icon mapping'],
 			['zabbix.php?action=regex.list',	'Configuration of regular expressions'],
 			['zabbix.php?action=macros.edit',	'Configuration of macros'],
-			['zabbix.php?action=valuemap.list',	'Configuration of value mapping'],
-			['zabbix.php?action=workingtime.edit',	'Configuration of working time'],
-			['zabbix.php?action=trigseverity.edit',	'Configuration of trigger severities'],
 			['zabbix.php?action=trigdisplay.edit',	'Configuration of trigger displaying options'],
 			['zabbix.php?action=miscconfig.edit',	'Other configuration parameters'],
 
@@ -105,10 +91,9 @@ class testGeneric extends CLegacyWebTest {
 			['zabbix.php?action=auditlog.list',					'Audit log'],
 			['auditacts.php',					'Action log'],
 
-			['queue.php',						'Queue [refreshed every 30 sec.]'],
-			['queue.php?config=0',				'Queue [refreshed every 30 sec.]'],
-			['queue.php?config=1',				'Queue [refreshed every 30 sec.]'],
-			['queue.php?config=2',				'Queue [refreshed every 30 sec.]'],
+			['zabbix.php?action=queue.overview',			'Queue [refreshed every 30 sec.]'],
+			['zabbix.php?action=queue.overview.proxy',		'Queue [refreshed every 30 sec.]'],
+			['zabbix.php?action=queue.details',				'Queue [refreshed every 30 sec.]'],
 
 			['report4.php',					'Notification report'],
 			['report4.php?period=daily',		'Notification report'],

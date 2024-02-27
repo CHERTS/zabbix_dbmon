@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,11 +32,20 @@ $widget = (new CWidget())
 	->setControls((new CTag('nav', true,
 		(new CList())
 			->addItem(new CRedirectButton(_('Create media type'), 'zabbix.php?action=mediatype.edit'))
-			->addItem(new CRedirectButton(_('Import'), 'conf.import.php?rules_preset=mediatype'))
+			->addItem(
+				(new CButton('', _('Import')))
+					->onClick(
+						'return PopUp("popup.import", {rules_preset: "mediatype"},
+							{dialogue_class: "modal-popup-generic"}
+						);'
+					)
+					->removeId()
+			)
 		))
 			->setAttribute('aria-label', _('Content controls'))
 	)
-	->addItem((new CFilter((new CUrl('zabbix.php'))->setArgument('action', 'mediatype.list')))
+	->addItem((new CFilter())
+		->setResetUrl((new CUrl('zabbix.php'))->setArgument('action', 'mediatype.list'))
 		->setProfile($data['profileIdx'])
 		->setActiveTab($data['active_tab'])
 		->addFilterTab(_('Filter'), [
@@ -104,7 +113,13 @@ foreach ($data['mediatypes'] as $mediaType) {
 	$actionLinks = [];
 	if (!empty($mediaType['listOfActions'])) {
 		foreach ($mediaType['listOfActions'] as $action) {
-			$actionLinks[] = new CLink($action['name'], 'actionconf.php?form=update&actionid='.$action['actionid']);
+			$actionLinks[] = new CLink($action['name'],
+				(new CUrl('actionconf.php'))
+					->setArgument('eventsource', $action['eventsource'])
+					->setArgument('form', 'update')
+					->setArgument('actionid', $action['actionid'])
+					->getUrl()
+			);
 			$actionLinks[] = ', ';
 		}
 		array_pop($actionLinks);
@@ -136,9 +151,12 @@ foreach ($data['mediatypes'] as $mediaType) {
 		->addClass(ZBX_STYLE_BTN_LINK)
 		->removeId()
 		->setEnabled(MEDIA_TYPE_STATUS_ACTIVE == $mediaType['status'])
-		->onClick('return PopUp("popup.mediatypetest.edit",'.json_encode([
-			'mediatypeid' => $mediaType['mediatypeid']
-		]).', "mediatypetest_edit", this);');
+		->onClick('
+			return PopUp("popup.mediatypetest.edit", '.json_encode(['mediatypeid' => $mediaType['mediatypeid']]).', {
+				dialogueid: "mediatypetest_edit",
+				dialogue_class: "modal-popup-medium"
+			});'
+		);
 
 	$name = new CLink($mediaType['name'], '?action=mediatype.edit&mediatypeid='.$mediaType['mediatypeid']);
 
@@ -161,14 +179,13 @@ $mediaTypeForm->addItem([
 	new CActionButtonList('action', 'mediatypeids', [
 		'mediatype.enable' => ['name' => _('Enable'), 'confirm' => _('Enable selected media types?')],
 		'mediatype.disable' => ['name' => _('Disable'), 'confirm' => _('Disable selected media types?')],
-		'mediatype.export' => ['name' => _('Export'), 'redirect' =>
-			(new CUrl('zabbix.php'))
-				->setArgument('action', 'export.mediatypes.xml')
-				->setArgument('backurl', (new CUrl('zabbix.php'))
+		'mediatype.export' => [
+			'content' => new CButtonExport('export.mediatypes',
+				(new CUrl('zabbix.php'))
 					->setArgument('action', 'mediatype.list')
-					->setArgument('page', $data['page'] == 1 ? null : $data['page'])
-					->getUrl())
-				->getUrl()
+					->setArgument('page', ($data['page'] == 1) ? null : $data['page'])
+					->getUrl()
+			)
 		],
 		'mediatype.delete' => ['name' => _('Delete'), 'confirm' => _('Delete selected media types?')]
 	], 'mediatype')

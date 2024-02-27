@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -325,7 +325,7 @@ jQuery(function($) {
 		.on('click', 'a', function(event) {
 			// Prevent click on graph image parent <a/> element when clicked inside graph selectable area.
 			if ($(event.target).is('img') && typeof $(event.target).data('zbx_sbox') !== 'undefined' && prevent_click
-					&& $(this).hasClass('dashbrd-widget-graph-link')) {
+					&& $(this).hasClass('dashboard-widget-graph-link')) {
 				return cancelEvent(event);
 			}
 		});
@@ -491,7 +491,9 @@ jQuery(function($) {
 		});
 	}
 
-	checkDisableTimeSelectorUI();
+	if (!$container.data('disable-initial-check')) {
+		checkDisableTimeSelectorUI();
+	}
 });
 
 /**
@@ -530,9 +532,7 @@ var timeControl = {
 			src: location.href,
 			dynamic: 1,
 			loadSBox: 0,
-			loadImage: 0,
-			mainObject: 0, // object on changing will reflect on all others
-			onDashboard: 0 // object is on dashboard
+			loadImage: 0
 		}, objData);
 
 		var _this = this;
@@ -592,7 +592,6 @@ var timeControl = {
 						this.refreshImage(id);
 					}
 				}
-
 			}
 		}
 	},
@@ -618,7 +617,7 @@ var timeControl = {
 			window.flickerfreeScreen.setElementProgressState(obj.id, true);
 			img = jQuery('<img>', {id: id}).appendTo(('#'+obj.containerid)).on('load', function() {
 				window.flickerfreeScreen.setElementProgressState(obj.id, false);
-				img.closest('.dashbrd-grid-widget').trigger('load.image', {imageid: id});
+				img.closest('.dashboard-grid-widget').trigger('load.image', {imageid: id});
 			});
 
 			var xhr = (obj.loadSBox == 0)
@@ -656,10 +655,10 @@ var timeControl = {
 		var container = jQuery('#' + obj.containerid),
 			clone = jQuery('<img>', {
 				id: img.attr('id'),
-				'class': img.attr('class')
+				class: img.attr('class')
 			})
 			.one('load', function() {
-				img.closest('.dashbrd-grid-widget').trigger('load.image', {imageid: img.attr('id')});
+				img.closest('.dashboard-grid-widget').trigger('load.image', {imageid: img.attr('id')});
 				img.replaceWith(clone);
 				window.flickerfreeScreen.setElementProgressState(obj.id, false);
 			});
@@ -705,7 +704,7 @@ var timeControl = {
 	disableAllSBox: function() {
 		jQuery.each(this.objectList, function(i, obj) {
 			if (obj.loadSBox == 1) {
-				jQuery('#'+obj.containerid).removeClass('dashbrd-widget-graph-link');
+				jQuery('#'+obj.containerid).removeClass('dashboard-widget-graph-link');
 			}
 		});
 		jQuery(document).off('dblclick mousedown', 'img');

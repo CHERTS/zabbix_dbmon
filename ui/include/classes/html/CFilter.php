@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,19 +21,19 @@
 
 class CFilter extends CDiv {
 
+	// Filter form object name and id attribute.
+	private const FORM_NAME = 'zbx_filter';
+
 	// Filter form object.
 	private $form;
-	// Filter form object name and id attribute.
-	private $name = 'zbx_filter';
+
 	// Visibility of 'Apply', 'Reset' form buttons. Visibility is set to all tabs.
 	private $show_buttons = true;
 
 	/**
-	 * Filter page URL.
-	 *
-	 * @var object
+	 * Filter reset URL.
 	 */
-	private $url;
+	private $reset_url;
 
 	// Array of filter tab headers. Every header is mapped to it content via href(header) and id(content) attribute.
 	protected $headers = [];
@@ -91,23 +91,27 @@ class CFilter extends CDiv {
 		]
 	];
 
-	public function __construct(CUrl $url) {
+	public function __construct() {
 		parent::__construct();
-
-		$this->url = $url;
 
 		$this
 			->setAttribute('data-accessible', 1)
-			->addClass('filter-space')
+			->addClass(ZBX_STYLE_FILTER_SPACE)
 			->setId(uniqid('filter_'));
 
 		$this->form = (new CForm('get'))
 			->cleanItems()
-			->setAttribute('name', $this->name);
+			->setAttribute('name', self::FORM_NAME);
+
+		$this->reset_url = new CUrl();
 	}
 
-	public function getName() {
-		return $this->name;
+	public function setResetUrl(CUrl $url): self {
+		$this->reset_url = (clone $url)
+			->setArgument('filter_rst', 1)
+			->getUrl();
+
+		return $this;
 	}
 
 	/**
@@ -118,8 +122,8 @@ class CFilter extends CDiv {
 	 *
 	 * @return CFilter
 	 */
-	public function addVar($name, $value) {
-		$this->form->addVar($name, $value);
+	public function addVar($name, $value, $id = null) {
+		$this->form->addVar($name, $value, $id);
 
 		return $this;
 	}
@@ -208,11 +212,7 @@ class CFilter extends CDiv {
 						->onClick('javascript: chkbxRange.clearSelectedOnFilterChange();')
 				)
 				->addItem(
-					(new CRedirectButton(_('Reset'),
-						$this->url
-							->setArgument('filter_rst', 1)
-							->getUrl()
-					))
+					(new CRedirectButton(_('Reset'), $this->reset_url))
 						->addClass(ZBX_STYLE_BTN_ALT)
 						->onClick('javascript: chkbxRange.clearSelectedOnFilterChange();')
 				);
@@ -320,8 +320,8 @@ class CFilter extends CDiv {
 	/**
 	 * Add tab.
 	 *
-	 * @param string|CTag $header    Tab header title string or CTag container.
-	 * @param array       $body      Array of body elements.
+	 * @param string|CTag $header  Tab header title string or CTag container.
+	 * @param array|CTag  $body    Array of body elements.
 	 *
 	 * @return CFilter
 	 */

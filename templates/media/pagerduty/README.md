@@ -10,12 +10,12 @@
 * ***Once the trigger is resolved, a resolving event will be sent to the PagerDuty service to resolve the alert and associated incident on that service.***
 # Requirements
 1. PagerDuty integrations with Zabbix require Events API v2 key. If you do not have permission to create Event API v2 key, please reach out to an Admin or Account Owner within your organization to help you configure the integration.
-2. PagerDuty webhook integration works with Zabbix version 5.0 or higher.
+2. PagerDuty webhook integration works with Zabbix version 6.0 or higher.
 # Support
 * If you need help use [forum](https://www.zabbix.com/forum/zabbix-suggestions-and-feedback/393216-discussion-thread-for-official-integration-with-pagerduty) 
 * If you have encountered a bug, please report it using [Zabbix Jira bug tracker](https://support.zabbix.com/).
 # Description
-This guide describes how to integrate your Zabbix 5.0 installation with PagerDuty using the Zabbix webhook feature. This guide will provide instructions on setting up a media type, a user and an action in Zabbix.
+This guide describes how to integrate your Zabbix 6.0 installation with PagerDuty using the Zabbix webhook feature. This guide will provide instructions on setting up a media type, a user and an action in Zabbix.
 
 ## In PagerDuty
 
@@ -29,19 +29,19 @@ This guide describes how to integrate your Zabbix 5.0 installation with PagerDut
 
     *   Set name and description for new service.
 
-    [![](images/tn_1.1.png?raw=true)](images/1.png)
+    [![](images/tn_1.1.png?raw=true)](images/1.1.png)
 
     *   Assign required an Escalation Policy.
 
-    [![](images/tn_1.2.png?raw=true)](images/1.png)
+    [![](images/tn_1.2.png?raw=true)](images/1.2.png)
 
     *  Select Alert Grouping.
 
-    [![](images/tn_1.3.png?raw=true)](images/1.png)
+    [![](images/tn_1.3.png?raw=true)](images/1.3.png)
 
     *  In integration section select Zabbix Webhook using search field and click **Create service**.
 
-    [![](images/tn_1.4.png?raw=true)](images/1.png)
+    [![](images/tn_1.4.png?raw=true)](images/1.4.png)
 
 * If you are adding your integration to an existing service, click the name of the service you want to add the integration to. Then click the **Integrations** tab and click the **+Add an Integration** button, select Zabbix Webhook using search field and click **Add**.
 
@@ -49,7 +49,7 @@ This guide describes how to integrate your Zabbix 5.0 installation with PagerDut
 
 * After successfully added integration use **Integration Key** from it in **token** macros for PagerDuty zabbix media type.
 
-    [![](images/tn_3.png?raw=true)](images/2.png)
+    [![](images/tn_3.png?raw=true)](images/3.png)
 
 ## In Zabbix
 
@@ -75,7 +75,7 @@ The configuration consists of a _media type_ in Zabbix, which will invoke webhoo
 
 [![](images/tn_7.png?raw=true)](images/7.png)
 
-3\. Select Import file [media_pagerduty.xml](media_pagerduty.xml) and click the **Import** button at the bottom to import the PagerDuty media type.
+3\. Select Import file [media_pagerduty.yaml](media_pagerduty.yaml) and click the **Import** button at the bottom to import the PagerDuty media type.
 
 4\. Change the value of the variable token
 
@@ -114,8 +114,8 @@ The configuration consists of a _media type_ in Zabbix, which will invoke webhoo
 
 8\. Use the PagerDuty User in any Actions of your choice.
 
-For more information, use the [Zabbix](https://www.zabbix.com/documentation/5.0/manual/config/notifications) and [PagerDuty](https://v2.developer.pagerduty.com/docs/send-an-event-events-api-v2) documentations.
+For more information, use the [Zabbix](https://www.zabbix.com/documentation/6.0/manual/config/notifications) and [PagerDuty](https://v2.developer.pagerduty.com/docs/send-an-event-events-api-v2) documentations.
 
 # Supported Versions
 
-Zabbix 5.0, PagerDuty Events API v2.
+Zabbix 6.0, PagerDuty Events API v2.

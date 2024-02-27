@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ if ($data['type'] == MEDIA_TYPE_WEBHOOK) {
 				->setWidth(ZBX_TEXTAREA_BIG_WIDTH)
 				->setEnabled(false),
 			(new CDiv(''))->setId('webhook_response_type'),
-			(new CDiv((new CLinkAction('Open log'))
+			(new CDiv((new CLinkAction(_('Open log')))
 				->setId('mediatypetest_log')
 				->addClass(ZBX_STYLE_DISABLED)
 				->onClick('openLogPopup(this)')))
@@ -85,10 +85,10 @@ $form = (new CForm())
 	->setName('mediatypetest_form')
 	->addVar('action', 'popup.mediatypetest.send')
 	->addVar('mediatypeid', $data['mediatypeid'])
-	->addItem([
-		$form_list,
-		(new CInput('submit', 'submit'))->addStyle('display: none;')
-	]);
+	->addItem($form_list);
+
+// Enable form submitting on Enter.
+$form->addItem((new CSubmitButton(null))->addClass(ZBX_STYLE_FORM_SUBMIT_HIDDEN));
 
 $output = [
 	'header' => $data['title'],

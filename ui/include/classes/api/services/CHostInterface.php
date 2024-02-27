@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,16 @@
  * Class containing methods for operations with host interfaces.
  */
 class CHostInterface extends CApiService {
+
+	public const ACCESS_RULES = [
+		'get' => ['min_user_type' => USER_TYPE_ZABBIX_USER],
+		'create' => ['min_user_type' => USER_TYPE_ZABBIX_ADMIN],
+		'update' => ['min_user_type' => USER_TYPE_ZABBIX_ADMIN],
+		'delete' => ['min_user_type' => USER_TYPE_ZABBIX_ADMIN],
+		'replacehostinterfaces' => ['min_user_type' => USER_TYPE_ZABBIX_ADMIN],
+		'massadd' => ['min_user_type' => USER_TYPE_ZABBIX_ADMIN],
+		'massremove' => ['min_user_type' => USER_TYPE_ZABBIX_ADMIN]
+	];
 
 	protected $tableName = 'interface';
 	protected $tableAlias = 'hi';
@@ -319,15 +329,15 @@ class CHostInterface extends CApiService {
 				}
 			}
 
-			if (zbx_empty($interface['ip']) && zbx_empty($interface['dns'])) {
+			if ($interface['ip'] === '' && $interface['dns'] === '') {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('IP and DNS cannot be empty for host interface.'));
 			}
 
-			if ($interface['useip'] == INTERFACE_USE_IP && zbx_empty($interface['ip'])) {
+			if ($interface['useip'] == INTERFACE_USE_IP && $interface['ip'] === '') {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _s('Interface with DNS "%1$s" cannot have empty IP address.', $interface['dns']));
 			}
 
-			if ($interface['useip'] == INTERFACE_USE_DNS && zbx_empty($interface['dns'])) {
+			if ($interface['useip'] == INTERFACE_USE_DNS && $interface['dns'] === '') {
 				if ($dbHosts && !empty($dbHosts[$interface['hostid']]['host'])) {
 					self::exception(ZBX_API_ERROR_PARAMETERS,
 						_s('Interface with IP "%1$s" cannot have empty DNS name while having "Use DNS" property on "%2$s".',
@@ -626,6 +636,7 @@ class CHostInterface extends CApiService {
 			'message' => _('Cannot delete interface for discovered host "%1$s".')
 		]));
 
+		// check interfaces
 		foreach ($data['interfaces'] as $interface) {
 			if (!isset($interface['dns']) || !isset($interface['ip']) || !isset($interface['port'])) {
 				self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
@@ -644,7 +655,7 @@ class CHostInterface extends CApiService {
 				'filter' => $filter
 			]);
 			if ($interfacesToRemove) {
-				$this->checkMainInterfacesOnDelete(zbx_objectValues($interfacesToRemove, 'interfaceid'));
+				$this->checkMainInterfacesOnDelete(array_column($interfacesToRemove, 'interfaceid'));
 			}
 		}
 	}
@@ -958,134 +969,62 @@ class CHostInterface extends CApiService {
 			$hostids[$hostData['hostid']] = $hostData['hostid'];
 		}
 
-		$interfaces = API::HostInterface()->get([
+		$dbInterfaces = API::HostInterface()->get([
 			'hostids' => $hostids,
 			'output' => ['hostid', 'main', 'type'],
 			'preservekeys' => true,
 			'nopermissions' => true
 		]);
-		$db_interfaces = $interfaces;
 
 		foreach ($interfaceIds as $interfaceId) {
-			unset($interfaces[$interfaceId]);
+			unset($dbInterfaces[$interfaceId]);
 		}
 
-		$this->checkMainInterfaces($interfaces, $db_interfaces);
+		$this->checkMainInterfaces($dbInterfaces);
 	}
 
 	/**
-	 * Check if main interfaces are correctly set for every interface type. Each host must either have only one main
-	 * interface for each interface type, or have no interface of that type at all. If no interfaces are given, it means
-	 * the last remaining main interface is trying to be deleted. In that case use $db_interfaces as reference.
+	 * Check if main interfaces are correctly set for every interface type.
+	 * Each host must either have only one main interface for each interface type, or have no interface of that type at all.
 	 *
-	 * @param array $interfaces     Array of interfaces that are created, updated (plus DB) or deleted (plus DB).
-	 * @param array $db_interfaces  Array of interfaces from DB (used for delete only and if no interfaces are given).
+	 * @param array $interfaces
 	 */
-	private function checkMainInterfaces(array $interfaces, array $db_interfaces = []) {
-		if (!$interfaces && $db_interfaces) {
-			$host = API::Host()->get([
-				'output' => ['name', 'hostid'],
-				'hostids' => zbx_objectValues($db_interfaces, 'hostid'),
-				'preservekeys' => true,
-				'nopermissions' => true
-			]);
-			$host = reset($host);
-
-			if ($host) {
-				foreach ($db_interfaces as $db_interface) {
-					if (bccomp($db_interface['hostid'], $host['hostid']) == 0) {
-						$type = $db_interface['type'];
-						break;
-					}
-				}
-
-				self::exception(ZBX_API_ERROR_PARAMETERS, _s(
-					'No default interface for "%1$s" type on "%2$s".', hostInterfaceTypeNumToName($type), $host['name']
-				));
-			}
-			// Otherwise it's not a host. Could be a Proxy.
-		}
-
-		$interface_count = [];
-
-		if ($db_interfaces) {
-			foreach ($db_interfaces as $db_interface) {
-				$hostid = $db_interface['hostid'];
-				$type = $db_interface['type'];
-
-				if (!array_key_exists($hostid, $interface_count)) {
-					$interface_count[$hostid] = [];
-				}
-
-				if (!array_key_exists($type, $interface_count[$hostid])) {
-					$interface_count[$hostid][$type] = ['main' => 0, 'all' => 0];
-				}
-			}
-		}
-
+	private function checkMainInterfaces(array $interfaces) {
+		$interfaceTypes = [];
 		foreach ($interfaces as $interface) {
-			$hostid = $interface['hostid'];
-			$type = $interface['type'];
-
-			if (!array_key_exists($hostid, $interface_count)) {
-				$interface_count[$hostid] = [];
+			if (!isset($interfaceTypes[$interface['hostid']])) {
+				$interfaceTypes[$interface['hostid']] = [];
 			}
 
-			if (!array_key_exists($type, $interface_count[$hostid])) {
-				$interface_count[$hostid][$type] = ['main' => 0, 'all' => 0];
+			if (!isset($interfaceTypes[$interface['hostid']][$interface['type']])) {
+				$interfaceTypes[$interface['hostid']][$interface['type']] = ['main' => 0, 'all' => 0];
 			}
 
 			if ($interface['main'] == INTERFACE_PRIMARY) {
-				$interface_count[$hostid][$type]['main']++;
+				$interfaceTypes[$interface['hostid']][$interface['type']]['main']++;
 			}
 			else {
-				$interface_count[$hostid][$type]['all']++;
+				$interfaceTypes[$interface['hostid']][$interface['type']]['all']++;
 			}
 		}
 
-		$main_interface_count = [];
-		$all_interface_count = [];
-
-		foreach ($interface_count as $hostid => $interface_type) {
-			foreach ($interface_type as $type => $counters) {
-				if (!array_key_exists($hostid, $main_interface_count)) {
-					$main_interface_count[$hostid] = 0;
-				}
-
-				$main_interface_count[$hostid] += $counters['main'];
-
-				if (!array_key_exists($hostid, $all_interface_count)) {
-					$all_interface_count[$hostid] = 0;
-				}
-
-				$all_interface_count[$hostid] += $counters['all'];
-			}
-		}
-
-		foreach ($interface_count as $hostid => $interface_type) {
-			foreach ($interface_type as $type => $counters) {
-				if (($counters['all'] > 0 && $counters['main'] == 0)
-						|| ($main_interface_count[$hostid] == 0 && $all_interface_count[$hostid] == 0)) {
+		foreach ($interfaceTypes as $interfaceHostId => $interfaceType) {
+			foreach ($interfaceType as $type => $counters) {
+				if ($counters['all'] && !$counters['main']) {
 					$host = API::Host()->get([
+						'hostids' => $interfaceHostId,
 						'output' => ['name'],
-						'hostids' => $hostid,
 						'preservekeys' => true,
 						'nopermissions' => true
 					]);
 					$host = reset($host);
 
-					if ($host) {
-						self::exception(ZBX_API_ERROR_PARAMETERS,_s('No default interface for "%1$s" type on "%2$s".',
-							hostInterfaceTypeNumToName($type), $host['name']
-						));
-					}
-					// Otherwise it's not a host. Could be a Proxy.
+					self::exception(ZBX_API_ERROR_PARAMETERS,
+						_s('No default interface for "%1$s" type on "%2$s".', hostInterfaceTypeNumToName($type), $host['name']));
 				}
 
 				if ($counters['main'] > 1) {
-					self::exception(ZBX_API_ERROR_PARAMETERS,
-						_('Host cannot have more than one default interface of the same type.')
-					);
+					self::exception(ZBX_API_ERROR_PARAMETERS, _('Host cannot have more than one default interface of the same type.'));
 				}
 			}
 		}
@@ -1186,8 +1125,7 @@ class CHostInterface extends CApiService {
 	 */
 	protected function checkSnmpAuthProtocol(array $interface) {
 		if ($interface['details']['version'] == SNMP_V3 && (array_key_exists('authprotocol', $interface['details'])
-					&& !in_array($interface['details']['authprotocol'], [ITEM_AUTHPROTOCOL_MD5,
-						ITEM_AUTHPROTOCOL_SHA]))) {
+					&& !array_key_exists($interface['details']['authprotocol'], getSnmpV3AuthProtocols()))) {
 			self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect arguments passed to function.'));
 		}
 	}
@@ -1204,7 +1142,7 @@ class CHostInterface extends CApiService {
 	 */
 	protected function checkSnmpPrivProtocol(array $interface) {
 		if ($interface['details']['version'] == SNMP_V3 && (array_key_exists('privprotocol', $interface['details'])
-				&& !in_array($interface['details']['privprotocol'], [ITEM_PRIVPROTOCOL_DES, ITEM_PRIVPROTOCOL_AES]))) {
+				&& !array_key_exists($interface['details']['privprotocol'], getSnmpV3PrivProtocols()))) {
 			self::exception(ZBX_API_ERROR_PARAMETERS,  _('Incorrect arguments passed to function.'));
 		}
 	}
@@ -1233,11 +1171,11 @@ class CHostInterface extends CApiService {
 				$sqlParts
 			);
 			$sqlParts = $this->addQuerySelect(
-				dbConditionCoalesce('his.authprotocol', ITEM_AUTHPROTOCOL_MD5, 'authprotocol'),
+				dbConditionCoalesce('his.authprotocol', ITEM_SNMPV3_AUTHPROTOCOL_MD5, 'authprotocol'),
 				$sqlParts
 			);
 			$sqlParts = $this->addQuerySelect(
-				dbConditionCoalesce('his.privprotocol', ITEM_PRIVPROTOCOL_DES, 'privprotocol'),
+				dbConditionCoalesce('his.privprotocol', ITEM_SNMPV3_PRIVPROTOCOL_DES, 'privprotocol'),
 				$sqlParts
 			);
 			$sqlParts = $this->addQuerySelect(dbConditionCoalesce('his.contextname', '', 'contextname'), $sqlParts);

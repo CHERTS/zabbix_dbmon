@@ -35,7 +35,7 @@ jobs:
         rm -rf ./bin/win64/*.cmd 2>/dev/null
         rm -f ./include/version.h.win 2>/dev/null
     - name: Run create bin, img and styles directory
-      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles
+      run: mkdir -p ./bin/win32/dev ./bin/win64/dev ./ui/assets/img ./ui/assets/styles; chmod a+x ./create/bin/*.{sh,pl}
     - name: Build zabbix dist
       run: |
         ./bootstrap.sh
@@ -51,7 +51,7 @@ jobs:
     - name: Build
       working-directory: ./zabbix-${{ env.ZABBIX_VERSION }}
       run: |
-        ./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-oracle --with-oracle --with-oracle-lib=/u01/app/oracle/18c/dbhome_1/lib --with-oracle-include=/u01/app/oracle/18c/dbhome_1/rdbms/public --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+        ./configure --with-openssl --with-libpthread --with-libpcre2 --with-libcurl --enable-dbmon --enable-dbmon-oracle --with-oracle --with-oracle-lib=/u01/app/oracle/18c/dbhome_1/lib --with-oracle-include=/u01/app/oracle/18c/dbhome_1/rdbms/public --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
         make
     - uses: actions/upload-artifact@v2
       with:

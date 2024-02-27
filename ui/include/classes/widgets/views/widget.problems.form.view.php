@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,8 +26,10 @@ $fields = $data['dialogue']['fields'];
 
 $form = CWidgetHelper::createForm();
 
+$rf_rate_field = ($data['templateid'] === null) ? $fields['rf_rate'] : null;
+
 $form_list = CWidgetHelper::createFormList($data['dialogue']['name'], $data['dialogue']['type'],
-	$data['dialogue']['view_mode'], $data['known_widget_types'], $fields['rf_rate']
+	$data['dialogue']['view_mode'], $data['known_widget_types'], $rf_rate_field
 );
 
 $scripts = [];
@@ -37,8 +39,7 @@ $jq_templates = [];
 $form_list->addRow(CWidgetHelper::getLabel($fields['show']), CWidgetHelper::getRadioButtonList($fields['show']));
 
 // Host groups.
-$field_groupids = CWidgetHelper::getGroup($fields['groupids'],
-	$data['captions']['ms']['groups']['groupids'],
+$field_groupids = CWidgetHelper::getGroup($fields['groupids'], $data['captions']['groups']['groupids'],
 	$form->getName()
 );
 $form_list->addRow(CWidgetHelper::getMultiselectLabel($fields['groupids']), $field_groupids);
@@ -46,17 +47,13 @@ $scripts[] = $field_groupids->getPostJS();
 
 // Exclude host groups.
 $field_exclude_groupids = CWidgetHelper::getGroup($fields['exclude_groupids'],
-	$data['captions']['ms']['groups']['exclude_groupids'],
-	$form->getName()
+	$data['captions']['groups']['exclude_groupids'], $form->getName()
 );
 $form_list->addRow(CWidgetHelper::getMultiselectLabel($fields['exclude_groupids']), $field_exclude_groupids);
 $scripts[] = $field_exclude_groupids->getPostJS();
 
 // Hosts.
-$field_hostids = CWidgetHelper::getHost($fields['hostids'],
-	$data['captions']['ms']['hosts']['hostids'],
-	$form->getName()
-);
+$field_hostids = CWidgetHelper::getHost($fields['hostids'], $data['captions']['hosts']['hostids'], $form->getName());
 $form_list->addRow(CWidgetHelper::getMultiselectLabel($fields['hostids']), $field_hostids);
 $scripts[] = $field_hostids->getPostJS();
 
@@ -83,14 +80,14 @@ $form_list->addRow(CWidgetHelper::getLabel($fields['show_tags']), CWidgetHelper:
 // Tag name.
 $form_list->addRow(CWidgetHelper::getLabel($fields['tag_name_format']),
 	CWidgetHelper::getRadioButtonList($fields['tag_name_format'])
-		->setEnabled($fields['show_tags']->getValue() !== PROBLEMS_SHOW_TAGS_NONE)
+		->setEnabled($fields['show_tags']->getValue() !== SHOW_TAGS_NONE)
 );
 
 // Tag display priority.
 $form_list->addRow(CWidgetHelper::getLabel($fields['tag_priority']),
 	CWidgetHelper::getTextBox($fields['tag_priority'])
 		->setAttribute('placeholder', _('comma-separated list'))
-		->setEnabled($fields['show_tags']->getValue() !== PROBLEMS_SHOW_TAGS_NONE)
+		->setEnabled($fields['show_tags']->getValue() !== SHOW_TAGS_NONE)
 );
 
 // Show operational data.

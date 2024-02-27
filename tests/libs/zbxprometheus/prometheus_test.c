@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -43,6 +43,12 @@ static zbx_prometheus_condition_test_t	*prometheus_condition_dup(zbx_prometheus_
 			break;
 		case ZBX_PROMETHEUS_CONDITION_OP_EQUAL_VALUE:
 			test_condition->op = zbx_strdup(NULL, "==");
+			break;
+		case ZBX_PROMETHEUS_CONDITION_OP_NOT_EQUAL:
+			test_condition->op = zbx_strdup(NULL, "!=");
+			break;
+		case ZBX_PROMETHEUS_CONDITION_OP_REGEX_NOT_MATCHED:
+			test_condition->op = zbx_strdup(NULL, "!~");
 			break;
 	}
 

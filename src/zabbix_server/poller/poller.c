@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,22 +17,18 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
+#include "poller.h"
 
-#include "db.h"
-#include "dbcache.h"
 #include "daemon.h"
 #include "zbxserver.h"
 #include "zbxself.h"
 #include "preproc.h"
-#include "../events.h"
-
-#include "poller.h"
+#include "zbxrtc.h"
 
 #include "checks_agent.h"
-#include "checks_aggregate.h"
 #include "checks_external.h"
 #include "checks_internal.h"
+#include "checks_script.h"
 #include "checks_simple.h"
 #include "checks_snmp.h"
 #include "checks_db.h"
@@ -44,292 +40,222 @@
 #include "zbxcrypto.h"
 #include "zbxjson.h"
 #include "zbxhttp.h"
+#include "avail_protocol.h"
+#include "log.h"
+#include "zbxavailability.h"
 
-extern unsigned char	process_type, program_type;
-extern int		server_num, process_num;
-
-#ifdef HAVE_NETSNMP
-static volatile sig_atomic_t	snmp_cache_reload_requested;
-#endif
+extern ZBX_THREAD_LOCAL unsigned char	process_type;
+extern unsigned char			program_type;
+extern ZBX_THREAD_LOCAL int		server_num, process_num;
 
 /******************************************************************************
  *                                                                            *
- * Function: db_host_update_availability                                      *
+ * Purpose: write interface availability changes into database                *
  *                                                                            *
- * Purpose: write host availability changes into database                     *
- *                                                                            *
- * Parameters: ha    - [IN] the host availability data                        *
+ * Parameters: data        - [IN/OUT] the serialized availability data        *
+ *             data_alloc  - [IN/OUT] the serialized availability data size   *
+ *             data_alloc  - [IN/OUT] the serialized availability data offset *
+ *             ia          - [IN] the interface availability data             *
  *                                                                            *
  * Return value: SUCCEED - the availability changes were written into db      *
  *               FAIL    - no changes in availability data were detected      *
  *                                                                            *
  ******************************************************************************/
-static int	db_host_update_availability(const zbx_host_availability_t *ha)
+static int	update_interface_availability(unsigned char **data, size_t *data_alloc, size_t *data_offset,
+		const zbx_interface_availability_t *ia)
 {
-	char	*sql = NULL;
-	size_t	sql_alloc = 0, sql_offset = 0;
+	if (FAIL == zbx_interface_availability_is_set(ia))
+		return FAIL;
 
-	if (SUCCEED == zbx_sql_add_host_availability(&sql, &sql_alloc, &sql_offset, ha))
-	{
-		DBbegin();
-		DBexecute("%s", sql);
-		DBcommit();
-
-		zbx_free(sql);
-
-		return SUCCEED;
-	}
-
-	return FAIL;
-}
-
-/******************************************************************************
- *                                                                            *
- * Function: host_get_availability                                            *
- *                                                                            *
- * Purpose: get host availability data based on the specified agent type      *
- *                                                                            *
- * Parameters: dc_host      - [IN] the host                                   *
- *             type         - [IN] the agent type                             *
- *             availability - [OUT] the host availability data                *
- *                                                                            *
- * Return value: SUCCEED - the host availability data was retrieved           *
- *                         successfully                                       *
- *               FAIL    - failed to retrieve host availability data,         *
- *                         invalid agent type was specified                   *
- *                                                                            *
- ******************************************************************************/
-static int	host_get_availability(const DC_HOST *dc_host, unsigned char agent, zbx_host_availability_t *ha)
-{
-	zbx_agent_availability_t	*availability = &ha->agents[agent];
-
-	availability->flags = ZBX_FLAGS_AGENT_STATUS;
-
-	switch (agent)
-	{
-		case ZBX_AGENT_ZABBIX:
-			availability->available = dc_host->available;
-			availability->error = zbx_strdup(NULL, dc_host->error);
-			availability->errors_from = dc_host->errors_from;
-			availability->disable_until = dc_host->disable_until;
-			break;
-		case ZBX_AGENT_SNMP:
-			availability->available = dc_host->snmp_available;
-			availability->error = zbx_strdup(NULL, dc_host->snmp_error);
-			availability->errors_from = dc_host->snmp_errors_from;
-			availability->disable_until = dc_host->snmp_disable_until;
-			break;
-		case ZBX_AGENT_IPMI:
-			availability->available = dc_host->ipmi_available;
-			availability->error = zbx_strdup(NULL, dc_host->ipmi_error);
-			availability->errors_from = dc_host->ipmi_errors_from;
-			availability->disable_until = dc_host->ipmi_disable_until;
-			break;
-		case ZBX_AGENT_JMX:
-			availability->available = dc_host->jmx_available;
-			availability->error = zbx_strdup(NULL, dc_host->jmx_error);
-			availability->disable_until = dc_host->jmx_disable_until;
-			availability->errors_from = dc_host->jmx_errors_from;
-			break;
-		default:
-			return FAIL;
-	}
-
-	ha->hostid = dc_host->hostid;
+	zbx_availability_serialize(data, data_alloc, data_offset, ia);
 
 	return SUCCEED;
 }
 
 /******************************************************************************
  *                                                                            *
- * Function: host_set_availability                                            *
+ * Purpose: get interface availability data                                   *
  *                                                                            *
- * Purpose: sets host availability data based on the specified agent type     *
- *                                                                            *
- * Parameters: dc_host      - [IN] the host                                   *
- *             type         - [IN] the agent type                             *
- *             availability - [IN] the host availability data                 *
- *                                                                            *
- * Return value: SUCCEED - the host availability data was set successfully    *
- *               FAIL    - failed to set host availability data,              *
- *                         invalid agent type was specified                   *
+ * Parameters: dc_interface - [IN] the interface                              *
+ *             ia           - [OUT] the interface availability data           *
  *                                                                            *
  ******************************************************************************/
-static int	host_set_availability(DC_HOST *dc_host, unsigned char agent, const zbx_host_availability_t *ha)
+static void	interface_get_availability(const DC_INTERFACE *dc_interface, zbx_interface_availability_t *ia)
 {
-	const zbx_agent_availability_t	*availability = &ha->agents[agent];
+	zbx_agent_availability_t	*availability = &ia->agent;
+
+	availability->flags = ZBX_FLAGS_AGENT_STATUS;
+
+	availability->available = dc_interface->available;
+	availability->error = zbx_strdup(NULL, dc_interface->error);
+	availability->errors_from = dc_interface->errors_from;
+	availability->disable_until = dc_interface->disable_until;
+
+	ia->interfaceid = dc_interface->interfaceid;
+}
+
+/********************************************************************************
+ *                                                                              *
+ * Purpose: sets interface availability data                                    *
+ *                                                                              *
+ * Parameters: dc_interface - [IN/OUT] the interface                            *
+ *             ia           - [IN] the interface availability data              *
+ *                                                                              *
+ *******************************************************************************/
+static void	interface_set_availability(DC_INTERFACE *dc_interface, const zbx_interface_availability_t *ia)
+{
+	const zbx_agent_availability_t	*availability = &ia->agent;
 	unsigned char			*pavailable;
 	int				*perrors_from, *pdisable_until;
 	char				*perror;
 
-	switch (agent)
-	{
-		case ZBX_AGENT_ZABBIX:
-			pavailable = &dc_host->available;
-			perror = dc_host->error;
-			perrors_from = &dc_host->errors_from;
-			pdisable_until = &dc_host->disable_until;
-			break;
-		case ZBX_AGENT_SNMP:
-			pavailable = &dc_host->snmp_available;
-			perror = dc_host->snmp_error;
-			perrors_from = &dc_host->snmp_errors_from;
-			pdisable_until = &dc_host->snmp_disable_until;
-			break;
-		case ZBX_AGENT_IPMI:
-			pavailable = &dc_host->ipmi_available;
-			perror = dc_host->ipmi_error;
-			perrors_from = &dc_host->ipmi_errors_from;
-			pdisable_until = &dc_host->ipmi_disable_until;
-			break;
-		case ZBX_AGENT_JMX:
-			pavailable = &dc_host->jmx_available;
-			perror = dc_host->jmx_error;
-			pdisable_until = &dc_host->jmx_disable_until;
-			perrors_from = &dc_host->jmx_errors_from;
-			break;
-		default:
-			return FAIL;
-	}
+	pavailable = &dc_interface->available;
+	perror = dc_interface->error;
+	perrors_from = &dc_interface->errors_from;
+	pdisable_until = &dc_interface->disable_until;
 
 	if (0 != (availability->flags & ZBX_FLAGS_AGENT_STATUS_AVAILABLE))
 		*pavailable = availability->available;
 
 	if (0 != (availability->flags & ZBX_FLAGS_AGENT_STATUS_ERROR))
-		zbx_strlcpy(perror, availability->error, HOST_ERROR_LEN_MAX);
+		zbx_strlcpy(perror, availability->error, INTERFACE_ERROR_LEN_MAX);
 
 	if (0 != (availability->flags & ZBX_FLAGS_AGENT_STATUS_ERRORS_FROM))
 		*perrors_from = availability->errors_from;
 
 	if (0 != (availability->flags & ZBX_FLAGS_AGENT_STATUS_DISABLE_UNTIL))
 		*pdisable_until = availability->disable_until;
-
-	return SUCCEED;
 }
 
-static unsigned char	host_availability_agent_by_item_type(unsigned char type)
+static int	interface_availability_by_item_type(unsigned char item_type, unsigned char interface_type)
 {
-	switch (type)
-	{
-		case ITEM_TYPE_ZABBIX:
-			return ZBX_AGENT_ZABBIX;
-			break;
-		case ITEM_TYPE_SNMP:
-			return ZBX_AGENT_SNMP;
-			break;
-		case ITEM_TYPE_IPMI:
-			return ZBX_AGENT_IPMI;
-			break;
-		case ITEM_TYPE_JMX:
-			return ZBX_AGENT_JMX;
-			break;
-		default:
-			return ZBX_AGENT_UNKNOWN;
-	}
+	if ((ITEM_TYPE_ZABBIX == item_type && INTERFACE_TYPE_AGENT == interface_type) ||
+			(ITEM_TYPE_SNMP == item_type && INTERFACE_TYPE_SNMP == interface_type) ||
+			(ITEM_TYPE_JMX == item_type && INTERFACE_TYPE_JMX == interface_type) ||
+			(ITEM_TYPE_IPMI == item_type && INTERFACE_TYPE_IPMI == interface_type))
+		return SUCCEED;
+
+	return FAIL;
 }
 
-void	zbx_activate_item_host(DC_ITEM *item, zbx_timespec_t *ts)
+/********************************************************************************
+ *                                                                              *
+ * Purpose: activate item interface                                             *
+ *                                                                              *
+ * Parameters: ts         - [IN] the timestamp                                  *
+ *             item       - [IN/OUT] the item                                   *
+ *             data       - [IN/OUT] the serialized availability data           *
+ *             data_alloc - [IN/OUT] the serialized availability data size      *
+ *             data_alloc - [IN/OUT] the serialized availability data offset    *
+ *             ts         - [IN] the timestamp                                  *
+ *                                                                              *
+ *******************************************************************************/
+void	zbx_activate_item_interface(zbx_timespec_t *ts, DC_ITEM *item,  unsigned char **data, size_t *data_alloc,
+		size_t *data_offset)
 {
-	zbx_host_availability_t	in, out;
-	unsigned char		agent_type;
+	zbx_interface_availability_t	in, out;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() hostid:" ZBX_FS_UI64 " itemid:" ZBX_FS_UI64 " type:%d",
-			__func__, item->host.hostid, item->itemid, (int)item->type);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() interfaceid:" ZBX_FS_UI64 " itemid:" ZBX_FS_UI64 " type:%d",
+			__func__, item->interface.interfaceid, item->itemid, (int)item->type);
 
-	zbx_host_availability_init(&in, item->host.hostid);
-	zbx_host_availability_init(&out, item->host.hostid);
+	zbx_interface_availability_init(&in, item->interface.interfaceid);
+	zbx_interface_availability_init(&out, item->interface.interfaceid);
 
-	if (ZBX_AGENT_UNKNOWN == (agent_type = host_availability_agent_by_item_type(item->type)))
+	if (FAIL == interface_availability_by_item_type(item->type, item->interface.type))
 		goto out;
 
-	if (FAIL == host_get_availability(&item->host, agent_type, &in))
+	interface_get_availability(&item->interface, &in);
+
+	if (FAIL == DCinterface_activate(item->interface.interfaceid, ts, &in.agent, &out.agent))
 		goto out;
 
-	if (FAIL == DChost_activate(item->host.hostid, agent_type, ts, &in.agents[agent_type], &out.agents[agent_type]))
+	if (FAIL == update_interface_availability(data, data_alloc, data_offset, &out))
 		goto out;
 
-	if (FAIL == db_host_update_availability(&out))
-		goto out;
+	interface_set_availability(&item->interface, &out);
 
-	host_set_availability(&item->host, agent_type, &out);
-
-	if (HOST_AVAILABLE_TRUE == in.agents[agent_type].available)
+	if (INTERFACE_AVAILABLE_TRUE == in.agent.available)
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "resuming %s checks on host \"%s\": connection restored",
 				zbx_agent_type_string(item->type), item->host.host);
 	}
 	else
 	{
-		zabbix_log(LOG_LEVEL_WARNING, "enabling %s checks on host \"%s\": host became available",
+		zabbix_log(LOG_LEVEL_WARNING, "enabling %s checks on host \"%s\": interface became available",
 				zbx_agent_type_string(item->type), item->host.host);
 	}
 out:
-	zbx_host_availability_clean(&out);
-	zbx_host_availability_clean(&in);
+	zbx_interface_availability_clean(&out);
+	zbx_interface_availability_clean(&in);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
 }
 
-void	zbx_deactivate_item_host(DC_ITEM *item, zbx_timespec_t *ts, const char *error)
+/********************************************************************************
+ *                                                                              *
+ * Purpose: deactivate item interface                                           *
+ *                                                                              *
+ * Parameters: ts         - [IN] the timestamp                                  *
+ *             item       - [IN/OUT] the item                                   *
+ *             data       - [IN/OUT] the serialized availability data           *
+ *             data_alloc - [IN/OUT] the serialized availability data size      *
+ *             data_alloc - [IN/OUT] the serialized availability data offset    *
+ *             ts         - [IN] the timestamp                                  *
+ *                                                                              *
+ *******************************************************************************/
+void	zbx_deactivate_item_interface(zbx_timespec_t *ts, DC_ITEM *item, unsigned char **data, size_t *data_alloc,
+		size_t *data_offset, const char *error)
 {
-	zbx_host_availability_t	in, out;
-	unsigned char		agent_type;
+	zbx_interface_availability_t	in, out;
 
-	zabbix_log(LOG_LEVEL_DEBUG, "In %s() hostid:" ZBX_FS_UI64 " itemid:" ZBX_FS_UI64 " type:%d",
-			__func__, item->host.hostid, item->itemid, (int)item->type);
+	zabbix_log(LOG_LEVEL_DEBUG, "In %s() interfaceid:" ZBX_FS_UI64 " itemid:" ZBX_FS_UI64 " type:%d",
+			__func__, item->interface.interfaceid, item->itemid, (int)item->type);
 
-	zbx_host_availability_init(&in, item->host.hostid);
-	zbx_host_availability_init(&out,item->host.hostid);
+	zbx_interface_availability_init(&in, item->interface.interfaceid);
+	zbx_interface_availability_init(&out,item->interface.interfaceid);
 
-	if (ZBX_AGENT_UNKNOWN == (agent_type = host_availability_agent_by_item_type(item->type)))
+	if (FAIL == interface_availability_by_item_type(item->type, item->interface.type))
 		goto out;
 
-	if (FAIL == host_get_availability(&item->host, agent_type, &in))
+	interface_get_availability(&item->interface, &in);
+
+	if (FAIL == DCinterface_deactivate(item->interface.interfaceid, ts, &in.agent, &out.agent, error))
 		goto out;
 
-	if (FAIL == DChost_deactivate(item->host.hostid, agent_type, ts, &in.agents[agent_type],
-			&out.agents[agent_type], error))
-	{
-		goto out;
-	}
-
-	if (FAIL == db_host_update_availability(&out))
+	if (FAIL == update_interface_availability(data, data_alloc, data_offset, &out))
 		goto out;
 
-	host_set_availability(&item->host, agent_type, &out);
+	interface_set_availability(&item->interface, &out);
 
-	if (0 == in.agents[agent_type].errors_from)
+	if (0 == in.agent.errors_from)
 	{
 		zabbix_log(LOG_LEVEL_WARNING, "%s item \"%s\" on host \"%s\" failed:"
 				" first network error, wait for %d seconds",
 				zbx_agent_type_string(item->type), item->key_orig, item->host.host,
-				out.agents[agent_type].disable_until - ts->sec);
+				out.agent.disable_until - ts->sec);
 	}
-	else
+	else if (INTERFACE_AVAILABLE_FALSE != in.agent.available)
 	{
-		if (HOST_AVAILABLE_FALSE != in.agents[agent_type].available)
+		if (INTERFACE_AVAILABLE_FALSE != out.agent.available)
 		{
-			if (HOST_AVAILABLE_FALSE != out.agents[agent_type].available)
-			{
-				zabbix_log(LOG_LEVEL_WARNING, "%s item \"%s\" on host \"%s\" failed:"
-						" another network error, wait for %d seconds",
-						zbx_agent_type_string(item->type), item->key_orig, item->host.host,
-						out.agents[agent_type].disable_until - ts->sec);
-			}
-			else
-			{
-				zabbix_log(LOG_LEVEL_WARNING, "temporarily disabling %s checks on host \"%s\":"
-						" host unavailable",
-						zbx_agent_type_string(item->type), item->host.host);
-			}
+			zabbix_log(LOG_LEVEL_WARNING, "%s item \"%s\" on host \"%s\" failed:"
+					" another network error, wait for %d seconds",
+					zbx_agent_type_string(item->type), item->key_orig, item->host.host,
+					out.agent.disable_until - ts->sec);
+		}
+		else
+		{
+			zabbix_log(LOG_LEVEL_WARNING, "temporarily disabling %s checks on host \"%s\":"
+					" interface unavailable",
+					zbx_agent_type_string(item->type), item->host.host);
 		}
 	}
 
 	zabbix_log(LOG_LEVEL_DEBUG, "%s() errors_from:%d available:%d", __func__,
-			out.agents[agent_type].errors_from, out.agents[agent_type].available);
+			out.agent.errors_from, out.agent.available);
 out:
-	zbx_host_availability_clean(&out);
-	zbx_host_availability_clean(&in);
+	zbx_interface_availability_clean(&out);
+	zbx_interface_availability_clean(&in);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s()", __func__);
 }
@@ -369,9 +295,6 @@ static int	get_value(DC_ITEM *item, AGENT_RESULT *result, zbx_vector_ptr_t *add_
 			res = CONFIG_ERROR;
 #endif
 			break;
-		case ITEM_TYPE_AGGREGATE:
-			res = get_value_aggregate(item, result);
-			break;
 		case ITEM_TYPE_EXTERNAL:
 			/* external checks use their own timeouts */
 			res = get_value_external(item, result);
@@ -402,6 +325,9 @@ static int	get_value(DC_ITEM *item, AGENT_RESULT *result, zbx_vector_ptr_t *add_
 			res = CONFIG_ERROR;
 #endif
 			break;
+		case ITEM_TYPE_SCRIPT:
+			res = get_value_script(item, result);
+			break;
 		default:
 			SET_MSG_RESULT(result, zbx_dsprintf(NULL, "Not supported item type:%d", item->type));
 			res = CONFIG_ERROR;
@@ -423,17 +349,14 @@ static int	get_value(DC_ITEM *item, AGENT_RESULT *result, zbx_vector_ptr_t *add_
 static int	parse_query_fields(const DC_ITEM *item, char **query_fields, unsigned char expand_macros)
 {
 	struct zbx_json_parse	jp_array, jp_object;
-	char			name[MAX_STRING_LEN], value[MAX_STRING_LEN];
+	char			name[MAX_STRING_LEN], value[MAX_STRING_LEN], *str = NULL;
 	const char		*member, *element = NULL;
 	size_t			alloc_len, offset;
 
-	if ('\0' == *item->query_fields_orig)
-	{
-		ZBX_STRDUP(*query_fields, item->query_fields_orig);
+	if ('\0' == **query_fields)
 		return SUCCEED;
-	}
 
-	if (SUCCEED != zbx_json_open(item->query_fields_orig, &jp_array))
+	if (SUCCEED != zbx_json_open(*query_fields, &jp_array))
 	{
 		zabbix_log(LOG_LEVEL_ERR, "cannot parse query fields: %s", zbx_json_strerror());
 		return FAIL;
@@ -454,37 +377,41 @@ static int	parse_query_fields(const DC_ITEM *item, char **query_fields, unsigned
 				NULL == zbx_json_decodevalue(member, value, sizeof(value), NULL))
 		{
 			zabbix_log(LOG_LEVEL_ERR, "cannot parse query fields: %s", zbx_json_strerror());
+			zbx_free(str);
 			return FAIL;
 		}
 
-		if (NULL == *query_fields && NULL == strchr(item->url, '?'))
-			zbx_chrcpy_alloc(query_fields, &alloc_len, &offset, '?');
+		if (NULL == str && NULL == strchr(item->url, '?'))
+			zbx_chrcpy_alloc(&str, &alloc_len, &offset, '?');
 		else
-			zbx_chrcpy_alloc(query_fields, &alloc_len, &offset, '&');
+			zbx_chrcpy_alloc(&str, &alloc_len, &offset, '&');
 
 		data = zbx_strdup(data, name);
 		if (MACRO_EXPAND_YES == expand_macros)
 		{
-			substitute_simple_macros(NULL, NULL, NULL,NULL, NULL, &item->host, item, NULL, NULL, &data,
-					MACRO_TYPE_HTTP_RAW, NULL, 0);
+			substitute_simple_macros(NULL, NULL, NULL,NULL, NULL, &item->host, item, NULL, NULL, NULL, NULL,
+					NULL, &data, MACRO_TYPE_HTTP_RAW, NULL, 0);
 		}
 		zbx_http_url_encode(data, &data);
-		zbx_strcpy_alloc(query_fields, &alloc_len, &offset, data);
-		zbx_chrcpy_alloc(query_fields, &alloc_len, &offset, '=');
+		zbx_strcpy_alloc(&str, &alloc_len, &offset, data);
+		zbx_chrcpy_alloc(&str, &alloc_len, &offset, '=');
 
 		data = zbx_strdup(data, value);
 		if (MACRO_EXPAND_YES == expand_macros)
 		{
 			substitute_simple_macros_unmasked(NULL, NULL, NULL,NULL, NULL, &item->host, item, NULL, NULL,
-					&data, MACRO_TYPE_HTTP_RAW, NULL, 0);
+					NULL, NULL, NULL, &data, MACRO_TYPE_HTTP_RAW, NULL, 0);
 		}
 
 		zbx_http_url_encode(data, &data);
-		zbx_strcpy_alloc(query_fields, &alloc_len, &offset, data);
+		zbx_strcpy_alloc(&str, &alloc_len, &offset, data);
 
 		free(data);
 	}
 	while (NULL != (element = zbx_json_next(&jp_array, element)));
+
+	zbx_free(*query_fields);
+	*query_fields = str;
 
 	return SUCCEED;
 }
@@ -499,13 +426,16 @@ void	zbx_prepare_items(DC_ITEM *items, int *errcodes, int num, AGENT_RESULT *res
 		init_result(&results[i]);
 		errcodes[i] = SUCCEED;
 
-		ZBX_STRDUP(items[i].key, items[i].key_orig);
-		if (MACRO_EXPAND_YES == expand_macros && SUCCEED != substitute_key_macros_unmasked(&items[i].key, NULL,
-				&items[i], NULL, NULL, MACRO_TYPE_ITEM_KEY, error, sizeof(error)))
+		if (MACRO_EXPAND_YES == expand_macros)
 		{
-			SET_MSG_RESULT(&results[i], zbx_strdup(NULL, error));
-			errcodes[i] = CONFIG_ERROR;
-			continue;
+			ZBX_STRDUP(items[i].key, items[i].key_orig);
+			if (SUCCEED != substitute_key_macros_unmasked(&items[i].key, NULL, &items[i], NULL, NULL,
+					MACRO_TYPE_ITEM_KEY, error, sizeof(error)))
+			{
+				SET_MSG_RESULT(&results[i], zbx_strdup(NULL, error));
+				errcodes[i] = CONFIG_ERROR;
+				continue;
+			}
 		}
 
 		switch (items[i].type)
@@ -517,7 +447,8 @@ void	zbx_prepare_items(DC_ITEM *items, int *errcodes, int num, AGENT_RESULT *res
 				if (MACRO_EXPAND_YES == expand_macros)
 				{
 					substitute_simple_macros(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-							NULL, NULL, NULL, &port, MACRO_TYPE_COMMON, NULL, 0);
+							NULL, NULL, NULL, NULL, NULL, NULL, &port, MACRO_TYPE_COMMON,
+							NULL, 0);
 				}
 
 				if (FAIL == is_ushort(port, &items[i].interface.port))
@@ -533,6 +464,9 @@ void	zbx_prepare_items(DC_ITEM *items, int *errcodes, int num, AGENT_RESULT *res
 		switch (items[i].type)
 		{
 			case ITEM_TYPE_SNMP:
+				if (MACRO_EXPAND_NO == expand_macros)
+					break;
+
 				if (ZBX_IF_SNMP_VERSION_3 == items[i].snmp_version)
 				{
 					ZBX_STRDUP(items[i].snmpv3_securityname, items[i].snmpv3_securityname_orig);
@@ -540,31 +474,30 @@ void	zbx_prepare_items(DC_ITEM *items, int *errcodes, int num, AGENT_RESULT *res
 					ZBX_STRDUP(items[i].snmpv3_privpassphrase, items[i].snmpv3_privpassphrase_orig);
 					ZBX_STRDUP(items[i].snmpv3_contextname, items[i].snmpv3_contextname_orig);
 
-					if (MACRO_EXPAND_YES == expand_macros)
-					{
-						substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid,
-								NULL, NULL, NULL, NULL, &items[i].snmpv3_securityname,
-								MACRO_TYPE_COMMON, NULL, 0);
-						substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid,
-								NULL, NULL, NULL, NULL, &items[i].snmpv3_authpassphrase,
-								MACRO_TYPE_COMMON, NULL, 0);
-						substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid,
-								NULL, NULL, NULL, NULL, &items[i].snmpv3_privpassphrase,
-								MACRO_TYPE_COMMON, NULL, 0);
-						substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid,
-								NULL, NULL, NULL, NULL, &items[i].snmpv3_contextname,
-								MACRO_TYPE_COMMON, NULL, 0);
-					}
+					substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid,
+							NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+							&items[i].snmpv3_securityname, MACRO_TYPE_COMMON, NULL,
+							0);
+					substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid,
+							NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+							&items[i].snmpv3_authpassphrase, MACRO_TYPE_COMMON,
+							NULL, 0);
+					substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid,
+							NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+							&items[i].snmpv3_privpassphrase, MACRO_TYPE_COMMON,
+							NULL, 0);
+					substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid,
+							NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+							&items[i].snmpv3_contextname, MACRO_TYPE_COMMON, NULL,
+							0);
 				}
 
 				ZBX_STRDUP(items[i].snmp_community, items[i].snmp_community_orig);
 				ZBX_STRDUP(items[i].snmp_oid, items[i].snmp_oid_orig);
 
-				if (MACRO_EXPAND_NO == expand_macros)
-					break;
-
 				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-						NULL, NULL, NULL, &items[i].snmp_community, MACRO_TYPE_COMMON, NULL, 0);
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].snmp_community,
+						MACRO_TYPE_COMMON, NULL, 0);
 				if (SUCCEED != substitute_key_macros(&items[i].snmp_oid, &items[i].host.hostid,
 						NULL, NULL, NULL, MACRO_TYPE_SNMP_OID, error, sizeof(error)))
 				{
@@ -573,74 +506,96 @@ void	zbx_prepare_items(DC_ITEM *items, int *errcodes, int num, AGENT_RESULT *res
 					continue;
 				}
 				break;
-			case ITEM_TYPE_SSH:
-				ZBX_STRDUP(items[i].publickey, items[i].publickey_orig);
-				ZBX_STRDUP(items[i].privatekey, items[i].privatekey_orig);
-
-				if (MACRO_EXPAND_YES == expand_macros)
-				{
-					substitute_simple_macros(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-							NULL, NULL, NULL, &items[i].publickey, MACRO_TYPE_COMMON, NULL,
-							0);
-					substitute_simple_macros(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-							NULL, NULL, NULL, &items[i].privatekey, MACRO_TYPE_COMMON, NULL,
-							0);
-				}
-				ZBX_FALLTHROUGH;
-			case ITEM_TYPE_TELNET:
-			case ITEM_TYPE_DB_MONITOR:
-				if (MACRO_EXPAND_YES == expand_macros)
-				{
-					substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, NULL, NULL, &items[i],
-							NULL, NULL, &items[i].params, MACRO_TYPE_PARAMS_FIELD, NULL, 0);
-				}
-				ZBX_FALLTHROUGH;
-			case ITEM_TYPE_SIMPLE:
-				items[i].username = zbx_strdup(items[i].username, items[i].username_orig);
-				items[i].password = zbx_strdup(items[i].password, items[i].password_orig);
-
+			case ITEM_TYPE_SCRIPT:
 				if (MACRO_EXPAND_NO == expand_macros)
 					break;
 
+				ZBX_STRDUP(items[i].timeout, items[i].timeout_orig);
+
+				substitute_simple_macros(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL, NULL,
+						NULL, NULL, NULL, NULL, NULL, &items[i].timeout, MACRO_TYPE_COMMON,
+						NULL, 0);
+				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, NULL, NULL, &items[i], NULL,
+						NULL, NULL, NULL, NULL, &items[i].script_params,
+						MACRO_TYPE_SCRIPT_PARAMS_FIELD, NULL, 0);
 				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-						NULL, NULL, NULL, &items[i].username, MACRO_TYPE_COMMON, NULL, 0);
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].params, MACRO_TYPE_COMMON,
+						NULL, 0);
+				break;
+			case ITEM_TYPE_SSH:
+				if (MACRO_EXPAND_NO == expand_macros)
+					break;
+
+				ZBX_STRDUP(items[i].publickey, items[i].publickey_orig);
+				ZBX_STRDUP(items[i].privatekey, items[i].privatekey_orig);
+
+				substitute_simple_macros(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL, NULL,
+						NULL, NULL, NULL, NULL, NULL, &items[i].publickey, MACRO_TYPE_COMMON,
+						NULL, 0);
+				substitute_simple_macros(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL, NULL,
+						NULL, NULL, NULL, NULL, NULL, &items[i].privatekey, MACRO_TYPE_COMMON, NULL, 0);
+				ZBX_FALLTHROUGH;
+			case ITEM_TYPE_TELNET:
+			case ITEM_TYPE_DB_MONITOR:
+				if (MACRO_EXPAND_NO == expand_macros)
+					break;
+
+				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, NULL, NULL, &items[i], NULL,
+						NULL, NULL, NULL, NULL, &items[i].params, MACRO_TYPE_PARAMS_FIELD,
+						NULL, 0);
+				ZBX_FALLTHROUGH;
+			case ITEM_TYPE_SIMPLE:
+				if (MACRO_EXPAND_NO == expand_macros)
+					break;
+
+				items[i].username = zbx_strdup(items[i].username, items[i].username_orig);
+				items[i].password = zbx_strdup(items[i].password, items[i].password_orig);
+
 				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-						NULL, NULL, NULL, &items[i].password, MACRO_TYPE_COMMON, NULL, 0);
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].username,
+						MACRO_TYPE_COMMON, NULL, 0);
+				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].password,
+						MACRO_TYPE_COMMON, NULL, 0);
 				break;
 			case ITEM_TYPE_JMX:
+				if (MACRO_EXPAND_NO == expand_macros)
+					break;
+
 				items[i].username = zbx_strdup(items[i].username, items[i].username_orig);
 				items[i].password = zbx_strdup(items[i].password, items[i].password_orig);
 				items[i].jmx_endpoint = zbx_strdup(items[i].jmx_endpoint, items[i].jmx_endpoint_orig);
 
-				if (MACRO_EXPAND_NO == expand_macros)
-					break;
-
 				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-						NULL, NULL, NULL, &items[i].username, MACRO_TYPE_COMMON, NULL, 0);
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].username,
+						MACRO_TYPE_COMMON, NULL, 0);
 				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-						NULL, NULL, NULL, &items[i].password, MACRO_TYPE_COMMON, NULL, 0);
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].password,
+						MACRO_TYPE_COMMON, NULL, 0);
 				substitute_simple_macros(NULL, NULL, NULL, NULL, NULL, NULL, &items[i],
-						NULL, NULL, &items[i].jmx_endpoint, MACRO_TYPE_JMX_ENDPOINT, NULL, 0);
+						NULL, NULL, NULL, NULL, NULL, &items[i].jmx_endpoint, MACRO_TYPE_JMX_ENDPOINT,
+						NULL, 0);
 				break;
 			case ITEM_TYPE_HTTPAGENT:
-				ZBX_STRDUP(items[i].timeout, items[i].timeout_orig);
-				ZBX_STRDUP(items[i].url, items[i].url_orig);
-				ZBX_STRDUP(items[i].status_codes, items[i].status_codes_orig);
-				ZBX_STRDUP(items[i].http_proxy, items[i].http_proxy_orig);
-				ZBX_STRDUP(items[i].ssl_cert_file, items[i].ssl_cert_file_orig);
-				ZBX_STRDUP(items[i].ssl_key_file, items[i].ssl_key_file_orig);
-				ZBX_STRDUP(items[i].ssl_key_password, items[i].ssl_key_password_orig);
-				ZBX_STRDUP(items[i].username, items[i].username_orig);
-				ZBX_STRDUP(items[i].password, items[i].password_orig);
-
 				if (MACRO_EXPAND_YES == expand_macros)
 				{
+					ZBX_STRDUP(items[i].timeout, items[i].timeout_orig);
+					ZBX_STRDUP(items[i].url, items[i].url_orig);
+					ZBX_STRDUP(items[i].status_codes, items[i].status_codes_orig);
+					ZBX_STRDUP(items[i].http_proxy, items[i].http_proxy_orig);
+					ZBX_STRDUP(items[i].ssl_cert_file, items[i].ssl_cert_file_orig);
+					ZBX_STRDUP(items[i].ssl_key_file, items[i].ssl_key_file_orig);
+					ZBX_STRDUP(items[i].ssl_key_password, items[i].ssl_key_password_orig);
+					ZBX_STRDUP(items[i].username, items[i].username_orig);
+					ZBX_STRDUP(items[i].password, items[i].password_orig);
+					ZBX_STRDUP(items[i].query_fields, items[i].query_fields_orig);
+
 					substitute_simple_macros(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-							NULL, NULL, NULL, &items[i].timeout, MACRO_TYPE_COMMON, NULL,
-							0);
-					substitute_simple_macros_unmasked(NULL, NULL, NULL,NULL, NULL, &items[i].host,
-							&items[i], NULL, NULL, &items[i].url, MACRO_TYPE_HTTP_RAW, NULL,
-							0);
+							NULL, NULL, NULL, NULL, NULL, NULL, &items[i].timeout,
+							MACRO_TYPE_COMMON, NULL, 0);
+					substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, NULL, &items[i].host,
+							&items[i], NULL, NULL, NULL, NULL, NULL, &items[i].url,
+							MACRO_TYPE_HTTP_RAW, NULL, 0);
 				}
 
 				if (SUCCEED != zbx_http_punycode_encode_url(&items[i].url))
@@ -673,33 +628,40 @@ void	zbx_prepare_items(DC_ITEM *items, int *errcodes, int num, AGENT_RESULT *res
 						break;
 					case ZBX_POSTTYPE_JSON:
 						substitute_simple_macros_unmasked(NULL, NULL, NULL,NULL, NULL,
-								&items[i].host, &items[i], NULL, NULL, &items[i].posts,
-								MACRO_TYPE_HTTP_JSON, NULL, 0);
+								&items[i].host, &items[i], NULL, NULL, NULL, NULL, NULL,
+								&items[i].posts, MACRO_TYPE_HTTP_JSON, NULL, 0);
 						break;
 					default:
 						substitute_simple_macros_unmasked(NULL, NULL, NULL,NULL, NULL,
-								&items[i].host, &items[i], NULL, NULL, &items[i].posts,
-								MACRO_TYPE_HTTP_RAW, NULL, 0);
+								&items[i].host, &items[i], NULL, NULL, NULL, NULL, NULL,
+								&items[i].posts, MACRO_TYPE_HTTP_RAW, NULL, 0);
 						break;
 				}
 
 				substitute_simple_macros_unmasked(NULL, NULL, NULL,NULL, NULL, &items[i].host,
-						&items[i], NULL, NULL, &items[i].headers, MACRO_TYPE_HTTP_RAW, NULL, 0);
+						&items[i], NULL, NULL, NULL, NULL, NULL, &items[i].headers,
+						MACRO_TYPE_HTTP_RAW, NULL, 0);
 				substitute_simple_macros(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-						NULL, NULL, NULL, &items[i].status_codes, MACRO_TYPE_COMMON, NULL, 0);
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].status_codes,
+						MACRO_TYPE_COMMON, NULL, 0);
 				substitute_simple_macros(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-						NULL, NULL, NULL, &items[i].http_proxy, MACRO_TYPE_COMMON, NULL, 0);
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].http_proxy,
+						MACRO_TYPE_COMMON, NULL, 0);
 				substitute_simple_macros(NULL, NULL, NULL,NULL, NULL, &items[i].host, &items[i], NULL,
-						NULL, &items[i].ssl_cert_file, MACRO_TYPE_HTTP_RAW, NULL, 0);
+						NULL, NULL, NULL, NULL, &items[i].ssl_cert_file, MACRO_TYPE_HTTP_RAW,
+						NULL, 0);
 				substitute_simple_macros(NULL, NULL, NULL,NULL, NULL, &items[i].host, &items[i], NULL,
-						NULL, &items[i].ssl_key_file, MACRO_TYPE_HTTP_RAW, NULL, 0);
+						NULL, NULL, NULL, NULL, &items[i].ssl_key_file, MACRO_TYPE_HTTP_RAW,
+						NULL, 0);
 				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-						NULL, NULL, NULL, &items[i].ssl_key_password, MACRO_TYPE_COMMON, NULL,
-						0);
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].ssl_key_password,
+						MACRO_TYPE_COMMON, NULL, 0);
 				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-						NULL, NULL, NULL, &items[i].username, MACRO_TYPE_COMMON, NULL, 0);
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].username,
+						MACRO_TYPE_COMMON, NULL, 0);
 				substitute_simple_macros_unmasked(NULL, NULL, NULL, NULL, &items[i].host.hostid, NULL,
-						NULL, NULL, NULL, &items[i].password, MACRO_TYPE_COMMON, NULL, 0);
+						NULL, NULL, NULL, NULL, NULL, NULL, &items[i].password,
+						MACRO_TYPE_COMMON, NULL, 0);
 				break;
 		}
 	}
@@ -779,6 +741,9 @@ void	zbx_clean_items(DC_ITEM *items, int num, AGENT_RESULT *results)
 				zbx_free(items[i].username);
 				zbx_free(items[i].password);
 				break;
+			case ITEM_TYPE_SCRIPT:
+				zbx_free(items[i].timeout);
+				break;
 			case ITEM_TYPE_SSH:
 				zbx_free(items[i].publickey);
 				zbx_free(items[i].privatekey);
@@ -802,15 +767,12 @@ void	zbx_clean_items(DC_ITEM *items, int num, AGENT_RESULT *results)
 
 /******************************************************************************
  *                                                                            *
- * Function: get_values                                                       *
- *                                                                            *
  * Purpose: retrieve values of metrics from monitored hosts                   *
  *                                                                            *
  * Parameters: poller_type - [IN] poller type (ZBX_POLLER_TYPE_...)           *
+ *             nextcheck   - [OUT] item nextcheck                             *
  *                                                                            *
  * Return value: number of items processed                                    *
- *                                                                            *
- * Author: Alexei Vladishev                                                   *
  *                                                                            *
  * Comments: processes single item at a time except for Java, SNMP items,     *
  *           see DCconfig_get_poller_items()                                  *
@@ -822,8 +784,10 @@ static int	get_values(unsigned char poller_type, int *nextcheck)
 	AGENT_RESULT		results[MAX_POLLER_ITEMS];
 	int			errcodes[MAX_POLLER_ITEMS];
 	zbx_timespec_t		timespec;
-	int			i, num, last_available = HOST_AVAILABLE_UNKNOWN;
+	int			i, num, last_available = INTERFACE_AVAILABLE_UNKNOWN;
 	zbx_vector_ptr_t	add_results;
+	unsigned char		*data = NULL;
+	size_t			data_alloc = 0, data_offset = 0;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s()", __func__);
 
@@ -851,19 +815,21 @@ static int	get_values(unsigned char poller_type, int *nextcheck)
 			case SUCCEED:
 			case NOTSUPPORTED:
 			case AGENT_ERROR:
-				if (HOST_AVAILABLE_TRUE != last_available)
+				if (INTERFACE_AVAILABLE_TRUE != last_available)
 				{
-					zbx_activate_item_host(&items[i], &timespec);
-					last_available = HOST_AVAILABLE_TRUE;
+					zbx_activate_item_interface(&timespec, &items[i], &data, &data_alloc,
+							&data_offset);
+					last_available = INTERFACE_AVAILABLE_TRUE;
 				}
 				break;
 			case NETWORK_ERROR:
 			case GATEWAY_ERROR:
 			case TIMEOUT_ERROR:
-				if (HOST_AVAILABLE_FALSE != last_available)
+				if (INTERFACE_AVAILABLE_FALSE != last_available)
 				{
-					zbx_deactivate_item_host(&items[i], &timespec, results[i].msg);
-					last_available = HOST_AVAILABLE_FALSE;
+					zbx_deactivate_item_interface(&timespec, &items[i], &data, &data_alloc,
+							&data_offset, results[i].msg);
+					last_available = INTERFACE_AVAILABLE_FALSE;
 				}
 				break;
 			case CONFIG_ERROR:
@@ -927,7 +893,7 @@ static int	get_values(unsigned char poller_type, int *nextcheck)
 					items[i].flags, NULL, &timespec, items[i].state, results[i].msg);
 		}
 
-		DCpoller_requeue_items(&items[i].itemid, &items[i].state, &timespec.sec, &errcodes[i], 1, poller_type,
+		DCpoller_requeue_items(&items[i].itemid, &timespec.sec, &errcodes[i], 1, poller_type,
 				nextcheck);
 	}
 
@@ -936,6 +902,13 @@ static int	get_values(unsigned char poller_type, int *nextcheck)
 	DCconfig_clean_items(items, NULL, num);
 	zbx_vector_ptr_clear_ext(&add_results, (zbx_mem_free_func_t)zbx_free_result_ptr);
 	zbx_vector_ptr_destroy(&add_results);
+
+	if (NULL != data)
+	{
+		zbx_availability_flush(data, data_offset);
+		zbx_free(data);
+	}
+
 	if (items != &item)
 		zbx_free(items);
 exit:
@@ -944,22 +917,13 @@ exit:
 	return num;
 }
 
-static void	zbx_poller_sigusr_handler(int flags)
-{
-#ifdef HAVE_NETSNMP
-	if (ZBX_RTC_SNMP_CACHE_RELOAD == ZBX_RTC_GET_MSG(flags))
-		snmp_cache_reload_requested = 1;
-#else
-	ZBX_UNUSED(flags);
-#endif
-}
-
 ZBX_THREAD_ENTRY(poller_thread, args)
 {
-	int		nextcheck, sleeptime = -1, processed = 0, old_processed = 0;
-	double		sec, total_sec = 0.0, old_total_sec = 0.0;
-	time_t		last_stat_time;
-	unsigned char	poller_type;
+	int			nextcheck, sleeptime = -1, processed = 0, old_processed = 0;
+	double			sec, total_sec = 0.0, old_total_sec = 0.0;
+	time_t			last_stat_time;
+	unsigned char		poller_type;
+	zbx_ipc_async_socket_t	rtc;
 
 #define	STAT_INTERVAL	5	/* if a process is busy and does not sleep then update status not faster than */
 				/* once in STAT_INTERVAL seconds */
@@ -974,29 +938,30 @@ ZBX_THREAD_ENTRY(poller_thread, args)
 
 	update_selfmon_counter(ZBX_PROCESS_STATE_BUSY);
 
+	scriptitem_es_engine_init();
+
 #if defined(HAVE_GNUTLS) || defined(HAVE_OPENSSL)
 	zbx_tls_init_child();
 #endif
-	zbx_setproctitle("%s #%d [connecting to the database]", get_process_type_string(process_type), process_num);
+	if (ZBX_POLLER_TYPE_HISTORY == poller_type)
+	{
+		zbx_setproctitle("%s #%d [connecting to the database]", get_process_type_string(process_type), process_num);
+
+		DBconnect(ZBX_DB_CONNECT_NORMAL);
+	}
+	zbx_setproctitle("%s #%d started", get_process_type_string(process_type), process_num);
 	last_stat_time = time(NULL);
 
-	DBconnect(ZBX_DB_CONNECT_NORMAL);
-
-	zbx_set_sigusr_handler(zbx_poller_sigusr_handler);
+	zbx_rtc_subscribe(&rtc, process_type, process_num);
 
 	while (ZBX_IS_RUNNING())
 	{
-		sec = zbx_time();
-		zbx_update_env(sec);
+		zbx_uint32_t	rtc_cmd;
+		unsigned char	*rtc_data;
 
-#ifdef HAVE_NETSNMP
-		if ((ZBX_POLLER_TYPE_NORMAL == poller_type || ZBX_POLLER_TYPE_UNREACHABLE == poller_type) &&
-				1 == snmp_cache_reload_requested)
-		{
-			zbx_clear_cache_snmp(process_type, process_num);
-			snmp_cache_reload_requested = 0;
-		}
-#endif
+		sec = zbx_time();
+		zbx_update_env(get_process_type_string(process_type), sec);
+
 		if (0 != sleeptime)
 		{
 			zbx_setproctitle("%s #%d [got %d values in " ZBX_FS_DBL " sec, getting values]",
@@ -1029,8 +994,21 @@ ZBX_THREAD_ENTRY(poller_thread, args)
 			last_stat_time = time(NULL);
 		}
 
-		zbx_sleep_loop(sleeptime);
+		if (SUCCEED == zbx_rtc_wait(&rtc, &rtc_cmd, &rtc_data, sleeptime) && 0 != rtc_cmd)
+		{
+#ifdef HAVE_NETSNMP
+			if (ZBX_RTC_SNMP_CACHE_RELOAD == rtc_cmd)
+			{
+				if (ZBX_POLLER_TYPE_NORMAL == poller_type || ZBX_POLLER_TYPE_UNREACHABLE == poller_type)
+					zbx_clear_cache_snmp(process_type, process_num);
+			}
+#endif
+			if (ZBX_RTC_SHUTDOWN == rtc_cmd)
+				break;
+		}
 	}
+
+	scriptitem_es_engine_destroy();
 
 	zbx_setproctitle("%s #%d [terminated]", get_process_type_string(process_type), process_num);
 

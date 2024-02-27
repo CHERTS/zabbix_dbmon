@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,15 +20,25 @@
 
 require_once dirname(__FILE__).'/../../include/CWebTest.php';
 require_once dirname(__FILE__).'/../../include/helpers/CDataHelper.php';
-require_once dirname(__FILE__).'/../traits/PreprocessingTrait.php';
 require_once dirname(__FILE__).'/../behaviors/CMessageBehavior.php';
+require_once dirname(__FILE__).'/../behaviors/CPreprocessingBehavior.php';
 
 /**
  * Common code for cloning hosts and templates with preprocessing steps in items.
  */
 class testFormPreprocessingClone extends CWebTest {
 
-	use PreprocessingTrait;
+	/**
+	 * Attach MessageBehavior and PreprocessingBehavior to the test.
+	 *
+	 * @return array
+	 */
+	public function getBehaviors() {
+		return [
+			CMessageBehavior::class,
+			CPreprocessingBehavior::class
+		];
+	}
 
 	public $hostid;
 	public $itemid;
@@ -172,7 +182,7 @@ class testFormPreprocessingClone extends CWebTest {
 			],
 			[
 				'type' => '22',
-				'params' => "cpu_usage_system\nlabel_name",
+				'params' => "cpu_usage_system\nlabel\nlabel_name",
 				'error_handler' => 3,
 				'error_handler_params' => 'error2'
 			]
@@ -230,43 +240,38 @@ class testFormPreprocessingClone extends CWebTest {
 	}
 
 	/**
-	 * Attach MessageBehavior to the test.
-	 *
-	 * @return array
-	 */
-	public function getBehaviors() {
-		return ['class' => CMessageBehavior::class];
-	}
-
-	/**
 	 * Function for cloning host or template and check whether preprocessing is cloned correctly.
 	 *
 	 * @param boolean $template		true if template, false if host
 	 */
 	public function executeCloning($template = false) {
+		$context = ($template) ? 'template' : 'host';
 		$this->page->login();
 
 		// Get item key and preprocessing.
 		$item_key = CDBHelper::getValue('SELECT key_ FROM items WHERE itemid ='.$this->itemid);
 		$item_original_steps = $this->getSteps('items.php?form=update&hostid='.$this->hostid.
-				'&itemid='.$this->itemid);
+				'&context='.$context.'&itemid='.$this->itemid);
 
 		// Get LLD key and  preprocessing.
 		$lld_key = CDBHelper::getValue('SELECT key_ FROM items WHERE itemid ='.$this->lldid);
-		$lld_original_steps = $this->getSteps('host_discovery.php?form=update&itemid='.$this->lldid);
+		$lld_original_steps = $this->getSteps('host_discovery.php?form=update&context='.$context.'&itemid='.$this->lldid);
 
 		// Get item prototype key and preprocessing.
 		$item_prototype_key = CDBHelper::getValue('SELECT key_ FROM items WHERE itemid ='.$this->item_prototypeid);
 		$item_prototype_original_steps = $this->getSteps('disc_prototypes.php?form=update&parent_discoveryid='.
-				$this->lldid.'&itemid='.$this->item_prototypeid);
+				$this->lldid.'&context='.$context.'&itemid='.$this->item_prototypeid);
 
 		// Open host or template and make a full clone of it.
-		$url = ($template) ? 'templates.php?form=update&templateid=' : 'hosts.php?form=update&hostid=';
+		$url = ($template) ? 'templates.php?form=update&templateid=' : 'zabbix.php?action=host.edit&hostid=';
 		$this->page->open($url.$this->hostid);
 		$this->query('button:Full clone')->waitUntilClickable()->one()->click();
 
 		// Fill cloned host or template form and save it.
-		$form = $this->query('id', ($template) ? 'templatesForm' : 'hostsForm')->asForm()->waitUntilPresent()->one();
+		$form = ($template)
+			? $this->query('name:templatesForm')->asForm()->waitUntilPresent()->one()
+			: $this->query('id:host-form')->asForm()->waitUntilPresent()->one();
+
 		$new_host_name = 'Cloned host name'.time();
 		$form->fill([($template) ? 'Template name' : 'Host name' => $new_host_name]);
 		$form->submit();
@@ -280,20 +285,20 @@ class testFormPreprocessingClone extends CWebTest {
 		// Get new cloned item id and assert item preprocessing.
 		$new_itemid = CDBHelper::getValue('SELECT itemid FROM items WHERE hostid ='.$cloned_hostid.' AND key_ ='.
 				zbx_dbstr($item_key));
-		$item_cloned_steps = $this->getSteps('items.php?form=update&hostid='.$cloned_hostid.
+		$item_cloned_steps = $this->getSteps('items.php?form=update&context='.$context.'&hostid='.$cloned_hostid.
 				'&itemid='.$new_itemid);
 		$this->assertEquals($item_original_steps, $item_cloned_steps);
 
 		// Get new cloned lld rule id and assert lld preprocessing.
 		$new_lldid = CDBHelper::getValue('SELECT itemid FROM items WHERE hostid ='.$cloned_hostid.
 				' AND key_ ='.zbx_dbstr($lld_key));
-		$lld_cloned_steps = $this->getSteps('host_discovery.php?form=update&itemid='.$new_lldid);
+		$lld_cloned_steps = $this->getSteps('host_discovery.php?form=update&context='.$context.'&itemid='.$new_lldid);
 		$this->assertEquals($lld_original_steps, $lld_cloned_steps);
 
 		// Get new cloned item prototype id and assert item prototype preprocessing.
 		$new_item_prototypeid = CDBHelper::getValue('SELECT itemid FROM items WHERE hostid ='.$cloned_hostid.
 				' AND key_ ='.zbx_dbstr($item_prototype_key));
-		$item_prototype_cloned_steps = $this->getSteps('disc_prototypes.php?form=update&parent_discoveryid='.
+		$item_prototype_cloned_steps = $this->getSteps('disc_prototypes.php?form=update&context='.$context.'&parent_discoveryid='.
 				$new_lldid.'&itemid='.$new_item_prototypeid);
 		$this->assertEquals($item_prototype_original_steps, $item_prototype_cloned_steps);
 	}

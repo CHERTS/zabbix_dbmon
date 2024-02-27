@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,11 +26,11 @@ class CControllerPopupItemTestGetValue extends CControllerPopupItemTest {
 
 	protected function checkInput() {
 		$fields = [
-			'authtype'				=> 'in '.implode(',', [HTTPTEST_AUTH_NONE, HTTPTEST_AUTH_BASIC, HTTPTEST_AUTH_NTLM, HTTPTEST_AUTH_KERBEROS, ITEM_AUTHTYPE_PASSWORD, ITEM_AUTHTYPE_PUBLICKEY]),
+			'authtype'				=> 'in '.implode(',', [HTTPTEST_AUTH_NONE, HTTPTEST_AUTH_BASIC, HTTPTEST_AUTH_NTLM, HTTPTEST_AUTH_KERBEROS, HTTPTEST_AUTH_DIGEST, ITEM_AUTHTYPE_PASSWORD, ITEM_AUTHTYPE_PUBLICKEY]),
 			'headers'				=> 'array',
 			'hostid'				=> 'db hosts.hostid',
 			'proxy_hostid'			=> 'id',
-			'http_authtype'			=> 'in '.implode(',', [HTTPTEST_AUTH_NONE, HTTPTEST_AUTH_BASIC, HTTPTEST_AUTH_NTLM, HTTPTEST_AUTH_KERBEROS, ITEM_AUTHTYPE_PASSWORD, ITEM_AUTHTYPE_PUBLICKEY]),
+			'http_authtype'			=> 'in '.implode(',', [HTTPTEST_AUTH_NONE, HTTPTEST_AUTH_BASIC, HTTPTEST_AUTH_NTLM, HTTPTEST_AUTH_KERBEROS, HTTPTEST_AUTH_DIGEST, ITEM_AUTHTYPE_PASSWORD, ITEM_AUTHTYPE_PUBLICKEY]),
 			'http_password'			=> 'string',
 			'http_proxy'			=> 'string',
 			'http_username'			=> 'string',
@@ -46,12 +46,14 @@ class CControllerPopupItemTestGetValue extends CControllerPopupItemTest {
 			'params_ap'				=> 'string',
 			'params_es'				=> 'string',
 			'params_f'				=> 'string',
+			'script'				=> 'string',
 			'password'				=> 'string',
 			'post_type'				=> 'in '.implode(',', [ZBX_POSTTYPE_RAW, ZBX_POSTTYPE_JSON, ZBX_POSTTYPE_XML]),
 			'posts'					=> 'string',
 			'privatekey'			=> 'string',
 			'publickey'				=> 'string',
 			'query_fields'			=> 'array',
+			'parameters'			=> 'array',
 			'request_method'		=> 'in '.implode(',', [HTTPCHECK_REQUEST_GET, HTTPCHECK_REQUEST_POST, HTTPCHECK_REQUEST_PUT, HTTPCHECK_REQUEST_HEAD]),
 			'retrieve_mode'			=> 'in '.implode(',', [HTTPTEST_STEP_RETRIEVE_MODE_CONTENT, HTTPTEST_STEP_RETRIEVE_MODE_HEADERS, HTTPTEST_STEP_RETRIEVE_MODE_BOTH]),
 			'snmp_oid'				=> 'string',
@@ -73,7 +75,7 @@ class CControllerPopupItemTestGetValue extends CControllerPopupItemTest {
 		$ret = $this->validateInput($fields);
 
 		if ($ret) {
-			$testable_item_types = self::getTestableItemTypes($this->getInput('hostid', 0));
+			$testable_item_types = self::getTestableItemTypes($this->getInput('hostid', '0'));
 			$this->item_type = $this->getInput('item_type');
 			$this->preproc_item = self::getPreprocessingItemClassInstance($this->getInput('test_type'));
 			$this->is_item_testable = in_array($this->item_type, $testable_item_types);
@@ -109,16 +111,37 @@ class CControllerPopupItemTestGetValue extends CControllerPopupItemTest {
 			$interface = $this->getInput('interface', []);
 
 			if (array_key_exists($this->item_type, $this->items_require_interface)) {
-				if ($this->items_require_interface[$this->item_type]['address']
-						&& (!array_key_exists('address', $interface) || $interface['address'] === '')) {
-					error(_s('Incorrect value for field "%1$s": %2$s.', _('Host address'), _('cannot be empty')));
+				if (!$this->validateInterface($interface)) {
 					$ret = false;
 				}
+			}
 
-				if ($this->items_require_interface[$this->item_type]['port']
-						&& (!array_key_exists('port', $interface) || $interface['port'] === '')) {
-					error(_s('Incorrect value for field "%1$s": %2$s.', _('Port'), _('cannot be empty')));
-					$ret = false;
+			if ($this->item_type == ITEM_TYPE_CALCULATED) {
+				$expression_parser = new CExpressionParser([
+					'usermacros' => true,
+					'lldmacros' => ($this->getInput('test_type') == self::ZBX_TEST_TYPE_ITEM_PROTOTYPE),
+					'calculated' => true,
+					'host_macro' => true,
+					'empty_host' => true
+				]);
+
+				if ($expression_parser->parse($this->getInput('params_f')) != CParser::PARSE_SUCCESS) {
+					error(_s('Incorrect value for field "%1$s": %2$s.', _('Formula'),
+						$expression_parser->getError()
+					));
+				}
+				else {
+					$expression_validator = new CExpressionValidator([
+						'usermacros' => true,
+						'lldmacros' => ($this->getInput('test_type') == self::ZBX_TEST_TYPE_ITEM_PROTOTYPE),
+						'calculated' => true
+					]);
+
+					if (!$expression_validator->validate($expression_parser->getResult()->getTokens())) {
+						error(_s('Incorrect value for field "%1$s": %2$s.', _('Formula'),
+							$expression_validator->getError()
+						));
+					}
 				}
 			}
 		}
@@ -144,13 +167,16 @@ class CControllerPopupItemTestGetValue extends CControllerPopupItemTest {
 		global $ZBX_SERVER, $ZBX_SERVER_PORT;
 
 		// Get post data for particular item type.
-		$data = $this->getItemTestProperties($this->getInputAll());
+		$data = $this->getItemTestProperties($this->getInputAll(), true);
 
 		// Apply effective macros values to properties.
 		$data = $this->resolveItemPropertyMacros($data);
 
-		if ($this->item_type != ITEM_TYPE_AGGREGATE && $this->item_type != ITEM_TYPE_CALCULATED) {
+		if ($this->item_type != ITEM_TYPE_CALCULATED) {
 			unset($data['value_type']);
+		}
+		else {
+			$data['host']['hostid'] = $this->getInput('hostid');
 		}
 
 		// Rename fields according protocol.
@@ -158,6 +184,7 @@ class CControllerPopupItemTestGetValue extends CControllerPopupItemTest {
 			'params_ap' => 'params',
 			'params_es' => 'params',
 			'params_f' => 'params',
+			'script' => 'params',
 			'http_username' => 'username',
 			'http_password' => 'password',
 			'http_authtype' => 'authtype',
@@ -172,8 +199,20 @@ class CControllerPopupItemTestGetValue extends CControllerPopupItemTest {
 			$data['query_fields'] = $this->transformQueryFields($data['query_fields']);
 		}
 
+		if (array_key_exists('parameters', $data)) {
+			$data['parameters'] = $this->transformParametersFields($data['parameters']);
+		}
+
 		// Only non-empty fields need to be sent to server.
 		$data = $this->unsetEmptyValues($data);
+
+		/*
+		 * Server will turn off status code check if field value is empty. If field is not present, then server will
+		 * default to check if status code is 200.
+		 */
+		if ($this->item_type == ITEM_TYPE_HTTPAGENT && !array_key_exists('status_codes', $data)) {
+			$data['status_codes'] = '';
+		}
 
 		$output = [
 			'user' => [
@@ -182,8 +221,11 @@ class CControllerPopupItemTestGetValue extends CControllerPopupItemTest {
 		];
 
 		// Send test to be executed on Zabbix server.
-		$server = new CZabbixServer($ZBX_SERVER, $ZBX_SERVER_PORT, ZBX_SOCKET_TIMEOUT, ZBX_SOCKET_BYTES_LIMIT);
-		$result = $server->testItem($data, CWebUser::getSessionCookie());
+		$server = new CZabbixServer($ZBX_SERVER, $ZBX_SERVER_PORT,
+			timeUnitToSeconds(CSettingsHelper::get(CSettingsHelper::CONNECT_TIMEOUT)),
+			timeUnitToSeconds(CSettingsHelper::get(CSettingsHelper::ITEM_TEST_TIMEOUT)), ZBX_SOCKET_BYTES_LIMIT
+		);
+		$result = $server->testItem($data, CSessionHelper::getId());
 
 		// Handle the response.
 		if ($result === false) {

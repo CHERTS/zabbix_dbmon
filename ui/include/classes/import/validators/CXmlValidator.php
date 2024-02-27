@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ class CXmlValidator extends CXmlValidatorGeneral {
 		]];
 
 		$strict = $this->getStrict();
+		$is_preview = $this->isPreview();
 
 		$data = $this
 			->setStrict(true)
@@ -64,8 +65,13 @@ class CXmlValidator extends CXmlValidatorGeneral {
 			);
 		}
 
+		if (in_array($version, ['1.0', '2.0', '3.0', '3.2', '3.4', '4.0', '4.2', '4.4', '5.0', '5.2'])) {
+			unset($data['zabbix_export']['screens']);
+		}
+
 		$data['zabbix_export'] = $this->factory->getObject($version)
 			->setStrict($strict)
+			->setPreview($is_preview)
 			->validate($data['zabbix_export'], '/zabbix_export');
 
 		return $data;

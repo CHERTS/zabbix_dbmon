@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,22 +24,9 @@ class CWebUser {
 	public static $data = null;
 
 	/**
-	 * Flag used to ignore setting authentication cookie performed checkAuthentication.
-	 */
-	static $set_cookie = true;
-
-	/**
 	 * Flag used to not to extend session lifetime in checkAuthentication.
 	 */
 	static $extend_session = true;
-
-	/**
-	 * Disable automatic cookie setting.
-	 * First checkAuthentication call (performed in initialization phase) will not be sending cookies.
-	 */
-	public static function disableSessionCookie() {
-		self::$set_cookie = false;
-	}
 
 	/**
 	 * Disable automatic session extension.
@@ -51,19 +38,17 @@ class CWebUser {
 	/**
 	 * Tries to login a user and populates self::$data on success.
 	 *
-	 * @param string $login			user login
-	 * @param string $password		user password
+	 * @param string $login     user login
+	 * @param string $password  user password
 	 *
 	 * @throws Exception if user cannot be logged in
 	 *
 	 * @return bool
 	 */
-	public static function login($login, $password) {
+	public static function login(string $login, string $password): bool {
 		try {
-			self::setDefault();
-
 			self::$data = API::User()->login([
-				'user' => $login,
+				'username' => $login,
 				'password' => $password,
 				'userData' => true
 			]);
@@ -72,29 +57,24 @@ class CWebUser {
 				throw new Exception();
 			}
 
+			API::getWrapper()->auth = self::$data['sessionid'];
+
 			if (self::$data['gui_access'] == GROUP_GUI_ACCESS_DISABLED) {
 				error(_('GUI access disabled.'));
 				throw new Exception();
 			}
-
-			$result = (bool) self::$data;
 
 			if (isset(self::$data['attempt_failed']) && self::$data['attempt_failed']) {
 				CProfile::init();
 				CProfile::update('web.login.attempt.failed', self::$data['attempt_failed'], PROFILE_TYPE_INT);
 				CProfile::update('web.login.attempt.ip', self::$data['attempt_ip'], PROFILE_TYPE_STR);
 				CProfile::update('web.login.attempt.clock', self::$data['attempt_clock'], PROFILE_TYPE_INT);
-				$result &= CProfile::flush();
+				if (!CProfile::flush()) {
+					return false;
+				}
 			}
 
-			// remove guest session after successful login
-			$result &= DBexecute('DELETE FROM sessions WHERE sessionid='.zbx_dbstr(get_cookie(ZBX_SESSION_NAME)));
-
-			if ($result) {
-				self::setSessionCookie(self::$data['sessionid']);
-			}
-
-			return $result;
+			return true;
 		}
 		catch (Exception $e) {
 			self::setDefault();
@@ -105,87 +85,80 @@ class CWebUser {
 	/**
 	 * Log-out the current user.
 	 */
-	public static function logout() {
-		self::$data['sessionid'] = self::getSessionCookie();
-
+	public static function logout(): void {
 		if (API::User()->logout([])) {
 			self::$data = null;
-			CSession::destroy();
-			zbx_unsetcookie(ZBX_SESSION_NAME);
+			session_destroy();
 		}
 	}
 
-	public static function checkAuthentication($sessionId) {
+	public static function checkAuthentication(string $sessionid): bool {
 		try {
-			if ($sessionId !== null) {
-				self::$data = API::User()->checkAuthentication([
-					'sessionid' => $sessionId,
-					'extend' => self::$extend_session
-				]);
-			}
+			self::$data = API::User()->checkAuthentication([
+				'sessionid' => $sessionid,
+				'extend' => self::$extend_session
+			]);
 
-			if ($sessionId === null || empty(self::$data)) {
-				self::setDefault();
+			if (empty(self::$data)) {
+				CMessageHelper::clear();
 				self::$data = API::User()->login([
-					'user' => ZBX_GUEST_USER,
+					'username' => ZBX_GUEST_USER,
 					'password' => '',
 					'userData' => true
 				]);
 
 				if (empty(self::$data)) {
-					clear_messages(1);
 					throw new Exception();
 				}
-				$sessionId = self::$data['sessionid'];
 			}
 
 			if (self::$data['gui_access'] == GROUP_GUI_ACCESS_DISABLED) {
 				throw new Exception();
 			}
 
-			if (self::$set_cookie) {
-				self::setSessionCookie($sessionId);
-			}
-			else {
-				self::$set_cookie = true;
-			}
-
-			return $sessionId;
+			return true;
 		}
 		catch (Exception $e) {
-			self::setDefault();
 			return false;
 		}
 	}
 
 	/**
-	 * Shorthand method for setting current session ID in cookies.
+	 * Checks access of authenticated user to specific access rule.
 	 *
-	 * @param string $sessionId		Session ID string
+	 * @static
+	 *
+	 * @param string $rule_name  Rule name.
+	 *
+	 * @return bool  Returns true if user has access to specified rule, false - otherwise.
+	 *
+	 * @throws Exception
 	 */
-	public static function setSessionCookie($sessionId) {
-		$autoLogin = self::isGuest() ? false : (bool) self::$data['autologin'];
+	public static function checkAccess(string $rule_name): bool {
+		if (empty(self::$data) || self::$data['roleid'] == 0) {
+			return false;
+		}
 
-		zbx_setcookie(ZBX_SESSION_NAME, $sessionId,  $autoLogin ? strtotime('+1 month') : 0);
+		return CRoleHelper::checkAccess($rule_name, self::$data['roleid']);
 	}
 
 	/**
-	 * Retrieves current session ID from cookie named as defined in ZBX_SESSION_NAME.
+	 * Sets user data defaults.
 	 *
-	 * @return string
+	 * @static
 	 */
-	public static function getSessionCookie() {
-		return get_cookie(ZBX_SESSION_NAME);
-	}
-
-	public static function setDefault() {
+	public static function setDefault(): void {
 		self::$data = [
-			'alias' => ZBX_GUEST_USER,
+			'sessionid' => CEncryptHelper::generateKey(),
+			'username' => ZBX_GUEST_USER,
 			'userid' => 0,
-			'lang' => 'en_gb',
-			'theme' => THEME_DEFAULT,
+			'lang' => CSettingsHelper::getGlobal(CSettingsHelper::DEFAULT_LANG),
+			'theme' => CSettingsHelper::getGlobal(CSettingsHelper::DEFAULT_THEME),
 			'type' => 0,
-			'debug_mode' => false
+			'gui_access' => GROUP_GUI_ACCESS_SYSTEM,
+			'debug_mode' => false,
+			'roleid' => 0,
+			'autologin' => 0
 		];
 	}
 
@@ -224,7 +197,7 @@ class CWebUser {
 	 * @return bool
 	 */
 	public static function isGuest() {
-		return (self::$data && self::$data['alias'] == ZBX_GUEST_USER);
+		return (self::$data && self::$data['username'] == ZBX_GUEST_USER);
 	}
 
 	/**
@@ -235,7 +208,7 @@ class CWebUser {
 	public static function isGuestAllowed() {
 		$guest = DB::select('users', [
 			'output' => ['userid'],
-			'filter' => ['alias' => ZBX_GUEST_USER]
+			'filter' => ['username' => ZBX_GUEST_USER]
 		]);
 
 		return check_perm2system($guest[0]['userid'])
@@ -261,13 +234,11 @@ class CWebUser {
 	}
 
 	/**
-	 * Get user ip address.
+	 * Get user IP address.
 	 *
 	 * @return string
 	 */
 	public static function getIp(): string {
-		return (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER) && $_SERVER['HTTP_X_FORWARDED_FOR'] !== '')
-			? $_SERVER['HTTP_X_FORWARDED_FOR']
-			: $_SERVER['REMOTE_ADDR'];
+		return $_SERVER['REMOTE_ADDR'];
 	}
 }

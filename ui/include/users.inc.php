@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,10 +27,8 @@
  * @return string
  */
 function getUserTheme($userData) {
-	$config = select_config();
-
-	if (isset($config['default_theme'])) {
-		$css = $config['default_theme'];
+	if (null !== CSettingsHelper::getGlobal(CSettingsHelper::DEFAULT_THEME)) {
+		$css = CSettingsHelper::get(CSettingsHelper::DEFAULT_THEME);
 	}
 	if (isset($userData['theme']) && $userData['theme'] != THEME_DEFAULT) {
 		$css = $userData['theme'];
@@ -47,13 +45,13 @@ function getUserTheme($userData) {
  *
  * @param int $userType
  *
- * @return string
+ * @return string|array
  */
 function user_type2str($userType = null) {
 	$userTypes = [
-		USER_TYPE_ZABBIX_USER => _('Zabbix User'),
-		USER_TYPE_ZABBIX_ADMIN => _('Zabbix Admin'),
-		USER_TYPE_SUPER_ADMIN => _('Zabbix Super Admin')
+		USER_TYPE_ZABBIX_USER => _('User'),
+		USER_TYPE_ZABBIX_ADMIN => _('Admin'),
+		USER_TYPE_SUPER_ADMIN => _('Super admin')
 	];
 
 	if ($userType === null) {
@@ -87,19 +85,6 @@ function user_auth_type2str($authType) {
 	];
 
 	return isset($authUserType[$authType]) ? $authUserType[$authType] : _('Unknown');
-}
-
-/**
- * Unblock user account.
- *
- * @param array $userIds
- *
- * @return bool
- */
-function unblock_user_login($userIds) {
-	zbx_value2array($userIds);
-
-	return DBexecute('UPDATE users SET attempt_failed=0 WHERE '.dbConditionInt('userid', $userIds));
 }
 
 /**
@@ -143,10 +128,10 @@ function granted2update_group($userGroupIds) {
 }
 
 /**
- * Gets user full name in format "alias (name surname)". If both name and surname exist, returns translated string.
+ * Gets user full name in format "username (name surname)". If both name and surname exist, returns translated string.
  *
  * @param array  $userData
- * @param string $userData['alias']
+ * @param string $userData['username']
  * @param string $userData['name']
  * @param string $userData['surname']
  *
@@ -155,7 +140,9 @@ function granted2update_group($userGroupIds) {
 function getUserFullname($userData) {
 	if (!zbx_empty($userData['surname'])) {
 		if (!zbx_empty($userData['name'])) {
-			return $userData['alias'].' '._xs('(%1$s %2$s)', 'user fullname', $userData['name'], $userData['surname']);
+			return $userData['username'].' '._xs('(%1$s %2$s)', 'user fullname', $userData['name'],
+				$userData['surname']
+			);
 		}
 
 		$fullname = $userData['surname'];
@@ -164,7 +151,7 @@ function getUserFullname($userData) {
 		$fullname = zbx_empty($userData['name']) ? '' : $userData['name'];
 	}
 
-	return zbx_empty($fullname) ? $userData['alias'] : $userData['alias'].' ('.$fullname.')';
+	return zbx_empty($fullname) ? $userData['username'] : $userData['username'].' ('.$fullname.')';
 }
 
 /**

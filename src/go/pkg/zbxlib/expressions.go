@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,21 +48,28 @@ import "C"
 import (
 	"errors"
 	"unsafe"
+
+	"git.zabbix.com/ap/plugin-support/log"
 )
 
 func NewGlobalRegexp() (grxp unsafe.Pointer) {
+	log.Tracef("Calling C function \"new_global_regexp()\"")
 	return unsafe.Pointer(C.new_global_regexp())
 }
 
 func DestroyGlobalRegexp(grxp unsafe.Pointer) {
+	log.Tracef("Calling C function \"free_global_regexp()\"")
 	C.free_global_regexp(C.zbx_vector_ptr_lp_t(grxp))
 }
 
 func AddGlobalRegexp(grxp unsafe.Pointer, name, body string, expr_type int, delim byte, mode int) {
 	cname := C.CString(name)
 	cbody := C.CString(body)
+	log.Tracef("Calling C function \"add_regexp_ex()\"")
 	C.add_regexp_ex(C.zbx_vector_ptr_lp_t(grxp), cname, cbody, C.int(expr_type), C.char(delim), C.int(mode))
+	log.Tracef("Calling C function \"free()\"")
 	C.free(unsafe.Pointer(cname))
+	log.Tracef("Calling C function \"free()\"")
 	C.free(unsafe.Pointer(cbody))
 }
 
@@ -74,12 +81,22 @@ func MatchGlobalRegexp(
 
 	cvalue := C.CString(value)
 	cpattern := C.CString(pattern)
+
+	defer func() {
+		log.Tracef("Calling C function \"free(cvalue)\"")
+		defer C.free(unsafe.Pointer(cvalue))
+		log.Tracef("Calling C function \"free(cpattern)\"")
+		defer C.free(unsafe.Pointer(cpattern))
+	}()
+
 	var ctemplate, coutput *C.char
 	if output_template != nil {
 		ctemplate = C.CString(*output_template)
+		log.Tracef("Calling C function \"free()\"")
 		defer C.free(unsafe.Pointer(ctemplate))
 	}
 
+	log.Tracef("Calling C function \"regexp_sub_ex()\"")
 	ret := C.regexp_sub_ex(C.zbx_vector_ptr_lp_t(grxp), cvalue, cpattern, C.int(mode), ctemplate, &coutput)
 	switch ret {
 	case C.ZBX_REGEXP_MATCH:
@@ -93,9 +110,8 @@ func MatchGlobalRegexp(
 		err = errors.New("invalid global regular expression")
 	}
 
-	C.free(unsafe.Pointer(cvalue))
-	C.free(unsafe.Pointer(cpattern))
 	if coutput != nil {
+		log.Tracef("Calling C function \"free()\"")
 		C.free(unsafe.Pointer(coutput))
 	}
 	return

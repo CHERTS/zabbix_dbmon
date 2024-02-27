@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,8 +62,8 @@ class testJSONRPC extends CAPITest {
 					'jsonrpc' => '2.0',
 					'error' => [
 						'code' => -32600,
-						'message' => 'Invalid Request.',
-						'data' => 'The received JSON is not a valid JSON-RPC Request.'
+						'message' => 'Invalid request.',
+						'data' => 'The received JSON is not a valid JSON-RPC request.'
 					],
 					'id' => null
 				]
@@ -75,8 +75,8 @@ class testJSONRPC extends CAPITest {
 					'jsonrpc' => '2.0',
 					'error' => [
 						'code' => -32600,
-						'message' => 'Invalid Request.',
-						'data' => 'The received JSON is not a valid JSON-RPC Request.'
+						'message' => 'Invalid request.',
+						'data' => 'The received JSON is not a valid JSON-RPC request.'
 					],
 					'id' => null
 				]
@@ -88,7 +88,7 @@ class testJSONRPC extends CAPITest {
 					'jsonrpc' => '2.0',
 					'error' => [
 						'code' => -32600,
-						'message' => 'Invalid Request.',
+						'message' => 'Invalid request.',
 						'data' => 'Invalid parameter "/jsonrpc": a character string is expected.'
 					],
 					'id' => null
@@ -101,8 +101,8 @@ class testJSONRPC extends CAPITest {
 					'jsonrpc' => '2.0',
 					'error' => [
 						'code' => -32600,
-						'message' => 'Invalid Request.',
-						'data' => 'Invalid parameter "/jsonrpc": value must be one of 2.0.'
+						'message' => 'Invalid request.',
+						'data' => 'Invalid parameter "/jsonrpc": value must be "2.0".'
 					],
 					'id' => null
 				]
@@ -114,7 +114,7 @@ class testJSONRPC extends CAPITest {
 					'jsonrpc' => '2.0',
 					'error' => [
 						'code' => -32600,
-						'message' => 'Invalid Request.',
+						'message' => 'Invalid request.',
 						'data' => 'Invalid parameter "/method": a character string is expected.'
 					],
 					'id' => null
@@ -127,7 +127,7 @@ class testJSONRPC extends CAPITest {
 					'jsonrpc' => '2.0',
 					'error' => [
 						'code' => -32600,
-						'message' => 'Invalid Request.',
+						'message' => 'Invalid request.',
 						'data' => 'Invalid parameter "/params": an array or object is expected.'
 					],
 					'id' => null
@@ -140,7 +140,7 @@ class testJSONRPC extends CAPITest {
 					'jsonrpc' => '2.0',
 					'error' => [
 						'code' => -32600,
-						'message' => 'Invalid Request.',
+						'message' => 'Invalid request.',
 						'data' => 'Invalid parameter "/auth": a character string is expected.'
 					],
 					'id' => 1
@@ -153,7 +153,7 @@ class testJSONRPC extends CAPITest {
 					'jsonrpc' => '2.0',
 					'error' => [
 						'code' => -32600,
-						'message' => 'Invalid Request.',
+						'message' => 'Invalid request.',
 						'data' => 'Invalid parameter "/id": a string, number or null value is expected.'
 					],
 					'id' => null
@@ -167,7 +167,7 @@ class testJSONRPC extends CAPITest {
 						'jsonrpc' => '2.0',
 						'error' => [
 							'code' => -32600,
-							'message' => 'Invalid Request.',
+							'message' => 'Invalid request.',
 							'data' => 'Invalid parameter "/": an array is expected.'
 						],
 						'id' => null
@@ -182,7 +182,7 @@ class testJSONRPC extends CAPITest {
 						'jsonrpc' => '2.0',
 						'error' => [
 							'code' => -32600,
-							'message' => 'Invalid Request.',
+							'message' => 'Invalid request.',
 							'data' => 'Invalid parameter "/": an array is expected.'
 						],
 						'id' => null
@@ -191,7 +191,7 @@ class testJSONRPC extends CAPITest {
 						'jsonrpc' => '2.0',
 						'error' => [
 							'code' => -32600,
-							'message' => 'Invalid Request.',
+							'message' => 'Invalid request.',
 							'data' => 'Invalid parameter "/": an array is expected.'
 						],
 						'id' => null
@@ -200,7 +200,7 @@ class testJSONRPC extends CAPITest {
 						'jsonrpc' => '2.0',
 						'error' => [
 							'code' => -32600,
-							'message' => 'Invalid Request.',
+							'message' => 'Invalid request.',
 							'data' => 'Invalid parameter "/": an array is expected.'
 						],
 						'id' => null
@@ -264,12 +264,16 @@ class testJSONRPC extends CAPITest {
 				']',
 				'result' => ''
 			],
-			// rpc call with extra parameters (deprecated, will be unsupported since version 5.4)
+			// rpc call with unsupported parameter
 			[
 				'request' => '{"jsonrpc": "2.0", "method": "apiinfo.version", "params": {}, "id": 1, "foo": "bar"}',
 				'result' => [
 					'jsonrpc' => '2.0',
-					'result' => ZABBIX_API_VERSION,
+					'error' =>[
+						'code' => -32600,
+						'message' => 'Invalid request.',
+						'data' => 'Invalid parameter "/": unexpected parameter "foo".'
+					],
 					'id' => 1
 				]
 			],
@@ -294,7 +298,7 @@ class testJSONRPC extends CAPITest {
 						'jsonrpc' => '2.0',
 						'error' => [
 							'code' => -32600,
-							'message' => 'Invalid Request.',
+							'message' => 'Invalid request.',
 							'data' => 'Invalid parameter "/": the parameter "jsonrpc" is missing.'
 						],
 						'id' => 2
@@ -303,7 +307,7 @@ class testJSONRPC extends CAPITest {
 						'jsonrpc' => '2.0',
 						'error' => [
 							'code' => -32600,
-							'message' => 'Invalid Request.',
+							'message' => 'Invalid request.',
 							'data' => 'Invalid parameter "/": the parameter "params" is missing.'
 						],
 						'id' => 3
@@ -312,7 +316,7 @@ class testJSONRPC extends CAPITest {
 						'jsonrpc' => '2.0',
 						'error' => [
 							'code' => -32600,
-							'message' => 'Invalid Request.',
+							'message' => 'Invalid request.',
 							'data' => 'Invalid parameter "/": an array is expected.'
 						],
 						'id' => null
@@ -345,7 +349,7 @@ class testJSONRPC extends CAPITest {
 					'error' => [
 						'code' => -32602,
 						'message' => 'Invalid params.',
-						'data' => 'Not authorised.'
+						'data' => 'Not authorized.'
 					],
 					'id' => 5
 				]
@@ -358,7 +362,7 @@ class testJSONRPC extends CAPITest {
 					'error' => [
 						'code' => -32602,
 						'message' => 'Invalid params.',
-						'data' => 'Not authorised.'
+						'data' => 'Not authorized.'
 					],
 					'id' => 5
 				]

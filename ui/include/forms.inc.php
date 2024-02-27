@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,20 +25,16 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 	$output = [new CTag('h3', true, $label)];
 
 	foreach ($data as $id => $element) {
-		$element['name'] = CHtml::encode($element['name']);
-
 		// is activated
 		if (str_in_array($id, $subfilter)) {
 			$output[] = (new CSpan([
 				(new CLinkAction($element['name']))
-					->onClick(CHtml::encode(
-						'javascript: create_var("zbx_filter", "subfilter_set", "1", false);'.
+					->onClick('javascript: create_var("zbx_filter", "subfilter_set", "1", false);'.
 						'create_var("zbx_filter", '.json_encode($subfilterName.'['.$id.']').', null, true);'
-					)),
+					),
 				' ',
 				new CSup($element['count'])
 			]))
-				->addClass(ZBX_STYLE_NOWRAP)
 				->addClass(ZBX_STYLE_SUBFILTER)
 				->addClass(ZBX_STYLE_SUBFILTER_ENABLED);
 		}
@@ -54,22 +50,19 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 			}
 			else {
 				$link = (new CLinkAction($element['name']))
-					->onClick(CHtml::encode(
-						'javascript: create_var("zbx_filter", "subfilter_set", "1", false);'.
+					->onClick('javascript: create_var("zbx_filter", "subfilter_set", "1", false);'.
 						'create_var("zbx_filter", '.
 							json_encode($subfilterName.'['.$id.']').', '.
 							json_encode($id).', '.
 							'true'.
 						');'
-					));
+					);
 
 				$output[] = (new CSpan([
 					$link,
 					' ',
 					new CSup(($subfilter ? '+' : '').$element['count'])
-				]))
-					->addClass(ZBX_STYLE_NOWRAP)
-					->addClass(ZBX_STYLE_SUBFILTER);
+				]))->addClass(ZBX_STYLE_SUBFILTER);
 			}
 		}
 	}
@@ -77,264 +70,84 @@ function prepareSubfilterOutput($label, $data, $subfilter, $subfilterName) {
 	return $output;
 }
 
-function getItemFilterForm(&$items) {
-	$filter_groupids			= $_REQUEST['filter_groupids'];
-	$filter_hostids				= $_REQUEST['filter_hostids'];
-	$filter_application			= $_REQUEST['filter_application'];
-	$filter_name				= $_REQUEST['filter_name'];
-	$filter_type				= $_REQUEST['filter_type'];
-	$filter_key					= $_REQUEST['filter_key'];
-	$filter_snmp_oid			= $_REQUEST['filter_snmp_oid'];
-	$filter_value_type			= $_REQUEST['filter_value_type'];
-	$filter_delay				= $_REQUEST['filter_delay'];
-	$filter_history				= $_REQUEST['filter_history'];
-	$filter_trends				= $_REQUEST['filter_trends'];
-	$filter_status				= $_REQUEST['filter_status'];
-	$filter_state				= $_REQUEST['filter_state'];
-	$filter_templated_items		= $_REQUEST['filter_templated_items'];
-	$filter_with_triggers		= $_REQUEST['filter_with_triggers'];
-	$filter_discovery           = $_REQUEST['filter_discovery'];
-	$subfilter_hosts			= $_REQUEST['subfilter_hosts'];
-	$subfilter_apps				= $_REQUEST['subfilter_apps'];
-	$subfilter_types			= $_REQUEST['subfilter_types'];
-	$subfilter_value_types		= $_REQUEST['subfilter_value_types'];
-	$subfilter_status			= $_REQUEST['subfilter_status'];
-	$subfilter_state			= $_REQUEST['subfilter_state'];
-	$subfilter_templated_items	= $_REQUEST['subfilter_templated_items'];
-	$subfilter_with_triggers	= $_REQUEST['subfilter_with_triggers'];
-	$subfilter_discovery        = $_REQUEST['subfilter_discovery'];
-	$subfilter_history			= $_REQUEST['subfilter_history'];
-	$subfilter_trends			= $_REQUEST['subfilter_trends'];
-	$subfilter_interval			= $_REQUEST['subfilter_interval'];
+/**
+ * Make subfilter for tags.
+ *
+ * @param array $data       Array contains available subfilter tags.
+ * @param array $subfilter  Array of already selected subfilter tags.
+ *
+ * @return array
+ */
+function prepareTagsSubfilterOutput(array $data, array &$subfilter): array {
+	$output = [new CTag('h3', true, _('Tags'))];
+	CArrayHelper::sort($data, ['tag', 'value']);
 
-	$filter = (new CFilter(new CUrl('items.php')))
-		->setProfile('web.items.filter')
-		->setActiveTab(CProfile::get('web.items.filter.active', 1))
-		->addVar('subfilter_hosts', $subfilter_hosts)
-		->addVar('subfilter_apps', $subfilter_apps)
-		->addVar('subfilter_types', $subfilter_types)
-		->addVar('subfilter_value_types', $subfilter_value_types)
-		->addVar('subfilter_status', $subfilter_status)
-		->addVar('subfilter_state', $subfilter_state)
-		->addVar('subfilter_templated_items', $subfilter_templated_items)
-		->addVar('subfilter_with_triggers', $subfilter_with_triggers)
-		->addVar('subfilter_discovery', $subfilter_discovery)
-		->addVar('subfilter_history', $subfilter_history)
-		->addVar('subfilter_trends', $subfilter_trends)
-		->addVar('subfilter_interval', $subfilter_interval);
+	$i = 0;
+	foreach ($data as $tag_hash => $tag) {
+		$element_name = ($tag['value'] === '') ? $tag['tag'] : $tag['tag'].': '.$tag['value'];
 
-	$filterColumn1 = new CFormList();
-	$filterColumn2 = new CFormList();
-	$filterColumn3 = new CFormList();
-	$filterColumn4 = new CFormList();
+		$tag['tag'] = json_encode($tag['tag']);
+		$tag['value'] = json_encode($tag['value']);
 
-	// type select
-	$fTypeVisibility = [];
-	$type_select = (new CSelect('filter_type'))
-		->setId('filter_type')
-		->setValue($filter_type)
-		->setFocusableElementId('label-filter-type')
-		->addOption(new CSelectOption(-1, _('all')));
+		// is activated
+		if (array_key_exists($tag_hash, $subfilter)) {
+			$subfilter[$tag_hash]['num'] = $i;
 
-	zbx_subarray_push($fTypeVisibility, -1, 'filter_delay_row');
-
-	$item_types = item_type2str();
-	unset($item_types[ITEM_TYPE_HTTPTEST]); // httptest items are only for internal zabbix logic
-
-	$type_select->addOptions(CSelect::createOptionsFromArray($item_types));
-
-	foreach ($item_types as $type => $name) {
-		if ($type != ITEM_TYPE_TRAPPER && $type != ITEM_TYPE_SNMPTRAP) {
-			zbx_subarray_push($fTypeVisibility, $type, 'filter_delay_row');
+			$output[] = (new CSpan([
+				(new CLinkAction($element_name))
+					->onClick('javascript: create_var("zbx_filter", "subfilter_set", "1", false);'.
+						'create_var("zbx_filter", "subfilter_tags['.$i.'][tag]", null, false);'.
+						'create_var("zbx_filter", "subfilter_tags['.$i.'][value]", null, true);'
+					),
+				' ',
+				new CSup($tag['count'])
+			]))
+				->addClass(ZBX_STYLE_SUBFILTER)
+				->addClass(ZBX_STYLE_SUBFILTER_ENABLED);
 		}
-		if ($type == ITEM_TYPE_SNMP) {
-			zbx_subarray_push($fTypeVisibility, $type, 'filter_snmp_oid_row');
+		// isn't activated
+		else {
+			// Subfilter has 0 items.
+			if ($tag['count'] == 0) {
+				$output[] = (new CSpan([
+					(new CSpan($element_name))->addClass(ZBX_STYLE_GREY),
+					' ',
+					new CSup($tag['count'])
+				]))->addClass(ZBX_STYLE_SUBFILTER);
+			}
+			else {
+				$link = (new CLinkAction($element_name))
+					->onClick('javascript: create_var("zbx_filter", "subfilter_set", "1", false);'.
+						'create_var("zbx_filter", "subfilter_tags['.$i.'][tag]", '.$tag['tag'].', false);'.
+						'create_var("zbx_filter", "subfilter_tags['.$i.'][value]", '.$tag['value'].', true);'
+					);
+
+				$output[] = (new CSpan([
+					$link,
+					' ',
+					new CSup(($subfilter ? '+' : '').$tag['count'])
+				]))->addClass(ZBX_STYLE_SUBFILTER);
+			}
 		}
+
+		$i++;
 	}
 
-	zbx_add_post_js("var filterTypeSwitcher = new CViewSwitcher('filter_type', 'change', ".zbx_jsvalue($fTypeVisibility, true).');');
+	return $output;
+}
 
-	// row 1
-	$group_filter = !empty($filter_groupids)
-		? CArrayHelper::renameObjectsKeys(API::HostGroup()->get([
-			'output' => ['groupid', 'name'],
-			'groupids' => $filter_groupids,
-			'editable' => true
-		]), ['groupid' => 'id'])
-		: [];
-
-	$filterColumn1->addRow((new CLabel(_('Host groups'), 'filter_groupid_ms')),
-		(new CMultiSelect([
-			'name' => 'filter_groupids[]',
-			'object_name' => 'hostGroup',
-			'data' => $group_filter,
-			'popup' => [
-				'parameters' => [
-					'srctbl' => 'host_groups',
-					'srcfld1' => 'groupid',
-					'dstfrm' => $filter->getName(),
-					'dstfld1' => 'filter_groupids_',
-					'editable' => true
-				]
-			]
-		]))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
-	);
-
-	$filterColumn2->addRow(new CLabel(_('Type'), $type_select->getFocusableElementId()), $type_select);
-	$filterColumn3->addRow(new CLabel(_('Type of information'), 'label-filter-value-type'),
-		(new CSelect('filter_value_type'))
-			->setFocusableElementId('label-filter-value-type')
-			->setValue($filter_value_type)
-			->addOptions(CSelect::createOptionsFromArray([
-				-1 => _('all'),
-				ITEM_VALUE_TYPE_UINT64 => _('Numeric (unsigned)'),
-				ITEM_VALUE_TYPE_FLOAT => _('Numeric (float)'),
-				ITEM_VALUE_TYPE_STR => _('Character'),
-				ITEM_VALUE_TYPE_LOG => _('Log'),
-				ITEM_VALUE_TYPE_TEXT => _('Text')
-			]))
-	);
-	$filterColumn4->addRow(new CLabel(_('State'), 'label-filter-state'),
-		(new CSelect('filter_state'))
-			->setId('filter_state')
-			->setFocusableElementId('label-filter-state')
-			->setValue($filter_state)
-			->addOptions(CSelect::createOptionsFromArray([
-				-1 => _('all'),
-				ITEM_STATE_NORMAL => itemState(ITEM_STATE_NORMAL),
-				ITEM_STATE_NOTSUPPORTED => itemState(ITEM_STATE_NOTSUPPORTED)
-			]))
-	);
-
-	// row 2
-	$host_filter = !empty($filter_hostids)
-		? CArrayHelper::renameObjectsKeys(API::Host()->get([
-			'output' => ['hostid', 'name'],
-			'hostids' => $filter_hostids,
-			'templated_hosts' => true,
-			'editable' => true
-		]), ['hostid' => 'id'])
-		: [];
-
-	$filterColumn1->addRow((new CLabel(_('Hosts'), 'filter_hostid_ms')),
-		(new CMultiSelect([
-			'name' => 'filter_hostids[]',
-			'object_name' => 'host_templates',
-			'data' => $host_filter,
-			'popup' => [
-				'filter_preselect_fields' => [
-					'hostgroups' => 'filter_groupids_'
-				],
-				'parameters' => [
-					'srctbl' => 'host_templates',
-					'srcfld1' => 'hostid',
-					'dstfrm' => $filter->getName(),
-					'dstfld1' => 'filter_hostids_',
-					'editable' => true
-				]
-			]
-		]))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
-	);
-
-	$filterColumn2->addRow(_('Update interval'),
-		(new CTextBox('filter_delay', $filter_delay))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
-		'filter_delay_row'
-	);
-	$filterColumn4->addRow(new CLabel(_('Status'), 'label-filter-status'),
-		(new CSelect('filter_status'))
-			->setId('filter_status')
-			->setFocusableElementId('label-filter-status')
-			->setValue($filter_status)
-			->addOptions(CSelect::createOptionsFromArray([
-				-1 => _('all'),
-				ITEM_STATUS_ACTIVE => item_status2str(ITEM_STATUS_ACTIVE),
-				ITEM_STATUS_DISABLED => item_status2str(ITEM_STATUS_DISABLED)
-			]))
-	);
-
-	// row 3
-	$filterColumn1->addRow(_('Application'),
-		[
-			(new CTextBox('filter_application', $filter_application))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
-			(new CDiv())->addClass(ZBX_STYLE_FORM_INPUT_MARGIN),
-			(new CButton(null, _('Select')))
-				->addClass(ZBX_STYLE_BTN_GREY)
-				->onClick('return PopUp("popup.generic",jQuery.extend('.
-					json_encode([
-						'srctbl' => 'applications',
-						'srcfld1' => 'name',
-						'dstfrm' => $filter->getName(),
-						'dstfld1' => 'filter_application',
-						'with_applications' => '1'
-					]).
-					', getFirstMultiselectValue("filter_hostids_")), null, this);'
-				)
-		]
-	);
-
-	$filterColumn3->addRow(_('History'),
-		(new CTextBox('filter_history', $filter_history))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
-	);
-	$filterColumn4->addRow(new CLabel(_('Triggers'), 'label-filter-with-triggers'),
-		(new CSelect('filter_with_triggers'))
-			->setFocusableElementId('label-filter-with-triggers')
-			->setValue($filter_with_triggers)
-			->addOptions(CSelect::createOptionsFromArray([
-				-1 => _('all'),
-				1 => _('With triggers'),
-				0 => _('Without triggers')
-			]))
-	);
-
-	// row 4
-	$filterColumn1->addRow(_('Name'),
-		(new CTextBox('filter_name', $filter_name))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
-	);
-	$filterColumn2->addRow(_('SNMP OID'),
-		(new CTextBox('filter_snmp_oid', $filter_snmp_oid, '', 255))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
-		'filter_snmp_oid_row'
-	);
-	$filterColumn3->addRow(_('Trends'),
-		(new CTextBox('filter_trends', $filter_trends))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
-	);
-	$filterColumn4->addRow(new CLabel(_('Template'), 'label-filter-templated-items'),
-		(new CSelect('filter_templated_items'))
-			->setFocusableElementId('label-filter-templated-items')
-			->setValue($filter_templated_items)
-			->addOptions(CSelect::createOptionsFromArray([
-				-1 => _('all'),
-				1 => _('Inherited items'),
-				0 => _('Not inherited items')
-			]))
-	);
-
-	// row 5
-	$filterColumn1->addRow(_('Key'),
-		(new CTextBox('filter_key', $filter_key))->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH)
-	);
-	$filterColumn4->addRow(new CLabel(_('Discovery'), 'label-filter-discovery'),
-		(new CSelect('filter_discovery'))
-			->setFocusableElementId('label-filter-discovery')
-			->setValue($filter_discovery)
-			->addOptions(CSelect::createOptionsFromArray([
-				-1 => _('all'),
-				ZBX_FLAG_DISCOVERY_CREATED => _('Discovered items'),
-				ZBX_FLAG_DISCOVERY_NORMAL => _('Regular items')
-			]))
-	);
-
+function makeItemSubfilter(array &$filter_data, array $items, string $context) {
 	// subfilters
 	$table_subfilter = (new CTableInfo())
 		->addRow([
 			new CTag('h4', true, [
-				_('Subfilter'), SPACE, (new CSpan(_('affects only filtered data')))->addClass(ZBX_STYLE_GREY)
+				_('Subfilter'), NBSP(), (new CSpan(_('affects only filtered data')))->addClass(ZBX_STYLE_GREY)
 			])
-		]);
+		], ZBX_STYLE_HOVER_NOBG);
 
 	// array contains subfilters and number of items in each
 	$item_params = [
 		'hosts' => [],
-		'applications' => [],
 		'types' => [],
 		'value_types' => [],
 		'status' => [],
@@ -344,16 +157,40 @@ function getItemFilterForm(&$items) {
 		'discovery' => [],
 		'history' => [],
 		'trends' => [],
-		'interval' => []
+		'interval' => [],
+		'tags' => []
 	];
 
 	$update_interval_parser = new CUpdateIntervalParser(['usermacros' => true]);
 	$simple_interval_parser = new CSimpleIntervalParser();
 
-	// generate array with values for subfilters of selected items
+	// Generate array with values for subfilters of selected items.
 	foreach ($items as $item) {
+		// tags
+		foreach ($item['tags'] as $tag) {
+			$tag_hash = json_encode([$tag['tag'], $tag['value']]);
+			if (!array_key_exists($tag_hash, $item_params['tags'])) {
+				$item_params['tags'][$tag_hash] = $tag + ['count' => 0];
+			}
+
+			$show_item = true;
+			foreach ($item['subfilters'] as $name => $value) {
+				if ($name === 'subfilter_tags') {
+					continue;
+				}
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
+			}
+
+			if ($show_item) {
+				$item_params['tags'][$tag_hash]['count']++;
+			}
+		}
+
 		// hosts
-		if ($filter_hostids) {
+		if ($filter_data['hosts']) {
 			$host = reset($item['hosts']);
 
 			if (!isset($item_params['hosts'][$host['hostid']])) {
@@ -364,7 +201,10 @@ function getItemFilterForm(&$items) {
 				if ($name == 'subfilter_hosts') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 			if ($show_item) {
 				$host = reset($item['hosts']);
@@ -372,39 +212,8 @@ function getItemFilterForm(&$items) {
 			}
 		}
 
-		// applications
-		if (!empty($item['applications'])) {
-			foreach ($item['applications'] as $application) {
-				if (!isset($item_params['applications'][$application['name']])) {
-					$item_params['applications'][$application['name']] = ['name' => $application['name'], 'count' => 0];
-				}
-			}
-		}
-		$show_item = true;
-		foreach ($item['subfilters'] as $name => $value) {
-			if ($name == 'subfilter_apps') {
-				continue;
-			}
-			$show_item &= $value;
-		}
-		$sel_app = false;
-		if ($show_item) {
-			// if any of item applications are selected
-			foreach ($item['applications'] as $app) {
-				if (str_in_array($app['name'], $subfilter_apps)) {
-					$sel_app = true;
-					break;
-				}
-			}
-			foreach ($item['applications'] as $app) {
-				if (str_in_array($app['name'], $subfilter_apps) || !$sel_app) {
-					$item_params['applications'][$app['name']]['count']++;
-				}
-			}
-		}
-
 		// types
-		if ($filter_type == -1) {
+		if ($filter_data['filter_type'] == -1) {
 			if (!isset($item_params['types'][$item['type']])) {
 				$item_params['types'][$item['type']] = ['name' => item_type2str($item['type']), 'count' => 0];
 			}
@@ -413,7 +222,10 @@ function getItemFilterForm(&$items) {
 				if ($name == 'subfilter_types') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 			if ($show_item) {
 				$item_params['types'][$item['type']]['count']++;
@@ -421,7 +233,7 @@ function getItemFilterForm(&$items) {
 		}
 
 		// value types
-		if ($filter_value_type == -1) {
+		if ($filter_data['filter_value_type'] == -1) {
 			if (!isset($item_params['value_types'][$item['value_type']])) {
 				$item_params['value_types'][$item['value_type']] = [
 					'name' => itemValueTypeString($item['value_type']),
@@ -434,7 +246,10 @@ function getItemFilterForm(&$items) {
 				if ($name == 'subfilter_value_types') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 			if ($show_item) {
 				$item_params['value_types'][$item['value_type']]['count']++;
@@ -442,7 +257,7 @@ function getItemFilterForm(&$items) {
 		}
 
 		// status
-		if ($filter_status == -1) {
+		if ($filter_data['filter_status'] == -1) {
 			if (!isset($item_params['status'][$item['status']])) {
 				$item_params['status'][$item['status']] = [
 					'name' => item_status2str($item['status']),
@@ -454,7 +269,10 @@ function getItemFilterForm(&$items) {
 				if ($name == 'subfilter_status') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 			if ($show_item) {
 				$item_params['status'][$item['status']]['count']++;
@@ -462,7 +280,7 @@ function getItemFilterForm(&$items) {
 		}
 
 		// state
-		if ($filter_state == -1) {
+		if ($context === 'host' && $filter_data['filter_state'] == -1) {
 			if (!isset($item_params['state'][$item['state']])) {
 				$item_params['state'][$item['state']] = [
 					'name' => itemState($item['state']),
@@ -474,7 +292,10 @@ function getItemFilterForm(&$items) {
 				if ($name == 'subfilter_state') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 			if ($show_item) {
 				$item_params['state'][$item['state']]['count']++;
@@ -482,7 +303,7 @@ function getItemFilterForm(&$items) {
 		}
 
 		// template
-		if ($filter_templated_items == -1) {
+		if ($filter_data['filter_inherited'] == -1) {
 			if ($item['templateid'] == 0 && !isset($item_params['templated_items'][0])) {
 				$item_params['templated_items'][0] = ['name' => _('Not inherited items'), 'count' => 0];
 			}
@@ -491,10 +312,13 @@ function getItemFilterForm(&$items) {
 			}
 			$show_item = true;
 			foreach ($item['subfilters'] as $name => $value) {
-				if ($name == 'subfilter_templated_items') {
+				if ($name == 'subfilter_inherited') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 			if ($show_item) {
 				if ($item['templateid'] == 0) {
@@ -507,7 +331,7 @@ function getItemFilterForm(&$items) {
 		}
 
 		// with triggers
-		if ($filter_with_triggers == -1) {
+		if ($filter_data['filter_with_triggers'] == -1) {
 			if (count($item['triggers']) == 0 && !isset($item_params['with_triggers'][0])) {
 				$item_params['with_triggers'][0] = ['name' => _('Without triggers'), 'count' => 0];
 			}
@@ -519,7 +343,10 @@ function getItemFilterForm(&$items) {
 				if ($name == 'subfilter_with_triggers') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 			if ($show_item) {
 				if (count($item['triggers']) == 0) {
@@ -532,7 +359,7 @@ function getItemFilterForm(&$items) {
 		}
 
 		// discovery
-		if ($filter_discovery == -1) {
+		if ($context === 'host' && $filter_data['filter_discovered'] == -1) {
 			if ($item['flags'] == ZBX_FLAG_DISCOVERY_NORMAL && !isset($item_params['discovery'][0])) {
 				$item_params['discovery'][0] = ['name' => _('Regular'), 'count' => 0];
 			}
@@ -541,10 +368,13 @@ function getItemFilterForm(&$items) {
 			}
 			$show_item = true;
 			foreach ($item['subfilters'] as $name => $value) {
-				if ($name == 'subfilter_discovery') {
+				if ($name == 'subfilter_discovered') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 			if ($show_item) {
 				if ($item['flags'] == ZBX_FLAG_DISCOVERY_NORMAL) {
@@ -557,14 +387,14 @@ function getItemFilterForm(&$items) {
 		}
 
 		// trends
-		if ($filter_trends === ''
+		if ($filter_data['filter_trends'] === ''
 				&& !in_array($item['value_type'], [ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG, ITEM_VALUE_TYPE_TEXT])) {
 			$trends = $item['trends'];
 			$value = $trends;
 
 			if ($simple_interval_parser->parse($trends) == CParser::PARSE_SUCCESS) {
 				$value = timeUnitToSeconds($trends);
-				$trends = convertUnitsS($value);
+				$trends = convertSecondsToTimeUnits($value);
 			}
 
 			if (!array_key_exists($trends, $item_params['trends'])) {
@@ -581,7 +411,10 @@ function getItemFilterForm(&$items) {
 				if ($name === 'subfilter_trends') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 
 			if ($show_item) {
@@ -590,13 +423,13 @@ function getItemFilterForm(&$items) {
 		}
 
 		// history
-		if ($filter_history === '') {
+		if ($filter_data['filter_history'] === '') {
 			$history = $item['history'];
 			$value = $history;
 
 			if ($simple_interval_parser->parse($history) == CParser::PARSE_SUCCESS) {
 				$value = timeUnitToSeconds($history);
-				$history = convertUnitsS($value);
+				$history = convertSecondsToTimeUnits($value);
 			}
 
 			if (!array_key_exists($history, $item_params['history'])) {
@@ -613,7 +446,10 @@ function getItemFilterForm(&$items) {
 				if ($name === 'subfilter_history') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 
 			if ($show_item) {
@@ -622,8 +458,10 @@ function getItemFilterForm(&$items) {
 		}
 
 		// interval
-		if ($filter_delay === '' && $filter_type != ITEM_TYPE_TRAPPER && $item['type'] != ITEM_TYPE_TRAPPER
-				&& $item['type'] != ITEM_TYPE_SNMPTRAP && $item['type'] != ITEM_TYPE_DEPENDENT) {
+		if ($filter_data['filter_delay'] === '' && $filter_data['filter_type'] != ITEM_TYPE_TRAPPER
+				&& $item['type'] != ITEM_TYPE_TRAPPER && $item['type'] != ITEM_TYPE_SNMPTRAP
+				&& $item['type'] != ITEM_TYPE_DEPENDENT
+				&& ($item['type'] != ITEM_TYPE_ZABBIX_ACTIVE || strncmp($item['key_'], 'mqtt.get', 8) !== 0)) {
 			// Use temporary variable for delay, because the original will be used for sorting later.
 			$delay = $item['delay'];
 			$value = $delay;
@@ -634,7 +472,7 @@ function getItemFilterForm(&$items) {
 				// "value" is delay represented in seconds and it is used for sorting the subfilter.
 				if ($delay[0] !== '{') {
 					$value = timeUnitToSeconds($delay);
-					$delay = convertUnitsS($value);
+					$delay = convertSecondsToTimeUnits($value);
 				}
 				else {
 					$value = $delay;
@@ -655,7 +493,10 @@ function getItemFilterForm(&$items) {
 				if ($name === 'subfilter_interval') {
 					continue;
 				}
-				$show_item &= $value;
+				if (!$value) {
+					$show_item = false;
+					break;
+				}
 			}
 
 			if ($show_item) {
@@ -665,71 +506,90 @@ function getItemFilterForm(&$items) {
 	}
 
 	// output
-	if ($filter_hostids && count($item_params['hosts']) > 1) {
-		$hosts_output = prepareSubfilterOutput(_('Hosts'), $item_params['hosts'], $subfilter_hosts, 'subfilter_hosts');
+	if (count($item_params['tags']) > 1) {
+		$tags_output = prepareTagsSubfilterOutput($item_params['tags'], $filter_data['subfilter_tags']);
+		$table_subfilter->addRow([$tags_output]);
+	}
+
+	if (!$filter_data['hosts'] && $filter_data['subfilter_hosts'] != -1 && count($item_params['hosts']) > 1) {
+		$hosts_output = prepareSubfilterOutput(_('Hosts'), $item_params['hosts'], $filter_data['subfilter_hosts'],
+			'subfilter_hosts'
+		);
 		$table_subfilter->addRow([$hosts_output]);
 	}
 
-	if (!empty($item_params['applications']) && count($item_params['applications']) > 1) {
-		$application_output = prepareSubfilterOutput(_('Applications'), $item_params['applications'], $subfilter_apps, 'subfilter_apps');
-		$table_subfilter->addRow([$application_output]);
-	}
-
-	if ($filter_type == -1 && count($item_params['types']) > 1) {
-		$type_output = prepareSubfilterOutput(_('Types'), $item_params['types'], $subfilter_types, 'subfilter_types');
+	if ($filter_data['filter_type'] == -1 && count($item_params['types']) > 1) {
+		$type_output = prepareSubfilterOutput(_('Types'), $item_params['types'], $filter_data['subfilter_types'],
+			'subfilter_types'
+		);
 		$table_subfilter->addRow([$type_output]);
 	}
 
-	if ($filter_value_type == -1 && count($item_params['value_types']) > 1) {
-		$value_types_output = prepareSubfilterOutput(_('Type of information'), $item_params['value_types'], $subfilter_value_types, 'subfilter_value_types');
+	if ($filter_data['filter_value_type'] == -1 && count($item_params['value_types']) > 1) {
+		$value_types_output = prepareSubfilterOutput(_('Type of information'), $item_params['value_types'],
+			$filter_data['subfilter_value_types'], 'subfilter_value_types'
+		);
 		$table_subfilter->addRow([$value_types_output]);
 	}
 
-	if ($filter_status == -1 && count($item_params['status']) > 1) {
-		$status_output = prepareSubfilterOutput(_('Status'), $item_params['status'], $subfilter_status, 'subfilter_status');
+	if ($filter_data['filter_status'] == -1 && count($item_params['status']) > 1) {
+		$status_output = prepareSubfilterOutput(_('Status'), $item_params['status'], $filter_data['subfilter_status'],
+			'subfilter_status'
+		);
 		$table_subfilter->addRow([$status_output]);
 	}
 
-	if ($filter_state == -1 && count($item_params['state']) > 1) {
-		$state_output = prepareSubfilterOutput(_('State'), $item_params['state'], $subfilter_state, 'subfilter_state');
+	if ($context === 'host' && $filter_data['filter_state'] == -1 && count($item_params['state']) > 1) {
+		$state_output = prepareSubfilterOutput(_('State'), $item_params['state'], $filter_data['subfilter_state'],
+			'subfilter_state'
+		);
 		$table_subfilter->addRow([$state_output]);
 	}
 
-	if ($filter_templated_items == -1 && count($item_params['templated_items']) > 1) {
-		$templated_items_output = prepareSubfilterOutput(_('Template'), $item_params['templated_items'], $subfilter_templated_items, 'subfilter_templated_items');
+	if ($filter_data['filter_inherited'] == -1 && count($item_params['templated_items']) > 1) {
+		$templated_items_output = prepareSubfilterOutput(_('Template'), $item_params['templated_items'],
+			$filter_data['subfilter_inherited'], 'subfilter_inherited'
+		);
 		$table_subfilter->addRow([$templated_items_output]);
 	}
 
-	if ($filter_with_triggers == -1 && count($item_params['with_triggers']) > 1) {
-		$with_triggers_output = prepareSubfilterOutput(_('With triggers'), $item_params['with_triggers'], $subfilter_with_triggers, 'subfilter_with_triggers');
+	if ($filter_data['filter_with_triggers'] == -1 && count($item_params['with_triggers']) > 1) {
+		$with_triggers_output = prepareSubfilterOutput(_('With triggers'), $item_params['with_triggers'],
+			$filter_data['subfilter_with_triggers'], 'subfilter_with_triggers'
+		);
 		$table_subfilter->addRow([$with_triggers_output]);
 	}
 
-	if ($filter_discovery == -1 && count($item_params['discovery']) > 1) {
-		$discovery_output = prepareSubfilterOutput(_('Discovery'), $item_params['discovery'], $subfilter_discovery, 'subfilter_discovery');
+	if ($context === 'host' && $filter_data['filter_discovered'] == -1 && count($item_params['discovery']) > 1) {
+		$discovery_output = prepareSubfilterOutput(_('Discovery'), $item_params['discovery'],
+			$filter_data['subfilter_discovered'], 'subfilter_discovered'
+		);
 		$table_subfilter->addRow([$discovery_output]);
 	}
 
-	if (zbx_empty($filter_history) && count($item_params['history']) > 1) {
-		$history_output = prepareSubfilterOutput(_('History'), $item_params['history'], $subfilter_history, 'subfilter_history');
+	if (!$filter_data['filter_history'] && count($item_params['history']) > 1) {
+		$history_output = prepareSubfilterOutput(_('History'), $item_params['history'],
+			$filter_data['subfilter_history'], 'subfilter_history'
+		);
 		$table_subfilter->addRow([$history_output]);
 	}
 
-	if (zbx_empty($filter_trends) && (count($item_params['trends']) > 1)) {
-		$trends_output = prepareSubfilterOutput(_('Trends'), $item_params['trends'], $subfilter_trends, 'subfilter_trends');
+	if (!$filter_data['filter_trends'] && (count($item_params['trends']) > 1)) {
+		$trends_output = prepareSubfilterOutput(_('Trends'), $item_params['trends'], $filter_data['subfilter_trends'],
+			'subfilter_trends'
+		);
 		$table_subfilter->addRow([$trends_output]);
 	}
 
-	if (zbx_empty($filter_delay) && $filter_type != ITEM_TYPE_TRAPPER && count($item_params['interval']) > 1) {
-		$interval_output = prepareSubfilterOutput(_('Interval'), $item_params['interval'], $subfilter_interval, 'subfilter_interval');
+	if (!$filter_data['filter_delay'] && $filter_data['filter_type'] != ITEM_TYPE_TRAPPER
+			&& count($item_params['interval']) > 1) {
+		$interval_output = prepareSubfilterOutput(_('Interval'), $item_params['interval'],
+			$filter_data['subfilter_interval'], 'subfilter_interval'
+		);
 		$table_subfilter->addRow([$interval_output]);
 	}
 
-	$filter->addFilterTab(_('Filter'), [$filterColumn1, $filterColumn2, $filterColumn3, $filterColumn4],
-		$table_subfilter
-	);
-
-	return $filter;
+	return $table_subfilter;
 }
 
 /**
@@ -755,23 +615,34 @@ function prepareItemHttpAgentFormData(array $item) {
 
 		foreach ($item['query_fields']['name'] as $index => $key) {
 			$value = $item['query_fields']['value'][$index];
+			$sortorder = $item['query_fields']['sortorder'][$index];
 
 			if ($key !== '' || $value !== '') {
-				$query_fields[] = [$key => $value];
+				$query_fields[$sortorder] = [$key => $value];
 			}
 		}
+
+		ksort($query_fields);
 		$item['query_fields'] = $query_fields;
 	}
 
 	if ($item['headers']) {
-		$headers = [];
+		$tmp_headers = [];
 
 		foreach ($item['headers']['name'] as $index => $key) {
 			$value = $item['headers']['value'][$index];
+			$sortorder = $item['headers']['sortorder'][$index];
 
 			if ($key !== '' || $value !== '') {
-				$headers[$key] = $value;
+				$tmp_headers[$sortorder] = [$key => $value];
 			}
+		}
+
+		ksort($tmp_headers);
+		$headers = [];
+
+		foreach ($tmp_headers as $key_value_pair) {
+			$headers[key($key_value_pair)] = reset($key_value_pair);
 		}
 
 		$item['headers'] = $headers;
@@ -781,18 +652,74 @@ function prepareItemHttpAgentFormData(array $item) {
 }
 
 /**
+ * Prepare ITEM_TYPE_SCRIPT type item data for create or update API calls.
+ * - Converts 'parameters' from array of keys and array of values to arrays of names and values.
+ *   IN:
+ *   Array (
+ *       [name] => Array (
+ *           [0] => a
+ *           [1] => c
+ *       )
+ *       [value] => Array (
+ *           [0] => b
+ *           [1] => d
+ *       )
+ *   )
+ *
+ *   OUT:
+ *   Array (
+ *       [0] => Array (
+ *           [name] => a
+ *           [value] => b
+ *       )
+ *       [1] => Array (
+ *           [name] => c
+ *           [value] => d
+ *       )
+ *   )
+ *
+ * @param array $item                          Array of form fields data for ITEM_TYPE_SCRIPT item.
+ * @param array $item['parameters']            Item parameters array.
+ * @param array $item['parameters']['name']    Item parameter names array.
+ * @param array $item['parameters']['values']  Item parameter values array.
+ *
+ * @return array
+ */
+function prepareScriptItemFormData(array $item): array {
+	$values = [];
+
+	if (is_array($item['parameters']) && array_key_exists('name', $item['parameters'])
+			&& array_key_exists('value', $item['parameters'])) {
+		foreach ($item['parameters']['name'] as $index => $key) {
+			if (array_key_exists($index, $item['parameters']['value'])
+					&& ($key !== '' || $item['parameters']['value'][$index] !== '')) {
+				$values[] = [
+					'name' => $key,
+					'value' => $item['parameters']['value'][$index]
+				];
+			}
+		}
+	}
+
+	$item['parameters'] = $values;
+
+	return $item;
+}
+
+/**
  * Get data for item edit page.
  *
- * @param array $item                          Item, item prototype, LLD rule or LLD item to take the data from.
- * @param array $options
- * @param bool  $options['is_discovery_rule']
+ * @param array  $item                          Item, item prototype, LLD rule or LLD item to take the data from.
+ * @param array  $options
+ * @param bool   $options['form']               (mandatory)
+ * @param bool   $options['is_discovery_rule']  (optional)
  *
  * @return array
  */
 function getItemFormData(array $item = [], array $options = []) {
 	$data = [
-		'form' => getRequest('form'),
-		'form_refresh' => getRequest('form_refresh'),
+		'form' => $options['form'],
+		'form_refresh' => getRequest('form_refresh', 0),
 		'is_discovery_rule' => !empty($options['is_discovery_rule']),
 		'parent_discoveryid' => getRequest('parent_discoveryid', 0),
 		'itemid' => getRequest('itemid'),
@@ -814,8 +741,6 @@ function getItemFormData(array $item = [], array $options = []) {
 		'valuemapid' => getRequest('valuemapid', 0),
 		'params' => getRequest('params', ''),
 		'trends' => getRequest('trends', DB::getDefault('items', 'trends')),
-		'new_application' => getRequest('new_application', ''),
-		'applications' => getRequest('applications', []),
 		'delay_flex' => array_values(getRequest('delay_flex', [])),
 		'ipmi_sensor' => getRequest('ipmi_sensor', ''),
 		'authtype' => getRequest('authtype', 0),
@@ -824,7 +749,6 @@ function getItemFormData(array $item = [], array $options = []) {
 		'publickey' => getRequest('publickey', ''),
 		'privatekey' => getRequest('privatekey', ''),
 		'logtimefmt' => getRequest('logtimefmt', ''),
-		'valuemaps' => null,
 		'possibleHostInventories' => null,
 		'alreadyPopulated' => null,
 		'initial_item_type' => null,
@@ -833,6 +757,7 @@ function getItemFormData(array $item = [], array $options = []) {
 		'timeout' => getRequest('timeout', DB::getDefault('items', 'timeout')),
 		'url' => getRequest('url'),
 		'query_fields' => getRequest('query_fields', []),
+		'parameters' => getRequest('parameters', []),
 		'posts' => getRequest('posts'),
 		'status_codes' => getRequest('status_codes', DB::getDefault('items', 'status_codes')),
 		'follow_redirects' => hasRequest('form_refresh')
@@ -854,8 +779,24 @@ function getItemFormData(array $item = [], array $options = []) {
 		'http_username' => getRequest('http_username', ''),
 		'http_password' => getRequest('http_password', ''),
 		'preprocessing' => getRequest('preprocessing', []),
-		'preprocessing_script_maxlength' => DB::getFieldLength('item_preproc', 'params')
+		'preprocessing_script_maxlength' => DB::getFieldLength('item_preproc', 'params'),
+		'context' => getRequest('context'),
+		'show_inherited_tags' => getRequest('show_inherited_tags', 0),
+		'tags' => getRequest('tags', [])
 	];
+
+	// Unset empty and inherited tags.
+	foreach ($data['tags'] as $key => $tag) {
+		if ($tag['tag'] === '' && $tag['value'] === '') {
+			unset($data['tags'][$key]);
+		}
+		elseif (array_key_exists('type', $tag) && !($tag['type'] & ZBX_PROPERTY_OWN)) {
+			unset($data['tags'][$key]);
+		}
+		else {
+			unset($data['tags'][$key]['type']);
+		}
+	}
 
 	if ($data['parent_discoveryid'] != 0) {
 		$data['discover'] = hasRequest('form_refresh')
@@ -874,24 +815,46 @@ function getItemFormData(array $item = [], array $options = []) {
 					&& array_key_exists('value', $data[$property])) {
 				foreach ($data[$property]['name'] as $index => $key) {
 					if (array_key_exists($index, $data[$property]['value'])) {
-						$values[] = [$key => $data[$property]['value'][$index]];
+						$sortorder = $data[$property]['sortorder'][$index];
+						$values[$sortorder] = [$key => $data[$property]['value'][$index]];
 					}
 				}
 			}
+			ksort($values);
 			$data[$property] = $values;
 		}
+
+		$data['parameters'] = [];
+	}
+	elseif ($data['type'] == ITEM_TYPE_SCRIPT) {
+		$values = [];
+
+		if (is_array($data['parameters']) && array_key_exists('name', $data['parameters'])
+				&& array_key_exists('value', $data['parameters'])) {
+			foreach ($data['parameters']['name'] as $index => $key) {
+				if (array_key_exists($index, $data['parameters']['value'])) {
+					$values[] = [
+						'name' => $key,
+						'value' => $data['parameters']['value'][$index]
+					];
+				}
+			}
+		}
+		$data['parameters'] = $values;
+
+		$data['headers'] = [];
+		$data['query_fields'] = [];
 	}
 	else {
 		$data['headers'] = [];
 		$data['query_fields'] = [];
+		$data['parameters'] = [];
 	}
 
 	// Dependent item initialization by master_itemid.
 	if (array_key_exists('master_item', $item)) {
-		$expanded = CMacrosResolverHelper::resolveItemNames([$item['master_item']]);
-		$master_item = reset($expanded);
-		$data['master_itemid'] = $master_item['itemid'];
-		$data['master_itemname'] = $master_item['name_expanded'];
+		$data['master_itemid'] = $item['master_item']['itemid'];
+		$data['master_itemname'] = $item['master_item']['name'];
 		// Do not initialize item data if only master_item array was passed.
 		unset($item['master_item']);
 	}
@@ -900,14 +863,13 @@ function getItemFormData(array $item = [], array $options = []) {
 	if ($data['parent_discoveryid'] != 0) {
 		$discoveryRule = API::DiscoveryRule()->get([
 			'output' => ['hostid'],
+			'selectHosts' => ['flags'],
 			'itemids' => $data['parent_discoveryid'],
 			'editable' => true
 		]);
 		$discoveryRule = reset($discoveryRule);
 		$data['hostid'] = $discoveryRule['hostid'];
-
-		$data['new_application_prototype'] = getRequest('new_application_prototype', '');
-		$data['application_prototypes'] = getRequest('application_prototypes', []);
+		$data['host'] = $discoveryRule['hosts'][0];
 	}
 	else {
 		$data['hostid'] = getRequest('hostid', 0);
@@ -924,11 +886,9 @@ function getItemFormData(array $item = [], array $options = []) {
 	// types, http items only for internal processes
 	$data['types'] = item_type2str();
 	unset($data['types'][ITEM_TYPE_HTTPTEST]);
+
 	if ($data['is_discovery_rule']) {
-		unset($data['types'][ITEM_TYPE_AGGREGATE],
-			$data['types'][ITEM_TYPE_CALCULATED],
-			$data['types'][ITEM_TYPE_SNMPTRAP]
-		);
+		unset($data['types'][ITEM_TYPE_CALCULATED], $data['types'][ITEM_TYPE_SNMPTRAP]);
 	}
 
 	// item
@@ -951,7 +911,9 @@ function getItemFormData(array $item = [], array $options = []) {
 			$flag = ZBX_FLAG_DISCOVERY_NORMAL;
 		}
 
-		$data['templates'] = makeItemTemplatesHtml($item['itemid'], getItemParentTemplates([$item], $flag), $flag);
+		$data['templates'] = makeItemTemplatesHtml($item['itemid'], getItemParentTemplates([$item], $flag), $flag,
+			CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_TEMPLATES)
+		);
 	}
 
 	// caption
@@ -1000,11 +962,11 @@ function getItemFormData(array $item = [], array $options = []) {
 		$data['privatekey'] = $data['item']['privatekey'];
 		$data['logtimefmt'] = $data['item']['logtimefmt'];
 		$data['jmx_endpoint'] = $data['item']['jmx_endpoint'];
-		$data['new_application'] = getRequest('new_application', '');
 		// ITEM_TYPE_HTTPAGENT
 		$data['timeout'] = $data['item']['timeout'];
 		$data['url'] = $data['item']['url'];
 		$data['query_fields'] = $data['item']['query_fields'];
+		$data['parameters'] = $data['item']['parameters'];
 		$data['posts'] = $data['item']['posts'];
 		$data['status_codes'] = $data['item']['status_codes'];
 		$data['follow_redirects'] = $data['item']['follow_redirects'];
@@ -1023,6 +985,10 @@ function getItemFormData(array $item = [], array $options = []) {
 		$data['http_username'] = $data['item']['username'];
 		$data['http_password'] = $data['item']['password'];
 
+		if (!$data['is_discovery_rule']) {
+			$data['tags'] = $data['item']['tags'];
+		}
+
 		if ($data['type'] == ITEM_TYPE_HTTPAGENT) {
 			// Convert hash to array where every item is hash for single key value pair as it is used by view.
 			$headers = [];
@@ -1033,15 +999,14 @@ function getItemFormData(array $item = [], array $options = []) {
 
 			$data['headers'] = $headers;
 		}
+		elseif ($data['type'] == ITEM_TYPE_SCRIPT && $data['parameters']) {
+			CArrayHelper::sort($data['parameters'], ['name']);
+		}
 
 		$data['preprocessing'] = $data['item']['preprocessing'];
 
 		if (!$data['is_discovery_rule']) {
 			$data['output_format'] = $data['item']['output_format'];
-		}
-
-		if ($data['parent_discoveryid'] != 0) {
-			$data['new_application_prototype'] = getRequest('new_application_prototype', '');
 		}
 
 		if (!$data['limited'] || !isset($_REQUEST['form_refresh'])) {
@@ -1059,7 +1024,8 @@ function getItemFormData(array $item = [], array $options = []) {
 					$delay = timeUnitToSeconds($data['delay']);
 
 					if ($delay == 0 && ($data['type'] == ITEM_TYPE_TRAPPER || $data['type'] == ITEM_TYPE_SNMPTRAP
-							|| $data['type'] == ITEM_TYPE_DEPENDENT)) {
+							|| $data['type'] == ITEM_TYPE_DEPENDENT || ($data['type'] == ITEM_TYPE_ZABBIX_ACTIVE
+								&& strncmp($data['key'], 'mqtt.get', 8) === 0))) {
 						$data['delay'] = ZBX_ITEM_DELAY_DEFAULT;
 					}
 				}
@@ -1087,59 +1053,11 @@ function getItemFormData(array $item = [], array $options = []) {
 			$data['history'] = $data['item']['history'];
 			$data['status'] = $data['item']['status'];
 			$data['trends'] = $data['item']['trends'];
-
-			$data['applications'] = array_unique(zbx_array_merge($data['applications'], get_applications_by_itemid($data['itemid'])));
-
-			if ($data['parent_discoveryid'] != 0) {
-				/*
-				 * Get a list of application prototypes assigned to item prototype. Don't select distinct names,
-				 * since database can be accidentally created case insensitive.
-				 */
-				$application_prototypes = DBfetchArray(DBselect(
-					'SELECT ap.name'.
-					' FROM application_prototype ap,item_application_prototype iap'.
-					' WHERE ap.application_prototypeid=iap.application_prototypeid'.
-						' AND ap.itemid='.zbx_dbstr($data['parent_discoveryid']).
-						' AND iap.itemid='.zbx_dbstr($data['itemid'])
-				));
-
-				// Merge form submitted data with data existing in DB to find diff and correctly display ListBox.
-				$data['application_prototypes'] = array_unique(
-					zbx_array_merge($data['application_prototypes'], zbx_objectValues($application_prototypes, 'name'))
-				);
-			}
 		}
 	}
 
 	if (!$data['delay_flex']) {
 		$data['delay_flex'][] = ['delay' => '', 'period' => '', 'type' => ITEM_DELAY_FLEXIBLE];
-	}
-
-	// applications
-	if (count($data['applications']) == 0) {
-		array_push($data['applications'], 0);
-	}
-	$data['db_applications'] = DBfetchArray(DBselect(
-		'SELECT DISTINCT a.applicationid,a.name'.
-		' FROM applications a'.
-		' WHERE a.hostid='.zbx_dbstr($data['hostid']).
-			(($data['parent_discoveryid'] != 0) ? ' AND a.flags='.ZBX_FLAG_DISCOVERY_NORMAL : '')
-	));
-	order_result($data['db_applications'], 'name');
-
-	if ($data['parent_discoveryid'] != 0) {
-		// Make the application prototype list no appearing empty, but filling it with "-None-" as first element.
-		if (count($data['application_prototypes']) == 0) {
-			$data['application_prototypes'][] = 0;
-		}
-
-		// Get a list of application prototypes by discovery rule.
-		$data['db_application_prototypes'] = DBfetchArray(DBselect(
-			'SELECT ap.application_prototypeid,ap.name'.
-			' FROM application_prototype ap'.
-			' WHERE ap.itemid='.zbx_dbstr($data['parent_discoveryid'])
-		));
-		order_result($data['db_application_prototypes'], 'name');
 	}
 
 	// interfaces
@@ -1153,25 +1071,42 @@ function getItemFormData(array $item = [], array $options = []) {
 		['field' => 'interfaceid','order' => ZBX_SORT_UP]
 	]);
 
-	if ($data['limited'] || (array_key_exists('item', $data) && $data['parent_discoveryid'] == 0
-			&& $data['item']['flags'] == ZBX_FLAG_DISCOVERY_CREATED)) {
+	if (!$data['is_discovery_rule'] && $data['form'] === 'clone') {
 		if ($data['valuemapid'] != 0) {
-			$valuemaps = API::ValueMap()->get([
-				'output' => ['name'],
-				'valuemapids' => [$data['valuemapid']]
+			$entity = ($data['parent_discoveryid'] == 0) ? API::Item() : API::ItemPrototype();
+			$cloned_item = $entity->get([
+				'output' => ['templateid'],
+				'selectValueMap' => ['name'],
+				'itemids' => $data['itemid']
 			]);
+			$cloned_item = reset($cloned_item);
 
-			if ($valuemaps) {
-				$data['valuemaps'] = $valuemaps[0]['name'];
+			if ($cloned_item['templateid'] != 0) {
+				$host_valuemaps = API::ValueMap()->get([
+					'output' => ['valuemapid'],
+					'hostids' => $data['hostid'],
+					'filter' => ['name' => $cloned_item['valuemap']['name']]
+				]);
+
+				$data['valuemapid'] = $host_valuemaps ? $host_valuemaps[0]['valuemapid'] : 0;
 			}
 		}
+
+		$data['itemid'] = 0;
+		$data['form'] = 'create';
+	}
+
+	if ($data['is_discovery_rule']) {
+		unset($data['valuemapid']);
+	}
+	else if ($data['valuemapid'] != 0) {
+		$data['valuemap'] = CArrayHelper::renameObjectsKeys(API::ValueMap()->get([
+			'output' => ['valuemapid', 'name'],
+			'valuemapids' => $data['valuemapid']
+		]), ['valuemapid' => 'id']);
 	}
 	else {
-		$data['valuemaps'] = API::ValueMap()->get([
-			'output' => ['valuemapid', 'name']
-		]);
-
-		CArrayHelper::sort($data['valuemaps'], ['name']);
+		$data['valuemap'] = [];
 	}
 
 	// possible host inventories
@@ -1198,13 +1133,102 @@ function getItemFormData(array $item = [], array $options = []) {
 		$data['master_itemid'] = 0;
 	}
 
+	if (!$data['is_discovery_rule']) {
+		// Select inherited tags.
+		if ($data['show_inherited_tags'] && array_key_exists('item', $data)) {
+			if ($data['item']['discoveryRule']) {
+				$items = [$data['item']['discoveryRule']];
+				$parent_templates = getItemParentTemplates($items, ZBX_FLAG_DISCOVERY_RULE)['templates'];
+			}
+			else {
+				$items = [[
+					'templateid' => $data['item']['templateid'],
+					'itemid' => $data['itemid']
+				]];
+				$parent_templates = getItemParentTemplates($items, ZBX_FLAG_DISCOVERY_NORMAL)['templates'];
+			}
+			unset($parent_templates[0]);
+
+			$db_templates = $parent_templates
+				? API::Template()->get([
+					'output' => ['templateid'],
+					'selectTags' => ['tag', 'value'],
+					'templateids' => array_keys($parent_templates),
+					'preservekeys' => true
+				])
+				: [];
+
+			$inherited_tags = [];
+
+			// Make list of template tags.
+			foreach ($parent_templates as $templateid => $template) {
+				if (array_key_exists($templateid, $db_templates)) {
+					foreach ($db_templates[$templateid]['tags'] as $tag) {
+						if (array_key_exists($tag['tag'], $inherited_tags)
+								&& array_key_exists($tag['value'], $inherited_tags[$tag['tag']])) {
+							$inherited_tags[$tag['tag']][$tag['value']]['parent_templates'] += [
+								$templateid => $template
+							];
+						}
+						else {
+							$inherited_tags[$tag['tag']][$tag['value']] = $tag + [
+								'parent_templates' => [$templateid => $template],
+								'type' => ZBX_PROPERTY_INHERITED
+							];
+						}
+					}
+				}
+			}
+
+			$db_hosts = API::Host()->get([
+				'output' => ['hostid', 'name'],
+				'selectTags' => ['tag', 'value'],
+				'hostids' => $data['hostid'],
+				'templated_hosts' => true
+			]);
+
+			// Overwrite and attach host level tags.
+			if ($db_hosts) {
+				foreach ($db_hosts[0]['tags'] as $tag) {
+					$inherited_tags[$tag['tag']][$tag['value']] = $tag;
+					$inherited_tags[$tag['tag']][$tag['value']]['type'] = ZBX_PROPERTY_INHERITED;
+				}
+			}
+
+			// Overwrite and attach item's own tags.
+			foreach ($data['tags'] as $tag) {
+				if (array_key_exists($tag['tag'], $inherited_tags)
+						&& array_key_exists($tag['value'], $inherited_tags[$tag['tag']])) {
+					$inherited_tags[$tag['tag']][$tag['value']]['type'] = ZBX_PROPERTY_BOTH;
+				}
+				else {
+					$inherited_tags[$tag['tag']][$tag['value']] = $tag + ['type' => ZBX_PROPERTY_OWN];
+				}
+			}
+
+			$data['tags'] = [];
+
+			foreach ($inherited_tags as $tag) {
+				foreach ($tag as $value) {
+					$data['tags'][] = $value;
+				}
+			}
+		}
+
+		if (!$data['tags']) {
+			$data['tags'] = [['tag' => '', 'value' => '']];
+		}
+		else {
+			CArrayHelper::sort($data['tags'], ['tag', 'value']);
+		}
+	}
+
 	return $data;
 }
 
 /**
  * Get list of item pre-processing data and return a prepared HTML object.
  *
- * @param CForm  $form                                     Form object to where add pre-processing list.
  * @param array  $preprocessing                            Array of item pre-processing steps.
  * @param string $preprocessing[]['type']                  Pre-processing step type.
  * @param array  $preprocessing[]['params']                Additional parameters used by pre-processing.
@@ -1215,7 +1239,7 @@ function getItemFormData(array $item = [], array $options = []) {
  *
  * @return CList
  */
-function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, array $types) {
+function getItemPreprocessing(array $preprocessing, $readonly, array $types) {
 	$script_maxlength = DB::getFieldLength('item_preproc', 'params');
 	$preprocessing_list = (new CList())
 		->setId('preprocessing')
@@ -1235,6 +1259,7 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 	$sortable = (count($preprocessing) > 1 && !$readonly);
 
 	$i = 0;
+	$have_validate_not_supported = in_array(ZBX_PREPROC_VALIDATE_NOT_SUPPORTED, array_column($preprocessing, 'type'));
 
 	foreach ($preprocessing as $step) {
 		// Create a select with preprocessing types.
@@ -1248,7 +1273,9 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 			$opt_group = new CSelectOptionGroup($group['label']);
 
 			foreach ($group['types'] as $type => $label) {
-				$opt_group->addOption(new CSelectOption($type, $label));
+				$enabled = (!$have_validate_not_supported || $type != ZBX_PREPROC_VALIDATE_NOT_SUPPORTED
+						|| $type == $step['type']);
+				$opt_group->addOption((new CSelectOption($type, $label))->setDisabled(!$enabled));
 			}
 
 			$preproc_types_select->addOptionGroup($opt_group);
@@ -1338,11 +1365,37 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 				break;
 
 			case ZBX_PREPROC_PROMETHEUS_PATTERN:
+				$step_param_2_value = (array_key_exists('params', $step) && array_key_exists(2, $step['params']))
+					? $step['params'][2]
+					: '';
+
+				if ($step_param_1_value === ZBX_PREPROC_PROMETHEUS_FUNCTION) {
+					$step_param_1_value = $step_param_2_value;
+					$step_param_2_value = '';
+				}
+
 				$params = [
 					$step_param_0->setAttribute('placeholder',
 						_('<metric name>{<label name>="<label value>", ...} == <value>')
 					),
-					$step_param_1->setAttribute('placeholder', _('<label name>'))
+					(new CSelect('preprocessing['.$i.'][params][1]'))
+						->addOptions(CSelect::createOptionsFromArray([
+							ZBX_PREPROC_PROMETHEUS_VALUE => _('value'),
+							ZBX_PREPROC_PROMETHEUS_LABEL => _('label'),
+							ZBX_PREPROC_PROMETHEUS_SUM => 'sum',
+							ZBX_PREPROC_PROMETHEUS_MIN => 'min',
+							ZBX_PREPROC_PROMETHEUS_MAX => 'max',
+							ZBX_PREPROC_PROMETHEUS_AVG => 'avg',
+							ZBX_PREPROC_PROMETHEUS_COUNT => 'count'
+						]))
+						->addClass('js-preproc-param-prometheus-pattern-function')
+						->setValue($step_param_1_value)
+						->setReadonly($readonly),
+					(new CTextBox('preprocessing['.$i.'][params][2]', $step_param_2_value))
+						->setTitle($step_param_2_value)
+						->setAttribute('placeholder', _('<label name>'))
+						->setEnabled($step_param_1_value === ZBX_PREPROC_PROMETHEUS_LABEL)
+						->setReadonly($readonly)
 				];
 				break;
 
@@ -1352,7 +1405,6 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 				);
 				break;
 
-			// ZBX-16642
 			case ZBX_PREPROC_CSV_TO_JSON:
 				$step_param_2_value = (array_key_exists('params', $step) && array_key_exists(2, $step['params']))
 					? $step['params'][2]
@@ -1394,6 +1446,12 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 			case ZBX_PREPROC_SCRIPT:
 			case ZBX_PREPROC_STR_REPLACE:
 				$on_fail->setEnabled(false);
+				break;
+
+			case ZBX_PREPROC_VALIDATE_NOT_SUPPORTED:
+				$on_fail
+					->setEnabled(false)
+					->setChecked(true);
 				break;
 
 			default:
@@ -1443,7 +1501,7 @@ function getItemPreprocessing(CForm $form, array $preprocessing, $readonly, arra
 		$preprocessing_list->addItem(
 			(new CListItem([
 				(new CDiv([
-					(new CDiv())
+					(new CDiv(new CVar('preprocessing['.$i.'][sortorder]', $step['sortorder'])))
 						->addClass(ZBX_STYLE_DRAG_ICON)
 						->addClass(!$sortable ? ZBX_STYLE_DISABLED : null),
 					(new CDiv($preproc_types_select))
@@ -1507,8 +1565,15 @@ function getCopyElementsFormData($elements_field, $title = null) {
 		'elements' => getRequest($elements_field, []),
 		'copy_type' => getRequest('copy_type', COPY_TYPE_TO_HOST_GROUP),
 		'copy_targetids' => getRequest('copy_targetids', []),
-		'hostid' => getRequest('hostid', 0)
+		'hostid' => 0
 	];
+
+	$prefix = (getRequest('context') === 'host') ? 'web.hosts.' : 'web.templates.';
+	$filter_hostids = getRequest('filter_hostids', CProfile::getArray($prefix.'triggers.filter_hostids', []));
+
+	if (count($filter_hostids) == 1) {
+		$data['hostid'] = reset($filter_hostids);
+	}
 
 	if (!$data['elements'] || !is_array($data['elements'])) {
 		show_error_message(_('Incorrect list of items.'));
@@ -1557,8 +1622,8 @@ function getTriggerMassupdateFormData() {
 		'parent_discoveryid' => getRequest('parent_discoveryid'),
 		'g_triggerid' => getRequest('g_triggerid', []),
 		'priority' => getRequest('priority', 0),
-		'config' => select_config(),
-		'hostid' => getRequest('hostid', 0)
+		'hostid' => getRequest('hostid', 0),
+		'context' => getRequest('context')
 	];
 
 	if ($data['dependencies']) {
@@ -1613,6 +1678,8 @@ function getTriggerMassupdateFormData() {
  * @param string      $data['recovery_expr_temp']               Trigger temporary recovery expression.
  * @param string      $data['recovery_mode']                    Trigger recovery mode.
  * @param string      $data['description']                      Trigger description.
+ * @param string      $data['event_name']                       Trigger event name.
+ * @param string      $data['opdata']                           Trigger operational data.
  * @param int         $data['type']                             Trigger problem event generation mode.
  * @param string      $data['priority']                         Trigger severity.
  * @param int         $data['status']                           Trigger status.
@@ -1625,6 +1692,11 @@ function getTriggerMassupdateFormData() {
  * @param string      $data['hostid']                           Host ID.
  * @param string      $data['expression_action']                Trigger expression action.
  * @param string      $data['recovery_expression_action']       Trigger recovery expression action.
+ * @param string      $data['tags']                             Trigger tags.
+ * @param string      $data['correlation_mode']                 Trigger correlation mode.
+ * @param string      $data['correlation_tag']                  Trigger correlation tag.
+ * @param string      $data['manual_close']                     Trigger manual close.
+ * @param string      $data['context']                          Additional parameter in URL to identify main section.
  *
  * @return array
  */
@@ -1668,7 +1740,8 @@ function getTriggerFormData(array $data) {
 
 		// Get templates.
 		$data['templates'] = makeTriggerTemplatesHtml($trigger['triggerid'],
-			getTriggerParentTemplates([$trigger], $flag), $flag
+			getTriggerParentTemplates([$trigger], $flag), $flag,
+			CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_TEMPLATES)
 		);
 
 		if ($data['show_inherited_tags']) {
@@ -1735,7 +1808,8 @@ function getTriggerFormData(array $data) {
 			$db_hosts = API::Host()->get([
 				'output' => [],
 				'selectTags' => ['tag', 'value'],
-				'hostids' => $data['hostid']
+				'hostids' => $data['hostid'],
+				'templated_hosts' => true
 			]);
 
 			if ($db_hosts) {
@@ -1788,6 +1862,7 @@ function getTriggerFormData(array $data) {
 
 		if (!$data['limited'] || !isset($_REQUEST['form_refresh'])) {
 			$data['description'] = $trigger['description'];
+			$data['event_name'] = $trigger['event_name'];
 			$data['opdata'] = $trigger['opdata'];
 			$data['type'] = $trigger['type'];
 			$data['recovery_mode'] = $trigger['recovery_mode'];
@@ -1834,30 +1909,32 @@ function getTriggerFormData(array $data) {
 
 	// Trigger expression constructor.
 	if ($data['expression_constructor'] == IM_TREE) {
-		$analyze = analyzeExpression($data['expression'], TRIGGER_EXPRESSION);
+		$analyze = analyzeExpression($data['expression'], TRIGGER_EXPRESSION, $error);
 
 		if ($analyze !== false) {
 			list($data['expression_formula'], $data['expression_tree']) = $analyze;
 
 			if ($data['expression_action'] !== '' && $data['expression_tree'] !== null) {
 				$new_expr = remakeExpression($data['expression'], $_REQUEST['expr_target_single'],
-					$data['expression_action'], $data['expr_temp']
+					$data['expression_action'], $data['expr_temp'], $error
 				);
 
 				if ($new_expr !== false) {
 					$data['expression'] = $new_expr;
-					$analyze = analyzeExpression($data['expression'], TRIGGER_EXPRESSION);
+					$analyze = analyzeExpression($data['expression'], TRIGGER_EXPRESSION, $error);
 
 					if ($analyze !== false) {
 						list($data['expression_formula'], $data['expression_tree']) = $analyze;
 					}
 					else {
+						error(_s('Cannot build expression tree: %1$s.', $error));
 						show_messages(false, '', _('Expression syntax error.'));
 					}
 
 					$data['expr_temp'] = '';
 				}
 				else {
+					error(_s('Cannot build expression tree: %1$s.', $error));
 					show_messages(false, '', _('Expression syntax error.'));
 				}
 			}
@@ -1867,6 +1944,7 @@ function getTriggerFormData(array $data) {
 			$data['expression_field_readonly'] = true;
 		}
 		else {
+			error(_s('Cannot build expression tree: %1$s.', $error));
 			show_messages(false, '', _('Expression syntax error.'));
 			$data['expression_field_name'] = 'expression';
 			$data['expression_field_value'] = $data['expression'];
@@ -1882,30 +1960,32 @@ function getTriggerFormData(array $data) {
 
 	// Trigger recovery expression constructor.
 	if ($data['recovery_expression_constructor'] == IM_TREE) {
-		$analyze = analyzeExpression($data['recovery_expression'], TRIGGER_RECOVERY_EXPRESSION);
+		$analyze = analyzeExpression($data['recovery_expression'], TRIGGER_RECOVERY_EXPRESSION, $error);
 
 		if ($analyze !== false) {
 			list($data['recovery_expression_formula'], $data['recovery_expression_tree']) = $analyze;
 
 			if ($data['recovery_expression_action'] !== '' && $data['recovery_expression_tree'] !== null) {
 				$new_expr = remakeExpression($data['recovery_expression'], $_REQUEST['recovery_expr_target_single'],
-					$data['recovery_expression_action'], $data['recovery_expr_temp']
+					$data['recovery_expression_action'], $data['recovery_expr_temp'], $error
 				);
 
 				if ($new_expr !== false) {
 					$data['recovery_expression'] = $new_expr;
-					$analyze = analyzeExpression($data['recovery_expression'], TRIGGER_RECOVERY_EXPRESSION);
+					$analyze = analyzeExpression($data['recovery_expression'], TRIGGER_RECOVERY_EXPRESSION, $error);
 
 					if ($analyze !== false) {
 						list($data['recovery_expression_formula'], $data['recovery_expression_tree']) = $analyze;
 					}
 					else {
+						error(_s('Cannot build expression tree: %1$s.', $error));
 						show_messages(false, '', _('Recovery expression syntax error.'));
 					}
 
 					$data['recovery_expr_temp'] = '';
 				}
 				else {
+					error(_s('Cannot build expression tree: %1$s.', $error));
 					show_messages(false, '', _('Recovery expression syntax error.'));
 				}
 			}
@@ -1915,6 +1995,7 @@ function getTriggerFormData(array $data) {
 			$data['recovery_expression_field_readonly'] = true;
 		}
 		else {
+			error(_s('Cannot build expression tree: %1$s.', $error));
 			show_messages(false, '', _('Recovery expression syntax error.'));
 			$data['recovery_expression_field_name'] = 'recovery_expression';
 			$data['recovery_expression_field_value'] = $data['recovery_expression'];
@@ -1980,18 +2061,22 @@ function renderTagTableRow($index, $tag = '', $value = '', array $options = []) 
 	return (new CRow([
 		(new CCol(
 			(new CTextAreaFlexible($options['field_name'].'['.$index.'][tag]', $tag, $options))
-				->setWidth(ZBX_TEXTAREA_TAG_WIDTH)
+				->setAdaptiveWidth(ZBX_TEXTAREA_TAG_WIDTH)
 				->setAttribute('placeholder', _('tag'))
 		))->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT),
 		(new CCol(
 			(new CTextAreaFlexible($options['field_name'].'['.$index.'][value]', $value, $options))
-				->setWidth(ZBX_TEXTAREA_TAG_VALUE_WIDTH)
+				->setAdaptiveWidth(ZBX_TEXTAREA_TAG_VALUE_WIDTH)
 				->setAttribute('placeholder', _('value'))
 		))->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_PARENT),
-		(new CButton($options['field_name'].'['.$index.'][remove]', _('Remove')))
-			->addClass(ZBX_STYLE_BTN_LINK)
-			->addClass('element-table-remove')
-			->setEnabled(!$options['readonly'])
+		(new CCol(
+			(new CButton($options['field_name'].'['.$index.'][remove]', _('Remove')))
+				->addClass(ZBX_STYLE_BTN_LINK)
+				->addClass('element-table-remove')
+				->setEnabled(!$options['readonly'])
+		))
+			->addClass(ZBX_STYLE_NOWRAP)
+			->addClass(ZBX_STYLE_TOP)
 	]))->addClass('form_row');
 }
 
@@ -2006,7 +2091,9 @@ function renderTagTableRow($index, $tag = '', $value = '', array $options = []) 
  * @return CTable
  */
 function renderTagTable(array $tags, $readonly = false, array $options = []) {
-	$table = (new CTable())->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_CONTAINER);
+	$table = (new CTable())
+		->addStyle('width: 100%; max-width: '.ZBX_TEXTAREA_BIG_WIDTH.'px;')
+		->addClass(ZBX_STYLE_TEXTAREA_FLEXIBLE_CONTAINER);
 
 	$row_options = ['readonly' => $readonly];
 

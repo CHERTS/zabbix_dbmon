@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@
  * @var CView $this
  */
 
+require_once dirname(__FILE__).'/js/configuration.item.prototype.list.js.php';
+
 $widget = (new CWidget())
 	->setTitle(_('Item prototypes'))
 	->setControls(
@@ -31,20 +33,23 @@ $widget = (new CWidget())
 				(new CUrl('disc_prototypes.php'))
 					->setArgument('form', 'create')
 					->setArgument('parent_discoveryid', $data['parent_discoveryid'])
+					->setArgument('context', $data['context'])
 					->getUrl()
 			))
 		))->setAttribute('aria-label', _('Content controls'))
 	)
-	->addItem(get_header_host_table('items', $data['hostid'], $data['parent_discoveryid']));
-
-// create form
-$itemForm = (new CForm())
-	->setName('items')
-	->addVar('parent_discoveryid', $data['parent_discoveryid']);
+	->setNavigation(getHostNavigation('items', $data['hostid'], $data['parent_discoveryid']));
 
 $url = (new CUrl('disc_prototypes.php'))
 	->setArgument('parent_discoveryid', $data['parent_discoveryid'])
+	->setArgument('context', $data['context'])
 	->getUrl();
+
+// create form
+$itemForm = (new CForm('post', $url))
+	->setName('items')
+	->addVar('parent_discoveryid', $data['parent_discoveryid'], 'form_parent_discoveryid')
+	->addVar('context', $data['context'], 'form_context');
 
 // create table
 $itemTable = (new CTableInfo())
@@ -52,39 +57,45 @@ $itemTable = (new CTableInfo())
 		(new CColHeader(
 			(new CCheckBox('all_items'))->onClick("checkAll('".$itemForm->getName()."', 'all_items', 'group_itemid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		_('Wizard'),
+		'',
 		make_sorting_header(_('Name'),'name', $data['sort'], $data['sortorder'], $url),
 		make_sorting_header(_('Key'), 'key_', $data['sort'], $data['sortorder'], $url),
 		make_sorting_header(_('Interval'), 'delay', $data['sort'], $data['sortorder'], $url),
 		make_sorting_header(_('History'), 'history', $data['sort'], $data['sortorder'], $url),
 		make_sorting_header(_('Trends'), 'trends', $data['sort'], $data['sortorder'], $url),
 		make_sorting_header(_('Type'), 'type', $data['sort'], $data['sortorder'], $url),
-		_('Applications'),
 		make_sorting_header(_('Create enabled'), 'status', $data['sort'], $data['sortorder'], $url),
-		make_sorting_header(_('Discover'), 'discover', $data['sort'], $data['sortorder'], $url)
+		make_sorting_header(_('Discover'), 'discover', $data['sort'], $data['sortorder'], $url),
+		_('Tags')
 	]);
 
 $update_interval_parser = new CUpdateIntervalParser(['usermacros' => true, 'lldmacros' => true]);
 
 foreach ($data['items'] as $item) {
 	$description = [];
-	$description[] = makeItemTemplatePrefix($item['itemid'], $data['parent_templates'], ZBX_FLAG_DISCOVERY_PROTOTYPE);
+	$description[] = makeItemTemplatePrefix($item['itemid'], $data['parent_templates'], ZBX_FLAG_DISCOVERY_PROTOTYPE,
+		$data['allowed_ui_conf_templates']
+	);
 
 	if ($item['type'] == ITEM_TYPE_DEPENDENT) {
 		if ($item['master_item']['type'] == ITEM_TYPE_HTTPTEST) {
-			$description[] = CHtml::encode($item['master_item']['name_expanded']);
+			$description[] = $item['master_item']['name'];
 		}
 		else {
 			$link = ($item['master_item']['source'] === 'itemprototypes')
-				? (new CUrl('disc_prototypes.php'))->setArgument('parent_discoveryid', $data['parent_discoveryid'])
+				? (new CUrl('disc_prototypes.php'))
+					->setArgument('parent_discoveryid', $data['parent_discoveryid'])
+					->setArgument('context', $data['context'])
 				: (new CUrl('items.php'))
 					->setArgument('filter_set', '1')
-					->setArgument('filter_hostids', [$item['hostid']]);
+					->setArgument('filter_hostids', [$item['hostid']])
+					->setArgument('context', $data['context']);
 
-			$description[] = (new CLink(CHtml::encode($item['master_item']['name_expanded']),
+			$description[] = (new CLink($item['master_item']['name'],
 				$link
 					->setArgument('form', 'update')
 					->setArgument('itemid', $item['master_item']['itemid'])
+					->setArgument('context', $data['context'])
 					->getUrl()
 			))
 				->addClass(ZBX_STYLE_LINK_ALT)
@@ -95,11 +106,12 @@ foreach ($data['items'] as $item) {
 	}
 
 	$description[] = new CLink(
-		$item['name_expanded'],
+		$item['name'],
 		(new CUrl('disc_prototypes.php'))
 			->setArgument('form', 'update')
 			->setArgument('parent_discoveryid', $data['parent_discoveryid'])
 			->setArgument('itemid', $item['itemid'])
+			->setArgument('context', $data['context'])
 			->getUrl()
 	);
 
@@ -112,24 +124,12 @@ foreach ($data['items'] as $item) {
 				? 'itemprototype.massenable'
 				: 'itemprototype.massdisable'
 			)
+			->setArgument('context', $data['context'])
 			->getUrl()
 	))
 		->addClass(ZBX_STYLE_LINK_ACTION)
 		->addClass(itemIndicatorStyle($item['status']))
 		->addSID();
-
-	if (!empty($item['applications'])) {
-		order_result($item['applications'], 'name');
-
-		$applications = zbx_objectValues($item['applications'], 'name');
-		$applications = implode(', ', $applications);
-		if (empty($applications)) {
-			$applications = '';
-		}
-	}
-	else {
-		$applications = '';
-	}
 
 	if (in_array($item['value_type'], [ITEM_VALUE_TYPE_STR, ITEM_VALUE_TYPE_LOG, ITEM_VALUE_TYPE_TEXT])) {
 		$item['trends'] = '';
@@ -137,28 +137,37 @@ foreach ($data['items'] as $item) {
 
 	// Hide zeros for trapper, SNMP trap and dependent items.
 	if ($item['type'] == ITEM_TYPE_TRAPPER || $item['type'] == ITEM_TYPE_SNMPTRAP
-			|| $item['type'] == ITEM_TYPE_DEPENDENT) {
+			|| $item['type'] == ITEM_TYPE_DEPENDENT
+			|| ($item['type'] == ITEM_TYPE_ZABBIX_ACTIVE && strncmp($item['key_'], 'mqtt.get', 8) === 0)) {
 		$item['delay'] = '';
 	}
 	elseif ($update_interval_parser->parse($item['delay']) == CParser::PARSE_SUCCESS) {
 		$item['delay'] = $update_interval_parser->getDelay();
 	}
 
-	$item_menu = CMenuPopupHelper::getItemPrototype($item['itemid'], $data['parent_discoveryid']);
+	$item_menu = CMenuPopupHelper::getItemPrototypeConfiguration([
+		'itemid' => $item['itemid'],
+		'context' => $data['context'],
+		'backurl' => (new CUrl('disc_prototypes.php'))
+			->setArgument('parent_discoveryid', $data['parent_discoveryid'])
+			->setArgument('context', $data['context'])
+			->getUrl()
+	]);
 
-	$wizard = (new CSpan(
-		(new CButton(null))->addClass(ZBX_STYLE_ICON_WZRD_ACTION)->setMenuPopup($item_menu)
-	))->addClass(ZBX_STYLE_REL_CONTAINER);
+	$wizard = (new CButton(null))
+		->addClass(ZBX_STYLE_ICON_WIZARD_ACTION)
+		->setMenuPopup($item_menu);
 
 	$nodiscover = ($item['discover'] == ZBX_PROTOTYPE_NO_DISCOVER);
 	$discover = (new CLink($nodiscover ? _('No') : _('Yes'),
 			(new CUrl('disc_prototypes.php'))
 				->setArgument('group_itemid[]', $item['itemid'])
 				->setArgument('parent_discoveryid', $data['parent_discoveryid'])
-				->setArgument('visible[discover]', '1')
-				->setArgument('massupdate', 'discover')
-				->setArgument('discover', $nodiscover ? ZBX_PROTOTYPE_DISCOVER : ZBX_PROTOTYPE_NO_DISCOVER)
-				->setArgumentSID()
+				->setArgument('action', $nodiscover
+					? 'itemprototype.massdiscover.enable'
+					: 'itemprototype.massdiscover.disable'
+				)
+				->setArgument('context', $data['context'])
 				->getUrl()
 		))
 			->addSID()
@@ -169,14 +178,14 @@ foreach ($data['items'] as $item) {
 		new CCheckBox('group_itemid['.$item['itemid'].']', $item['itemid']),
 		$wizard,
 		$description,
-		(new CDiv(CHtml::encode($item['key_'])))->addClass(ZBX_STYLE_WORDWRAP),
+		(new CDiv($item['key_']))->addClass(ZBX_STYLE_WORDWRAP),
 		$item['delay'],
 		$item['history'],
 		$item['trends'],
 		item_type2str($item['type']),
-		$applications,
 		$status,
-		$discover
+		$discover,
+		$data['tags'][$item['itemid']]
 	]);
 }
 
@@ -192,7 +201,17 @@ $itemForm->addItem([
 			'itemprototype.massdisable' => ['name' => _('Create disabled'),
 				'confirm' => _('Create items from selected prototypes as disabled?')
 			],
-			'itemprototype.massupdateform' => ['name' => _('Mass update')],
+			'popup.massupdate.itemprototype' => [
+				'content' => (new CButton('', _('Mass update')))
+					->onClick(
+						"openMassupdatePopup('popup.massupdate.itemprototype', {}, {
+							dialogue_class: 'modal-popup-preprocessing',
+							trigger_element: this
+						});"
+					)
+					->addClass(ZBX_STYLE_BTN_ALT)
+					->removeAttribute('id')
+			],
 			'itemprototype.massdelete' => ['name' => _('Delete'),
 				'confirm' => _('Delete selected item prototypes?')
 			]

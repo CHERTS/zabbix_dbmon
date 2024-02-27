@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -48,26 +48,40 @@ class CDropdownElement extends CElement {
 	/**
 	 * Select option by text.
 	 *
-	 * @param string $text    option text to be selected
+	 * @param string $text		option text to be selected
 	 *
 	 * @return $this
 	 */
 	public function select($text) {
-		$xpath = 'xpath:.//li[not(@optgroup) and text()='.CXPathHelper::escapeQuotes($text).']';
-
 		if ($text === $this->getText()) {
 			return $this;
 		}
 
-		for ($i = 0; $i < 5; $i++) {
-			try {
-				$this->waitUntilClickable()->click();
-				$this->query($xpath)->one()->click();
+		$option = null;
+		if ($this->query("xpath:.//li[not(@optgroup)]/*")->count() > 0) {
+			foreach ($this->getOptions() as $element) {
+				if ($text === $element->getText()) {
+					$option = $element;
 
-				return $this;
+					break;
+				}
 			}
-			catch (Exception $exception) {
-				// Code is not missing here.
+		}
+		else {
+			$option = $this->query('xpath:.//li[not(@optgroup) and text()='.CXPathHelper::escapeQuotes($text).']')->one();
+		}
+		if ($option !== null) {
+			for ($i = 0; $i < 5; $i++) {
+				try {
+					$this->waitUntilClickable()->click();
+					$option->scrollIntoView();
+					$option->click();
+
+					return $this;
+				}
+				catch (Exception $exception) {
+					// Code is not missing here.
+				}
 			}
 		}
 

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,21 +17,17 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+#include "zabbix_stats.h"
+
 #include "common.h"
-#include "zbxjson.h"
 #include "dbcache.h"
 #include "zbxself.h"
-#include "valuecache.h"
 #include "../../zabbix_server/vmware/vmware.h"
 #include "preproc.h"
-
-#include "zabbix_stats.h"
 
 extern unsigned char	program_type;
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_send_zabbix_stats                                            *
  *                                                                            *
  * Purpose: collects all metrics required for Zabbix stats request            *
  *                                                                            *
@@ -49,10 +45,10 @@ void	zbx_get_zabbix_stats(struct zbx_json *json)
 	DCget_count_stats_all(&count_stats);
 
 	/* zabbix[boottime] */
-	zbx_json_adduint64(json, "boottime", CONFIG_SERVER_STARTUP_TIME);
+	zbx_json_addint64(json, "boottime", CONFIG_SERVER_STARTUP_TIME);
 
 	/* zabbix[uptime] */
-	zbx_json_adduint64(json, "uptime", time(NULL) - CONFIG_SERVER_STARTUP_TIME);
+	zbx_json_addint64(json, "uptime", time(NULL) - CONFIG_SERVER_STARTUP_TIME);
 
 	/* zabbix[hosts] */
 	zbx_json_adduint64(json, "hosts", count_stats.hosts);
@@ -163,10 +159,12 @@ void	zbx_get_zabbix_stats(struct zbx_json *json)
 			zbx_json_addfloat(json, "max", process_stats[proc_type].idle_max);
 			zbx_json_addfloat(json, "min", process_stats[proc_type].idle_min);
 			zbx_json_close(json);
-			zbx_json_adduint64(json, "count", process_stats[proc_type].count);
+			zbx_json_addint64(json, "count", process_stats[proc_type].count);
 			zbx_json_close(json);
 		}
 	}
+
+	zbx_json_close(json);
 
 	zbx_json_close(json);
 }

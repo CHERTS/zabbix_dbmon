@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"zabbix.com/pkg/log"
+	"git.zabbix.com/ap/plugin-support/log"
 	"zabbix.com/pkg/win32"
 
 	"golang.org/x/sys/windows"
@@ -75,33 +75,35 @@ type CounterPathElements struct {
 func LocateObjectsAndDefaultCounters(resetDefCounters bool) (err error) {
 	ObjectsNames = make(map[string]string)
 
-	engBuf, err := getRegQueryCounters(HKEY_PERFORMANCE_NLSTEXT)
-	if err != nil {
-		return
-	}
-
 	locNames, err := win32.PdhEnumObject()
 	if err != nil {
 		return err
 	}
 
-	var wcharEngIndex, wcharEngName []uint16
 	englishCounters := make(map[string]int)
-	for len(engBuf) != 0 {
-		wcharEngIndex, engBuf = win32.NextField(engBuf)
-		if len(wcharEngIndex) == 0 {
-			break
-		}
-		wcharEngName, engBuf = win32.NextField(engBuf)
-		if len(wcharEngName) == 0 {
-			break
-		}
 
-		idx, err := strconv.Atoi(windows.UTF16ToString(wcharEngIndex))
-		if err != nil {
-			return err
+	engBuf, err := getRegQueryCounters(HKEY_PERFORMANCE_NLSTEXT)
+	if err == nil {
+		var wcharEngIndex, wcharEngName []uint16
+
+		for len(engBuf) != 0 {
+			wcharEngIndex, engBuf = win32.NextField(engBuf)
+			if len(wcharEngIndex) == 0 {
+				break
+			}
+			wcharEngName, engBuf = win32.NextField(engBuf)
+			if len(wcharEngName) == 0 {
+				break
+			}
+
+			idx, err := strconv.Atoi(windows.UTF16ToString(wcharEngIndex))
+			if err != nil {
+				return err
+			}
+			englishCounters[windows.UTF16ToString(wcharEngName)] = idx
 		}
-		englishCounters[windows.UTF16ToString(wcharEngName)] = idx
+	} else {
+		log.Warningf("cannot read localized object names: %s", err.Error())
 	}
 
 	objectsLocal := make(map[int]string)
@@ -196,7 +198,7 @@ func GetCounterDouble(path string) (value *float64, err error) {
 	if err = win32.PdhCollectQueryData(query); err != nil {
 		return
 	}
-	return win32.PdhGetFormattedCounterValueDouble(counter)
+	return win32.PdhGetFormattedCounterValueDouble(counter, 2)
 }
 
 func GetCounterInt64(path string) (value *int64, err error) {

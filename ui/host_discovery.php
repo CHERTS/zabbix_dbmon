@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ require_once dirname(__FILE__).'/include/forms.inc.php';
 
 $page['title'] = _('Configuration of discovery rules');
 $page['file'] = 'host_discovery.php';
-$page['scripts'] = ['class.cviewswitcher.js', 'multilineinput.js', 'multiselect.js', 'items.js', 'textareaflexible.js'];
+$page['scripts'] = ['multilineinput.js', 'items.js'];
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
@@ -56,16 +56,18 @@ $fields = [
 	'delay' =>					[T_ZBX_TU, O_OPT, P_ALLOW_USER_MACRO, null,
 									'(isset({add}) || isset({update})) && isset({type})'.
 										' && {type} != '.ITEM_TYPE_TRAPPER.' && {type} != '.ITEM_TYPE_SNMPTRAP.
-										' && {type} != '.ITEM_TYPE_DEPENDENT,
+										' && {type} != '.ITEM_TYPE_DEPENDENT.
+										' && !({type} == '.ITEM_TYPE_ZABBIX_ACTIVE.
+											' && isset({key}) && strncmp({key}, "mqtt.get", 8) === 0)',
 									_('Update interval')
 								],
-	'delay_flex' =>				[T_ZBX_STR, O_OPT, null,	null,			null],
+	'delay_flex' =>				[T_ZBX_STR, O_OPT, P_ONLY_TD_ARRAY,	null,			null],
 	'status' =>					[T_ZBX_INT, O_OPT, null,	IN(ITEM_STATUS_ACTIVE), null],
 	'type' =>					[T_ZBX_INT, O_OPT, null,
 									IN([-1, ITEM_TYPE_ZABBIX, ITEM_TYPE_TRAPPER, ITEM_TYPE_SIMPLE, ITEM_TYPE_INTERNAL,
 										ITEM_TYPE_ZABBIX_ACTIVE, ITEM_TYPE_EXTERNAL, ITEM_TYPE_DB_MONITOR,
 										ITEM_TYPE_IPMI, ITEM_TYPE_SSH, ITEM_TYPE_TELNET, ITEM_TYPE_JMX,
-										ITEM_TYPE_DEPENDENT, ITEM_TYPE_HTTPAGENT, ITEM_TYPE_SNMP
+										ITEM_TYPE_DEPENDENT, ITEM_TYPE_HTTPAGENT, ITEM_TYPE_SNMP, ITEM_TYPE_SCRIPT
 									]),
 									'isset({add}) || isset({update})'
 								],
@@ -90,7 +92,7 @@ $fields = [
 								],
 	$paramsFieldName =>			[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'(isset({add}) || isset({update}))'.
 									' && isset({type}) && '.IN(ITEM_TYPE_SSH.','.ITEM_TYPE_DB_MONITOR.','.
-										ITEM_TYPE_TELNET.','.ITEM_TYPE_CALCULATED, 'type'
+										ITEM_TYPE_TELNET.','.ITEM_TYPE_CALCULATED.','.ITEM_TYPE_SCRIPT, 'type'
 									),
 									getParamFieldLabelByType(getRequest('type', 0))
 								],
@@ -109,14 +111,14 @@ $fields = [
 	'lifetime' =>				[T_ZBX_STR, O_OPT, null,	null,		'isset({add}) || isset({update})'],
 	'evaltype' =>				[T_ZBX_INT, O_OPT, null, 	IN($evalTypes), 'isset({add}) || isset({update})'],
 	'formula' =>				[T_ZBX_STR, O_OPT, null,	null,		'isset({add}) || isset({update})'],
-	'conditions' =>				[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
-	'lld_macro_paths' =>		[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
+	'conditions' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ONLY_TD_ARRAY,	null,	null],
+	'lld_macro_paths' =>		[T_ZBX_STR, O_OPT, P_SYS|P_ONLY_TD_ARRAY,	null,	null],
 	'jmx_endpoint' =>			[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,
 		'(isset({add}) || isset({update})) && isset({type}) && {type} == '.ITEM_TYPE_JMX
 	],
 	'timeout' => 				[T_ZBX_TU, O_OPT, P_ALLOW_USER_MACRO,	null,
 									'(isset({add}) || isset({update})) && isset({type})'.
-										' && {type} == '.ITEM_TYPE_HTTPAGENT,
+										' && '.IN(ITEM_TYPE_HTTPAGENT.','.ITEM_TYPE_SCRIPT, 'type'),
 									_('Timeout')
 								],
 	'url' =>					[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,
@@ -124,9 +126,10 @@ $fields = [
 										' && {type} == '.ITEM_TYPE_HTTPAGENT,
 									_('URL')
 								],
-	'query_fields' =>			[T_ZBX_STR, O_OPT, null,	null,		null],
-	'posts' =>					[T_ZBX_STR, O_OPT, null,	null,		null],
-	'status_codes' =>			[T_ZBX_STR, O_OPT, null,	null,		null],
+	'query_fields' =>			[T_ZBX_STR, O_OPT, P_ONLY_TD_ARRAY,	null,	null],
+	'parameters' =>				[T_ZBX_STR, O_OPT, P_ONLY_TD_ARRAY,	null,	null],
+	'posts' =>					[T_ZBX_STR, O_OPT, null,	null,			null],
+	'status_codes' =>			[T_ZBX_STR, O_OPT, null,	null,			null],
 	'follow_redirects' =>		[T_ZBX_INT, O_OPT, null,
 									IN([HTTPTEST_STEP_FOLLOW_REDIRECTS_OFF, HTTPTEST_STEP_FOLLOW_REDIRECTS_ON]),
 									null
@@ -135,8 +138,8 @@ $fields = [
 									IN([ZBX_POSTTYPE_RAW, ZBX_POSTTYPE_JSON, ZBX_POSTTYPE_XML]),
 									null
 								],
-	'http_proxy' =>				[T_ZBX_STR, O_OPT, null,	null,		null],
-	'headers' => 				[T_ZBX_STR, O_OPT, null,	null,		null],
+	'http_proxy' =>				[T_ZBX_STR, O_OPT, null,			null,	null],
+	'headers' => 				[T_ZBX_STR, O_OPT, P_ONLY_TD_ARRAY,	null,	null],
 	'retrieve_mode' =>			[T_ZBX_INT, O_OPT, null,
 									IN([HTTPTEST_STEP_RETRIEVE_MODE_CONTENT, HTTPTEST_STEP_RETRIEVE_MODE_HEADERS,
 										HTTPTEST_STEP_RETRIEVE_MODE_BOTH
@@ -165,7 +168,7 @@ $fields = [
 								],
 	'http_authtype' =>			[T_ZBX_INT, O_OPT, null,
 									IN([HTTPTEST_AUTH_NONE, HTTPTEST_AUTH_BASIC, HTTPTEST_AUTH_NTLM,
-										HTTPTEST_AUTH_KERBEROS
+										HTTPTEST_AUTH_KERBEROS, HTTPTEST_AUTH_DIGEST
 									]),
 									null
 								],
@@ -173,18 +176,23 @@ $fields = [
 									'(isset({add}) || isset({update})) && isset({http_authtype})'.
 										' && ({http_authtype} == '.HTTPTEST_AUTH_BASIC.
 											' || {http_authtype} == '.HTTPTEST_AUTH_NTLM.
-											' || {http_authtype} == '.HTTPTEST_AUTH_KERBEROS.')',
+											' || {http_authtype} == '.HTTPTEST_AUTH_KERBEROS.
+											' || {http_authtype} == '.HTTPTEST_AUTH_DIGEST.
+										')',
 									_('Username')
 								],
 	'http_password' =>			[T_ZBX_STR, O_OPT, null,	null,
 									'(isset({add}) || isset({update})) && isset({http_authtype})'.
 										' && ({http_authtype} == '.HTTPTEST_AUTH_BASIC.
 											' || {http_authtype} == '.HTTPTEST_AUTH_NTLM.
-											' || {http_authtype} == '.HTTPTEST_AUTH_KERBEROS.')',
+											' || {http_authtype} == '.HTTPTEST_AUTH_KERBEROS.
+											' || {http_authtype} == '.HTTPTEST_AUTH_DIGEST.
+										')',
 									_('Password')
 								],
-	'preprocessing' =>			[T_ZBX_STR, O_OPT, P_NO_TRIM,	null,	null],
-	'overrides' =>				[T_ZBX_STR, O_OPT, P_NO_TRIM,	null,	null],
+	'preprocessing' =>			[null,      O_OPT, P_NO_TRIM|P_ONLY_TD_ARRAY,	null,	null],
+	'overrides' =>				[null,      O_OPT, P_NO_TRIM|P_ONLY_TD_ARRAY,	null,	null],
+	'context' =>				[T_ZBX_STR, O_MAND, P_SYS,		IN('"host", "template"'),	null],
 	// actions
 	'action' =>					[T_ZBX_STR, O_OPT, P_SYS|P_ACT,
 									IN('"discoveryrule.massdelete","discoveryrule.massdisable",'.
@@ -192,7 +200,7 @@ $fields = [
 									),
 									null
 								],
-	'g_hostdruleid' =>			[T_ZBX_INT, O_OPT, null,	DB_ID,		null],
+	'g_hostdruleid' =>			[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	DB_ID,		null],
 	'add' =>					[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'update' =>					[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
 	'clone' =>					[T_ZBX_STR, O_OPT, P_SYS|P_ACT, null,	null],
@@ -200,19 +208,19 @@ $fields = [
 	'cancel' =>					[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'check_now' =>				[T_ZBX_STR, O_OPT, P_SYS|P_ACT,	null,	null],
 	'form' =>					[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
-	'form_refresh' =>			[T_ZBX_INT, O_OPT, null,	null,		null],
+	'form_refresh' =>			[T_ZBX_INT, O_OPT, P_SYS,	null,		null],
 	// filter
 	'filter_set' =>				[T_ZBX_STR, O_OPT, null,	null,		null],
 	'filter_rst' =>				[T_ZBX_STR, O_OPT, null,	null,		null],
-	'filter_groupids' =>		[T_ZBX_INT, O_OPT, null,	DB_ID,		null],
-	'filter_hostids' =>			[T_ZBX_INT, O_OPT, null,	DB_ID,		null],
+	'filter_groupids' =>		[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	DB_ID,	null],
+	'filter_hostids' =>			[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	DB_ID,	null],
 	'filter_name' =>			[T_ZBX_STR, O_OPT, null,	null,		null],
 	'filter_key' =>				[T_ZBX_STR, O_OPT, null,	null,		null],
 	'filter_type' =>			[T_ZBX_INT, O_OPT, null,
 									IN([-1, ITEM_TYPE_ZABBIX, ITEM_TYPE_TRAPPER, ITEM_TYPE_SIMPLE, ITEM_TYPE_INTERNAL,
 										ITEM_TYPE_ZABBIX_ACTIVE, ITEM_TYPE_EXTERNAL, ITEM_TYPE_DB_MONITOR,
 										ITEM_TYPE_IPMI, ITEM_TYPE_SSH, ITEM_TYPE_TELNET, ITEM_TYPE_JMX,
-										ITEM_TYPE_DEPENDENT, ITEM_TYPE_HTTPAGENT, ITEM_TYPE_SNMP
+										ITEM_TYPE_DEPENDENT, ITEM_TYPE_HTTPAGENT, ITEM_TYPE_SNMP, ITEM_TYPE_SCRIPT
 									]),
 									null
 								],
@@ -225,10 +233,17 @@ $fields = [
 	'filter_status' =>			[T_ZBX_INT, O_OPT, null,	IN([-1, ITEM_STATUS_ACTIVE, ITEM_STATUS_DISABLED]),
 									null
 								],
+	'backurl' =>				[T_ZBX_STR, O_OPT, null,	null,		null],
 	// sort and sortorder
 	'sort' =>					[T_ZBX_STR, O_OPT, P_SYS, IN('"delay","key_","name","status","type"'),	null],
 	'sortorder' =>				[T_ZBX_STR, O_OPT, P_SYS, IN('"'.ZBX_SORT_DOWN.'","'.ZBX_SORT_UP.'"'),	null]
 ];
+
+if (getRequest('interfaceid') == INTERFACE_TYPE_OPT) {
+	unset($fields['interfaceid']);
+	unset($_REQUEST['interfaceid']);
+}
+
 check_fields($fields);
 
 $_REQUEST['params'] = getRequest($paramsFieldName, '');
@@ -286,55 +301,62 @@ elseif ($hostid) {
 	}
 }
 
+// Validate backurl.
+if (hasRequest('backurl') && !CHtmlUrlValidator::validateSameSite(getRequest('backurl'))) {
+	access_deny();
+}
+
+$prefix = (getRequest('context') === 'host') ? 'web.hosts.' : 'web.templates.';
+
 /**
  * Filter.
  */
-$sort_field = getRequest('sort', CProfile::get('web.'.$page['file'].'.sort', 'name'));
-$sort_order = getRequest('sortorder', CProfile::get('web.'.$page['file'].'.sortorder', ZBX_SORT_UP));
+$sort_field = getRequest('sort', CProfile::get($prefix.$page['file'].'.sort', 'name'));
+$sort_order = getRequest('sortorder', CProfile::get($prefix.$page['file'].'.sortorder', ZBX_SORT_UP));
 
-CProfile::update('web.'.$page['file'].'.sort', $sort_field, PROFILE_TYPE_STR);
-CProfile::update('web.'.$page['file'].'.sortorder', $sort_order, PROFILE_TYPE_STR);
+CProfile::update($prefix.$page['file'].'.sort', $sort_field, PROFILE_TYPE_STR);
+CProfile::update($prefix.$page['file'].'.sortorder', $sort_order, PROFILE_TYPE_STR);
 
 if (hasRequest('filter_set')) {
-	CProfile::updateArray('web.host_discovery.filter.groupids', getRequest('filter_groupids', []), PROFILE_TYPE_ID);
-	CProfile::updateArray('web.host_discovery.filter.hostids', getRequest('filter_hostids', []), PROFILE_TYPE_ID);
-	CProfile::update('web.host_discovery.filter.name', getRequest('filter_name', ''), PROFILE_TYPE_STR);
-	CProfile::update('web.host_discovery.filter.key', getRequest('filter_key', ''), PROFILE_TYPE_STR);
-	CProfile::update('web.host_discovery.filter.type', getRequest('filter_type', -1), PROFILE_TYPE_INT);
-	CProfile::update('web.host_discovery.filter.delay', getRequest('filter_delay', ''), PROFILE_TYPE_STR);
-	CProfile::update('web.host_discovery.filter.lifetime', getRequest('filter_lifetime', ''), PROFILE_TYPE_STR);
-	CProfile::update('web.host_discovery.filter.snmp_oid', getRequest('filter_snmp_oid', ''), PROFILE_TYPE_STR);
-	CProfile::update('web.host_discovery.filter.state', getRequest('filter_state', -1), PROFILE_TYPE_INT);
-	CProfile::update('web.host_discovery.filter.status', getRequest('filter_status', -1), PROFILE_TYPE_INT);
+	CProfile::updateArray($prefix.'host_discovery.filter.groupids', getRequest('filter_groupids', []), PROFILE_TYPE_ID);
+	CProfile::updateArray($prefix.'host_discovery.filter.hostids', getRequest('filter_hostids', []), PROFILE_TYPE_ID);
+	CProfile::update($prefix.'host_discovery.filter.name', getRequest('filter_name', ''), PROFILE_TYPE_STR);
+	CProfile::update($prefix.'host_discovery.filter.key', getRequest('filter_key', ''), PROFILE_TYPE_STR);
+	CProfile::update($prefix.'host_discovery.filter.type', getRequest('filter_type', -1), PROFILE_TYPE_INT);
+	CProfile::update($prefix.'host_discovery.filter.delay', getRequest('filter_delay', ''), PROFILE_TYPE_STR);
+	CProfile::update($prefix.'host_discovery.filter.lifetime', getRequest('filter_lifetime', ''), PROFILE_TYPE_STR);
+	CProfile::update($prefix.'host_discovery.filter.snmp_oid', getRequest('filter_snmp_oid', ''), PROFILE_TYPE_STR);
+	CProfile::update($prefix.'host_discovery.filter.state', getRequest('filter_state', -1), PROFILE_TYPE_INT);
+	CProfile::update($prefix.'host_discovery.filter.status', getRequest('filter_status', -1), PROFILE_TYPE_INT);
 }
 elseif (hasRequest('filter_rst')) {
-	CProfile::deleteIdx('web.host_discovery.filter.groupids');
+	CProfile::deleteIdx($prefix.'host_discovery.filter.groupids');
 
-	if (count(CProfile::getArray('web.host_discovery.filter.hostids', [])) != 1) {
-		CProfile::deleteIdx('web.host_discovery.filter.hostids');
+	if (count(CProfile::getArray($prefix.'host_discovery.filter.hostids', [])) != 1) {
+		CProfile::deleteIdx($prefix.'host_discovery.filter.hostids');
 	}
 
-	CProfile::delete('web.host_discovery.filter.name');
-	CProfile::delete('web.host_discovery.filter.key');
-	CProfile::delete('web.host_discovery.filter.type');
-	CProfile::delete('web.host_discovery.filter.delay');
-	CProfile::delete('web.host_discovery.filter.lifetime');
-	CProfile::delete('web.host_discovery.filter.snmp_oid');
-	CProfile::delete('web.host_discovery.filter.state');
-	CProfile::delete('web.host_discovery.filter.status');
+	CProfile::delete($prefix.'host_discovery.filter.name');
+	CProfile::delete($prefix.'host_discovery.filter.key');
+	CProfile::delete($prefix.'host_discovery.filter.type');
+	CProfile::delete($prefix.'host_discovery.filter.delay');
+	CProfile::delete($prefix.'host_discovery.filter.lifetime');
+	CProfile::delete($prefix.'host_discovery.filter.snmp_oid');
+	CProfile::delete($prefix.'host_discovery.filter.state');
+	CProfile::delete($prefix.'host_discovery.filter.status');
 }
 
 $filter = [
-	'groups' => CProfile::getArray('web.host_discovery.filter.groupids', []),
-	'hosts' => CProfile::getArray('web.host_discovery.filter.hostids', []),
-	'name' => CProfile::get('web.host_discovery.filter.name', ''),
-	'key' => CProfile::get('web.host_discovery.filter.key', ''),
-	'type' => CProfile::get('web.host_discovery.filter.type', -1),
-	'delay' => CProfile::get('web.host_discovery.filter.delay', ''),
-	'lifetime' => CProfile::get('web.host_discovery.filter.lifetime', ''),
-	'snmp_oid' => CProfile::get('web.host_discovery.filter.snmp_oid', ''),
-	'state' => CProfile::get('web.host_discovery.filter.state', -1),
-	'status' => CProfile::get('web.host_discovery.filter.status', -1)
+	'groups' => CProfile::getArray($prefix.'host_discovery.filter.groupids', []),
+	'hosts' => CProfile::getArray($prefix.'host_discovery.filter.hostids', []),
+	'name' => CProfile::get($prefix.'host_discovery.filter.name', ''),
+	'key' => CProfile::get($prefix.'host_discovery.filter.key', ''),
+	'type' => CProfile::get($prefix.'host_discovery.filter.type', -1),
+	'delay' => CProfile::get($prefix.'host_discovery.filter.delay', ''),
+	'lifetime' => CProfile::get($prefix.'host_discovery.filter.lifetime', ''),
+	'snmp_oid' => CProfile::get($prefix.'host_discovery.filter.snmp_oid', ''),
+	'state' => CProfile::get($prefix.'host_discovery.filter.state', -1),
+	'status' => CProfile::get($prefix.'host_discovery.filter.status', -1)
 ];
 
 $filter_groupids = [];
@@ -345,7 +367,6 @@ if ($filter['groups']) {
 	$filter['groups'] = CArrayHelper::renameObjectsKeys(API::HostGroup()->get([
 		'output' => ['groupid', 'name'],
 		'groupids' => $filter['groups'],
-		'editable' => true,
 		'preservekeys' => true
 	]), ['groupid' => 'id']);
 
@@ -354,13 +375,22 @@ if ($filter['groups']) {
 
 // Get hosts.
 if ($filter['hosts']) {
-	$filter['hosts'] = CArrayHelper::renameObjectsKeys(API::Host()->get([
-		'output' => ['hostid', 'name'],
-		'hostids' => $filter['hosts'],
-		'templated_hosts' => true,
-		'editable' => true,
-		'preservekeys' => true
-	]), ['hostid' => 'id']);
+	if (getRequest('context') === 'host') {
+		$filter['hosts'] = CArrayHelper::renameObjectsKeys(API::Host()->get([
+			'output' => ['hostid', 'name'],
+			'hostids' => $filter['hosts'],
+			'editable' => true,
+			'preservekeys' => true
+		]), ['hostid' => 'id']);
+	}
+	else {
+		$filter['hosts'] = CArrayHelper::renameObjectsKeys(API::Template()->get([
+			'output' => ['templateid', 'name'],
+			'templateids' => $filter['hosts'],
+			'editable' => true,
+			'preservekeys' => true
+		]), ['templateid' => 'id']);
+	}
 
 	$filter_hostids = array_keys($filter['hosts']);
 
@@ -412,7 +442,9 @@ elseif (hasRequest('add') || hasRequest('update')) {
 	 * "delay_flex" is a temporary field that collects flexible and scheduling intervals separated by a semicolon.
 	 * In the end, custom intervals together with "delay" are stored in the "delay" variable.
 	 */
-	if ($type != ITEM_TYPE_TRAPPER && $type != ITEM_TYPE_SNMPTRAP && hasRequest('delay_flex')) {
+	if ($type != ITEM_TYPE_TRAPPER && $type != ITEM_TYPE_SNMPTRAP
+			&& ($type != ITEM_TYPE_ZABBIX_ACTIVE || strncmp(getRequest('key'), 'mqtt.get', 8) !== 0)
+			&& hasRequest('delay_flex')) {
 		$intervals = [];
 		$simple_interval_parser = new CSimpleIntervalParser(['usermacros' => true]);
 		$time_period_parser = new CTimePeriodParser(['usermacros' => true]);
@@ -426,13 +458,13 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 				if ($simple_interval_parser->parse($interval['delay']) != CParser::PARSE_SUCCESS) {
 					$result = false;
-					info(_s('Invalid interval "%1$s".', $interval['delay']));
+					error(_s('Invalid interval "%1$s".', $interval['delay']));
 					break;
 				}
 
 				if ($time_period_parser->parse($interval['period']) != CParser::PARSE_SUCCESS) {
 					$result = false;
-					info(_s('Invalid interval "%1$s".', $interval['period']));
+					error(_s('Invalid interval "%1$s".', $interval['period']));
 					break;
 				}
 
@@ -445,7 +477,7 @@ elseif (hasRequest('add') || hasRequest('update')) {
 
 				if ($scheduling_interval_parser->parse($interval['schedule']) != CParser::PARSE_SUCCESS) {
 					$result = false;
-					info(_s('Invalid interval "%1$s".', $interval['schedule']));
+					error(_s('Invalid interval "%1$s".', $interval['schedule']));
 					break;
 				}
 
@@ -482,7 +514,6 @@ elseif (hasRequest('add') || hasRequest('update')) {
 					$step['params'] = implode("\n", $step['params']);
 					break;
 
-				// ZBX-16642
 				case ZBX_PREPROC_CSV_TO_JSON:
 					if (!array_key_exists(2, $step['params'])) {
 						$step['params'][2] = ZBX_PREPROC_CSV_NO_HEADER;
@@ -498,12 +529,14 @@ elseif (hasRequest('add') || hasRequest('update')) {
 				'error_handler' => ZBX_PREPROC_FAIL_DEFAULT,
 				'error_handler_params' => ''
 			];
+
+			unset($step['sortorder']);
 		}
 		unset($step);
 
 		$newItem = [
 			'itemid' => getRequest('itemid'),
-			'interfaceid' => getRequest('interfaceid'),
+			'interfaceid' => getRequest('interfaceid', 0),
 			'name' => getRequest('name'),
 			'description' => getRequest('description'),
 			'key_' => getRequest('key'),
@@ -550,6 +583,15 @@ elseif (hasRequest('add') || hasRequest('update')) {
 			$newItem = prepareItemHttpAgentFormData($http_item) + $newItem;
 		}
 
+		if ($newItem['type'] == ITEM_TYPE_SCRIPT) {
+			$script_item = [
+				'parameters' => getRequest('parameters', []),
+				'timeout' => getRequest('timeout', DB::getDefault('items', 'timeout'))
+			];
+
+			$newItem = prepareScriptItemFormData($script_item) + $newItem;
+		}
+
 		if ($newItem['type'] == ITEM_TYPE_JMX) {
 			$newItem['jmx_endpoint'] = getRequest('jmx_endpoint', '');
 		}
@@ -566,13 +608,17 @@ elseif (hasRequest('add') || hasRequest('update')) {
 		$conditions = getRequest('conditions', []);
 		ksort($conditions);
 		$conditions = array_values($conditions);
-		foreach ($conditions as $condition) {
-			if (!zbx_empty($condition['macro'])) {
-				$condition['macro'] = mb_strtoupper($condition['macro']);
 
-				$lld_rule_filter['conditions'][] = $condition;
+		foreach ($conditions as $condition) {
+			if ($condition['macro'] === '' && $condition['value'] === '') {
+				continue;
 			}
+
+			$condition['macro'] = mb_strtoupper($condition['macro']);
+
+			$lld_rule_filter['conditions'][] = $condition;
 		}
+
 		if ($lld_rule_filter['evaltype'] == CONDITION_EVAL_TYPE_EXPRESSION) {
 			// if only one or no conditions are left, reset the evaltype to and/or and clear the formula
 			if (count($lld_rule_filter['conditions']) <= 1) {
@@ -606,8 +652,20 @@ elseif (hasRequest('add') || hasRequest('update')) {
 		if (hasRequest('update')) {
 			DBstart();
 
-			// unset unchanged values
-			$newItem = CArrayHelper::unsetEqualValues($newItem, $item, ['itemid']);
+			// Unset equal values if item script type and parameters have not changed.
+			$compare = function($arr, $arr2) {
+				return (array_combine(array_column($arr, 'name'), array_column($arr, 'value')) ==
+					array_combine(array_column($arr2, 'name'), array_column($arr2, 'value'))
+				);
+			};
+			if ($newItem['type'] == ITEM_TYPE_SCRIPT && $newItem['type'] == $item['type']
+					&& $compare($item['parameters'], $newItem['parameters'])) {
+				unset($newItem['parameters']);
+			}
+
+			if ($newItem['type'] == $item['type']) {
+				$newItem = CArrayHelper::unsetEqualValues($newItem, $item, ['itemid']);
+			}
 
 			// don't update the filter if it hasn't changed
 			$conditionsChanged = false;
@@ -670,15 +728,30 @@ elseif (hasRequest('add') || hasRequest('update')) {
 	}
 
 	if (hasRequest('add')) {
-		show_messages($result, _('Discovery rule created'), _('Cannot add discovery rule'));
+		if ($result) {
+			CMessageHelper::setSuccessTitle(_('Discovery rule created'));
+		}
+		else {
+			CMessageHelper::setErrorTitle(_('Cannot add discovery rule'));
+		}
 	}
 	else {
-		show_messages($result, _('Discovery rule updated'), _('Cannot update discovery rule'));
+		if ($result) {
+			CMessageHelper::setSuccessTitle(_('Discovery rule updated'));
+		}
+		else {
+			CMessageHelper::setErrorTitle(_('Cannot update discovery rule'));
+		}
 	}
 
 	if ($result) {
 		unset($_REQUEST['itemid'], $_REQUEST['form']);
 		uncheckTableRows($checkbox_hash);
+
+		if (hasRequest('backurl')) {
+			$response = new CControllerResponseRedirect(getRequest('backurl'));
+			$response->redirect();
+		}
 	}
 }
 elseif (hasRequest('action') && str_in_array(getRequest('action'), ['discoveryrule.massenable', 'discoveryrule.massdisable']) && hasRequest('g_hostdruleid')) {
@@ -693,7 +766,7 @@ elseif (hasRequest('action') && str_in_array(getRequest('action'), ['discoveryru
 	$result = (bool) API::DiscoveryRule()->update($lld_rules);
 
 	if ($result) {
-		uncheckTableRows($checkbox_hash);
+		$filter_hostids ? uncheckTableRows($checkbox_hash) : uncheckTableRows();
 	}
 
 	$updated = count($itemids);
@@ -711,7 +784,7 @@ elseif (hasRequest('action') && getRequest('action') === 'discoveryrule.massdele
 	$result = API::DiscoveryRule()->delete(getRequest('g_hostdruleid'));
 
 	if ($result) {
-		uncheckTableRows($checkbox_hash);
+		$filter_hostids ? uncheckTableRows($checkbox_hash) : uncheckTableRows();
 	}
 	show_messages($result, _('Discovery rules deleted'), _('Cannot delete discovery rules'));
 }
@@ -771,20 +844,31 @@ if (hasRequest('form')) {
 		}
 	}
 
-	$data = getItemFormData($form_item, [
-		'is_discovery_rule' => true
-	]);
+	$data = getItemFormData($form_item, ['form' => getRequest('form'), 'is_discovery_rule' => true]);
 	$data['lifetime'] = getRequest('lifetime', DB::getDefault('items', 'lifetime'));
-	$data['evaltype'] = getRequest('evaltype');
+	$data['evaltype'] = getRequest('evaltype', CONDITION_EVAL_TYPE_AND_OR);
 	$data['formula'] = getRequest('formula');
 	$data['conditions'] = getRequest('conditions', []);
+
+	foreach ($data['conditions'] as $i => $condition) {
+		if ($condition['macro'] === '' && $condition['value'] === '') {
+			unset($data['conditions'][$i]);
+		}
+	}
+
+	$data['conditions'] = sortLldRuleFilterConditions($data['conditions'], $data['evaltype']);
 	$data['lld_macro_paths'] = getRequest('lld_macro_paths', []);
 	$data['overrides'] = getRequest('overrides', []);
 	$data['host'] = $host;
 	$data['preprocessing_test_type'] = CControllerPopupItemTestEdit::ZBX_TEST_TYPE_LLD;
-	$data['preprocessing_types'] = CDiscoveryRule::$supported_preprocessing_types;
+	$data['preprocessing_types'] = CDiscoveryRule::SUPPORTED_PREPROCESSING_TYPES;
+	$data['display_interfaces'] = ($host['status'] == HOST_STATUS_MONITORED
+		|| $host['status'] == HOST_STATUS_NOT_MONITORED
+	);
+	$data['backurl'] = getRequest('backurl');
 
 	if (!hasRequest('form_refresh')) {
+		$i = 0;
 		foreach ($data['preprocessing'] as &$step) {
 			if ($step['type'] == ZBX_PREPROC_SCRIPT) {
 				$step['params'] = [$step['params'], ''];
@@ -792,18 +876,32 @@ if (hasRequest('form')) {
 			else {
 				$step['params'] = explode("\n", $step['params']);
 			}
+			$step['sortorder'] = $i++;
 		}
 		unset($step);
 	}
+
+	CArrayHelper::sort($data['preprocessing'], ['sortorder']);
 
 	// update form
 	if (hasRequest('itemid') && !getRequest('form_refresh')) {
 		$data['lifetime'] = $item['lifetime'];
 		$data['evaltype'] = $item['filter']['evaltype'];
 		$data['formula'] = $item['filter']['formula'];
-		$data['conditions'] = $item['filter']['conditions'];
+		$data['conditions'] = sortLldRuleFilterConditions($item['filter']['conditions'], $item['filter']['evaltype']);
 		$data['lld_macro_paths'] = $item['lld_macro_paths'];
+
 		$data['overrides'] = $item['overrides'];
+
+		foreach ($data['overrides'] as &$override) {
+			if ($override['filter']['conditions']) {
+				$override['filter']['conditions'] = sortLldRuleFilterConditions($override['filter']['conditions'],
+					$override['filter']['evaltype']
+				);
+			}
+		}
+		unset($override);
+
 		// Sort overrides to be listed in step order.
 		CArrayHelper::sort($data['overrides'], ['step']);
 	}
@@ -813,8 +911,24 @@ if (hasRequest('form')) {
 		$data['form'] = 'clone';
 	}
 
+	if (!$data['conditions']) {
+		$data['conditions'] = [[
+			'macro' => '',
+			'operator' => CONDITION_OPERATOR_REGEXP,
+			'value' => '',
+			'formulaid' => num2letter(0)
+		]];
+	}
+
 	if ($data['type'] != ITEM_TYPE_JMX) {
 		$data['jmx_endpoint'] = ZBX_DEFAULT_JMX_ENDPOINT;
+	}
+
+	$data['counter'] = null;
+	if (hasRequest('conditions')) {
+		$conditions = getRequest('conditions');
+		krsort($conditions);
+		$data['counter'] = key($conditions) + 1;
 	}
 
 	// render view
@@ -823,17 +937,16 @@ if (hasRequest('form')) {
 	}
 }
 else {
-	$config = select_config();
-
 	$data = [
 		'filter' => $filter,
 		'hostid' => (count($filter_hostids) == 1) ? reset($filter_hostids) : 0,
 		'sort' => $sort_field,
 		'sortorder' => $sort_order,
-		'profileIdx' => 'web.host_discovery.filter',
-		'active_tab' => CProfile::get('web.host_discovery.filter.active', 1),
+		'profileIdx' => $prefix.'host_discovery.filter',
+		'active_tab' => CProfile::get($prefix.'host_discovery.filter.active', 1),
 		'checkbox_hash' => $checkbox_hash,
-		'is_template' => true
+		'is_template' => true,
+		'context' => getRequest('context')
 	];
 
 	// Select LLD rules.
@@ -845,10 +958,11 @@ else {
 		'selectTriggers' => API_OUTPUT_COUNT,
 		'selectHostPrototypes' => API_OUTPUT_COUNT,
 		'editable' => true,
+		'templated' => ($data['context'] === 'template'),
 		'filter' => [],
 		'search' => [],
 		'sortfield' => $sort_field,
-		'limit' => $config['search_limit'] + 1
+		'limit' => CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT) + 1
 	];
 
 	if ($filter_groupids) {
@@ -885,7 +999,8 @@ else {
 			];
 			$options['filter']['delay'] = $filter['delay'];
 		}
-		elseif ($filter['type'] == ITEM_TYPE_TRAPPER || $filter['type'] == ITEM_TYPE_DEPENDENT) {
+		elseif ($filter['type'] == ITEM_TYPE_TRAPPER || $filter['type'] == ITEM_TYPE_DEPENDENT
+				|| ($filter['type'] == ITEM_TYPE_ZABBIX_ACTIVE && strncmp($filter['key'], 'mqtt.get', 8) === 0)) {
 			$options['filter']['delay'] = -1;
 		}
 		else {
@@ -911,7 +1026,6 @@ else {
 	}
 
 	$data['discoveries'] = API::DiscoveryRule()->get($options);
-	$data['discoveries'] = CMacrosResolverHelper::resolveItemNames($data['discoveries']);
 
 	switch ($sort_field) {
 		case 'delay':
@@ -956,10 +1070,11 @@ else {
 	CPagerHelper::savePage($page['file'], $page_num);
 
 	$data['paging'] = CPagerHelper::paginate($page_num, $data['discoveries'], $sort_order,
-		new CUrl('host_discovery.php')
+		(new CUrl('host_discovery.php'))->setArgument('context', $data['context'])
 	);
 
 	$data['parent_templates'] = getItemParentTemplates($data['discoveries'], ZBX_FLAG_DISCOVERY_RULE);
+	$data['allowed_ui_conf_templates'] = CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_TEMPLATES);
 
 	// render view
 	echo (new CView('configuration.host.discovery.list', $data))->getOutput();

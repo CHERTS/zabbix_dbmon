@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -37,20 +37,9 @@ function get_image_by_imageid($imageid) {
 
 	if (!isset($images[$imageid])) {
 		$row = DBfetch(DBselect('SELECT i.* FROM images i WHERE i.imageid='.zbx_dbstr($imageid)));
-		$row['image'] = zbx_unescape_image($row['image']);
 		$images[$imageid] = $row;
 	}
 	return $images[$imageid];
-}
-
-function zbx_unescape_image($image) {
-	global $DB;
-
-	$result = $image ? $image : 0;
-	if ($DB['TYPE'] == ZBX_DB_POSTGRESQL) {
-		$result = pg_unescape_bytea($image);
-	}
-	return $result;
 }
 
 /**
@@ -86,12 +75,10 @@ function imageThumb($source, $thumbWidth = 0, $thumbHeight = 0) {
 			}
 		}
 
-		if (function_exists('imagecreatetruecolor') && @imagecreatetruecolor(1, 1)) {
-			$thumb = imagecreatetruecolor($thumbWidth, $thumbHeight);
-		}
-		else {
-			$thumb = imagecreate($thumbWidth, $thumbHeight);
-		}
+		$thumbWidth = (int) round($thumbWidth);
+		$thumbHeight = (int) round($thumbHeight);
+
+		$thumb = imagecreatetruecolor($thumbWidth, $thumbHeight);
 
 		// preserve png transparency
 		imagealphablending($thumb, false);
@@ -102,11 +89,13 @@ function imageThumb($source, $thumbWidth = 0, $thumbHeight = 0) {
 			0, 0,
 			0, 0,
 			$thumbWidth, $thumbHeight,
-			$srcWidth, $srcHeight);
+			$srcWidth, $srcHeight
+		);
 
 		imagedestroy($source);
 		$source = $thumb;
 	}
+
 	return $source;
 }
 

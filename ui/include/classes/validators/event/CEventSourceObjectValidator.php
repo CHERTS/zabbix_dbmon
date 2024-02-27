@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,6 +41,9 @@ class CEventSourceObjectValidator extends CValidator {
 			EVENT_OBJECT_TRIGGER => 1,
 			EVENT_OBJECT_ITEM => 1,
 			EVENT_OBJECT_LLDRULE => 1
+		],
+		EVENT_SOURCE_SERVICE => [
+			EVENT_OBJECT_SERVICE => 1
 		]
 	];
 

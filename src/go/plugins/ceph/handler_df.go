@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,9 +21,8 @@ package ceph
 
 import (
 	"encoding/json"
-	"math"
 
-	"zabbix.com/pkg/zbxerr"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 )
 
 type cephDf struct {
@@ -91,7 +90,7 @@ func dfHandler(data map[command][]byte) (interface{}, error) {
 
 	for _, p := range df.Pools {
 		poolsStat[p.Name] = poolStat{
-			PercentUsed: math.Round(p.Stats.PercentUsed),
+			PercentUsed: p.Stats.PercentUsed,
 			Objects:     p.Stats.Objects,
 			BytesUsed:   p.Stats.BytesUsed,
 			Rd:          p.Stats.Rd,

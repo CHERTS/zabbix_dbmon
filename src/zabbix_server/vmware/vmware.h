@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@
 #ifndef ZABBIX_VMWARE_H
 #define ZABBIX_VMWARE_H
 
-#include "common.h"
+#include "config.h"
 #include "threads.h"
+#include "zbxalgo.h"
 
 /* the vmware service state */
 #define ZBX_VMWARE_STATE_NEW		0x001
@@ -95,6 +96,15 @@ typedef struct
 }
 zbx_vmware_perf_entity_t;
 
+typedef struct
+{
+	zbx_uint64_t	partitionid;
+	char		*diskname;
+}
+zbx_vmware_diskextent_t;
+
+ZBX_PTR_VECTOR_DECL(vmware_diskextent, zbx_vmware_diskextent_t *)
+
 #define ZBX_VMWARE_DS_NONE		0
 #define ZBX_VMWARE_DS_MOUNTED		1
 #define ZBX_VMWARE_DS_ACCESSIBLE	2
@@ -113,6 +123,7 @@ typedef struct
 	zbx_uint64_t			free_space;
 	zbx_uint64_t			uncommitted;
 	zbx_vector_str_uint64_pair_t	hv_uuids_access;
+	zbx_vector_vmware_diskextent_t	diskextents;
 }
 zbx_vmware_datastore_t;
 
@@ -122,13 +133,24 @@ ZBX_PTR_VECTOR_DECL(vmware_datastore, zbx_vmware_datastore_t *)
 
 typedef struct
 {
-	char	*name;
-	char	*uuid;
+	zbx_uint64_t	partitionid;
+	int		multipath_total;
+	int		multipath_active;
 }
-zbx_vmware_ds_name_uuid_t;
+zbx_vmware_hvdisk_t;
 
-int	vmware_hvds_name_compare(const void *d1, const void *d2);
-ZBX_PTR_VECTOR_DECL(ds_name_uuid, zbx_vmware_ds_name_uuid_t)
+ZBX_VECTOR_DECL(vmware_hvdisk, zbx_vmware_hvdisk_t)
+
+typedef struct
+{
+	char				*name;
+	char				*uuid;
+	zbx_vector_vmware_hvdisk_t	hvdisks;
+}
+zbx_vmware_dsname_t;
+
+int	vmware_dsname_compare(const void *d1, const void *d2);
+ZBX_PTR_VECTOR_DECL(vmware_dsname, zbx_vmware_dsname_t *)
 
 typedef struct
 {
@@ -179,8 +201,9 @@ typedef struct
 	char				*datacenter_name;
 	char				*parent_name;
 	char				*parent_type;
+	char				*ip;
 	char				**props;
-	zbx_vector_ds_name_uuid_t	ds_names;
+	zbx_vector_vmware_dsname_t	dsnames;
 	zbx_vector_ptr_t		vms;
 }
 zbx_vmware_hv_t;
@@ -313,7 +336,8 @@ int	zbx_vmware_get_statistics(zbx_vmware_stats_t *stats);
 
 zbx_vmware_service_t	*zbx_vmware_get_service(const char* url, const char* username, const char* password);
 
-int	zbx_vmware_service_get_counterid(zbx_vmware_service_t *service, const char *path, zbx_uint64_t *counterid);
+int	zbx_vmware_service_get_counterid(zbx_vmware_service_t *service, const char *path, zbx_uint64_t *counterid,
+		int *unit);
 int	zbx_vmware_service_add_perf_counter(zbx_vmware_service_t *service, const char *type, const char *id,
 		zbx_uint64_t counterid, const char *instance);
 zbx_vmware_perf_entity_t	*zbx_vmware_service_get_perf_entity(zbx_vmware_service_t *service, const char *type,
@@ -359,8 +383,13 @@ zbx_vmware_perf_entity_t	*zbx_vmware_service_get_perf_entity(zbx_vmware_service_
 #define ZBX_VMWARE_VMPROP_STORAGE_UNSHARED		13
 #define ZBX_VMWARE_VMPROP_STORAGE_UNCOMMITTED		14
 #define ZBX_VMWARE_VMPROP_UPTIME			15
+#define ZBX_VMWARE_VMPROP_IPADDRESS			16
+#define ZBX_VMWARE_VMPROP_GUESTHOSTNAME			17
+#define ZBX_VMWARE_VMPROP_GUESTFAMILY			18
+#define ZBX_VMWARE_VMPROP_GUESTFULLNAME			19
+#define ZBX_VMWARE_VMPROP_FOLDER			20
 
-#define ZBX_VMWARE_VMPROPS_NUM				16
+#define ZBX_VMWARE_VMPROPS_NUM				21
 
 /* vmware service types */
 #define ZBX_VMWARE_TYPE_UNKNOWN	0
@@ -372,6 +401,26 @@ zbx_vmware_perf_entity_t	*zbx_vmware_service_get_perf_entity(zbx_vmware_service_
 #define ZBX_VMWARE_SOAP_CLUSTER		"ClusterComputeResource"
 #define ZBX_VMWARE_SOAP_DEFAULT		"VMware"
 #define ZBX_VMWARE_SOAP_DS		"Datastore"
+#define ZBX_VMWARE_SOAP_HV		"HostSystem"
+#define ZBX_VMWARE_SOAP_VM		"VirtualMachine"
+
+/* Indicates the unit of measure represented by a counter or statistical value */
+#define ZBX_VMWARE_UNIT_UNDEFINED		0
+#define ZBX_VMWARE_UNIT_JOULE			1
+#define ZBX_VMWARE_UNIT_KILOBYTES		2
+#define ZBX_VMWARE_UNIT_KILOBYTESPERSECOND	3
+#define ZBX_VMWARE_UNIT_MEGABYTES		4
+#define ZBX_VMWARE_UNIT_MEGABYTESPERSECOND	5
+#define ZBX_VMWARE_UNIT_MEGAHERTZ		6
+#define ZBX_VMWARE_UNIT_MICROSECOND		7
+#define ZBX_VMWARE_UNIT_MILLISECOND		8
+#define ZBX_VMWARE_UNIT_NUMBER			9
+#define ZBX_VMWARE_UNIT_PERCENT			10
+#define ZBX_VMWARE_UNIT_SECOND			11
+#define ZBX_VMWARE_UNIT_TERABYTES		12
+#define ZBX_VMWARE_UNIT_WATT			13
+#define ZBX_VMWARE_UNIT_CELSIUS			14
+#define ZBX_VMWARE_UNIT_NANOSECOND		15
 
 #endif	/* defined(HAVE_LIBXML2) && defined(HAVE_LIBCURL) */
 

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ class CControllerSystemWarning extends CController {
 	}
 
 	protected function checkInput() {
-		return true;
+		return $this->validateInput([]);
 	}
 
 	protected function checkPermissions() {
@@ -34,15 +34,18 @@ class CControllerSystemWarning extends CController {
 	}
 
 	protected function doAction() {
+		CMessageHelper::restoreScheduleMessages();
+
 		$data = [
 			'theme' => getUserTheme(CWebUser::$data),
 			'messages' => []
 		];
 
-		if (CSession::keyExists('messages')) {
-			$data['messages'] = CSession::getValue('messages');
-			CSession::unsetValue(['messages']);
-		}
+		$data['messages'] = CMessageHelper::getMessages();
+
+		$data['messages'] = array_map(function (array $message): string {
+			return $message['message'];
+		}, $data['messages']);
 
 		$this->setResponse(new CControllerResponseData($data));
 	}

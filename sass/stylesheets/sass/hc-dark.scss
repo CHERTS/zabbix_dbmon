@@ -42,6 +42,7 @@ $font-selected-color: #ffffff;
 $font-alt-color: #cacaca;
 $body-bg-color: #111111;
 $overlay-bg-color: #222222;
+$overlay-border-color: #666666;
 
 // Main menu
 
@@ -65,6 +66,9 @@ $menu-main-submenu-selected-color: #ffffff;
 $menu-main-submenu-selected-bg-color: #0c0c0c;
 $menu-main-submenu-selected-border-color: #787878;
 
+$menu-main-submenu-next-level-bg: #ffffff !default;
+$menu-main-submenu-next-level-shadow: transparent !default;
+
 $menu-main-icons-opacity: 1;
 
 $menu-main-arrow-bg-position: -579px -434px;
@@ -74,27 +78,44 @@ $menu-user-color: #131619;
 $menu-user-hover-color: #000000;
 $menu-user-disabled-color: #787878;
 
+$menu-user-submenu-color: #0c0c0c;
+$menu-user-submenu-bg-color: #cccccc;
+$menu-user-submenu-border-color: #f3f3f3;
+$menu-user-submenu-hover-color: #ffffff;
+$menu-user-submenu-hover-bg-color: #1a1a1a;
+$menu-user-submenu-hover-border-color: transparent;
+$menu-user-submenu-selected-color: #ffffff;
+$menu-user-submenu-selected-bg-color: #0c0c0c;
+$menu-user-submenu-selected-border-color: #787878;
+
+$menu-user-submenu-next-level-bg: #ffffff !default;
+$menu-user-submenu-next-level-shadow: transparent !default;
+
+$menu-user-arrow-bg-position: -579px -434px;
+$menu-user-arrow-hover-bg-position: -579px -434px;
+
 // Sidebar
 $sidebar-server-name-color: #787878;
 
 $menu-main-icons: (
-		dashboard: -600px -664px,
-		problems: -600px -688px,
-		monitoring: -600px -712px,
-		inventory: -600px -736px,
-		reports: -600px -760px,
-		configuration: -600px -784px,
-		administration: -600px -808px
+	dashboard: -600px -664px,
+	problems: -600px -688px,
+	monitoring: -600px -712px,
+	services: -600px -832px,
+	inventory: -600px -736px,
+	reports: -600px -760px,
+	configuration: -600px -784px,
+	administration: -600px -808px
 );
 
 $menu-user-icons: (
-		support: -247px -84px,
-		share: -168px -84px,
-		help: -168px -48px,
-		guest: -247px -192px,
-		profile: -168px -120px,
-		signout: -168px -156px
-) !default;
+	support: -247px -84px,
+	integrations: -168px -84px,
+	help: -168px -48px,
+	guest: -247px -192px,
+	profile: -168px -120px,
+	signout: -168px -156px
+);
 
 // UI
 $ui-bg-color: #000000;
@@ -128,6 +149,9 @@ $scrollbar-track-color: #1f1f1f;
 $scrollbar-thumb-color: #999999;
 $scrollbar-thumb-color-darken: 30%;
 
+$input-placeholder-color: #bbbbbb;
+$input-disabled-placeholder-color: darken($input-placeholder-color, 45%);
+
 // Search form
 $form-search-color: #000000;
 $form-search-bg-color: #ffffff;
@@ -141,10 +165,9 @@ $form-search-focused-icon-bg-position: -570px -616px;
 $form-search-icon-focused-bg-position: -600px -616px;
 $form-search-focused-icon-hover-bg-position: $form-search-focused-icon-bg-position;
 
-$input-placeholder-color: #bbbbbb;
-
 // Error messages
 $msg-bad-color: $light-red;
+$msg-btn-text-color: #ffffff;
 $msg-good-color: $light-green;
 $msg-warning-color: #ffb319;
 $msg-warning-border-color: #ffb319;
@@ -153,6 +176,7 @@ $msg-warning-border-color: #ffb319;
 $btn-font-color: #333333;
 $btn-bg-color: #e0e0e0;
 $btn-border-color: #333333;
+$btn-border-focus-color: #ffffff;
 
 $btn-alt-font-color: #ffffff;
 $btn-alt-bg-color: transparent;
@@ -203,6 +227,24 @@ $ok-ack-fg-color: #00ff00;
 
 // Multiselect
 $multiselect-selected-bg-color: #222222;
+
+// Dashboard list table.
+$dashboard-shared-bg-color: #e0e0e0;
+$dashboard-my-bg-color: #e0e0e0;
+
+// Import compare.
+$toc-title-color: #000000;
+$toc-title-bg-color: #dddddd;
+$diff-added-bg-color: transparent;
+$diff-removed-bg-color: transparent;
+
+// Text
+$text-placeholder-color: #000000;
+
+// Change indicators.
+$arrow-fill-up: #FFFFFF;
+$arrow-fill-down: #FFFFFF;
+$arrow-fill-up-down: #FFFFFF;
 
 // Important! @import string should come after variables.
 @import 'screen.scss';
@@ -259,8 +301,9 @@ $multiselect-selected-bg-color: #222222;
 
 // components/menu-main
 .menu-main {
-	& > li.has-submenu {
+	li.has-submenu {
 		&.is-expanded > a,
+		.is-selected > a,
 		& > a:hover,
 		& > a:focus {
 			&::before {
@@ -296,63 +339,82 @@ $multiselect-selected-bg-color: #222222;
 	}
 }
 
+.dashboard-navigation-tabs {
+	.csortable-list {
+		& > .csortable-item:focus:not(:active) {
+			& > div {
+				box-shadow: 0 0 0 2px $blue;
+			}
+		}
+	}
+
+	& .csortable > .csortable-item > div,
+	& .csortable-list > .csortable-item > div:hover {
+		border: 1px solid transparent;
+	}
+
+	& .csortable > .csortable-item > div.selected-tab,
+	& .csortable-list > .csortable-item > div.selected-tab {
+		span {
+			color: $white;
+		}
+	}
+}
+
 // Dashboard, widgets and iterators.
 // To maintain code clarity:
 //   - Do not mix rules for dashboard view mode and dashboard edit mode.
 //   - Do not mix rules for widgets and iterators.
-.dashbrd-grid-new-widget-placeholder {
-	.dashbrd-grid-widget-new-box,
-	.dashbrd-grid-widget-set-position,
-	.dashbrd-grid-widget-set-size {
+
+.dashboard-widget-placeholder {
+	.dashboard-widget-placeholder-box {
 		box-shadow: none;
 		border-color: $font-color;
 		background-color: transparent;
 	}
 
-	.dashbrd-grid-widget-set-size {
-		border: 2px dashed $font-color;
-		box-shadow: none;
-		background: darken($body-bg-color, 6%);
-	}
-
-	.dashbrd-grid-new-widget-label {
+	.dashboard-widget-placeholder-label {
 		&::before {
 			background: url($sprite-path) no-repeat -269px -888px;
 		}
 	}
-}
 
-.dashbrd-grid-widget-set-size {
-	.dashbrd-grid-new-widget-label {
-		&::before {
-			background: url($sprite-path) no-repeat -457px -888px;
+	.dashboard-widget-placeholder-resizing {
+		border: 2px dashed $font-color;
+		box-shadow: none;
+		background: darken($body-bg-color, 6%);
+
+		.dashboard-widget-placeholder-label {
+			&::before {
+				background: url($sprite-path) no-repeat -457px -888px;
+			}
 		}
 	}
 }
 
-.dashbrd-grid-widget {
-	&.dashbrd-grid-widget-hidden-header {
-		&.dashbrd-grid-widget-focus {
-			.dashbrd-grid-widget-head {
+.dashboard-grid-widget {
+	&.dashboard-grid-widget-hidden-header {
+		&.dashboard-grid-widget-focus {
+			.dashboard-grid-widget-head {
 				box-shadow: 0 -6px 8px -2px #000000;
 			}
 		}
 	}
 }
 
-.dashbrd-grid-iterator {
-	&.dashbrd-grid-iterator-focus {
-		.dashbrd-grid-iterator-head {
+.dashboard-grid-iterator {
+	&.dashboard-grid-iterator-focus {
+		.dashboard-grid-iterator-head {
 			box-shadow: 0 -6px 8px -2px #000000;
 		}
 	}
 }
 
-.dashbrd-grid-container.dashbrd-mode-edit {
-	.dashbrd-grid-widget {
+.dashboard.dashboard-is-edit-mode {
+	.dashboard-grid-widget {
 		&.ui-draggable-dragging {
-			&.dashbrd-grid-widget-hidden-header {
-				.dashbrd-grid-widget-head {
+			&.dashboard-grid-widget-hidden-header {
+				.dashboard-grid-widget-head {
 					box-shadow: 0 -6px 8px -2px #000000;
 				}
 			}
@@ -366,9 +428,9 @@ $multiselect-selected-bg-color: #222222;
 		}
 	}
 
-	.dashbrd-grid-iterator {
+	.dashboard-grid-iterator {
 		&.ui-draggable-dragging {
-			.dashbrd-grid-iterator-head {
+			.dashboard-grid-iterator-head {
 				box-shadow: 0 -6px 8px -2px #000000;
 			}
 		}
@@ -379,13 +441,13 @@ $multiselect-selected-bg-color: #222222;
 				box-shadow: 0 4px 20px 2px #000000;
 			}
 
-			.dashbrd-grid-iterator-mask {
+			.dashboard-grid-iterator-mask {
 				border: 0;
 			}
 		}
 	}
 
-	.dashbrd-grid-widget-placeholder > div {
+	.dashboard-grid-widget-placeholder > div {
 		background-color: lighten($ui-bg-color, 12%) !important;
 	}
 }
@@ -412,43 +474,46 @@ $var-icons: (
 
 $form-icon-btn: (
 	cal: url($sprite-path) no-repeat -354px -834px,
-	wzrd-action: url($sprite-path) no-repeat -317px -617px
+	wizard-action: url($sprite-path) no-repeat -317px -617px
 );
 
 // Dynamically generated classes:
 //  .icon-cal
-//  .icon-wzrd-action
+//  .icon-wizard-action
 @each $form-icon-btn, $bgimage in $form-icon-btn {
 	.icon-#{$form-icon-btn} {
 		background: $transparent $bgimage;
 		@extend %form-icon-btn;
 
-		@if $form-icon-btn == 'wzrd-action' {
+		@if $form-icon-btn == 'wizard-action' {
 			margin-top: -16px;
 		}
 	}
 }
 
 $icon-btn: (
-	conf: $btn-bg-color url($sprite-path) no-repeat -43px -187px,
 	kiosk: $btn-bg-color url($sprite-path) no-repeat -79px -223px,
-	max: $btn-bg-color url($sprite-path) no-repeat -43px -223px,
 	min: $btn-bg-color url($sprite-path) no-repeat -43px -259px,
 	add-fav: $btn-bg-color url($sprite-path) no-repeat -43px -295px,
 	remove-fav: $btn-bg-color url($sprite-path) no-repeat -43px -329px,
 	action: $btn-bg-color url($sprite-path) no-repeat -43px -367px,
-	info: $btn-bg-color url($sprite-path) no-repeat -43px -403px
+	info: $btn-bg-color url($sprite-path) no-repeat -43px -403px,
+	"dashboard-kioskmode-toggle-slideshow.slideshow-state-started": $btn-bg-color url($sprite-path) no-repeat -280px -582px,
+	"dashboard-kioskmode-toggle-slideshow.slideshow-state-stopped": $btn-bg-color url($sprite-path) no-repeat -281px -546px,
+	dashboard-kioskmode-previous-page: $btn-bg-color url($sprite-path) no-repeat -246px -657px,
+	dashboard-kioskmode-next-page: $btn-bg-color url($sprite-path) no-repeat -244px -624px
 );
 
 // Dynamically generated classes:
-//  .btn-conf
 //  .btn-kiosk
-//  .btn-max
 //  .btn-min
 //  .btn-add-fav
 //  .btn-remove-fav
 //  .btn-action
 //  .btn-info
+//  .btn-dashboard-kioskmode-toggle-slideshow
+//  .btn-dashboard-kioskmode-previous-page
+//  .btn-dashboard-kioskmode-next-page
 @each $icon-btn, $bgimage in $icon-btn {
 	.btn-#{$icon-btn} {
 		background: $bgimage;
@@ -457,6 +522,7 @@ $icon-btn: (
 }
 
 $icon-widget-btn: (
+	dashboard-page-properties: url($sprite-path) no-repeat -165px -618px,
 	iterator-page-previous: url($sprite-path) no-repeat -397px -657px,
 	iterator-page-next: url($sprite-path) no-repeat -395px -623px,
 	widget-action: url($sprite-path) no-repeat -318px -618px,
@@ -471,6 +537,7 @@ $icon-widget-btn: (
 );
 
 // Dynamically generated classes:
+//  .btn-dashboard-page-properties
 //  .btn-iterator-page-previous
 //  .btn-iterator-page-next
 //  .btn-widget-action
@@ -489,7 +556,7 @@ $icon-widget-btn: (
 	}
 }
 
-.btn-dashbrd-conf {
+.btn-dashboard-conf {
 	background: url($sprite-path) no-repeat -354px -619px !important;
 }
 
@@ -521,10 +588,6 @@ $icon-widget-btn: (
 	background-color: $form-bg-color;
 	border: 1px solid $form-border-color;
 
-	.menu-popup-item-disabled {
-		color: $form-disabled-font-color;
-	}
-
 	.menu-popup-item {
 		&:hover,
 		&:focus,
@@ -543,6 +606,11 @@ $icon-widget-btn: (
 				background: url($sprite-path) no-repeat -317px -835px;
 			}
 		}
+
+		&.disabled {
+			background-color: transparent;
+			color: $form-disabled-font-color;
+		}
 	}
 
 	&.page-title-submenu::before {
@@ -552,7 +620,7 @@ $icon-widget-btn: (
 	}
 }
 
-.filter-breadcrumb {
+.header-navigation {
 	li,
 	> li:first-child {
 		> span a:focus {
@@ -567,16 +635,16 @@ $icon-widget-btn: (
 	}
 }
 
-.add-child-btn {
-	background: url($sprite-path) no-repeat -359px -551px !important;
+.btn-add {
+	background: url($sprite-path) no-repeat -357px -550px !important;
 }
 
-.edit-item-btn {
-	background: url($sprite-path) no-repeat -359px -478px !important;
+.btn-edit {
+	background: url($sprite-path) no-repeat -357px -477px !important;
 }
 
-.import-items-btn {
-	background: url($sprite-path) no-repeat -359px -515px !important;
+.btn-import {
+	background: url($sprite-path) no-repeat -357px -514px !important;
 }
 
 .drag-icon {
@@ -598,6 +666,7 @@ button {
 }
 
 .radio-list-control {
+	.normal-bg,
 	.average-bg,
 	.disaster-bg,
 	.high-bg,
@@ -752,6 +821,12 @@ a.link-action {
 
 .tag {
 	color: $ui-bg-color;
+
+	&.green-bg,
+	&.yellow-bg {
+		background-color: $ui-bg-selected-color;
+		color: $white;
+	}
 }
 
 .disabled {
@@ -794,17 +869,6 @@ a.link-action {
 	}
 }
 
-.progress-bar-container {
-	a {
-		&:hover,
-		&:focus {
-			.progress-bar-label {
-				color: #ffffff !important;
-			}
-		}
-	}
-}
-
 .multiselect-suggest {
 	li {
 		&.suggest-hover {
@@ -817,7 +881,7 @@ a.link-action {
 	color: lighten($alt-yellow, 10%);
 }
 
-.dashbrd-widget-graph-link {
+.dashboard-widget-graph-link {
 	&:focus {
 		&::after {
 			background: $blue;
@@ -879,7 +943,7 @@ a.link-action {
 				background-position: -361px -767px
 			}
 
-			.icon-wzrd-action {
+			.icon-wizard-action {
 				background: transparent url($sprite-path) no-repeat -318px -624px;
 			}
 		}
@@ -1029,7 +1093,7 @@ td.log-info-bg,
 td.log-warning-bg,
 td.log-high-bg,
 td.log-disaster-bg {
-	padding-left: 42px;
+	padding-left: 42px !important;
 	color: $font-color;
 }
 
@@ -1052,10 +1116,6 @@ td.log-disaster-bg {
 	width: 34px;
 	height: 27px;
 	position: relative;
-	margin: 0 0 0 -42px;
-}
-
-.notif-indic-container {
 	margin: 0 0 0 -42px;
 }
 
@@ -1152,6 +1212,12 @@ td.inactive-bg {
 
 // Time selection.
 .ui-tabs-nav {
+	.btn-info {
+		&::after {
+			background-position: -279px -621px;
+		}
+	}
+
 	.btn-time {
 		&::after {
 			background-position: -246px -583px;
@@ -1193,6 +1259,12 @@ td.inactive-bg {
 	}
 
 	.ui-tabs-active {
+		.btn-info {
+			&::after {
+				background-position: -431px -621px;
+			}
+		}
+
 		.btn-time {
 			&::after {
 				background-position: -87px -583px;
@@ -1321,12 +1393,31 @@ td.inactive-bg {
 	}
 }
 
+.icon-user {
+	&::before {
+		background-position: -379px -46px;
+	}
+}
+
+.icon-user-group {
+	&::before {
+		background-position: -379px -8px;
+	}
+}
+
 .icon-actions-number-red {
 	&::before {
 		background-position: -524px -325px;
 	}
 }
 
+.problem-icon-link {
+	&:focus {
+		box-shadow: 0 0 0 2px $blue;
+	}
+}
+
+.problem-icon-link,
 .problem-icon-list {
 	.problem-icon-list-item {
 		background: transparent;
@@ -1429,4 +1520,46 @@ td.inactive-bg {
 
 .btn-undo.is-focused {
 	box-shadow: 0 1px 0px $blue, 0 -1px 0px $blue;
+}
+
+// Tabfilter
+
+.filter-container.tabfilter-container {
+	.icon-filter::before {
+		background: url($sprite-path) no-repeat -87px -547px;
+	}
+
+	.tabfilter-item-label {
+		&.focused {
+			box-shadow: 0 0 0 2px $blue;
+		}
+	}
+}
+
+.breadcrumbs {
+	&>::after {
+		content: " /";
+	}
+
+	&>:last-child::after {
+		content: "";
+	}
+}
+
+// HOST INTERFACES
+
+.interfaces {
+	.interface-row {
+		&[data-type="2"] {
+			.interface-btn-toggle {
+				background-position: -318px -690px;
+			}
+
+			&.list-accordion-item-opened {
+				.interface-btn-toggle {
+					background-position: -318px -655px;
+				}
+			}
+		}
+	}
 }

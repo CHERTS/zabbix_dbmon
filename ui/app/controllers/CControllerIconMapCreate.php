@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ class CControllerIconMapCreate extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'iconmap'   => 'required | array'
+			'iconmap'   => 'required|array'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -36,24 +36,24 @@ class CControllerIconMapCreate extends CController {
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() == USER_TYPE_SUPER_ADMIN);
+		return $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_GENERAL);
 	}
 
 	protected function doAction() {
-		$result = (bool) API::IconMap()->create((array) $this->getInput('iconmap'));
+		$result = (bool) API::IconMap()->create($this->getInput('iconmap'));
 
 		if ($result) {
-			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))
-				->setArgument('action', 'iconmap.list')
+			$response = new CControllerResponseRedirect(
+				(new CUrl('zabbix.php'))->setArgument('action', 'iconmap.list')
 			);
-			$response->setMessageOk(_('Icon map created'));
+			CMessageHelper::setSuccessTitle(_('Icon map created'));
 		}
 		else {
-			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))
-				->setArgument('action', 'iconmap.edit')
+			$response = new CControllerResponseRedirect(
+				(new CUrl('zabbix.php'))->setArgument('action', 'iconmap.edit')
 			);
 			$response->setFormData($this->getInputAll());
-			$response->setMessageError(_('Cannot create icon map'));
+			CMessageHelper::setErrorTitle(_('Cannot create icon map'));
 		}
 
 		$this->setResponse($response);

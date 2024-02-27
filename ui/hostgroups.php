@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,8 +29,7 @@ require_once dirname(__FILE__).'/include/page_header.php';
 
 // VAR	TYPE	OPTIONAL	FLAGS	VALIDATION	EXCEPTION
 $fields = [
-	'groups' =>			[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null],
-	'groupids' =>		[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		null],
+	'groups' =>			[T_ZBX_INT, O_OPT, P_SYS|P_ONLY_ARRAY,	DB_ID,	null],
 	// group
 	'groupid' =>		[T_ZBX_INT, O_OPT, P_SYS,	DB_ID,		'isset({form}) && {form} == "update"'],
 	'name' =>			[T_ZBX_STR, O_OPT, null,	NOT_EMPTY,	'isset({add}) || isset({update})', _('Group name')],
@@ -47,7 +46,7 @@ $fields = [
 	'cancel' =>			[T_ZBX_STR, O_OPT, P_SYS,		null,	null],
 	// other
 	'form' =>			[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
-	'form_refresh' =>	[T_ZBX_INT, O_OPT, null,	null,		null],
+	'form_refresh' =>	[T_ZBX_INT, O_OPT, P_SYS,	null,		null],
 	// filter
 	'filter_set' =>		[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
 	'filter_rst' =>		[T_ZBX_STR, O_OPT, P_SYS,	null,		null],
@@ -215,6 +214,7 @@ elseif (hasRequest('action')) {
  */
 if (hasRequest('form')) {
 	$data = [
+		'form_refresh' => getRequest('form_refresh', 0),
 		'form' => getRequest('form'),
 		'groupid' => getRequest('groupid', 0),
 		'name' => getRequest('name', ''),
@@ -243,11 +243,11 @@ if (hasRequest('form')) {
 				'editable' => true
 			]);
 
+		$data['allowed_ui_conf_hosts'] = CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_HOSTS);
+
 		if (!hasRequest('form_refresh')) {
 			$data['name'] = $data['group']['name'];
 		}
-
-		$data['deletable_host_groups'] = getDeletableHostGroupIds([$data['groupid']]);
 	}
 
 	// render view
@@ -275,17 +275,20 @@ else {
 		'name' => CProfile::get('web.groups.filter_name', '')
 	];
 
-	$config = select_config();
-
 	$data = [
 		'sort' => $sortField,
 		'sortorder' => $sortOrder,
 		'filter' => $filter,
-		'config' => $config,
 		'profileIdx' => 'web.groups.filter',
-		'active_tab' => CProfile::get('web.groups.filter.active', 1)
+		'active_tab' => CProfile::get('web.groups.filter.active', 1),
+		'config' => [
+			'max_in_table' => CSettingsHelper::get(CSettingsHelper::MAX_IN_TABLE)
+		],
+		'allowed_ui_conf_hosts' => CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_HOSTS),
+		'allowed_ui_conf_templates' => CWebUser::checkAccess(CRoleHelper::UI_CONFIGURATION_TEMPLATES)
 	];
 
+	$limit = CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT) + 1;
 	$groups = API::HostGroup()->get([
 		'output' => ['groupid', $sortField],
 		'search' => [
@@ -293,7 +296,7 @@ else {
 		],
 		'editable' => true,
 		'sortfield' => $sortField,
-		'limit' => $config['search_limit'] + 1
+		'limit' => $limit
 	]);
 	order_result($groups, $sortField, $sortOrder);
 
@@ -324,6 +327,7 @@ else {
 	]);
 
 	// get host groups
+	$limit = CSettingsHelper::get(CSettingsHelper::MAX_IN_TABLE) + 1;
 	$data['groups'] = API::HostGroup()->get([
 		'output' => ['groupid', 'name', 'flags'],
 		'groupids' => $groupIds,
@@ -332,7 +336,7 @@ else {
 		'selectGroupDiscovery' => ['ts_delete'],
 		'selectDiscoveryRule' => ['itemid', 'name'],
 		'selectHostPrototype' => ['hostid'],
-		'limitSelects' => $config['max_in_table'] + 1
+		'limitSelects' => $limit
 	]);
 	order_result($data['groups'], $sortField, $sortOrder);
 

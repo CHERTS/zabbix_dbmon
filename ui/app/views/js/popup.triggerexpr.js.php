@@ -1,7 +1,7 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -40,7 +40,12 @@ $(() => {
 		}
 	};
 
-	$('#function').on('change', (e) => {
-		reloadPopup($(e.target).closest('form').get(0), 'popup.triggerexpr');
+	$('#function-select').on('change', (e) => {
+		var form = e.target.closest('form'),
+			function_name_parts = form.elements.function_select.value.split('_');
+
+		form.elements.function.value = function_name_parts[1];
+
+		reloadPopup(form, 'popup.triggerexpr');
 	});
 });

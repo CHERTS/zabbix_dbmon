@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -47,6 +47,15 @@ catch (ConfigFileException $e) {
 			]))->getOutput();
 
 			exit;
+
+		case CConfigFile::CONFIG_VAULT_ERROR:
+			echo (new CView('general.warning', [
+				'header' => _('Vault connection failed.'),
+				'messages' => [$e->getMessage()],
+				'theme' => ZBX_DEFAULT_THEME
+			]))->getOutput();
+
+			exit;
 	}
 }
 catch (Exception $e) {
@@ -61,7 +70,7 @@ catch (Exception $e) {
 
 CProfiler::getInstance()->start();
 
-global $ZBX_SERVER, $ZBX_SERVER_PORT, $page;
+global $page;
 
 $page = [
 	'title' => null,

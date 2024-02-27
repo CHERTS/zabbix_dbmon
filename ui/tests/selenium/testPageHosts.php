@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,20 +19,28 @@
 **/
 
 require_once dirname(__FILE__).'/../include/CLegacyWebTest.php';
-require_once dirname(__FILE__).'/traits/FilterTrait.php';
-require_once dirname(__FILE__).'/traits/TableTrait.php';
+require_once dirname(__FILE__).'/behaviors/CTableBehavior.php';
+require_once dirname(__FILE__).'/behaviors/CTagBehavior.php';
 
 /**
- * @dataSource TagFilter
+ * @dataSource TagFilter, WebScenarios
  */
 class testPageHosts extends CLegacyWebTest {
+
+	/**
+	 * Attach MessageBehavior, TableBehavior and TagBehavior to the test.
+	 */
+	public function getBehaviors() {
+		return [
+			CTableBehavior::class,
+			CTagBehavior::class
+		];
+	}
+
 	public $HostName = 'ЗАББИКС Сервер';
 	public $HostGroup = 'Zabbix servers';
 	public $HostIp = '127.0.0.1';
 	public $HostPort = '10050';
-
-	use FilterTrait;
-	use TableTrait;
 
 	public static function allHosts() {
 		return CDBHelper::getDataProvider(
@@ -48,13 +56,15 @@ class testPageHosts extends CLegacyWebTest {
 	}
 
 	public function testPageHosts_CheckLayout() {
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
 		$this->zbxTestCheckTitle('Configuration of hosts');
 		$this->zbxTestCheckHeader('Hosts');
+		$table = $this->query('class:list-table')->asTable()->one();
 		$filter = $this->query('name:zbx_filter')->asForm()->one();
 		$filter->query('button:Reset')->one()->click();
 		$filter->getField('Host groups')->select($this->HostGroup);
 		$filter->submit();
+		$table->waitUntilReloaded();
 
 		$this->zbxTestTextPresent($this->HostName);
 		$this->zbxTestTextPresent('Simple form test host');
@@ -65,7 +75,6 @@ class testPageHosts extends CLegacyWebTest {
 		$this->zbxTestAssertElementPresentXpath('//div[@id="filter_proxyids_"]/..//button[@disabled]');
 
 		$this->zbxTestAssertElementPresentXpath("//thead//th/a[text()='Name']");
-		$this->zbxTestAssertElementPresentXpath("//thead//th[contains(text(),'Applications')]");
 		$this->zbxTestAssertElementPresentXpath("//thead//th[contains(text(),'Items')]");
 		$this->zbxTestAssertElementPresentXpath("//thead//th[contains(text(),'Triggers')]");
 		$this->zbxTestAssertElementPresentXpath("//thead//th[contains(text(),'Graphs')]");
@@ -97,18 +106,14 @@ class testPageHosts extends CLegacyWebTest {
 		$name = $host['name'];
 
 		$sqlHosts =
-			'SELECT hostid,proxy_hostid,host,status,error,available,ipmi_authtype,ipmi_privilege,ipmi_username,'.
-			'ipmi_password,ipmi_disable_until,ipmi_available,snmp_disable_until,snmp_available,maintenanceid,'.
-			'maintenance_status,maintenance_type,maintenance_from,ipmi_errors_from,snmp_errors_from,ipmi_error,'.
-			'snmp_error,jmx_disable_until,jmx_available,jmx_errors_from,jmx_error,'.
+			'SELECT hostid,proxy_hostid,host,status,ipmi_authtype,ipmi_privilege,ipmi_username,'.
+			'ipmi_password,maintenanceid,maintenance_status,maintenance_type,maintenance_from,'.
 			'name,flags,templateid,description,tls_connect,tls_accept'.
 			' FROM hosts'.
 			' WHERE hostid='.$hostid;
 		$oldHashHosts = CDBHelper::getHash($sqlHosts);
 		$sqlItems = "select * from items where hostid=$hostid order by itemid";
 		$oldHashItems = CDBHelper::getHash($sqlItems);
-		$sqlApplications = "select * from applications where hostid=$hostid order by applicationid";
-		$oldHashApplications = CDBHelper::getHash($sqlApplications);
 		$sqlInterface = "select * from interface where hostid=$hostid order by interfaceid";
 		$oldHashInterface = CDBHelper::getHash($sqlInterface);
 		$sqlHostMacro = "select * from hostmacro where hostid=$hostid order by hostmacroid";
@@ -122,21 +127,21 @@ class testPageHosts extends CLegacyWebTest {
 		$sqlHostInventory = "select * from host_inventory where hostid=$hostid";
 		$oldHashHostInventory = CDBHelper::getHash($sqlHostInventory);
 
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
 		$this->query('button:Reset')->one()->click();
 		$this->zbxTestCheckTitle('Configuration of hosts');
 		$this->zbxTestCheckHeader('Hosts');
 
 		$this->zbxTestTextPresent($name);
 		$this->zbxTestClickLinkText($name);
-		$this->zbxTestClickWait('update');
+		$form = COverlayDialogElement::find()->asForm()->one()->waitUntilReady();
+		$form->submit();
 		$this->zbxTestCheckTitle('Configuration of hosts');
 		$this->zbxTestWaitUntilMessageTextPresent('msg-good', 'Host updated');
 		$this->zbxTestTextPresent($name);
 
 		$this->assertEquals($oldHashHosts, CDBHelper::getHash($sqlHosts));
 		$this->assertEquals($oldHashItems, CDBHelper::getHash($sqlItems));
-		$this->assertEquals($oldHashApplications, CDBHelper::getHash($sqlApplications));
 		$this->assertEquals($oldHashInterface, CDBHelper::getHash($sqlInterface));
 		$this->assertEquals($oldHashHostMacro, CDBHelper::getHash($sqlHostMacro));
 		$this->assertEquals($oldHashHostsGroups, CDBHelper::getHash($sqlHostsGroups));
@@ -149,12 +154,12 @@ class testPageHosts extends CLegacyWebTest {
 	public function testPageHosts_MassDisableAll() {
 		DBexecute("update hosts set status=".HOST_STATUS_MONITORED." where status=".HOST_STATUS_NOT_MONITORED);
 
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
 		$this->zbxTestCheckTitle('Configuration of hosts');
 		$this->query('button:Reset')->one()->click();
 
 		$this->zbxTestCheckboxSelect('all_hosts');
-		$this->zbxTestClickButton('host.massdisable');
+		$this->zbxTestClickButtonText('Disable');
 		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of hosts');
@@ -173,12 +178,12 @@ class testPageHosts extends CLegacyWebTest {
 
 		$hostid = $host['hostid'];
 
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
 		$this->zbxTestCheckTitle('Configuration of hosts');
 		$this->query('button:Reset')->one()->click();
 
-		$this->zbxTestCheckboxSelect('hosts_'.$hostid);
-		$this->zbxTestClickButton('host.massdisable');
+		$this->zbxTestCheckboxSelect('hostids_'.$hostid);
+		$this->zbxTestClickButtonText('Disable');
 		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of hosts');
@@ -196,12 +201,12 @@ class testPageHosts extends CLegacyWebTest {
 
 		$hostid = $host['hostid'];
 
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
 		$this->zbxTestCheckTitle('Configuration of hosts');
 		$this->query('button:Reset')->one()->click();
 
-		$this->zbxTestCheckboxSelect('hosts_'.$hostid);
-		$this->zbxTestClickButton('host.massenable');
+		$this->zbxTestCheckboxSelect('hostids_'.$hostid);
+		$this->zbxTestClickButtonText('Enable');
 		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of hosts');
@@ -214,12 +219,12 @@ class testPageHosts extends CLegacyWebTest {
 	public function testPageHosts_MassActivateAll() {
 		DBexecute("update hosts set status=".HOST_STATUS_NOT_MONITORED." where status=".HOST_STATUS_MONITORED);
 
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
 		$this->zbxTestCheckTitle('Configuration of hosts');
 		$this->query('button:Reset')->one()->click();
 
 		$this->zbxTestCheckboxSelect('all_hosts');
-		$this->zbxTestClickButton('host.massenable');
+		$this->zbxTestClickButtonText('Enable');
 		$this->zbxTestAcceptAlert();
 
 		$this->zbxTestCheckTitle('Configuration of hosts');
@@ -231,24 +236,22 @@ class testPageHosts extends CLegacyWebTest {
 	}
 
 	public function testPageHosts_FilterByName() {
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
+		$table = $this->query('class:list-table')->asTable()->waitUntilPresent()->one();
 		$filter = $this->query('name:zbx_filter')->asForm()->one();
 		$filter->query('button:Reset')->one()->click();
 		$filter->getField('Name')->fill($this->HostName);
 		$filter->submit();
+		$table->waitUntilReloaded();
 		$this->zbxTestTextPresent($this->HostName);
 		$this->zbxTestTextNotPresent('Displaying 0 of 0 found');
 	}
 
 	public function testPageHosts_FilterByTemplates() {
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
 		$filter = $this->query('name:zbx_filter')->asForm()->one();
 		$filter->query('button:Reset')->one()->click();
-		$filter->fill([
-			'Templates' => [
-				'values' =>'Form test template',
-				'context' => 'Templates']
-		]);
+		$filter->fill(['Templates' => ['values' =>'Template for web scenario testing', 'context' => 'Templates']]);
 		$filter->submit();
 		$this->zbxTestWaitForPageToLoad();
 		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='Simple form test host']");
@@ -256,12 +259,14 @@ class testPageHosts extends CLegacyWebTest {
 	}
 
 	public function testPageHosts_FilterByProxy() {
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
+		$table = $this->query('class:list-table')->asTable()->waitUntilPresent()->one();
 		$filter = $this->query('name:zbx_filter')->asForm()->one();
 		$filter->query('button:Reset')->one()->click();
 
 		$this->zbxTestClickXpathWait('//label[text()="Proxy"]');
 		$this->zbxTestClickButtonText('Apply');
+		$table->waitUntilReloaded();
 		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='Host_1 with proxy']");
 		$this->zbxTestAssertElementPresentXpath("//tbody//td[text()='Proxy_1 for filter']");
 		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='Host_2 with proxy']");
@@ -271,13 +276,13 @@ class testPageHosts extends CLegacyWebTest {
 		$this->zbxTestLaunchOverlayDialog('Proxies');
 		$this->zbxTestClickLinkTextWait('Proxy_1 for filter');
 		$this->zbxTestClickButtonText('Apply');
-		$this->zbxTestWaitForPageToLoad();
+		$table->waitUntilReloaded();
 		$this->zbxTestAssertElementPresentXpath("//tbody//a[text()='Host_1 with proxy']");
 		$this->zbxTestAssertElementPresentXpath("//div[@class='table-stats'][text()='Displaying 1 of 1 found']");
 	}
 
 	public function testPageHosts_FilterNone() {
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
 		$filter = $this->query('name:zbx_filter')->asForm()->one();
 		$filter->query('button:Reset')->one()->click();
 		$filter->getField('Name')->fill('1928379128ksdhksdjfh');
@@ -290,7 +295,8 @@ class testPageHosts extends CLegacyWebTest {
 	}
 
 	public function testPageHosts_FilterByAllFields() {
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
+		$table = $this->query('class:list-table')->asTable()->one();
 		$filter = $this->query('name:zbx_filter')->asForm()->one();
 		$filter->query('button:Reset')->one()->click();
 		$filter->getField('Host groups')->select($this->HostGroup);
@@ -298,12 +304,13 @@ class testPageHosts extends CLegacyWebTest {
 		$filter->getField('IP')->fill($this->HostIp);
 		$filter->getField('Port')->fill($this->HostPort);
 		$filter->submit();
+		$table->waitUntilReloaded();
 		$this->zbxTestTextPresent($this->HostName);
 		$this->zbxTestAssertElementPresentXpath("//div[@class='table-stats'][text()='Displaying 1 of 1 found']");
 	}
 
 	public function testPageHosts_FilterReset() {
-		$this->zbxTestLogin('hosts.php');
+		$this->zbxTestLogin(self::HOST_LIST_PAGE);
 		$this->query('button:Reset')->one()->click();
 		$this->zbxTestTextNotPresent('Displaying 0 of 0 found');
 	}
@@ -406,7 +413,278 @@ class testPageHosts extends CLegacyWebTest {
 						['name' => 'action', 'operator' => 'Equals']
 					]
 				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'tag', 'operator' => 'Exists'],
+						['name' => 'test', 'operator' => 'Exists']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering']
 					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'Or',
+					'tags' => [
+						['name' => 'tag', 'operator' => 'Exists'],
+						['name' => 'test', 'operator' => 'Exists']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering'],
+						['Name' => 'Host for tags filtering - clone'],
+						['Name' => 'Host for tags filtering - update']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'test', 'operator' => 'Exists']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'Or',
+					'tags' => [
+						['name' => 'action', 'operator' => 'Exists']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering'],
+						['Name' => 'Host for tags filtering - clone'],
+						['Name' => 'Host for tags filtering - update']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'test', 'operator' => 'Does not exist']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering - clone'],
+						['Name' => 'Host for tags filtering - update'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'Or',
+					'tags' => [
+						['name' => 'test', 'operator' => 'Does not exist']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering - clone'],
+						['Name' => 'Host for tags filtering - update'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'Or',
+					'tags' => [
+						['name' => 'test', 'operator' => 'Does not exist'],
+						['name' => 'tag', 'operator' => 'Does not exist']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering - clone'],
+						['Name' => 'Host for tags filtering - update'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'test', 'operator' => 'Does not exist'],
+						['name' => 'tag', 'operator' => 'Does not exist']
+					],
+					'result' => [
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'test', 'operator' => 'Does not equal', 'value' => 'test_tag']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering - clone'],
+						['Name' => 'Host for tags filtering - update'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'Or',
+					'tags' => [
+						['name' => 'test', 'operator' => 'Does not equal', 'value' => 'test_tag']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering - clone'],
+						['Name' => 'Host for tags filtering - update'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'test', 'operator' => 'Does not equal']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering'],
+						['Name' => 'Host for tags filtering - clone'],
+						['Name' => 'Host for tags filtering - update'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'action', 'operator' => 'Does not equal', 'value' => 'update'],
+						['name' => 'action', 'operator' => 'Does not equal', 'value' => 'simple']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering - clone'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'Or',
+					'tags' => [
+						['name' => 'action', 'operator' => 'Does not equal', 'value' => 'update'],
+						['name' => 'action', 'operator' => 'Does not equal', 'value' => 'simple']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering - clone'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'action', 'operator' => 'Does not contain', 'value' => 'clone']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering'],
+						['Name' => 'Host for tags filtering - update'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'Or',
+					'tags' => [
+						['name' => 'action', 'operator' => 'Does not contain', 'value' => 'clone']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering'],
+						['Name' => 'Host for tags filtering - update'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'action', 'operator' => 'Does not contain', 'value' => 'clo'],
+						['name' => 'tag', 'operator' => 'Does not contain', 'value' => 'ho']
+					],
+					'result' => [
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'Or',
+					'tags' => [
+						['name' => 'action', 'operator' => 'Does not contain', 'value' => 'clo'],
+						['name' => 'tag', 'operator' => 'Does not contain', 'value' => 'ho']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering'],
+						['Name' => 'Host for tags filtering - update'],
+						['Name' => 'Simple form test host'],
+						['Name' => 'SLA reports host'],
+						['Name' => 'Template inheritance test host']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'action', 'operator' => 'Does not contain', 'value' => 'clone'],
+						['name' => 'tag', 'operator' => 'Equals', 'value' => 'host']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering - update']
+					]
+				]
+			],
+			[
+				[
+					'evaluation_type' => 'And/Or',
+					'tags' => [
+						['name' => 'action', 'operator' => 'Does not contain', 'value' => 'clone'],
+						['name' => 'tag', 'operator' => 'Exists']
+					],
+					'result' => [
+						['Name' => 'Host for tags filtering'],
+						['Name' => 'Host for tags filtering - update']
+					]
+				]
+			]
 		];
 	}
 
@@ -416,11 +694,15 @@ class testPageHosts extends CLegacyWebTest {
 	 * @dataProvider getFilterByTagsData
 	 */
 	public function testPageHosts_FilterByTags($data) {
-		$this->page->login()->open('hosts.php?filter_groups%5B%5D=4&filter_host=host&filter_port=10051&&filter_set=1');
+		$this->page->login()->open((new CUrl('zabbix.php'))
+			->setArgument('action', 'host.list')
+			->setArgument('filter_groups[]', 4)
+			->setArgument('filter_host', 'host')
+			->setArgument('filter_port', 10051)
+			->setArgument('filter_set', 1)
+			->getUrl()
+		);
 		$form = $this->query('name:zbx_filter')->waitUntilPresent()->asForm()->one();
-		// Reset filter from possible previous scenario.
-		$form->query('button:Reset')->one()->click();
-
 		$form->fill(['id:filter_evaltype' => $data['evaluation_type']]);
 		$this->setTags($data['tags']);
 		$form->submit();

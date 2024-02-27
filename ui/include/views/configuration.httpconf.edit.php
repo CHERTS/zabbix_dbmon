@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,13 +27,18 @@ $widget = (new CWidget())->setTitle(_('Web monitoring'));
 
 // append host summary to widget header
 if (!empty($this->data['hostid'])) {
-	$widget->addItem(get_header_host_table('web', $this->data['hostid']));
+	$widget->setNavigation(getHostNavigation('web', $this->data['hostid']));
 }
 
+$url = (new CUrl('httpconf.php'))
+	->setArgument('context', $data['context'])
+	->getUrl();
+
 // create form
-$http_form = (new CForm())
+$http_form = (new CForm('post', $url))
+	->addItem((new CVar('form_refresh', $data['form_refresh'] + 1))->removeId())
+	->setId('http-form')
 	->setName('httpForm')
-	->setId('httpForm')
 	->setAttribute('aria-labelledby', ZBX_STYLE_PAGE_TITLE)
 	->addVar('form', $this->data['form'])
 	->addVar('hostid', $this->data['hostid'])
@@ -56,33 +61,11 @@ if (!empty($this->data['templates'])) {
 // Name
 $name_text_box = (new CTextBox('name', $this->data['name'], $this->data['templated'], 64))
 	->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
-	->setAriaRequired();
-if (!$this->data['templated']) {
-	$name_text_box->setAttribute('autofocus', 'autofocus');
-}
-$http_form_list->addRow((new CLabel(_('Name'), 'name'))->setAsteriskMark(), $name_text_box);
+	->setAriaRequired()
+	->setAttribute('autofocus', 'autofocus');
 
-// Application
-if ($this->data['application_list']) {
-	$applications = zbx_array_merge([''], $this->data['application_list']);
-	$http_form_list->addRow(new CLabel(_('Application'), 'label-application'),
-		(new CSelect('applicationid'))
-			->setFocusableElementId('label-application')
-			->setValue($this->data['applicationid'])
-			->addOptions(CSelect::createOptionsFromArray($applications))
-	);
-}
-else {
-	$http_form_list->addRow(_('Application'), new CSpan(_('No applications found.')));
-}
-
-// New application
 $http_form_list
-	->addRow(new CLabel(_('New application'), 'new_application'),
-		(new CSpan(
-			(new CTextBox('new_application', $this->data['new_application']))->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
-		))->addClass(ZBX_STYLE_FORM_NEW_GROUP)
-	)
+	->addRow((new CLabel(_('Name'), 'name'))->setAsteriskMark(), $name_text_box)
 	->addRow((new CLabel(_('Update interval'), 'delay'))->setAsteriskMark(),
 		(new CTextBox('delay', $data['delay']))
 			->setWidth(ZBX_TEXTAREA_SMALL_WIDTH)
@@ -249,9 +232,20 @@ $http_step_form_list->addRow((new CLabel(_('Steps'), $steps_table->getId()))->se
 // append tabs to form
 $http_tab = (new CTabView())
 	->addTab('scenarioTab', _('Scenario'), $http_form_list)
-	->addTab('stepTab', _('Steps'), $http_step_form_list)
-	->addTab('authenticationTab', _('Authentication'), $http_authentication_form_list);
-if (!$this->data['form_refresh']) {
+	->addTab('stepTab', _('Steps'), $http_step_form_list, TAB_INDICATOR_STEPS)
+	->addTab('tags-tab', _('Tags'),
+		new CPartial('configuration.tags.tab', [
+			'source' => 'httptest',
+			'tags' => $data['tags'],
+			'show_inherited_tags' => $data['show_inherited_tags'],
+			'readonly' => false,
+			'tabs_id' => 'tabs',
+			'tags_tab_id' => 'tags-tab'
+		]),
+		TAB_INDICATOR_TAGS
+	)
+	->addTab('authenticationTab', _('Authentication'), $http_authentication_form_list, TAB_INDICATOR_HTTP_AUTH);
+if ($this->data['form_refresh'] == 0) {
 	$http_tab->setSelected(0);
 }
 
@@ -269,16 +263,17 @@ if (!empty($this->data['httptestid'])) {
 		);
 	}
 
-	$buttons[] = (new CButtonDelete(_('Delete web scenario?'), url_params(['form', 'httptestid', 'hostid'])))
-		->setEnabled(!$data['templated']);
-	$buttons[] = new CButtonCancel();
+	$buttons[] = (new CButtonDelete(_('Delete web scenario?'), url_params(['form', 'httptestid', 'hostid', 'context']),
+		'context'
+	))->setEnabled(!$data['templated']);
+	$buttons[] = new CButtonCancel(url_param('context'));
 
 	$http_tab->setFooter(makeFormFooter(new CSubmit('update', _('Update')), $buttons));
 }
 else {
 	$http_tab->setFooter(makeFormFooter(
 		new CSubmit('add', _('Add')),
-		[new CButtonCancel()]
+		[new CButtonCancel(url_param('context'))]
 	));
 }
 
@@ -303,3 +298,11 @@ zbx_subarray_push($this->data['scenario_tab_data']['agent_visibility'], ZBX_AGEN
 require_once dirname(__FILE__).'/js/configuration.httpconf.edit.js.php';
 
 $widget->show();
+
+(new CScriptTag('
+	view.init('.json_encode([
+		'form_name' => $http_form->getName()
+	]).');
+'))
+	->setOnDocumentReady()
+	->show();

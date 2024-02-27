@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -229,28 +229,27 @@ function getSubGroups(array $groupids, array &$ms_groups = null, array $options 
 	return array_keys($db_groups);
 }
 
-/*
+/**
  * Creates a hintbox suitable for Problem hosts widget.
  *
- * @param array  $hosts                                                   Array of problematic hosts.
- * @param array  $data                                                    Array of host data, filter settings and
- *                                                                        severity configuration.
- * @param array  $data['config']                                          Severities configuration array.
- * @param array  $data['filter']['severities']                            Array of severities.
- * @param string $data['hosts_data'][<hostid>]['host']                    Host name.
- * @param int    $data['hosts_data'][<hostid>]['severities'][<severity>]  Severity count.
- * @param CUrl   $url                                                     URL that leads to problems view having hostid
- *                                                                        in its filter.
+ * @param array      $hosts                                                   Array of problematic hosts.
+ * @param array      $data                                                    Array of host data, filter settings and
+ *                                                                            severity configuration.
+ * @param array      $data['filter']['severities']                            Array of severities.
+ * @param string     $data['hosts_data'][<hostid>]['host']                    Host name.
+ * @param int        $data['hosts_data'][<hostid>]['severities'][<severity>]  Severity count.
+ * @param CUrl|null  $url                                                     URL that leads to problems view having
+ *                                                                            hostid in its filter.
  *
  * @return CTableInfo
  */
-function makeProblemHostsHintBox(array $hosts, array $data, CUrl $url) {
+function makeProblemHostsHintBox(array $hosts, array $data, ?CUrl $url) {
 	// Set trigger severities as table header, ordered starting from highest severity.
 	$header = [_('Host')];
 
 	foreach (range(TRIGGER_SEVERITY_COUNT - 1, TRIGGER_SEVERITY_NOT_CLASSIFIED) as $severity) {
 		if (in_array($severity, $data['filter']['severities'])) {
-			$header[] = getSeverityName($severity, $data['config']);
+			$header[] = CSeverityHelper::getName($severity);
 		}
 	}
 
@@ -275,8 +274,13 @@ function makeProblemHostsHintBox(array $hosts, array $data, CUrl $url) {
 
 	foreach ($hosts as $hostid => $host) {
 		$host_data = $data['hosts_data'][$hostid];
-		$url->setArgument('filter_hostids', [$hostid]);
-		$host_name = new CLink($host_data['host'], $url->getUrl());
+		if ($url !== null) {
+			$url->setArgument('hostids', [$hostid]);
+			$host_name = new CLink($host_data['host'], $url->getUrl());
+		}
+		else {
+			$host_name = $host_data['host'];
+		}
 
 		if ($host_data['maintenance_status'] == HOST_MAINTENANCE_STATUS_ON) {
 			if (array_key_exists($host_data['maintenanceid'], $db_maintenances)) {
@@ -300,7 +304,8 @@ function makeProblemHostsHintBox(array $hosts, array $data, CUrl $url) {
 			if (in_array($severity, $data['filter']['severities'])) {
 				$row->addItem(
 					($host_data['severities'][$severity] != 0)
-						? (new CCol($host_data['severities'][$severity]))->addClass(getSeverityStyle($severity))
+						? (new CCol($host_data['severities'][$severity]))
+							->addClass(CSeverityHelper::getStyle($severity))
 						: ''
 				);
 			}

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
  */
 abstract class CXmlValidatorGeneral {
 
+	public const YAML = 'yaml';
 	public const XML = 'xml';
 	public const JSON = 'json';
 
@@ -40,6 +41,13 @@ abstract class CXmlValidatorGeneral {
 	 * @var bool
 	 */
 	protected $strict = false;
+
+	/**
+	 * This validation is for importcompare, it should produce same output in import, as for export.
+	 *
+	 * @var bool
+	 */
+	protected $preview = false;
 
 	/**
 	 * @param string $format  Format of import source.
@@ -71,6 +79,28 @@ abstract class CXmlValidatorGeneral {
 	}
 
 	/**
+	 * On import preview validation should not change content.
+	 *
+	 * @return bool
+	 */
+	public function isPreview(): bool {
+		return $this->preview;
+	}
+
+	/**
+	 * On import preview validation should not change content.
+	 *
+	 * @param bool $preview
+	 *
+	 * @return self
+	 */
+	public function setPreview(bool $preview): self {
+		$this->preview = $preview;
+
+		return $this;
+	}
+
+	/**
 	 * Validate import data.
 	 *
 	 * @param array|string $data  Import data.
@@ -87,8 +117,6 @@ abstract class CXmlValidatorGeneral {
 	 * @param array        $rules  Validation rules.
 	 * @param array|string $data   Import data.
 	 * @param string       $path   XML path (for error reporting).
-	 *
-	 * @throws Exception if $data does not correspond to validation rules.
 	 *
 	 * @return mixed  Validator does some manipulations for the incoming data. For example, converts empty tags to an
 	 *                array, if desired. Converted data is returned.
@@ -139,7 +167,7 @@ abstract class CXmlValidatorGeneral {
 
 			// validation of the values type
 			foreach ($rules['rules'] as $tag => $rule) {
-				if (array_key_exists('import', $rule)) {
+				if (array_key_exists('import', $rule) && !$this->preview) {
 					$data[$tag] = call_user_func($rule['import'], $data);
 				}
 
@@ -187,6 +215,7 @@ abstract class CXmlValidatorGeneral {
 							$is_valid_tag = ($tag === $prefix.($index == 0 ? '' : $index) || $tag === $index);
 							break;
 
+						case self::YAML:
 						case self::JSON:
 							$is_valid_tag = ctype_digit(strval($tag));
 							break;

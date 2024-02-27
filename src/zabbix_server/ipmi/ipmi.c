@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,23 +17,19 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-#include "common.h"
+#include "ipmi.h"
+
+#include "config.h"
 
 #ifdef HAVE_OPENIPMI
 
 #include "log.h"
-#include "zbxserialize.h"
-#include "dbcache.h"
-
 #include "zbxipcservice.h"
 #include "ipmi_protocol.h"
 #include "checks_ipmi.h"
 #include "zbxserver.h"
-#include "ipmi.h"
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_ipmi_port_expand_macros                                      *
  *                                                                            *
  * Purpose: expands user macros in IPMI port value and converts the result to *
  *          to unsigned short value                                           *
@@ -53,7 +49,7 @@ int	zbx_ipmi_port_expand_macros(zbx_uint64_t hostid, const char *port_orig, unsi
 	int	ret = SUCCEED;
 
 	tmp = zbx_strdup(NULL, port_orig);
-	substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL, NULL,
+	substitute_simple_macros(NULL, NULL, NULL, NULL, &hostid, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 			&tmp, MACRO_TYPE_COMMON, NULL, 0);
 
 	if (FAIL == is_ushort(tmp, port) || 0 == *port)
@@ -68,8 +64,6 @@ int	zbx_ipmi_port_expand_macros(zbx_uint64_t hostid, const char *port_orig, unsi
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_ipmi_execute_command                                         *
  *                                                                            *
  * Purpose: executes IPMI command                                             *
  *                                                                            *
@@ -160,8 +154,6 @@ out:
 }
 
 /******************************************************************************
- *                                                                            *
- * Function: zbx_ipmi_test_item                                               *
  *                                                                            *
  * Purpose: test IPMI item                                                    *
  *                                                                            *

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -53,19 +53,17 @@ class CScreenHttpTest extends CScreenBase {
 		$sort_field = $this->data['sort'];
 		$sort_order = $this->data['sortorder'];
 
-		$httptests = [];
-		$paging = [];
-
-		$config = select_config();
-
 		$options = [
 			'output' => ['httptestid', 'name', 'hostid'],
 			'selectHosts' => ['name', 'status'],
+			'selectTags' => ['tag', 'value'],
 			'selectSteps' => API_OUTPUT_COUNT,
+			'evaltype' => array_key_exists('evaltype', $this->data) ? $this->data['evaltype'] : TAG_EVAL_TYPE_AND_OR,
+			'tags' => array_key_exists('tags', $this->data) ? $this->data['tags'] : [],
 			'templated' => false,
 			'preservekeys' => true,
 			'filter' => ['status' => HTTPTEST_STATUS_ACTIVE],
-			'limit' => $config['search_limit'] + 1
+			'limit' => CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT) + 1
 		];
 
 		$options['hostids'] = $this->data['hostids'] ? $this->data['hostids'] : null;
@@ -89,6 +87,10 @@ class CScreenHttpTest extends CScreenBase {
 		$httptests = resolveHttpTestMacros($httptests, true, false);
 		order_result($httptests, $sort_field, $sort_order);
 
+		$tags = makeTags($httptests, true, 'httptestid', ZBX_TAG_COUNT_DEFAULT,
+			array_key_exists('tags', $this->data) ? $this->data['tags'] : []
+		);
+
 		// Fetch the latest results of the web scenario.
 		$last_httptest_data = Manager::HttpTest()->getLastData(array_keys($httptests));
 
@@ -108,12 +110,15 @@ class CScreenHttpTest extends CScreenBase {
 				make_sorting_header(_('Name'), 'name', $sort_field, $sort_order, 'zabbix.php?action=web.view'),
 				_('Number of steps'),
 				_('Last check'),
-				_('Status')
+				_('Status'),
+				_('Tags')
 			]);
 
-		foreach ($httptests as $httptest) {
+		foreach ($httptests as $key => $httptest) {
 			if (array_key_exists('lastfailedstep', $httptest) && $httptest['lastfailedstep'] !== null) {
-				$lastcheck = zbx_date2str(DATE_TIME_FORMAT_SECONDS, $httptest['lastcheck']);
+				$lastcheck = (new CSpan(zbx_date2age($httptest['lastcheck'])))
+					->addClass(ZBX_STYLE_CURSOR_POINTER)
+					->setHint(zbx_date2str(DATE_TIME_FORMAT_SECONDS, $httptest['lastcheck']), '', true, '', 0);
 
 				if ($httptest['lastfailedstep'] != 0) {
 					$httpstep = get_httpstep_by_no($httptest['httptestid'], $httptest['lastfailedstep']);
@@ -144,7 +149,8 @@ class CScreenHttpTest extends CScreenBase {
 				new CLink($httptest['name'], 'httpdetails.php?httptestid='.$httptest['httptestid']),
 				$httptest['steps'],
 				$lastcheck,
-				$status
+				$status,
+				array_key_exists($key, $tags) ? $tags[$key] : ''
 			]));
 		}
 

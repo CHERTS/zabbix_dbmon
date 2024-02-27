@@ -1,7 +1,7 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ class CSelect extends CTag {
 	/**
 	 * @param string $name  Input field name.
 	 */
-	public function __construct(string $name) {
+	public function __construct(string $name = null) {
 		parent::__construct('z-select', true);
 
 		$this->name = $name;
@@ -145,6 +145,17 @@ class CSelect extends CTag {
 	}
 
 	/**
+	 * @param string|null $name
+	 *
+	 * @return self
+	 */
+	public function setName($name): self {
+		$this->name = $name;
+
+		return $this;
+	}
+
+	/**
 	 * @param int $width
 	 *
 	 * @return self
@@ -165,6 +176,17 @@ class CSelect extends CTag {
 	}
 
 	/**
+	 * @param int $value
+	 *
+	 * @return self
+	 */
+	public function setAdaptiveWidth(int $value): self {
+		$this->addStyle('max-width: '.$value.'px;');
+
+		return $this->setWidthAuto();
+	}
+
+	/**
 	 * Set custom template for options.
 	 *
 	 * @param string $template
@@ -173,6 +195,19 @@ class CSelect extends CTag {
 	 */
 	public function setOptionTemplate(string $template) {
 		$this->setAttribute('option-template', $template);
+
+		return $this;
+	}
+
+	/**
+	 * Set custom template for selected option.
+	 *
+	 * @param string $template
+	 *
+	 * @return self
+	 */
+	public function setSelectedOptionTemplate(string $template) {
+		$this->setAttribute('selected-option-template', $template);
 
 		return $this;
 	}
@@ -225,8 +260,8 @@ class CSelect extends CTag {
 		$this->setAttribute('data-options', json_encode($this->toArray()));
 
 		/*
-		 * This attribute makes element "focusable", it match by jQuery(':focusable') queries and also browser would be
-		 * able to evaluate "autofocus" attribute correctly.
+		 * This attribute makes element "focusable", it is matched by jQuery(':focusable') queries and also browser
+		 * would be able to evaluate "autofocus" attribute correctly.
 		 */
 		$this->setAttribute('tabindex', '-1');
 

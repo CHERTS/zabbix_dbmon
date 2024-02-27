@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,8 +18,6 @@
 **/
 
 #include "common.h"
-
-#include "cfg.h"
 #include "log.h"
 #include "zbxgetopt.h"
 #include "zbxembed.h"
@@ -38,6 +36,13 @@ const char	*usage_message[] = {
 
 unsigned char	program_type;
 
+#define JS_TIMEOUT_MIN		1
+#define JS_TIMEOUT_MAX		60
+#define JS_TIMEOUT_DEF		ZBX_ES_TIMEOUT
+#define JS_TIMEOUT_MIN_STR	ZBX_STR(JS_TIMEOUT_MIN)
+#define JS_TIMEOUT_MAX_STR	ZBX_STR(JS_TIMEOUT_MAX)
+#define JS_TIMEOUT_DEF_STR	ZBX_STR(JS_TIMEOUT_DEF)
+
 const char	*help_message[] = {
 	"Execute script using Zabbix embedded scripting engine.",
 	"",
@@ -48,7 +53,9 @@ const char	*help_message[] = {
 	"                               standard input.",
 	"  -p,--param input-param       Specify input parameter",
 	"  -l,--loglevel log-level      Specify log level",
-	"  -t,--timeout timeout         Specify timeout in seconds",
+	"  -t --timeout timeout         Specify the timeout in seconds. Valid range: " JS_TIMEOUT_MIN_STR "-"
+			JS_TIMEOUT_MAX_STR " seconds",
+	"                               (default: " JS_TIMEOUT_DEF_STR " seconds)",
 	"  -h --help                    Display this help message",
 	"  -V --version                 Display version number",
 	"",
@@ -56,7 +63,6 @@ const char	*help_message[] = {
 	"  zabbix_js -s script-file.js -p example",
 	NULL	/* end of text */
 };
-
 
 /* long options */
 struct zbx_option	longopts[] =
@@ -72,7 +78,7 @@ struct zbx_option	longopts[] =
 };
 
 /* short options */
-static char	shortopts[] = "s:i:p:hVl:t";
+static char	shortopts[] = "s:i:p:hVl:t:";
 
 /* end of COMMAND LINE OPTIONS */
 
@@ -102,7 +108,6 @@ char	*CONFIG_TLS_CIPHER_CMD		= NULL;
 
 int	CONFIG_PASSIVE_FORKS		= 0;	/* not used in zabbix_js, just for linking with tls.c */
 int	CONFIG_ACTIVE_FORKS		= 0;	/* not used in zabbix_js, just for linking with tls.c */
-
 
 char	*CONFIG_SOURCE_IP 		= NULL;
 char	*CONFIG_SSL_CA_LOCATION		= NULL;
@@ -146,55 +151,11 @@ static char	*read_file(const char *filename, char **error)
 	return data;
 }
 
-static char	*execute_script(const char *script, const char *param, int timeout, char **error)
-{
-	zbx_es_t	es;
-	char		*code = NULL;
-	int		size;
-	char		*errmsg = NULL, *result = NULL;
-
-	zbx_es_init(&es);
-	if (FAIL == zbx_es_init_env(&es, &errmsg))
-	{
-		*error = zbx_dsprintf(NULL, "cannot initialize scripting environment: %s", errmsg);
-		zbx_free(errmsg);
-		return NULL;
-	}
-
-	if (0 != timeout)
-		zbx_es_set_timeout(&es, timeout);
-
-	if (FAIL == zbx_es_compile(&es, script, &code, &size, &errmsg))
-	{
-		*error = zbx_dsprintf(NULL, "cannot compile script: %s", errmsg);
-		zbx_free(errmsg);
-		goto out;
-	}
-
-	if (FAIL == zbx_es_execute(&es, script, code, size, param, &result, &errmsg))
-	{
-		*error = zbx_dsprintf(NULL, "cannot execute script: %s", errmsg);
-		zbx_free(errmsg);
-		goto out;
-	}
-out:
-	if (FAIL == zbx_es_destroy_env(&es, &errmsg))
-	{
-		zbx_error("cannot destroy scripting environment: %s", errmsg);
-		zbx_free(result);
-	}
-
-	zbx_free(code);
-	zbx_free(errmsg);
-
-	return result;
-}
-
 int	main(int argc, char **argv)
 {
 	int	ret = FAIL, loglevel = LOG_LEVEL_WARNING, timeout = 0;
 	char	*script_file = NULL, *input_file = NULL, *param = NULL, ch, *script = NULL, *error = NULL,
-		*result = NULL;
+		*result = NULL, script_error[MAX_STRING_LEN];
 
 	progname = get_program_name(argv[0]);
 
@@ -219,7 +180,14 @@ int	main(int argc, char **argv)
 				loglevel = atoi(zbx_optarg);
 				break;
 			case 't':
-				timeout = atoi(zbx_optarg);
+				if (FAIL == is_uint_n_range(zbx_optarg, ZBX_MAX_UINT64_LEN, &timeout, sizeof(timeout),
+						JS_TIMEOUT_MIN, JS_TIMEOUT_MAX))
+				{
+					zbx_error("Invalid timeout, valid range [" JS_TIMEOUT_MIN_STR ":"
+							JS_TIMEOUT_MAX_STR "] seconds");
+					exit(EXIT_FAILURE);
+				}
+
 				break;
 			case 'h':
 				help();
@@ -246,7 +214,6 @@ int	main(int argc, char **argv)
 		zbx_error("cannot open log: %s", error);
 		goto clean;
 	}
-
 
 	if (NULL == script_file || (NULL == input_file && NULL == param))
 	{
@@ -289,15 +256,18 @@ int	main(int argc, char **argv)
 		}
 	}
 
-	if (NULL == (result = execute_script(script, param, timeout, &error)))
+	if (FAIL == zbx_es_execute_command(script, param, timeout, &result, script_error, sizeof(script_error), NULL))
 	{
-		zbx_error("error executing script:\n%s", error);
+		zbx_error("error executing script:\n%s", script_error);
 		goto close;
 	}
 	ret = SUCCEED;
 	printf("\n%s\n", result);
 close:
 	zabbix_close_log();
+#ifndef _WINDOWS
+	zbx_locks_destroy();
+#endif
 clean:
 	zbx_free(result);
 	zbx_free(error);

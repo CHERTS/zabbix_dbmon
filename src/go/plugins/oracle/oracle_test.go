@@ -3,7 +3,7 @@
 
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -32,11 +32,9 @@ import (
 	"strings"
 	"testing"
 
-	"zabbix.com/pkg/zbxerr"
-
+	"git.zabbix.com/ap/plugin-support/plugin"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 	"github.com/omeid/go-yarn"
-
-	"zabbix.com/pkg/plugin"
 )
 
 type TestConfig struct {

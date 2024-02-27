@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,13 +24,21 @@
  */
 
 $pageHeader = (new CPageHeader(_('Fatal error, please report to the Zabbix team'), CWebUser::getLang()))
-	->addCssFile('assets/styles/'.CHtml::encode($data['theme']).'.css')
+	->addCssFile('assets/styles/'.$data['theme'].'.css')
 	->display();
 
-$buttons = [
-	(new CButton('back', _('Go to dashboard')))
-		->onClick('javascript: document.location = "zabbix.php?action=dashboard.view"'
-)];
+if (CWebUser::isLoggedIn()) {
+	$buttons = [
+		(new CButton('back', _s('Go to "%1$s"', CMenuHelper::getFirstLabel())))
+			->onClick('javascript: document.location = "'.CMenuHelper::getFirstUrl().'"')
+	];
+}
+else {
+	$buttons = [
+		(new CButton('login', _s('Go to "%1$s"', _('Login'))))
+			->onClick('javascript: document.location = "index.php"')
+	];
+}
 
 echo '<body';
 

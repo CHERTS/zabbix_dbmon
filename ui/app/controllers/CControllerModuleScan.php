@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -29,11 +29,11 @@ class CControllerModuleScan extends CController {
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() == USER_TYPE_SUPER_ADMIN);
+		return $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_GENERAL);
 	}
 
 	protected function doAction() {
-		clear_messages();
+		get_and_clear_messages();
 
 		$db_modules_create = [];
 		$db_modules_create_names = [];
@@ -127,11 +127,11 @@ class CControllerModuleScan extends CController {
 			? _('Modules updated')
 			: _('No new modules discovered');
 
-		if (hasErrorMesssages()) {
-			$response->setMessageError($message);
+		if (hasErrorMessages()) {
+			CMessageHelper::setErrorTitle($message);
 		}
 		else {
-			$response->setMessageOk($message);
+			CMessageHelper::setSuccessTitle($message);
 		}
 
 		$this->setResponse($response);

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ class CControllerFavouriteDelete extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'object' =>		'fatal|required|in graphid,itemid,screenid,slideshowid,sysmapid',
+			'object' =>		'fatal|required|in itemid,sysmapid',
 			'objectid' =>	'fatal|required|id'
 		];
 
@@ -42,18 +42,13 @@ class CControllerFavouriteDelete extends CController {
 
 	protected function doAction() {
 		$profile = [
-			'graphid' => 'web.favorite.graphids',
 			'itemid' => 'web.favorite.graphids',
-			'screenid' => 'web.favorite.screenids',
-			'slideshowid' => 'web.favorite.screenids',
 			'sysmapid' => 'web.favorite.sysmapids'
 		];
 
 		$widgetids = [
 			'graphid' => WIDGET_FAV_GRAPHS,
 			'itemid' => WIDGET_FAV_GRAPHS,
-			'screenid' => WIDGET_FAV_SCREENS,
-			'slideshowid' => WIDGET_FAV_SCREENS,
 			'sysmapid' => WIDGET_FAV_MAPS
 		];
 
@@ -67,20 +62,23 @@ class CControllerFavouriteDelete extends CController {
 		$result = DBend($result);
 
 		if ($result) {
-			$data['main_block'] =
-				'if (jQuery(\'#addrm_fav\').length) {'."\n".
-					'document.getElementById(\'addrm_fav\').title = \''._('Add to favourites').'\';'."\n".
-					'document.getElementById(\'addrm_fav\').onclick = function() { add2favorites(\''.$object.'\', \''.$objectid.'\'); }'."\n".
-					'switchElementClass(\'addrm_fav\', \'btn-remove-fav\', \'btn-add-fav\');'."\n".
-				'}'."\n".
-				'else {'."\n".
-					'var $widgets = jQuery(".dashbrd-grid-container").dashboardGrid('."\n".
-						'"getWidgetsBy", "type", "'.$widgetids[$object].'");'."\n".
-					'jQuery.each($widgets, function(index, widget) {'."\n".
-						'jQuery(".dashbrd-grid-container").dashboardGrid('."\n".
-							'"refreshWidget", widget["widgetid"]);'."\n".
-					'});'."\n".
-				'}';
+			$data['main_block'] = '
+				var addrm_fav = document.getElementById("addrm_fav");
+
+				if (addrm_fav !== null) {
+					addrm_fav.title = "'._('Add to favorites').'";
+					addrm_fav.onclick = () => add2favorites("'.$object.'", "'.$objectid.'");
+					addrm_fav.classList.add("btn-add-fav");
+					addrm_fav.classList.remove("btn-remove-fav");
+				}
+				else {
+					ZABBIX.Dashboard.getSelectedDashboardPage().getWidgets().forEach((widget) => {
+						if (widget.getType() === "'.$widgetids[$object].'") {
+							widget._startUpdating();
+						}
+					});
+				}
+			';
 		}
 		else {
 			$data['main_block'] = '';

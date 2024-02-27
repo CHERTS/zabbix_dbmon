@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,14 +26,25 @@ class CControllerIconMapList extends CController {
 	}
 
 	protected function checkInput() {
-		return true;
+		$fields = [
+			// Empty validation rules only to init CMessageHelper.
+		];
+
+		$ret = $this->validateInput($fields);
+
+		if (!$ret) {
+			$this->setResponse(new CControllerResponseFatal());
+		}
+
+		return $ret;
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() == USER_TYPE_SUPER_ADMIN);
+		return $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_GENERAL);
 	}
 
 	protected function doAction() {
+
 		$data = [
 			'icon_list' => [],
 			'inventory_list' => []
@@ -54,7 +65,7 @@ class CControllerIconMapList extends CController {
 		}
 
 		$data['iconmaps'] = API::IconMap()->get([
-			'output' => ['mappings', 'name', 'iconmapid'],
+			'output' => ['iconmapid', 'name'],
 			'selectMappings' => ['inventory_link', 'expression', 'iconid'],
 			'editable' => true
 		]);

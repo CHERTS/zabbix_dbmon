@@ -5,50 +5,44 @@ Released into the Public Domain by Ulrich Drepper <drepper@redhat.com>.  */
 
 #ifdef __linux__
 	#include <endian.h>
-#elif __hpux
-/* Nothing to do in HP-UX */
-#elif _AIX
-/* Nothing to do in AIX */
+#elif __hpux	/* on HP-UX IA-64 gcc default is -mbig-endian */
+# define SWAP(n) (n)
+#elif _AIX	/* IBM AIX is big-endian */
+# define SWAP(n) (n)
+#elif defined(_WINDOWS) || defined(__MINGW32__)
+/* Nothing to do in Windows */
 #else
 	#if defined(ZBX_OLD_SOLARIS)
 		#include <sys/isa_defs.h>
+
+		#if defined(_LITTLE_ENDIAN)
+			# define SWAP(n) \
+				(((n) << 24) | (((n) & 0xff00) << 8) | (((n) >> 8) & 0xff00) | ((n) >> 24))
+		#elif defined(_BIG_ENDIAN)
+			# define SWAP(n) (n)
+		#endif
 	#else
 		#include <machine/endian.h>
 	#endif
 #endif
-#include <errno.h>
-#include <limits.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/param.h>
-#include <sys/types.h>
 
+#if !(defined(_WINDOWS) || defined(__MINGW32__))
+	#include <stdio.h>
+	#include <string.h>
+#endif
 
-/* Structure to save state of computation between the single steps.  */
-struct sha256_ctx
-{
-	uint32_t H[8];
-
-	uint32_t total[2];
-	uint32_t buflen;
-	char buffer[128];	/* NB: always correctly aligned for uint32_t.  */
-};
-
-
+#if !defined(SWAP)
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 # define SWAP(n) \
 	(((n) << 24) | (((n) & 0xff00) << 8) | (((n) >> 8) & 0xff00) | ((n) >> 24))
 #else
 # define SWAP(n) (n)
 #endif
-
+#endif
 
 /* This array contains the bytes used to pad the buffer to the next
 64-byte boundary.  (FIPS 180-2:5.1.1)  */
 static const unsigned char fillbuf[64] = { 0x80, 0 /* , 0, 0, ...  */ };
-
 
 /* Constants for SHA256 from FIPS 180-2:4.2.2.  */
 static const uint32_t K[64] =
@@ -71,11 +65,10 @@ static const uint32_t K[64] =
 	0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
-
 /* Process LEN bytes of BUFFER, accumulating context into CTX.
 It is assumed that LEN % 64 == 0.  */
 static void
-sha256_process_block (const void *buffer, size_t len, struct sha256_ctx *ctx)
+sha256_process_block (const void *buffer, size_t len, sha256_ctx *ctx)
 {
 	const uint32_t *words = buffer;
 	size_t nwords = len / sizeof (uint32_t);
@@ -174,11 +167,10 @@ cyclic rotation.  Hope the C compiler is smart enough.  */
 	ctx->H[7] = h;
 }
 
-
 /* Initialize structure containing state of computation.
 (FIPS 180-2:5.3.2)  */
 static void
-sha256_init_ctx (struct sha256_ctx *ctx)
+sha256_init_ctx (sha256_ctx *ctx)
 {
 	ctx->H[0] = 0x6a09e667;
 	ctx->H[1] = 0xbb67ae85;
@@ -193,14 +185,13 @@ sha256_init_ctx (struct sha256_ctx *ctx)
 	ctx->buflen = 0;
 }
 
-
 /* Process the remaining bytes in the internal buffer and the usual
 prolog according to the standard and write the result to RESBUF.
 
 IMPORTANT: On some systems it is required that RESBUF is correctly
 aligned for a 32 bits value.  */
 static void *
-sha256_finish_ctx (struct sha256_ctx *ctx, void *resbuf)
+sha256_finish_ctx (sha256_ctx *ctx, void *resbuf)
 {
 	/* Take yet unprocessed bytes into account.  */
 	uint32_t bytes = ctx->buflen;
@@ -230,9 +221,8 @@ sha256_finish_ctx (struct sha256_ctx *ctx, void *resbuf)
 	return resbuf;
 }
 
-
 static void
-sha256_process_bytes (const void *buffer, size_t len, struct sha256_ctx *ctx)
+sha256_process_bytes (const void *buffer, size_t len, sha256_ctx *ctx)
 {
 	/* When we already have some bits in our internal buffer concatenate
 	both inputs first.  */
@@ -269,12 +259,14 @@ compilers don't.  */
 # define UNALIGNED_P(p) (((uintptr_t) p) % sizeof (uint32_t) != 0)
 #endif
 		if (UNALIGNED_P (buffer))
+		{
 			while (len > 64)
 			{
 				sha256_process_block (memcpy (ctx->buffer, buffer, 64), 64, ctx);
 				buffer = (const char *) buffer + 64;
 				len -= 64;
 			}
+		}
 		else
 		{
 			sha256_process_block (buffer, len & ~63, ctx);
@@ -300,11 +292,35 @@ compilers don't.  */
 	}
 }
 
+void	zbx_sha256_init(sha256_ctx *ctx)
+{
+	sha256_init_ctx(ctx);
+}
+
+void	*zbx_sha256_finish(sha256_ctx *ctx, void *resbuf)
+{
+	return sha256_finish_ctx(ctx, resbuf);
+}
+
+void	zbx_sha256_process_bytes(const void *buffer, size_t len, sha256_ctx *ctx)
+{
+	sha256_process_bytes(buffer, len, ctx);
+}
+
 void	zbx_sha256_hash(const char *in, char *out)
 {
-	struct	sha256_ctx ctx;
+	sha256_ctx ctx;
+
 	sha256_init_ctx (&ctx);
 	sha256_process_bytes (in, strlen (in), &ctx);
 	sha256_finish_ctx (&ctx, out);
 }
 
+void	zbx_sha256_hash_len(const char *in, size_t len, char *out)
+{
+	sha256_ctx ctx;
+
+	sha256_init_ctx(&ctx);
+	sha256_process_bytes (in, len, &ctx);
+	sha256_finish_ctx(&ctx, out);
+}

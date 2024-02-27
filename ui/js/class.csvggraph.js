@@ -1,6 +1,6 @@
 /*
  ** Zabbix
- ** Copyright (C) 2001-2022 Zabbix SIA
+ ** Copyright (C) 2001-2024 Zabbix SIA
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
  *  - show_problems - show problems in hintbox when mouse is moved over the problem zone;
  *  - min_period - min period in seconds that must be s-boxed to change the data in dashboard timeselector.
  */
-jQuery(function ($) {
+(function ($) {
 	"use strict";
 
 	// Makes SBox selection cancelable pressing Esc.
@@ -46,18 +46,17 @@ jQuery(function ($) {
 		var graph = graph || e.data.graph,
 			data = graph.data('options');
 
-		dropDocumentListeners(e, graph);
-
 		if (data) {
 			if (!data.isHintBoxFrozen) {
-				$('.dashbrd-grid-container')
-					.dashboardGrid('unpauseWidgetRefresh', graph.data('widget')['uniqueid']);
+				graph.data('widget')._resumeUpdating();
 			}
 
 			$('.svg-graph-selection', graph).attr({'width': 0, 'height': 0});
 			$('.svg-graph-selection-text', graph).text('');
 			graph.data('options').boxing = false;
 		}
+
+		dropDocumentListeners(e, graph);
 	}
 
 	/**
@@ -66,11 +65,11 @@ jQuery(function ($) {
 	 * - to avoid another call of destroySBox on 'mouseup' (in case if user has pressed ESC).
 	 */
 	function dropDocumentListeners(e, graph) {
-		var widgets_boxing = 0; // Number of widgets with active SBox.
-		$('.dashbrd-grid-container').data('dashboardGrid')['widgets'].forEach(function(w) {
-			if (w !== graph.data('widget') && w['type'] === 'svggraph') {
-				var svg_graph = $('svg', w['content_body']);
-				if (svg_graph.length && svg_graph.data('options')['boxing']) {
+		let widgets_boxing = 0; // Number of widgets with active SBox.
+		ZABBIX.Dashboard.getSelectedDashboardPage().getWidgets().forEach((widget) => {
+			if (widget.getType() === 'svggraph' && widget._svg !== null) {
+				const options = jQuery(widget._svg).data('options');
+				if (options !== undefined && options.boxing) {
 					widgets_boxing++;
 				}
 			}
@@ -92,6 +91,7 @@ jQuery(function ($) {
 			hbox = graph.data('hintbox') || null;
 
 		if (hbox !== null && data.isHintBoxFrozen === false) {
+			graph.removeAttr('data-expanded');
 			removeFromOverlaysStack(graph.hintboxid);
 			graph.off('mouseup', makeHintboxStatic);
 			graph.removeData('hintbox');
@@ -119,20 +119,20 @@ jQuery(function ($) {
 			// Should be put inside hintBoxItem to use functionality of hintBox.
 			graph.hintBoxItem = hintBox.createBox(e, graph, content, '', true, 'top: 0; left: 0', graph.parent());
 			data.isHintBoxFrozen = true;
-			$('.dashbrd-grid-container').dashboardGrid('pauseWidgetRefresh', graph.data('widget')['uniqueid']);
-
-			Overlay.prototype.recoverFocus.call({'$dialogue': graph.hintBoxItem});
-			Overlay.prototype.containFocus.call({'$dialogue': graph.hintBoxItem});
+			graph.data('widget')._pauseUpdating();
 
 			graph.hintBoxItem.on('onDeleteHint.hintBox', function(e) {
-				$('.dashbrd-grid-container')
-					.dashboardGrid('unpauseWidgetRefresh', graph.data('widget')['uniqueid']);
+				graph.data('widget')._resumeUpdating();
 				data.isHintBoxFrozen = false; // Unfreeze because only onfrozen hintboxes can be removed.
 				graph.off('mouseup', hintboxSilentMode);
 				destroyHintbox(graph);
 			});
 
 			repositionHintBox(e, graph);
+
+			Overlay.prototype.recoverFocus.call({'$dialogue': graph.hintBoxItem});
+			Overlay.prototype.containFocus.call({'$dialogue': graph.hintBoxItem});
+
 			graph
 				.off('mouseup', hintboxSilentMode)
 				.on('mouseup', {graph: graph}, hintboxSilentMode);
@@ -189,7 +189,7 @@ jQuery(function ($) {
 
 		// If mouse movement detected (SBox has dragged), destroy opened hintbox and pause widget refresh.
 		if (data.start != data.end && !data.boxing) {
-			$('.dashbrd-grid-container').dashboardGrid('pauseWidgetRefresh', graph.data('widget')['uniqueid']);
+			graph.data('widget')._pauseUpdating();
 			data.isHintBoxFrozen = false;
 			data.boxing = true;
 			destroyHintbox(graph);
@@ -515,7 +515,6 @@ jQuery(function ($) {
 								&& (+point.y + tolerance) > e.offsetY && e.offsetY > (+point.y - tolerance)) {
 							xy_point = point;
 							points_total = 1;
-							return;
 						}
 					});
 				}
@@ -556,20 +555,20 @@ jQuery(function ($) {
 
 				if (show_hint) {
 					// Calculate time at mouse position.
-					var time = parseInt(data.timeFrom + ((offsetX - data.dimX) * data.spp));
+					const time = new CDate((data.timeFrom + (offsetX - data.dimX) * data.spp) * 1000);
 
 					html = $('<div>')
-							.addClass('svg-graph-hintbox')
-							.append(
-								$('<div>')
-									.addClass('header')
-									.html(time2str(time))
-							)
-							.append(html)
-							.append(points_total > data.hintMaxRows
-								? makeHintBoxFooter(data.hintMaxRows, points_total)
-								: null
-							);
+						.addClass('svg-graph-hintbox')
+						.append(
+							$('<div>')
+								.addClass('header')
+								.html(time.format(PHP_ZBX_FULL_DATE_TIME))
+						)
+						.append(html)
+						.append(points_total > data.hintMaxRows
+							? makeHintBoxFooter(data.hintMaxRows, points_total)
+							: null
+						);
 				}
 			}
 			else {
@@ -617,61 +616,59 @@ jQuery(function ($) {
 	}
 
 	var methods = {
-		init: function(options, widget) {
-			options = $.extend({}, {
-				sbox: false,
-				show_problems: true,
-				hint_max_rows: 20,
-				min_period: 60
-			}, options);
-
+		init: function(widget) {
 			this.each(function() {
-				var graph = $(this),
-					data = {
-						dimX: options.dims.x,
-						dimY: options.dims.y,
-						dimW: options.dims.w,
-						dimH: options.dims.h,
-						showProblems: options.show_problems,
-						hintMaxRows: options.hint_max_rows,
+				jQuery(widget._svg)
+					.data('options', {
+						dimX: widget._svg_options.dims.x,
+						dimY: widget._svg_options.dims.y,
+						dimW: widget._svg_options.dims.w,
+						dimH: widget._svg_options.dims.h,
+						showProblems: widget._svg_options.show_problems,
+						hintMaxRows: widget._svg_options.hint_max_rows,
 						isHintBoxFrozen: false,
-						spp: options.spp || null,
-						timeFrom: options.time_from,
-						minPeriod: options.min_period,
+						spp: widget._svg_options.spp || null,
+						timeFrom: widget._svg_options.time_from,
+						minPeriod: widget._svg_options.min_period,
 						boxing: false
-					};
-
-				graph
-					.data('options', data)
+					})
 					.data('widget', widget)
 					.attr('unselectable', 'on')
-					.css('user-select', 'none')
-					.on('mousemove', {graph: graph}, showHintbox)
-					.on('mouseleave', function(e) {
-						var graph = $(this);
-						destroyHintbox(graph);
-						hideHelper(graph);
-					})
-					.on('selectstart', false);
+					.css('user-select', 'none');
 
-				if (options.sbox) {
-					dropDocumentListeners(null, graph);
-
-					graph
-						.on('dblclick', function() {
-							hintBox.hideHint(graph, true);
-							$.publish('timeselector.zoomout');
-							return false;
-						})
-						.on('mousedown', {graph: graph}, startSBoxDrag);
+				if (widget._svg_options.sbox) {
+					dropDocumentListeners(null, jQuery(widget._svg));
 				}
 			});
 		},
-		disableSBox: function(e) {
-			var graph = $(this);
+		activate: function () {
+			const widget = $(this).data('widget');
+			const graph = jQuery(widget._svg);
+
+			graph
+				.on('mousemove', {graph}, showHintbox)
+				.on('mouseleave', function() {
+					destroyHintbox(graph);
+					hideHelper(graph);
+				})
+				.on('selectstart', false);
+
+			if (widget._svg_options.sbox) {
+				graph
+					.on('dblclick', function() {
+						hintBox.hideHint(graph, true);
+						$.publish('timeselector.zoomout');
+						return false;
+					})
+					.on('mousedown', {graph}, startSBoxDrag);
+			}
+		},
+		deactivate: function (e) {
+			const widget = $(this).data('widget');
+			const graph = jQuery(widget._svg);
 
 			destroySBox(e, graph);
-			graph.off('mousedown', startSBoxDrag);
+			graph.off('mousemove mouseleave dblclick mousedown selectstart');
 		}
 	};
 
@@ -682,4 +679,4 @@ jQuery(function ($) {
 
 		return methods.init.apply(this, arguments);
 	};
-});
+})(jQuery);

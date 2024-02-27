@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@ class CBaseComponent {
 	/**
 	 * CSS Classes.
 	 */
-
 	addClass(class_name) {
 		this._target.classList.add(class_name);
 		return this;
@@ -55,7 +54,7 @@ class CBaseComponent {
 	}
 
 	one(types, listener, options = false) {
-		return this.on(types, listener, Object.assign({once: true}, options));
+		return this.on(types, listener, {once: true, ...options});
 	}
 
 	off(types, listener, options = false) {
@@ -63,8 +62,7 @@ class CBaseComponent {
 		return this;
 	}
 
-	fire(type, options = {}) {
-		this._target.dispatchEvent(new CustomEvent(type, {detail: Object.assign({target: this}, options)}));
-		return this;
+	fire(type, detail = {}, options = {}) {
+		return this._target.dispatchEvent(new CustomEvent(type, {...options, detail: {target: this, ...detail}}));
 	}
 }

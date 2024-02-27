@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -24,9 +24,10 @@ class CMapHelper {
 	/**
 	 * Get map data with resolved element / link states.
 	 *
-	 * @param array $sysmapids					Map IDs.
-	 * @param array $options					Options used to retrieve actions.
-	 * @param int   $options['severity_min']	Minimum severity.
+	 * @param array  $sysmapids					Map IDs.
+	 * @param array  $options					Options used to retrieve actions.
+	 * @param int    $options['severity_min']	Minimum severity.
+	 * @param int    $options['unique_id']
 	 *
 	 * @return array
 	 */
@@ -47,7 +48,7 @@ class CMapHelper {
 			],
 			'selectSelements' => ['selementid', 'elements', 'elementtype', 'iconid_off', 'iconid_on', 'label',
 				'label_location', 'x', 'y', 'iconid_disabled', 'iconid_maintenance', 'elementsubtype', 'areatype',
-				'width', 'height', 'viewtype', 'use_iconmap', 'application', 'urls', 'permission'
+				'width', 'height', 'viewtype', 'use_iconmap', 'permission', 'evaltype', 'tags'
 			],
 			'selectLinks' => ['linkid', 'selementid1', 'selementid2', 'drawtype', 'color', 'label', 'linktriggers',
 				'permission'
@@ -112,7 +113,8 @@ class CMapHelper {
 				'width' => $map['width'],
 				'height' => $map['height']
 			],
-			'refresh' => 'map.php?sysmapid='.$map['sysmapid'].'&severity_min='.$map['severity_min'],
+			'refresh' => 'map.php?sysmapid='.$map['sysmapid'].'&severity_min='.$map['severity_min']
+				.(array_key_exists('unique_id', $options) ? '&unique_id='.$options['unique_id'] : ''),
 			'background' => $map['backgroundid'],
 			'label_location' => $map['label_location'],
 			'elements' => array_values($map['selements']),
@@ -201,11 +203,12 @@ class CMapHelper {
 	/**
 	 * Resolve map element (selements and links) state.
 	 *
-	 * @param array $sysmap                   Map data.
-	 * @param array $areas                    Areas representing array containing host group element IDs and dimension
-	 *                                        properties of area.
-	 * @param array $options                  Options used to retrieve actions.
-	 * @param int   $options['severity_min']  Minimum severity.
+	 * @param array  $sysmap                   Map data.
+	 * @param array  $areas                    Areas representing array containing host group element IDs and dimension
+	 *                                         properties of area.
+	 * @param array  $options                  Options used to retrieve actions.
+	 * @param int    $options['severity_min']  Minimum severity.
+	 * @param int    $options['unique_id']
 	 */
 	protected static function resolveMapState(array &$sysmap, array $areas, array $options) {
 		$map_info = getSelementsInfo($sysmap, ['severity_min' => $options['severity_min']]);
@@ -253,7 +256,7 @@ class CMapHelper {
 		$labels = getMapLabels($sysmap, $map_info);
 		$highlights = getMapHighligts($sysmap, $map_info);
 		$actions = getActionsBySysmap($sysmap, $options);
-		$linktrigger_info = getMapLinkTriggerInfo($sysmap, $options);
+		$link_triggers_info = getMapLinkTriggerInfo($sysmap, $options);
 
 		$problems_total = 0;
 		$status_problems = [];
@@ -317,51 +320,43 @@ class CMapHelper {
 			'. '.
 			implode('', array_merge($status_problems, $status_other));
 
-		foreach ($sysmap['shapes'] as &$shape) {
-			if (array_key_exists('text', $shape)) {
-				$shape['text'] = CMacrosResolverHelper::resolveMapLabelMacros($shape['text']);
-				$shape['text'] = str_replace('{MAP.NAME}', $sysmap['name'], $shape['text']);
-			}
-		}
-		unset($shape);
+		$sysmap['shapes'] = CMacrosResolverHelper::resolveMapShapeLabelMacros($sysmap['name'], $sysmap['shapes']);
+		$sysmap['links'] = CMacrosResolverHelper::resolveMapLinkLabelMacros($sysmap['links']);
 
 		foreach ($sysmap['lines'] as $line) {
 			$sysmap['shapes'][] = self::convertLineToShape($line);
 		}
 
 		foreach ($sysmap['links'] as &$link) {
-			$link['label'] = CMacrosResolverHelper::resolveMapLabelMacros($link['label']);
-
-			if ($link['permission'] >= PERM_READ) {
-				if (empty($link['linktriggers'])) {
-					continue;
-				}
-
-				$drawtype = $link['drawtype'];
-				$color = $link['color'];
-				$linktriggers = $link['linktriggers'];
-				order_result($linktriggers, 'triggerid');
-				$max_severity = $options['severity_min'];
-
-				foreach ($linktriggers as $link_trigger) {
-					if ($link_trigger['triggerid'] == 0
-							|| !array_key_exists($link_trigger['triggerid'], $linktrigger_info)) {
-						continue;
+			if ($link['permission'] >= PERM_READ && $link['linktriggers']) {
+				$link_triggers = array_filter($link['linktriggers'],
+					function ($link_trigger) use ($link_triggers_info, $options) {
+						return (array_key_exists($link_trigger['triggerid'], $link_triggers_info)
+							&& $link_triggers_info[$link_trigger['triggerid']]['status'] == TRIGGER_STATUS_ENABLED
+							&& $link_triggers_info[$link_trigger['triggerid']]['value'] == TRIGGER_VALUE_TRUE
+							&& $link_triggers_info[$link_trigger['triggerid']]['priority'] >= $options['severity_min']
+						);
 					}
+				);
 
-					$trigger = zbx_array_merge($link_trigger, $linktrigger_info[$link_trigger['triggerid']]);
+				// Link-trigger with highest severity or lower triggerid defines link color and drawtype.
+				if ($link_triggers) {
+					$link_triggers = array_map(function ($link_trigger) use ($link_triggers_info) {
+						return [
+							'priority' => $link_triggers_info[$link_trigger['triggerid']]['priority']
+						] + $link_trigger;
+					}, $link_triggers);
 
-					if ($trigger['status'] == TRIGGER_STATUS_ENABLED
-							&& $trigger['value'] == TRIGGER_VALUE_TRUE
-							&& $trigger['priority'] >= $max_severity) {
-						$drawtype = $trigger['drawtype'];
-						$color = $trigger['color'];
-						$max_severity = $trigger['priority'];
-					}
+					CArrayHelper::sort($link_triggers, [
+						['field' => 'priority', 'order' => ZBX_SORT_DOWN],
+						['field' => 'triggerid', 'order' => ZBX_SORT_UP]
+					]);
+
+					$styling_link_triggers = reset($link_triggers);
+
+					$link['color'] = $styling_link_triggers['color'];
+					$link['drawtype'] = $styling_link_triggers['drawtype'];
 				}
-
-				$link['color'] = $color;
-				$link['drawtype'] = $drawtype;
 			}
 		}
 		unset($link);
@@ -640,6 +635,7 @@ class CMapHelper {
 						'border_width' => 3,
 						'border_color' => $theme['maingridcolor'],
 						'background_color' => '',
+						'text' => '',
 						'zindex' => -1
 					];
 				}

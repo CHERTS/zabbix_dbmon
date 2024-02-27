@@ -1,7 +1,7 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,7 +34,15 @@ class CApiTagHelperTest extends TestCase {
 					],
 					TAG_EVAL_TYPE_AND_OR
 				] + $sql_args,
-				'EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag\' AND UPPER(event_tag.value) LIKE \'%VALUE%\' ESCAPE \'!\')'
+				'EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Tag\''.
+						' AND UPPER(event_tag.value)'.
+						' LIKE \'%VALUE%\' ESCAPE \'!\''.
+				')'
 			],
 			[
 				[
@@ -43,7 +51,13 @@ class CApiTagHelperTest extends TestCase {
 					],
 					TAG_EVAL_TYPE_AND_OR
 				] + $sql_args,
-				'EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag\')'
+				'EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Tag\''.
+				')'
 			],
 			[
 				[
@@ -59,9 +73,37 @@ class CApiTagHelperTest extends TestCase {
 					],
 					TAG_EVAL_TYPE_AND_OR
 				] + $sql_args,
-				'EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag1\' AND (UPPER(event_tag.value) LIKE \'%VALUE1%\' ESCAPE \'!\' OR UPPER(event_tag.value) LIKE \'%VALUE2%\' ESCAPE \'!\' OR event_tag.value=\'Value3\'))'.
-				' AND EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag2\' AND (event_tag.value=\'Value4\' OR UPPER(event_tag.value) LIKE \'%VALUE5%\' ESCAPE \'!\'))'.
-				' AND EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag3\')'
+				'EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Tag1\''.
+						' AND (UPPER(event_tag.value)'.
+							' LIKE \'%VALUE1%\' ESCAPE \'!\''.
+							' OR UPPER(event_tag.value)'.
+							' LIKE \'%VALUE2%\' ESCAPE \'!\''.
+							' OR event_tag.value=\'Value3\''.
+						')'.
+				')'.
+				' AND EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Tag2\''.
+						' AND (event_tag.value=\'Value4\''.
+							' OR UPPER(event_tag.value)'.
+							' LIKE \'%VALUE5%\' ESCAPE \'!\''.
+						')'.
+				')'.
+				' AND EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Tag3\''.
+				')'
 			],
 			[
 				[
@@ -77,9 +119,39 @@ class CApiTagHelperTest extends TestCase {
 					],
 					TAG_EVAL_TYPE_OR
 				] + $sql_args,
-				'(EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag1\' AND (UPPER(event_tag.value) LIKE \'%VALUE1%\' ESCAPE \'!\' OR UPPER(event_tag.value) LIKE \'%VALUE2%\' ESCAPE \'!\' OR event_tag.value=\'Value3\'))'.
-				' OR EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag2\' AND (event_tag.value=\'Value4\' OR UPPER(event_tag.value) LIKE \'%VALUE5%\' ESCAPE \'!\'))'.
-				' OR EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag3\'))'
+				'('.
+					'EXISTS ('.
+						'SELECT NULL'.
+						' FROM event_tag'.
+						' WHERE'.
+							' e.eventid=event_tag.eventid'.
+							' AND event_tag.tag=\'Tag1\''.
+							' AND (UPPER(event_tag.value)'.
+								' LIKE \'%VALUE1%\' ESCAPE \'!\''.
+								' OR UPPER(event_tag.value)'.
+								' LIKE \'%VALUE2%\' ESCAPE \'!\''.
+								' OR event_tag.value=\'Value3\''.
+							')'.
+					')'.
+					' OR EXISTS ('.
+						'SELECT NULL'.
+						' FROM event_tag'.
+						' WHERE'.
+							' e.eventid=event_tag.eventid'.
+							' AND event_tag.tag=\'Tag2\''.
+							' AND (event_tag.value=\'Value4\''.
+								' OR UPPER(event_tag.value)'.
+								' LIKE \'%VALUE5%\' ESCAPE \'!\''.
+							')'.
+					')'.
+					' OR EXISTS ('.
+						'SELECT NULL'.
+						' FROM event_tag'.
+						' WHERE'.
+							' e.eventid=event_tag.eventid'.
+							' AND event_tag.tag=\'Tag3\''.
+					')'.
+				')'
 			],
 			[
 				[
@@ -88,7 +160,14 @@ class CApiTagHelperTest extends TestCase {
 					],
 					TAG_EVAL_TYPE_AND_OR
 				] + $sql_args,
-				'EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag\' AND event_tag.value=\'\')'
+				'EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Tag\''.
+						' AND event_tag.value=\'\''.
+				')'
 			],
 			[
 				[
@@ -97,7 +176,14 @@ class CApiTagHelperTest extends TestCase {
 					],
 					TAG_EVAL_TYPE_AND_OR
 				] + $sql_args,
-				'EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag\' AND event_tag.value=\'\')'
+				'EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Tag\''.
+						' AND event_tag.value=\'\''.
+				')'
 			],
 			[
 				[
@@ -106,7 +192,14 @@ class CApiTagHelperTest extends TestCase {
 					],
 					TAG_EVAL_TYPE_AND_OR
 				] + $sql_args,
-				'EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag\' AND event_tag.value=\'Value\')'
+				'EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Tag\''.
+						' AND event_tag.value=\'Value\''.
+				')'
 			],
 			[
 				[
@@ -116,7 +209,166 @@ class CApiTagHelperTest extends TestCase {
 					],
 					TAG_EVAL_TYPE_AND_OR
 				] + $sql_args,
-				'EXISTS (SELECT NULL FROM event_tag WHERE e.eventid=event_tag.eventid AND event_tag.tag=\'Tag\')'
+				'EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Tag\''.
+				')'
+			],
+			[
+				[
+					[
+						['tag' => 'Browser', 'operator' => TAG_OPERATOR_NOT_EQUAL, 'value' => 'Chrome']
+					],
+					TAG_EVAL_TYPE_AND_OR
+				] + $sql_args,
+				'NOT EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Browser\''.
+						' AND event_tag.value=\'Chrome\''.
+				')'
+			],
+			[
+				[
+					[
+						['tag' => 'Browser', 'operator' => TAG_OPERATOR_NOT_EQUAL, 'value' => 'Chrome'],
+						['tag' => 'Browser', 'operator' => TAG_OPERATOR_NOT_EQUAL, 'value' => 'Firefox']
+					],
+					TAG_EVAL_TYPE_AND_OR
+				] + $sql_args,
+				'NOT EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Browser\''.
+						' AND ('.
+							'event_tag.value=\'Chrome\''.
+							' OR event_tag.value=\'Firefox\''.
+						')'.
+				')'
+			],
+			[
+				[
+					[
+						['tag' => 'Browser', 'operator' => TAG_OPERATOR_EXISTS]
+					],
+					TAG_EVAL_TYPE_AND_OR
+				] + $sql_args,
+				'EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Browser\''.
+				')'
+			],
+			[
+				[
+					[
+						['tag' => 'Browser', 'operator' => TAG_OPERATOR_EXISTS],
+						['tag' => 'Browser', 'operator' => TAG_OPERATOR_NOT_EQUAL, 'value' => 'Chrome'],
+						['tag' => 'Browser', 'operator' => TAG_OPERATOR_NOT_EQUAL, 'value' => 'Firefox']
+					],
+					TAG_EVAL_TYPE_AND_OR
+				] + $sql_args,
+				'EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'Browser\''.
+				')'
+			],
+			[
+				[
+					[
+						['tag' => 'OS', 'operator' => TAG_OPERATOR_NOT_EXISTS],
+						['tag' => 'OS', 'operator' => TAG_OPERATOR_EQUAL, 'value' => 'Android']
+					],
+					TAG_EVAL_TYPE_OR
+				] + $sql_args,
+				'NOT EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'OS\''.
+				')'
+			],
+			[
+				[
+					[
+						['tag' => 'OS', 'operator' => TAG_OPERATOR_NOT_EXISTS],
+						['tag' => 'Browser', 'operator' => TAG_OPERATOR_NOT_EXISTS],
+						['tag' => 'OS', 'operator' => TAG_OPERATOR_EQUAL, 'value' => 'Android']
+					],
+					TAG_EVAL_TYPE_OR
+				] + $sql_args,
+				'('.
+					'NOT EXISTS ('.
+						'SELECT NULL'.
+						' FROM event_tag'.
+						' WHERE'.
+							' e.eventid=event_tag.eventid'.
+							' AND event_tag.tag=\'OS\''.
+					')'.
+					' OR NOT EXISTS ('.
+						'SELECT NULL'.
+						' FROM event_tag'.
+						' WHERE'.
+							' e.eventid=event_tag.eventid'.
+							' AND event_tag.tag=\'Browser\''.
+					')'.
+				')'
+			],
+			[
+				[
+					[
+						['tag' => 'OS', 'operator' => TAG_OPERATOR_NOT_LIKE, 'value' => 'win']
+					],
+					TAG_EVAL_TYPE_AND_OR
+				] + $sql_args,
+				'NOT EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'OS\''.
+						' AND UPPER(event_tag.value)'.
+						' LIKE \'%WIN%\' ESCAPE \'!\''.
+				')'
+			],
+			[
+				[
+					[
+						['tag' => 'tag1', 'operator' => TAG_OPERATOR_NOT_LIKE, 'value' => 'value'],
+						['tag' => 'OS', 'operator' => TAG_OPERATOR_NOT_LIKE, 'value' => 'win']
+
+					],
+					TAG_EVAL_TYPE_AND_OR
+				] + $sql_args,
+				'NOT EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'tag1\''.
+						' AND UPPER(event_tag.value) LIKE \'%VALUE%\' ESCAPE \'!\''.
+				')'.
+				' AND NOT EXISTS ('.
+					'SELECT NULL'.
+					' FROM event_tag'.
+					' WHERE'.
+						' e.eventid=event_tag.eventid'.
+						' AND event_tag.tag=\'OS\''.
+						' AND UPPER(event_tag.value) LIKE \'%WIN%\' ESCAPE \'!\''.
+				')'
 			]
 		];
 	}

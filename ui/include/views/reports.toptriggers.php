@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,14 +21,17 @@
 
 /**
  * @var CView $this
+ * @var array $data
  */
 
-$filterForm = new CFilter(new CUrl('toptriggers.php'));
+$this->includeJsFile('reports.toptriggers.js.php');
+
+$filterForm = (new CFilter())->setResetUrl(new CUrl('toptriggers.php'));
 
 $severities = [];
 foreach (range(TRIGGER_SEVERITY_NOT_CLASSIFIED, TRIGGER_SEVERITY_COUNT - 1) as $severity) {
 	$severities[] = [
-		'name' => getSeverityName($severity, $data['config']),
+		'name' => CSeverityHelper::getName($severity),
 		'value' => $severity
 	];
 }
@@ -43,7 +46,7 @@ $filter_column = (new CFormList())
 				'parameters' => [
 					'srctbl' => 'host_groups',
 					'srcfld1' => 'groupid',
-					'dstfrm' => $filterForm->getName(),
+					'dstfrm' => 'zbx_filter',
 					'dstfld1' => 'groupids_',
 					'real_hosts' => true,
 					'enrich_parent_groups' => true
@@ -63,14 +66,18 @@ $filter_column = (new CFormList())
 				'parameters' => [
 					'srctbl' => 'hosts',
 					'srcfld1' => 'hostid',
-					'dstfrm' => $filterForm->getName(),
+					'dstfrm' => 'zbx_filter',
 					'dstfld1' => 'hostids_'
 				]
 			]
 		]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 	)
 	->addRow(new CLabel(_('Severity')),
-		(new CSeverityCheckBoxList('severities'))->setChecked($data['filter']['severities'])
+		(new CCheckBoxList('severities'))
+			->setOptions(CSeverityHelper::getSeverities())
+			->setChecked($data['filter']['severities'])
+			->setColumns(3)
+			->setVertical(true)
 	);
 
 $filterForm
@@ -96,7 +103,7 @@ foreach ($data['triggers'] as $trigger) {
 	$table->addRow([
 		$hostName,
 		$triggerDescription,
-		getSeverityCell($trigger['priority'], $data['config']),
+		CSeverityHelper::makeSeverityCell((int) $trigger['priority']),
 		$trigger['cnt_event']
 	]);
 }
@@ -106,8 +113,7 @@ $obj_data = [
 	'domid' => 'toptriggers',
 	'loadSBox' => 0,
 	'loadImage' => 0,
-	'dynamic' => 0,
-	'mainObject' => 1
+	'dynamic' => 0
 ];
 zbx_add_post_js('timeControl.addObject("toptriggers", '.zbx_jsvalue($data['filter']).', '.zbx_jsvalue($obj_data).');');
 zbx_add_post_js('timeControl.processObjects();');

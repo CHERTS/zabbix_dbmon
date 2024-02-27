@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,13 +19,25 @@
 **/
 
 require_once dirname(__FILE__) . '/common/testFormMacros.php';
+require_once dirname(__FILE__).'/behaviors/CMacrosBehavior.php';
+require_once dirname(__FILE__).'/behaviors/CMessageBehavior.php';
 
 /**
  * @backup hosts
  */
 class testFormMacrosTemplate extends testFormMacros {
 
-	use MacrosTrait;
+	/**
+	 * Attach MacrosBehavior to the test.
+	 *
+	 * @return array
+	 */
+	public function getBehaviors() {
+		return [
+			CMacrosBehavior::class,
+			CMessageBehavior::class
+		];
+	}
 
 	/**
 	 * The name of the template for updating macros, id=40000.
@@ -47,6 +59,15 @@ class testFormMacrosTemplate extends testFormMacros {
 	 * @var integer
 	 */
 	protected static $templateid_remove_inherited;
+
+	public $vault_object = 'template';
+	public $vault_error_field = '/1/macros/6/value';
+	public $update_vault_macro = '{$VAULT_HOST_MACRO_CHANGED}';
+	public $vault_macro_index = 0;
+
+	public $revert_macro_1 = '{$SECRET_TEMPLATE_MACRO_REVERT}';
+	public $revert_macro_2 = '{$SECRET_TEMPLATE_MACRO_2_TEXT_REVERT}';
+	public $revert_macro_object = 'template';
 
 	/**
 	 * @dataProvider getCreateMacrosData
@@ -122,7 +143,7 @@ class testFormMacrosTemplate extends testFormMacros {
 	 * @onBeforeOnce prepareTemplateRemoveMacrosData
 	 */
 	public function testFormMacrosTemplate_RemoveInheritedMacro($data) {
-		$this->checkRemoveInheritedMacros($data, self::$templateid_remove_inherited, 'template');
+		$this->checkRemoveInheritedMacros($data, 'template', self::$templateid_remove_inherited);
 	}
 
 	public function getCreateSecretMacrosData() {
@@ -177,28 +198,6 @@ class testFormMacrosTemplate extends testFormMacros {
 		$this->createSecretMacros($data, 'templates.php?form=update&templateid=99022', 'templates');
 	}
 
-	public function getRevertSecretMacrosData() {
-		return [
-			[
-				[
-					'macro_fields' => [
-						'macro' => '{$SECRET_TEMPLATE_MACRO_REVERT}',
-						'value' => 'Secret template value'
-					]
-				]
-			],
-			[
-				[
-					'macro_fields' => [
-						'macro' => '{$SECRET_TEMPLATE_MACRO_2_TEXT_REVERT}',
-						'value' => 'Secret template value 2'
-					],
-					'set_to_text' => true
-				]
-			]
-		];
-	}
-
 	/**
 	 * @dataProvider getRevertSecretMacrosData
 	 */
@@ -250,11 +249,17 @@ class testFormMacrosTemplate extends testFormMacros {
 		$this->updateSecretMacros($data, 'templates.php?form=update&templateid=99137', 'templates');
 	}
 
-	public function testFormMacrosTemplate_SecretMacroResolution() {
-		$macro = [
-			'macro' => '{$X_SECRET_HOST_MACRO_2_RESOLVE}',
-			'value' => 'Value 2 B resolved'
-		];
-		$this->resolveSecretMacro($macro, 'hosts.php?form=update&hostid=99135', 'hosts', 'host');
+	/**
+	 * @dataProvider getCreateVaultMacrosData
+	 */
+	public function testFormMacrosTemplate_CreateVaultMacros($data) {
+		$this->createVaultMacros($data, 'templates.php?form=update&templateid=99022', 'templates');
+	}
+
+	/**
+	 * @dataProvider getUpdateVaultMacrosData
+	 */
+	public function testFormMacrosTemplate_UpdateVaultMacros($data) {
+		$this->updateVaultMacros($data, 'templates.php?form=update&templateid=99014', 'templates');
 	}
 }

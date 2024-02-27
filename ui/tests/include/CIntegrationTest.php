@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -33,20 +33,24 @@ class CIntegrationTest extends CAPITest {
 	const WAIT_ITERATIONS			= 60;
 
 	// Default delays (in seconds):
-	const WAIT_ITERATION_DELAY		= 1; // Wait iteration delay.
-	const CACHE_RELOAD_DELAY		= 5; // Configuration cache reload delay.
+	const WAIT_ITERATION_DELAY			= 1; // Wait iteration delay.
+	const WAIT_ITERATION_DELAY_FOR_SHUTDOWN		= 3; // Shutdown may legitimately take a lot of time
+	const CACHE_RELOAD_DELAY			= 5; // Configuration cache reload delay.
+	const HOUSEKEEPER_EXEC_DELAY	= 5; // Housekeeper execution delay.
 	const DATA_PROCESSING_DELAY		= 5; // Data processing delay.
 
 	// Zabbix component constants.
-	const COMPONENT_SERVER	= 'server';
-	const COMPONENT_PROXY	= 'proxy';
-	const COMPONENT_AGENT	= 'agentd';
-	const COMPONENT_AGENT2	= 'agent2';
+	const COMPONENT_SERVER			= 'server';
+	const COMPONENT_SERVER_HANODE1	= 'server_ha1';
+	const COMPONENT_PROXY			= 'proxy';
+	const COMPONENT_AGENT			= 'agentd';
+	const COMPONENT_AGENT2			= 'agent2';
 
 	// Zabbix component port constants.
 	const AGENT_PORT_SUFFIX = '50';
 	const SERVER_PORT_SUFFIX = '51';
 	const PROXY_PORT_SUFFIX = '52';
+	const SERVER_HANODE1_PORT_SUFFIX = '61';
 	const AGENT2_PORT_SUFFIX = '53';
 
 	/**
@@ -89,7 +93,7 @@ class CIntegrationTest extends CAPITest {
 	 *
 	 * @var array
 	 */
-	private static $case_configuration = [];
+	protected static $case_configuration = [];
 
 	/**
 	 * Process annotations defined on suite / case level.
@@ -253,11 +257,18 @@ class CIntegrationTest extends CAPITest {
 		$components = array_merge(self::$suite_components, $this->case_components);
 
 		foreach ($components as $component) {
-			try {
-				self::stopComponent($component);
-			}
-			catch (Exception $e) {
-				self::zbxAddWarning($e->getMessage());
+			self::stopComponent($component);
+		}
+
+		if ($this->hasFailed()) {
+			$case_name = strtr($this->getName(true), [' ' => '-']);
+			mkdir(PHPUNIT_COMPONENT_DIR.'failed/'.$case_name, 0775, true);
+
+			foreach ($components as $component) {
+				$log_file = self::getLogPath($component);
+				if (file_exists($log_file)) {
+					rename($log_file, PHPUNIT_COMPONENT_DIR.'failed/'.$case_name.'/'.basename($log_file));
+				}
 			}
 		}
 
@@ -275,12 +286,7 @@ class CIntegrationTest extends CAPITest {
 	 */
 	public static function onAfterTestSuite() {
 		foreach (self::$suite_components as $component) {
-			try {
-				self::stopComponent($component);
-			}
-			catch (Exception $e) {
-				self::zbxAddWarning($e->getMessage());
-			}
+			self::stopComponent($component);
 		}
 
 		if (self::$suite_hosts) {
@@ -300,10 +306,10 @@ class CIntegrationTest extends CAPITest {
 	 */
 	private static function getComponents() {
 		return [
-			self::COMPONENT_SERVER, self::COMPONENT_PROXY, self::COMPONENT_AGENT, self::COMPONENT_AGENT2
+			self::COMPONENT_SERVER, self::COMPONENT_PROXY, self::COMPONENT_AGENT, self::COMPONENT_AGENT2,
+			self::COMPONENT_SERVER_HANODE1
 		];
 	}
-
 	/**
 	 * Validate component name.
 	 *
@@ -320,28 +326,33 @@ class CIntegrationTest extends CAPITest {
 	/**
 	 * Wait for component to start.
 	 *
-	 * @param string $component    component name
+	 * @param string $component              component name
+	 * @param string $waitLogLineOverride    already log line to use to consider component as running
+	 * @param bool $skip_pid    skip PID check
 	 *
 	 * @throws Exception    on failed wait operation
 	 */
-	protected static function waitForStartup($component) {
+	protected static function waitForStartup($component, $waitLogLineOverride = '', $skip_pid = false) {
 		self::validateComponent($component);
 
 		for ($r = 0; $r < self::WAIT_ITERATIONS; $r++) {
 			$pid = @file_get_contents(self::getPidPath($component));
-			if ($pid && is_numeric($pid) && posix_kill($pid, 0)) {
+			if ($skip_pid == true || ($pid && is_numeric($pid) && posix_kill($pid, 0))) {
 				switch ($component) {
+					case self::COMPONENT_SERVER_HANODE1:
+						self::waitForLogLineToBePresent($component, 'HA manager started', false, 5, 1);
+						break;
 					case self::COMPONENT_SERVER:
 					case self::COMPONENT_PROXY:
-						self::waitForLogLineToBePresent($component, 'started [trapper #1]', false, 5, 1);
+						$line = empty($waitLogLineOverride) ? 'started [trapper #1]' : $waitLogLineOverride;
+						self::waitForLogLineToBePresent($component, $line, false, 5, 1);
 						break;
-
 					case self::COMPONENT_AGENT:
 						self::waitForLogLineToBePresent($component, 'started [listener #1]', false, 5, 1);
 						break;
 
 					case self::COMPONENT_AGENT2:
-						self::waitForLogLineToBePresent($component, 'using configuration file', false, 5, 1);
+						self::waitForLogLineToBePresent($component, 'Zabbix Agent2 hostname', false, 5, 1);
 						break;
 				}
 				return;
@@ -354,24 +365,54 @@ class CIntegrationTest extends CAPITest {
 	}
 
 	/**
-	 * Wait for component to stop.
+	 * Checks absence of pid file after kill.
 	 *
 	 * @param string $component    component name
 	 *
-	 * @throws Exception    on failed wait operation
 	 */
-	protected static function waitForShutdown($component) {
-		self::validateComponent($component);
-
+	private static function checkPidKilled($component) {
 		for ($r = 0; $r < self::WAIT_ITERATIONS; $r++) {
 			if (!file_exists(self::getPidPath($component))) {
-				return;
+				return true;
 			}
 
-			sleep(self::WAIT_ITERATION_DELAY);
+			sleep(self::WAIT_ITERATION_DELAY_FOR_SHUTDOWN);
 		}
 
-		throw new Exception('Failed to wait for component "'.$component.'" to stop.');
+		return false;
+	}
+
+	/**
+	 * Wait for component to stop.
+	 *
+	 * @param string $component
+	 * @param array  $child_pids
+	 *
+	 * @throws Exception    on failed wait operation
+	 */
+	protected static function waitForShutdown($component, array $child_pids) {
+		if (!self::checkPidKilled($component)) {
+			throw new Exception('Failed to wait for component "'.$component.'" to stop.');
+		}
+
+		$failed_pids = [];
+
+		foreach ($child_pids as $child_pid) {
+			if (ctype_digit($child_pid) && posix_kill($child_pid, 0)) {
+				posix_kill($child_pid, SIGKILL);
+				$failed_pids[] = $child_pid;
+			}
+		}
+
+		if (!$failed_pids) {
+			return;
+		}
+
+		$log = CLogHelper::readLog(self::getLogPath($component), false);
+
+		throw new Exception('Multiple child processes for component "'.$component.'" did not stop gracefully:'."\n".
+			implode(', ', $failed_pids)."\n".
+			'Log file contents: '."\n".$log."\n");
 	}
 
 	/**
@@ -385,7 +426,7 @@ class CIntegrationTest extends CAPITest {
 	 *
 	 * @throws Exception    on execution error
 	 */
-	private static function executeCommand(string $command, array $params, bool $background = false) {
+	protected static function executeCommand(string $command, array $params, bool $background = false) {
 		if ($params) {
 			foreach ($params as &$param) {
 				$param = escapeshellarg($param);
@@ -441,13 +482,22 @@ class CIntegrationTest extends CAPITest {
 				'LogFile' => PHPUNIT_COMPONENT_DIR.'zabbix_server.log',
 				'PidFile' => PHPUNIT_COMPONENT_DIR.'zabbix_server.pid',
 				'SocketDir' => PHPUNIT_COMPONENT_DIR,
-				'ListenPort' => PHPUNIT_PORT_PREFIX.self::SERVER_PORT_SUFFIX
+				'ListenPort' => PHPUNIT_PORT_PREFIX.self::SERVER_PORT_SUFFIX,
+				'AllowUnsupportedDBVersions' => '1'
+			]),
+			self::COMPONENT_SERVER_HANODE1 => array_merge($db, [
+				'LogFile' => PHPUNIT_COMPONENT_DIR.'zabbix_server_ha1.log',
+				'PidFile' => PHPUNIT_COMPONENT_DIR.'zabbix_server_ha1.pid',
+				'SocketDir' => PHPUNIT_COMPONENT_DIR.'ha1/',
+				'ListenPort' => PHPUNIT_PORT_PREFIX.self::SERVER_HANODE1_PORT_SUFFIX,
+				'AllowUnsupportedDBVersions' => '1'
 			]),
 			self::COMPONENT_PROXY => array_merge($db, [
 				'LogFile' => PHPUNIT_COMPONENT_DIR.'zabbix_proxy.log',
 				'PidFile' => PHPUNIT_COMPONENT_DIR.'zabbix_proxy.pid',
 				'SocketDir' => PHPUNIT_COMPONENT_DIR,
-				'ListenPort' => PHPUNIT_PORT_PREFIX.self::PROXY_PORT_SUFFIX
+				'ListenPort' => PHPUNIT_PORT_PREFIX.self::PROXY_PORT_SUFFIX,
+				'AllowUnsupportedDBVersions' => '1'
 			]),
 			self::COMPONENT_AGENT => [
 				'LogFile' => PHPUNIT_COMPONENT_DIR.'zabbix_agent.log',
@@ -478,7 +528,13 @@ class CIntegrationTest extends CAPITest {
 	protected static function prepareComponentConfiguration($component, $values) {
 		self::validateComponent($component);
 
-		$path = PHPUNIT_CONFIG_SOURCE_DIR.'zabbix_'.$component.'.conf';
+		if ($component == self::COMPONENT_SERVER_HANODE1) {
+			$path = PHPUNIT_CONFIG_SOURCE_DIR.'zabbix_'.self::COMPONENT_SERVER.'.conf';
+		}
+		else {
+			$path = PHPUNIT_CONFIG_SOURCE_DIR.'zabbix_'.$component.'.conf';
+		}
+
 		if (!file_exists($path) || ($config = @file_get_contents($path)) === false) {
 			throw new Exception('There is no configuration file for component "'.$component.'": '.$path.'.');
 		}
@@ -503,10 +559,12 @@ class CIntegrationTest extends CAPITest {
 	 * Start component.
 	 *
 	 * @param string $component    component name
+	 * @param string $waitLogLineOverride    already log line to use to consider component as running
+	 * @param bool $skip_pid    skip PID check
 	 *
 	 * @throws Exception    on missing configuration or failed start
 	 */
-	protected function startComponent($component) {
+	protected function startComponent($component, $waitLogLineOverride = '', $skip_pid = false) {
 		self::validateComponent($component);
 
 		$config = PHPUNIT_CONFIG_DIR.'zabbix_'.$component.'.conf';
@@ -515,9 +573,15 @@ class CIntegrationTest extends CAPITest {
 		}
 
 		self::clearLog($component);
+
 		$background = ($component === self::COMPONENT_AGENT2);
-		self::executeCommand(PHPUNIT_BINARY_DIR.'zabbix_'.$component, ['-c', $config], $background);
-		self::waitForStartup($component);
+
+		$bin_path = $component === self::COMPONENT_SERVER_HANODE1
+			? PHPUNIT_BINARY_DIR.'zabbix_'.self::COMPONENT_SERVER
+			: PHPUNIT_BINARY_DIR.'zabbix_'.$component;
+
+		self::executeCommand($bin_path, ['-c', $config], $background);
+		self::waitForStartup($component, $waitLogLineOverride, $skip_pid );
 	}
 
 	/**
@@ -530,11 +594,49 @@ class CIntegrationTest extends CAPITest {
 	protected static function stopComponent($component) {
 		self::validateComponent($component);
 
+		$child_pids = [];
 		$pid = @file_get_contents(self::getPidPath($component));
-		if ($pid && is_numeric($pid)) {
+
+		if ($pid !== false && is_numeric($pid)) {
+			$output = shell_exec('pgrep -P '.$pid);
+			if ($output !== false && $output !== null) {
+				$child_pids = explode("\n", $output);
+			}
+
 			posix_kill($pid, SIGTERM);
 		}
-		self::waitForShutdown($component);
+		self::waitForShutdown($component, $child_pids);
+	}
+
+	/**
+	 * Stop component by using SIGKILL signal.
+	 *
+	 * @param string $component    component name
+	 *
+	 * @throws Exception    on missing configuration or failed stop
+	 */
+	protected static function killComponent($component) {
+		self::validateComponent($component);
+
+		$child_pids = [];
+		$pid_path = self::getPidPath($component);
+		$pid = @file_get_contents($pid_path);
+
+		if ($pid !== false && is_numeric($pid)) {
+			$output = shell_exec('pgrep -P '.$pid);
+			if ($output !== false && $output !== null) {
+				$child_pids = explode("\n", $output);
+				foreach ($child_pids as $child_pid) {
+					if (ctype_digit($child_pid) && posix_kill($child_pid, 0)) {
+						posix_kill($child_pid, SIGKILL);
+					}
+				}
+			}
+
+			posix_kill($pid, SIGKILL);
+		}
+
+		unlink($pid_path);
 	}
 
 	/**
@@ -551,8 +653,8 @@ class CIntegrationTest extends CAPITest {
 			throw new Exception('There is no client available for Zabbix Agent.');
 		}
 
-		return new CZabbixClient('localhost', self::getConfigurationValue($component, 'ListenPort', 10051),
-				ZBX_SOCKET_TIMEOUT, ZBX_SOCKET_BYTES_LIMIT
+		return new CZabbixClient('localhost', self::getConfigurationValue($component, 'ListenPort', 10051), 3, 3,
+			ZBX_SOCKET_BYTES_LIMIT
 		);
 	}
 
@@ -591,7 +693,13 @@ class CIntegrationTest extends CAPITest {
 			$component = $this->getActiveComponent();
 		}
 
-		$result = $this->getClient($component)->sendDataValues($type, $values);
+		$client = $this->getClient($component);
+		$result = $client->sendDataValues($type, $values);
+
+		// Check that data was sent successfully.
+		$this->assertTrue(($result !== false),
+			sprintf('Component "%s" failed to receive data: %s', $component, $client->getError())
+		);
 
 		// Check that discovery data was sent.
 		$this->assertTrue(array_key_exists('processed', $result), 'Result doesn\'t contain "processed" count.');
@@ -720,6 +828,19 @@ class CIntegrationTest extends CAPITest {
 	}
 
 	/**
+	 * @param string $component    component name or null for active component
+	 */
+	protected function executeHousekeeper($component = null) {
+		if ($component === null) {
+			$component = $this->getActiveComponent();
+		}
+
+		self::executeCommand(PHPUNIT_BINARY_DIR.'zabbix_'.$component, ['--runtime-control', 'housekeeper_execute']);
+
+		sleep(self::HOUSEKEEPER_EXEC_DELAY);
+	}
+
+	/**
 	 * Request data from API until data is present (@see call).
 	 *
 	 * @param string   $method        API method to be called
@@ -787,7 +908,7 @@ class CIntegrationTest extends CAPITest {
 	protected static function getPidPath($component) {
 		self::validateComponent($component);
 
-		return self::getConfigurationValue($component, 'PidFile', '/tmp/zabbix_'.$component.'.log');
+		return self::getConfigurationValue($component, 'PidFile', '/tmp/zabbix_'.$component.'.pid');
 	}
 
 	/**
@@ -824,11 +945,12 @@ class CIntegrationTest extends CAPITest {
 	 * @param string       $component     name of the component
 	 * @param string|array $lines         line(s) to look for
 	 * @param boolean      $incremental   flag to be used to enable incremental read
+	 * @param boolean      $match_regex   flag to be used to match line by regex
 	 *
 	 * @return boolean
 	 */
-	protected static function isLogLinePresent($component, $lines, $incremental = true) {
-		return CLogHelper::isLogLinePresent(self::getLogPath($component), $lines, $incremental);
+	protected static function isLogLinePresent($component, $lines, $incremental = true, $match_regex = false) {
+		return CLogHelper::isLogLinePresent(self::getLogPath($component), $lines, $incremental, $match_regex);
 	}
 
 	/**
@@ -839,10 +961,11 @@ class CIntegrationTest extends CAPITest {
 	 * @param boolean      $incremental   flag to be used to enable incremental read
 	 * @param integer      $iterations    iteration count
 	 * @param integer      $delay         iteration delay
+	 * @param boolean      $match_regex   flag to be used to match line by regex
 	 *
 	 * @throws Exception    on failed wait operation
 	 */
-	protected static function waitForLogLineToBePresent($component, $lines, $incremental = true, $iterations = null, $delay = null) {
+	protected static function waitForLogLineToBePresent($component, $lines, $incremental = true, $iterations = null, $delay = null, $match_regex = false) {
 		if ($iterations === null) {
 			$iterations = self::WAIT_ITERATIONS;
 		}
@@ -852,8 +975,8 @@ class CIntegrationTest extends CAPITest {
 		}
 
 		for ($r = 0; $r < $iterations; $r++) {
-			if (self::isLogLinePresent($component, $lines, $incremental)) {
-				return;
+			if (self::isLogLinePresent($component, $lines, $incremental, $match_regex)) {
+				return true;
 			}
 
 			sleep($delay);
@@ -871,6 +994,36 @@ class CIntegrationTest extends CAPITest {
 			$description = 'line "'.$lines.'"';
 		}
 
-		throw new Exception('Failed to wait for '.$description.' to be present in '.$component.' log file.');
+		$c = CLogHelper::readLog(self::getLogPath($component), false);
+
+		if (file_exists(self::getLogPath(self::COMPONENT_AGENT))) {
+			$c2 = @CLogHelper::readLog(self::getLogPath(self::COMPONENT_AGENT), false);
+		}
+		else {
+			$c2 = '';
+		}
+
+		throw new Exception('Failed to wait for '.$description.' to be present in '.$component .
+				'log file path:'.self::getLogPath($component).' and server log file contents: ' .
+				$c  . "\n and agent log file contents: " . $c2);
+	}
+
+	/**
+	 * Check if line is present.
+	 *
+	 * @param string       $component     name of the component
+	 * @param string|array $cmd           command
+	 *
+	 * @throws Exception    on execution error
+	 */
+	protected function executeRuntimeControlCommand($component, $cmd) {
+		if (!is_array($cmd)) {
+			$cmd = [$cmd];
+		}
+
+		$params = ['-c', PHPUNIT_CONFIG_DIR.'zabbix_'.$component.'.conf', '--runtime-control'];
+		$args = array_merge($params, $cmd);
+
+		self::executeCommand(PHPUNIT_BINARY_DIR.'zabbix_'.$component, $args, '> /dev/null 2>&1');
 	}
 }

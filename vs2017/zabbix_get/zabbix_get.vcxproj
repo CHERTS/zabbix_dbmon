@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\libs\zbxalgo\algodefs.c" />
+    <ClCompile Include="..\..\src\libs\zbxalgo\hashset.c" />
     <ClCompile Include="..\..\src\libs\zbxalgo\vector.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\comms.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)zbxcommon_comms.obj</ObjectFileName>
@@ -28,9 +29,11 @@
     <ClCompile Include="..\..\src\libs\zbxcommon\iprange.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\misc.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\str.c" />
+    <ClCompile Include="..\..\src\libs\zbxcommon\time.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\variant.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\xml.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\zbxgetopt.c" />
+    <ClCompile Include="..\..\src\libs\zbxcommshigh\comms.c" />
     <ClCompile Include="..\..\src\libs\zbxcomms\comms.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)zbxcomms_comms.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)zbxcomms_comms.obj</ObjectFileName>
@@ -38,10 +41,12 @@
     <ClCompile Include="..\..\src\libs\zbxcompress\compress.c" />
     <ClCompile Include="..\..\src\libs\zbxconf\cfg.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\base64.c" />
+    <ClCompile Include="..\..\src\libs\zbxcrypto\crypto.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\md5.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\tls.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\tls_version.c" />
     <ClCompile Include="..\..\src\libs\zbxjson\json.c" />
+    <ClCompile Include="..\..\src\libs\zbxjson\jsonobj.c" />
     <ClCompile Include="..\..\src\libs\zbxjson\jsonpath.c" />
     <ClCompile Include="..\..\src\libs\zbxjson\json_parser.c" />
     <ClCompile Include="..\..\src\libs\zbxlog\log.c" />
@@ -63,19 +68,19 @@
     <ProjectGuid>{CF0C802C-D347-4585-A3CC-4451ED7373AE}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>zabbixget</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
@@ -84,13 +89,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
@@ -174,7 +179,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK;UNICODE;_UNICODE;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0501;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_PCRE_H;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK;UNICODE;_UNICODE;</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -194,7 +199,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x86;$(ProjectDir)..\openssl\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;user32.lib;shlwapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>true</EnableUAC>
       <TargetMachine>NotSet</TargetMachine>
       <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
@@ -211,7 +216,7 @@ copy $(ProjectDir)\messages.rc $(ProjectDir)..\..\build\win32\include\ /Y
 copy $(ProjectDir)\MSG00001.bin $(ProjectDir)..\..\build\win32\project\ /Y</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
+      <Command>rem signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)..\bin\win32 /Y
 copy $(SolutionDir)openssl\bin\x86\libeay32.dll $(SolutionDir)..\bin\win32
 copy $(SolutionDir)openssl\bin\x86\libssl32.dll $(SolutionDir)..\bin\win32
@@ -226,7 +231,7 @@ copy $(SolutionDir)openssl\bin\x86\ssleay32.dll $(SolutionDir)..\bin\win32</Comm
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_WIN32_WINNT=0x0502;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK;UNICODE;_UNICODE;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0502;_WINDOWS;_CONSOLE;HAVE_WINLDAP_H;HAVE_ASSERT_H;ZABBIX_SERVICE;_VC80_UPGRADE=0x0600;HAVE_IPV6;PCRE_STATIC;HAVE_PCRE_H;HAVE_OPENSSL;HAVE_OPENSSL_WITH_PSK;UNICODE;_UNICODE;</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <ExceptionHandling>Sync</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -248,7 +253,7 @@ copy $(SolutionDir)openssl\bin\x86\ssleay32.dll $(SolutionDir)..\bin\win32</Comm
       </OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x64;$(ProjectDir)..\openssl\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;user32.lib;shlwapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>true</EnableUAC>
       <TargetMachine>MachineX64</TargetMachine>
       <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
@@ -276,7 +281,7 @@ copy $(ProjectDir)\messages.rc $(ProjectDir)..\..\build\win32\include\ /Y
 copy $(ProjectDir)\MSG00001.bin $(ProjectDir)..\..\build\win32\project\ /Y</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
+      <Command>rem signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)..\bin\win64 /Y
 copy $(SolutionDir)openssl\bin\x64\libeay32.dll $(SolutionDir)..\bin\win64
 copy $(SolutionDir)openssl\bin\x64\libssl32.dll $(SolutionDir)..\bin\win64

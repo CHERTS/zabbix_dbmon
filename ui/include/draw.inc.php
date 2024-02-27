@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,14 +27,14 @@
  * @param   array     $fgColor    foreground color, array of RGB
  * @param   float     $alpha      transparency index in range of 0-1, 1 returns unchanged fgColor color
  *
- * @return  array                 new color
+ * @return int  A color index.
  */
 function zbx_colormix($image, $bgColor, $fgColor, $alpha) {
 	$r = $bgColor[0] + ($fgColor[0] - $bgColor[0]) * $alpha;
 	$g = $bgColor[1] + ($fgColor[1] - $bgColor[1]) * $alpha;
 	$b = $bgColor[2] + ($fgColor[2] - $bgColor[2]) * $alpha;
 
-	return imagecolorresolvealpha($image, $r, $g, $b, 0);
+	return imagecolorresolvealpha($image, (int) $r, (int) $g, (int) $b, 0);
 }
 
 /**

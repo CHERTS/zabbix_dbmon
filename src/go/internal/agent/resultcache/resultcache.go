@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -49,9 +49,9 @@ import (
 	"os"
 	"time"
 
+	"git.zabbix.com/ap/plugin-support/log"
+	"git.zabbix.com/ap/plugin-support/plugin"
 	"zabbix.com/internal/agent"
-	"zabbix.com/pkg/log"
-	"zabbix.com/pkg/plugin"
 )
 
 const (
@@ -91,8 +91,9 @@ type AgentDataRequest struct {
 }
 
 type Uploader interface {
-	Write(data []byte, timeout time.Duration) (err error)
+	Write(data []byte, timeout time.Duration) (err []error)
 	Addr() (s string)
+	Hostname() (s string)
 	CanRetry() (enabled bool)
 }
 
@@ -104,7 +105,7 @@ type cacheData struct {
 	clientID   uint64
 	token      string
 	lastDataID uint64
-	lastError  error
+	lastErrors []error
 	retry      *time.Timer
 	timeout    int
 }
@@ -200,7 +201,12 @@ func createTableQuery(table string, id int) string {
 		table, id)
 }
 
-func prepareDiskCache(options *agent.AgentOptions, addresses []string) (err error) {
+func prepareDiskCache(options *agent.AgentOptions, addresses [][]string, hostnames []string) (err error) {
+	type activeCombination struct {
+		address  string
+		hostname string
+	}
+
 	var database *sql.DB
 	database, err = sql.Open("sqlite3", options.PersistentBufferFile)
 	if err != nil {
@@ -208,7 +214,7 @@ func prepareDiskCache(options *agent.AgentOptions, addresses []string) (err erro
 	}
 	defer database.Close()
 
-	stmt, err := database.Prepare("CREATE TABLE IF NOT EXISTS registry (id INTEGER PRIMARY KEY,address TEXT,UNIQUE(address))")
+	stmt, err := database.Prepare("CREATE TABLE IF NOT EXISTS registry (id INTEGER PRIMARY KEY,address TEXT,hostname TEXT,UNIQUE(address,hostname))")
 	if err != nil {
 		return err
 	}
@@ -221,28 +227,37 @@ func prepareDiskCache(options *agent.AgentOptions, addresses []string) (err erro
 
 	var id int
 	var address string
+	var hostname string
 	ids := make([]int, 0)
-	registeredAddresses := make([]string, 0)
-	rows, err := database.Query("SELECT id,address FROM registry")
+	combinations := make([]activeCombination, 0)
+	registeredCombinations := make([]activeCombination, 0)
+
+	for _, addr := range addresses {
+		for _, host := range hostnames {
+			combinations = append(combinations, activeCombination{address: addr[0], hostname: host})
+		}
+	}
+
+	rows, err := database.Query("SELECT id,address,hostname FROM registry")
 	if err != nil {
 		return err
 	}
 
 	for rows.Next() {
-		if err = rows.Scan(&id, &address); err != nil {
+		if err = rows.Scan(&id, &address, &hostname); err != nil {
 			rows.Close()
 			return err
 		}
 		ids = append(ids, id)
-		registeredAddresses = append(registeredAddresses, address)
+		registeredCombinations = append(registeredCombinations, activeCombination{address: address, hostname: hostname})
 	}
 	if err = rows.Err(); err != nil {
 		return err
 	}
 addressCheck:
-	for i, address := range registeredAddresses {
-		for _, addr := range addresses {
-			if addr == address {
+	for i, cr := range registeredCombinations {
+		for _, c := range combinations {
+			if c.address == cr.address && c.hostname == cr.hostname {
 				continue addressCheck
 			}
 		}
@@ -257,25 +272,25 @@ addressCheck:
 		}
 	}
 
-	for _, addr := range addresses {
-		stmt, err = database.Prepare("INSERT OR IGNORE INTO registry (address) VALUES (?)")
+	for _, c := range combinations {
+		stmt, err = database.Prepare("INSERT OR IGNORE INTO registry (address,hostname) VALUES (?,?)")
 		if err != nil {
 			return err
 		}
 
 		defer stmt.Close()
 
-		if _, err = stmt.Exec(addr); err != nil {
+		if _, err = stmt.Exec(c.address, c.hostname); err != nil {
 			return err
 		}
-		rows, err = database.Query("SELECT id FROM registry WHERE address=?", addr)
+		rows, err = database.Query("SELECT id FROM registry WHERE address=? AND hostname=?", c.address, c.hostname)
 		if err != nil {
 			return err
 		}
 
 		if ok, err := fetchRowAndClose(rows, &id); !ok {
 			if err == nil {
-				err = fmt.Errorf("cannot select id for address %s", addr)
+				err = fmt.Errorf("cannot select id for address %s hostname %s", c.address, c.hostname)
 			}
 			return err
 		}
@@ -307,14 +322,17 @@ addressCheck:
 		if _, err = database.Exec(fmt.Sprintf("CREATE INDEX IF NOT EXISTS log_%d_1 ON log_%d (write_clock)", id, id)); err != nil {
 			return err
 		}
+
+		/* delete gathered logs - they will be rescanned using the lastlogsize received from server */
 		if _, err = database.Exec(fmt.Sprintf("DELETE FROM log_%d", id)); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func Prepare(options *agent.AgentOptions, addresses []string) (err error) {
+func Prepare(options *agent.AgentOptions, addresses [][]string, hostnames []string) (err error) {
 	if options.EnablePersistentBuffer == 1 && options.PersistentBufferFile == "" {
 		return errors.New("\"EnablePersistentBuffer\" parameter misconfiguration: \"PersistentBufferFile\" parameter is not set")
 	}
@@ -325,11 +343,11 @@ func Prepare(options *agent.AgentOptions, addresses []string) (err error) {
 		return
 	}
 
-	if err = prepareDiskCache(options, addresses); err != nil {
+	if err = prepareDiskCache(options, addresses, hostnames); err != nil {
 		if err = os.Remove(options.PersistentBufferFile); err != nil {
 			return
 		}
-		err = prepareDiskCache(options, addresses)
+		err = prepareDiskCache(options, addresses, hostnames)
 	}
 	return
 }

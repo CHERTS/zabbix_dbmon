@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,16 +27,16 @@ class CControllerUserList extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'sort' =>				'in alias,name,surname,type',
+			'sort' =>				'in username,name,surname,role_name',
 			'sortorder' =>			'in '.ZBX_SORT_DOWN.','.ZBX_SORT_UP,
 			'uncheck' =>			'in 1',
 			'filter_set' =>			'in 1',
 			'filter_rst' =>			'in 1',
 			'filter_usrgrpid' =>	'db usrgrp.usrgrpid',
-			'filter_alias' =>		'string',
+			'filter_username' =>	'string',
 			'filter_name' =>		'string',
 			'filter_surname' =>		'string',
-			'filter_type' =>		'in -1,'.USER_TYPE_ZABBIX_USER.','.USER_TYPE_ZABBIX_ADMIN.','.USER_TYPE_SUPER_ADMIN,
+			'filter_roles' =>		'array_id',
 			'page' =>				'ge 1'
 		];
 
@@ -50,45 +50,40 @@ class CControllerUserList extends CController {
 	}
 
 	protected function checkPermissions() {
-		return ($this->getUserType() == USER_TYPE_SUPER_ADMIN);
+		return $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_USERS);
 	}
 
 	protected function doAction() {
 		$filter_usrgrpid = $this->getInput('filter_usrgrpid', CProfile::get('web.user.filter.usrgrpid', 0));
 		CProfile::update('web.user.filter.usrgrpid', $filter_usrgrpid, PROFILE_TYPE_ID);
 
-		$sortfield = $this->getInput('sort', CProfile::get('web.user.sort', 'alias'));
+		$sortfield = $this->getInput('sort', CProfile::get('web.user.sort', 'username'));
 		$sortorder = $this->getInput('sortorder', CProfile::get('web.user.sortorder', ZBX_SORT_UP));
 		CProfile::update('web.user.sort', $sortfield, PROFILE_TYPE_STR);
 		CProfile::update('web.user.sortorder', $sortorder, PROFILE_TYPE_STR);
 
 		if ($this->hasInput('filter_set')) {
-			CProfile::update('web.user.filter_alias', $this->getInput('filter_alias', ''), PROFILE_TYPE_STR);
+			CProfile::update('web.user.filter_username', $this->getInput('filter_username', ''), PROFILE_TYPE_STR);
 			CProfile::update('web.user.filter_name', $this->getInput('filter_name', ''), PROFILE_TYPE_STR);
 			CProfile::update('web.user.filter_surname', $this->getInput('filter_surname', ''), PROFILE_TYPE_STR);
-			CProfile::update('web.user.filter_type', $this->getInput('filter_type', -1), PROFILE_TYPE_INT);
+			CProfile::updateArray('web.user.filter_roles', $this->getInput('filter_roles', []), PROFILE_TYPE_ID);
 		}
 		elseif ($this->hasInput('filter_rst')) {
-			CProfile::delete('web.user.filter_alias');
+			CProfile::delete('web.user.filter_username');
 			CProfile::delete('web.user.filter_name');
 			CProfile::delete('web.user.filter_surname');
-			CProfile::delete('web.user.filter_type');
+			CProfile::deleteIdx('web.user.filter_roles');
 		}
 
 		$filter = [
-			'alias' => CProfile::get('web.user.filter_alias', ''),
+			'username' => CProfile::get('web.user.filter_username', ''),
 			'name' => CProfile::get('web.user.filter_name', ''),
 			'surname' => CProfile::get('web.user.filter_surname', ''),
-			'type' => CProfile::get('web.user.filter_type', -1)
+			'roles' => CProfile::getArray('web.user.filter_roles', [])
 		];
-
-		$config = select_config();
 
 		$data = [
 			'uncheck' => $this->hasInput('uncheck'),
-			'config' => [
-				'max_in_table' => $config['max_in_table']
-			],
 			'sort' => $sortfield,
 			'sortorder' => $sortorder,
 			'filter' => $filter,
@@ -99,8 +94,16 @@ class CControllerUserList extends CController {
 				'preservekeys' => true
 			]),
 			'filter_usrgrpid' => $filter_usrgrpid,
-			'sessions' => []
+			'sessions' => [],
+			'allowed_ui_user_groups' => $this->checkAccess(CRoleHelper::UI_ADMINISTRATION_USER_GROUPS)
 		];
+
+		$data['filter']['roles'] = $filter['roles']
+			? CArrayHelper::renameObjectsKeys(API::Role()->get([
+				'output' => ['roleid', 'name'],
+				'roleids' => $filter['roles']
+			]), ['roleid' => 'id'])
+			: [];
 
 		CArrayHelper::sort($data['user_groups'], ['name']);
 
@@ -109,21 +112,28 @@ class CControllerUserList extends CController {
 		}
 		$data['user_groups'] = [0 => _('All')] + $data['user_groups'];
 
+		$limit = CSettingsHelper::get(CSettingsHelper::SEARCH_LIMIT) + 1;
 		$data['users'] = API::User()->get([
-			'output' => ['userid', 'alias', 'name', 'surname', 'type', 'autologout', 'attempt_failed'],
+			'output' => ['userid', 'username', 'name', 'surname', 'autologout', 'attempt_failed', 'roleid'],
 			'selectUsrgrps' => ['name', 'gui_access', 'users_status'],
+			'selectRole' => ['name'],
 			'search' => [
-				'alias' => ($filter['alias'] === '') ? null : $filter['alias'],
+				'username' => ($filter['username'] === '') ? null : $filter['username'],
 				'name' => ($filter['name'] === '') ? null : $filter['name'],
 				'surname' => ($filter['surname'] === '') ? null : $filter['surname']
 			],
 			'filter' => [
-				'type' => ($filter['type'] == -1) ? null : $filter['type']
+				'roleid' => ($filter['roles'] == -1) ? null : $filter['roles']
 			],
 			'usrgrpids' => ($filter_usrgrpid == 0) ? null : $filter_usrgrpid,
 			'getAccess' => true,
-			'limit' => $config['search_limit'] + 1
+			'limit' => $limit
 		]);
+
+		foreach ($data['users'] as &$user) {
+			$user['role_name'] = $user['role']['name'];
+		}
+		unset($user);
 
 		// data sort and pager
 		CArrayHelper::sort($data['users'], [['field' => $sortfield, 'order' => $sortorder]]);
@@ -150,6 +160,11 @@ class CControllerUserList extends CController {
 				$data['sessions'][$db_session['userid']] = $db_session;
 			}
 		}
+
+		$data['config'] = [
+			'login_attempts' => CSettingsHelper::get(CSettingsHelper::LOGIN_ATTEMPTS),
+			'max_in_table' => CSettingsHelper::get(CSettingsHelper::MAX_IN_TABLE)
+		];
 
 		$response = new CControllerResponseData($data);
 		$response->setTitle(_('Configuration of users'));

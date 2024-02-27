@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -64,18 +64,3 @@ void	xml_free_data_dyn(char **data)
 	else
 		zbx_free(*data);
 }
-
-/******************************************************************************
- *                                                                            *
- * Function: xml_escape_dyn                                                   *
- *                                                                            *
- * Purpose: replace <> symbols in string with &lt;&gt; so the resulting       *
- *          string can be written into xml field                              *
- *                                                                            *
- * Parameters: data - [IN] the input string                                   *
- *                                                                            *
- * Return value: an allocated string containing escaped input string          *
- *                                                                            *
- * Comments: The caller must free the returned string after it has been used. *
- *                                                                            *
- ******************************************************************************/

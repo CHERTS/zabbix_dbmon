@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -62,7 +62,8 @@ class testInheritanceTriggerPrototype extends CLegacyWebTest {
 		$sqlTriggers = 'SELECT * FROM triggers ORDER BY triggerid';
 		$oldHashTriggers = CDBHelper::getHash($sqlTriggers);
 
-		$this->zbxTestLogin('trigger_prototypes.php?form=update&triggerid='.$data['triggerid'].'&parent_discoveryid='.$data['parent_itemid']);
+		$this->zbxTestLogin('trigger_prototypes.php?form=update&context=host&triggerid='.$data['triggerid'].
+				'&parent_discoveryid='.$data['parent_itemid']);
 		$this->zbxTestClickWait('update');
 		$this->zbxTestCheckTitle('Configuration of trigger prototypes');
 		$this->zbxTestTextPresent('Trigger prototype updated');
@@ -77,14 +78,14 @@ class testInheritanceTriggerPrototype extends CLegacyWebTest {
 				[
 					'expected' => TEST_GOOD,
 					'description' => 'testInheritanceTriggerPrototype5',
-					'expression' => '{Inheritance test template:item-discovery-prototype.last(0)}<0'
+					'expression' => 'last(/Inheritance test template/item-discovery-prototype)<0'
 				]
 			],
 			[
 				[
 					'expected' => TEST_BAD,
 					'description' => 'testInheritanceTriggerPrototype1',
-					'expression' => '{Inheritance test template:key-item-inheritance-test.last()}=0',
+					'expression' => 'last(/Inheritance test template/key-item-inheritance-test)=0',
 					'errors' => [
 						'Cannot add trigger prototype',
 						'Trigger prototype "testInheritanceTriggerPrototype1" must contain at least one item prototype.'
@@ -99,7 +100,8 @@ class testInheritanceTriggerPrototype extends CLegacyWebTest {
 	 */
 	public function testInheritanceTriggerPrototype_SimpleCreate($data) {
 
-		$this->zbxTestLogin('trigger_prototypes.php?form=Create+trigger+prototype&parent_discoveryid='.$this->discoveryRuleId);
+		$this->zbxTestLogin('trigger_prototypes.php?form=Create+trigger+prototype&context=host&parent_discoveryid='.
+				$this->discoveryRuleId);
 
 		$this->zbxTestInputTypeByXpath("//input[@name='description']", $data['description']);
 		$this->zbxTestInputType('expression', $data['expression']);

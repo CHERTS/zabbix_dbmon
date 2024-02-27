@@ -1,6 +1,6 @@
 # VictorOps webhook
 
-This guide describes how to integrate Zabbix 5.0 installation with VictorOps using the Zabbix webhook feature. This guide provides instructions on setting up a media type, a user and an action in Zabbix.<br>
+This guide describes how to integrate Zabbix 6.0 installation with VictorOps using the Zabbix webhook feature. This guide provides instructions on setting up a media type, a user and an action in Zabbix.<br>
 
 
 ## Setting up VictorOps
@@ -12,7 +12,7 @@ This guide describes how to integrate Zabbix 5.0 installation with VictorOps usi
 
 
 ## Setting up the webhook in Zabbix
-1\. In the *Administration > Media types* section, import [media_victorops.xml](media_victorops.xml).
+1\. In the *Administration > Media types* section, import [media_victorops.yaml](media_victorops.yaml).
 
 2\. Open the newly added **VictorOps** media type and replace *&lt;PLACE ENDPOINT URL HERE&gt;* placeholder with your REST integration endpoint URL.<br>
 The following parameters should be filled:<br>
@@ -36,7 +36,7 @@ Format explanation:<br>
 "Send to" field should be filled as "Default" or your routing key.<br>
 Make sure this user has access to all hosts, for which you would like problem notifications to be converted into VictorOps tasks.
 
-For more information see [Zabbix](https://www.zabbix.com/documentation/5.0/manual/config/notifications) and [VictorOps](https://help.victorops.com/) documentations.
+For more information see [Zabbix](https://www.zabbix.com/documentation/6.0/manual/config/notifications) and [VictorOps](https://help.victorops.com/) documentations.
 
 ## Supported versions
-Zabbix 5.0 and higher
+Zabbix 6.0 and higher

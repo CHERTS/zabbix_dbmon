@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -31,13 +31,20 @@ abstract class CControllerPopupItemTest extends CController {
 	const ZBX_TEST_TYPE_LLD = 2;
 
 	/**
+	 * Max-length of input fields that can contain resolved macro values. Used in views for input fields.
+	 *
+	 * @var int
+	 */
+	public const INPUT_MAX_LENGTH = 2048;
+
+	/**
 	 * Define a set of item types allowed to test and item properties needed to collect for each item type.
 	 *
 	 * @var array
 	 */
-	private static $testable_item_types = [ITEM_TYPE_ZABBIX, ITEM_TYPE_SIMPLE, ITEM_TYPE_INTERNAL, ITEM_TYPE_AGGREGATE,
-		ITEM_TYPE_EXTERNAL, ITEM_TYPE_DB_MONITOR, ITEM_TYPE_HTTPAGENT, ITEM_TYPE_SSH, ITEM_TYPE_TELNET, ITEM_TYPE_JMX,
-		ITEM_TYPE_CALCULATED
+	private static $testable_item_types = [ITEM_TYPE_ZABBIX, ITEM_TYPE_SIMPLE, ITEM_TYPE_INTERNAL, ITEM_TYPE_EXTERNAL,
+		ITEM_TYPE_DB_MONITOR, ITEM_TYPE_HTTPAGENT, ITEM_TYPE_SSH, ITEM_TYPE_TELNET, ITEM_TYPE_JMX,
+		ITEM_TYPE_CALCULATED, ITEM_TYPE_SNMP, ITEM_TYPE_SCRIPT
 	];
 
 	/**
@@ -84,7 +91,7 @@ abstract class CControllerPopupItemTest extends CController {
 	 */
 	protected $items_support_proxy = [ITEM_TYPE_ZABBIX, ITEM_TYPE_SIMPLE, ITEM_TYPE_INTERNAL, ITEM_TYPE_EXTERNAL,
 		ITEM_TYPE_DB_MONITOR, ITEM_TYPE_HTTPAGENT, ITEM_TYPE_IPMI, ITEM_TYPE_SSH, ITEM_TYPE_TELNET, ITEM_TYPE_JMX,
-		ITEM_TYPE_SNMP
+		ITEM_TYPE_SNMP, ITEM_TYPE_SCRIPT
 	];
 
 	/**
@@ -93,7 +100,7 @@ abstract class CControllerPopupItemTest extends CController {
 	 * @var array
 	 */
 	protected $item_types_has_key_mandatory = [ITEM_TYPE_ZABBIX, ITEM_TYPE_SIMPLE, ITEM_TYPE_INTERNAL,
-		ITEM_TYPE_AGGREGATE, ITEM_TYPE_EXTERNAL, ITEM_TYPE_DB_MONITOR, ITEM_TYPE_HTTPAGENT, ITEM_TYPE_IPMI,
+		ITEM_TYPE_EXTERNAL, ITEM_TYPE_DB_MONITOR, ITEM_TYPE_HTTPAGENT, ITEM_TYPE_IPMI,
 		ITEM_TYPE_SSH, ITEM_TYPE_TELNET, ITEM_TYPE_JMX, ITEM_TYPE_CALCULATED
 	];
 
@@ -130,53 +137,66 @@ abstract class CControllerPopupItemTest extends CController {
 		'url' => [
 			'host' => ['{HOSTNAME}', '{HOST.HOST}', '{HOST.NAME}'],
 			'interface' => ['{HOST.IP}', '{IPADDRESS}', '{HOST.DNS}', '{HOST.CONN}', '{HOST.PORT}'],
-			'item' => ['{ITEM.ID}', '{ITEM.KEY}'],
+			'item' => ['{ITEM.ID}', '{ITEM.KEY.ORIG}', '{ITEM.KEY}'],
 			'support_user_macros' => true,
 			'support_lld_macros' => true
 		],
 		'posts' => [
 			'host' => ['{HOSTNAME}', '{HOST.HOST}', '{HOST.NAME}'],
 			'interface' => ['{HOST.IP}', '{IPADDRESS}', '{HOST.DNS}', '{HOST.CONN}', '{HOST.PORT}'],
-			'item' => ['{ITEM.ID}', '{ITEM.KEY}'],
+			'item' => ['{ITEM.ID}', '{ITEM.KEY.ORIG}', '{ITEM.KEY}'],
 			'support_user_macros' => true,
 			'support_lld_macros' => true
 		],
 		'http_proxy' => [
-			'host' => ['{HOSTNAME}', '{HOST.HOST}', '{HOST.NAME}'],
-			'interface' => ['{HOST.IP}', '{IPADDRESS}', '{HOST.DNS}', '{HOST.CONN}', '{HOST.PORT}'],
-			'item' => ['{ITEM.ID}', '{ITEM.KEY}'],
+			'item' => ['{ITEM.ID}', '{ITEM.KEY.ORIG}', '{ITEM.KEY}'],
 			'support_user_macros' => true,
 			'support_lld_macros' => true
 		],
 		'ssl_cert_file' => [
 			'host' => ['{HOSTNAME}', '{HOST.HOST}', '{HOST.NAME}'],
 			'interface' => ['{HOST.IP}', '{IPADDRESS}', '{HOST.DNS}', '{HOST.CONN}', '{HOST.PORT}'],
-			'item' => ['{ITEM.ID}', '{ITEM.KEY}'],
+			'item' => ['{ITEM.ID}', '{ITEM.KEY.ORIG}', '{ITEM.KEY}'],
 			'support_user_macros' => true,
 			'support_lld_macros' => true
 		],
 		'ssl_key_file' => [
 			'host' => ['{HOSTNAME}', '{HOST.HOST}', '{HOST.NAME}'],
 			'interface' => ['{HOST.IP}', '{IPADDRESS}', '{HOST.DNS}', '{HOST.CONN}', '{HOST.PORT}'],
-			'item' => ['{ITEM.ID}', '{ITEM.KEY}'],
+			'item' => ['{ITEM.ID}', '{ITEM.KEY.ORIG}', '{ITEM.KEY}'],
 			'support_user_macros' => true,
 			'support_lld_macros' => true
 		],
 		'query_fields' => [
 			'host' => ['{HOSTNAME}', '{HOST.HOST}', '{HOST.NAME}'],
 			'interface' => ['{HOST.IP}', '{IPADDRESS}', '{HOST.DNS}', '{HOST.CONN}', '{HOST.PORT}'],
-			'item' => ['{ITEM.ID}', '{ITEM.KEY}'],
+			'item' => ['{ITEM.ID}', '{ITEM.KEY.ORIG}', '{ITEM.KEY}'],
 			'support_user_macros' => true,
 			'support_lld_macros' => true
 		],
 		'headers' => [
 			'host' => ['{HOSTNAME}', '{HOST.HOST}', '{HOST.NAME}'],
 			'interface' => ['{HOST.IP}', '{IPADDRESS}', '{HOST.DNS}', '{HOST.CONN}', '{HOST.PORT}'],
-			'item' => ['{ITEM.ID}', '{ITEM.KEY}'],
+			'item' => ['{ITEM.ID}', '{ITEM.KEY.ORIG}', '{ITEM.KEY}'],
+			'support_user_macros' => true,
+			'support_lld_macros' => true
+		],
+		'parameters' => [
+			'host' => ['{HOSTNAME}', '{HOST.HOST}', '{HOST.NAME}'],
+			'interface' => ['{HOST.IP}', '{IPADDRESS}', '{HOST.DNS}', '{HOST.CONN}'],
+			'item' => ['{ITEM.ID}', '{ITEM.KEY.ORIG}', '{ITEM.KEY}'],
 			'support_user_macros' => true,
 			'support_lld_macros' => true
 		],
 		'params_f' => [],
+		'script' => [
+			'support_user_macros' => true,
+			'support_lld_macros' => true
+		],
+		'timeout' => [
+			'support_user_macros' => true,
+			'support_lld_macros' => true
+		],
 		'ipmi_sensor' => [
 			'support_user_macros' => false,
 			'support_lld_macros' => true
@@ -244,14 +264,13 @@ abstract class CControllerPopupItemTest extends CController {
 	/**
 	 * Get testable item types based on host type.
 	 *
-	 * @param int $hostid
+	 * @param string $hostid
 	 *
 	 * @return array
 	 */
-	public static function getTestableItemTypes(int $hostid = 0): array {
+	public static function getTestableItemTypes(string $hostid = '0'): array {
 		if ($hostid != 0 && self::isItemTypeTestable($hostid)) {
 			self::$testable_item_types[] = ITEM_TYPE_IPMI;
-			self::$testable_item_types[] = ITEM_TYPE_SNMP;
 		}
 
 		return self::$testable_item_types;
@@ -260,11 +279,11 @@ abstract class CControllerPopupItemTest extends CController {
 	/**
 	 * Function checks if item type can be tested depending on what type of host it belongs to.
 	 *
-	 * @param int $hostid
+	 * @param string $hostid
 	 *
 	 * @return bool
 	 */
-	protected static function isItemTypeTestable(int $hostid): bool {
+	protected static function isItemTypeTestable(string $hostid): bool {
 		$ret = (bool) API::Template()->get([
 			'countOutput' => true,
 			'templateids' => [$hostid]
@@ -284,9 +303,8 @@ abstract class CControllerPopupItemTest extends CController {
 
 		if ($ret && $hostid != 0) {
 			$hosts = API::Host()->get([
-				'output' => ['hostid', 'host', 'name', 'status', 'available', 'proxy_hostid', 'tls_subject',
-					'ipmi_available', 'jmx_available', 'snmp_available', 'maintenance_status', 'maintenance_type',
-					'ipmi_authtype', 'ipmi_privilege', 'ipmi_username', 'ipmi_password', 'tls_psk_identity', 'tls_psk',
+				'output' => ['hostid', 'host', 'name', 'status', 'proxy_hostid', 'tls_subject', 'maintenance_status',
+					'maintenance_type', 'ipmi_authtype', 'ipmi_privilege', 'ipmi_username', 'ipmi_password',
 					'tls_issuer', 'tls_connect'
 				],
 				'hostids' => [$hostid],
@@ -295,7 +313,7 @@ abstract class CControllerPopupItemTest extends CController {
 
 			if (!$hosts) {
 				$hosts = API::Template()->get([
-					'output' => ['templateid', 'host', 'name', 'status', 'available', 'jmx_available'],
+					'output' => ['templateid', 'host', 'name', 'status'],
 					'templateids' => [$hostid],
 					'editable' => true
 				]);
@@ -318,7 +336,7 @@ abstract class CControllerPopupItemTest extends CController {
 	 *
 	 * @return CItem|CItemPrototype|CDiscoveryRule
 	 */
-	protected function getPreprocessingItemClassInstance($test_type) {
+	protected static function getPreprocessingItemClassInstance($test_type) {
 		switch ($test_type) {
 			case self::ZBX_TEST_TYPE_ITEM:
 				return new CItem;
@@ -355,11 +373,13 @@ abstract class CControllerPopupItemTest extends CController {
 	/**
 	 * Function returns array of item specific properties used for item testing.
 	 *
-	 * @param array $input  Stored user input used to overwrite values retrieved from database.
+	 * @param array $input       Stored user input used to overwrite values retrieved from database.
+	 * @param bool  $for_server  Whether need to add to result additional properties used only for connection with
+	 *                           Zabbix server.
 	 *
 	 * @return array
 	 */
-	protected function getItemTestProperties(array $input) {
+	protected function getItemTestProperties(array $input, bool $for_server = false) {
 		$data = [
 			'value_type' => $input['value_type']
 		];
@@ -405,6 +425,14 @@ abstract class CControllerPopupItemTest extends CController {
 			$interface_input['address'] = $input['address'];
 		}
 
+		if (array_key_exists('data', $input) && array_key_exists('interface_details', $input['data'])
+				&& is_array($input['data']['interface_details'])) {
+			$interface_input['details'] = $input['data']['interface_details'];
+		}
+		elseif (array_key_exists('interface', $input) && array_key_exists('details', $input['interface'])) {
+			$interface_input['details'] = $input['interface']['details'];
+		}
+
 		// Set proxy.
 		if (in_array($this->item_type, $this->items_support_proxy)) {
 			if (array_key_exists('data', $input) && array_key_exists('proxy_hostid', $input['data'])) {
@@ -430,12 +458,22 @@ abstract class CControllerPopupItemTest extends CController {
 
 				if ($this->host['status'] != HOST_STATUS_TEMPLATE) {
 					$data['host'] = [
-						'tls_psk_identity' => $this->host['tls_psk_identity'],
-						'tls_psk' => $this->host['tls_psk'],
 						'tls_issuer' => $this->host['tls_issuer'],
 						'tls_connect' => $this->host['tls_connect'],
 						'tls_subject' => $this->host['tls_subject']
 					];
+
+					if ($for_server && $this->host['tls_connect'] == HOST_ENCRYPTION_PSK) {
+						$hosts = API::Host()->get([
+							'output' => ['tls_psk_identity', 'tls_psk'],
+							'hostids' => $this->host['hostid'],
+							'editable' => true
+						]);
+						$host = reset($hosts);
+
+						$data['host']['tls_psk_identity'] = $host['tls_psk_identity'];
+						$data['host']['tls_psk'] = $host['tls_psk'];
+					}
 				}
 
 				unset($data['interface']['useip'], $data['interface']['interfaceid'], $data['interface']['ip'],
@@ -491,26 +529,16 @@ abstract class CControllerPopupItemTest extends CController {
 				$data += [
 					'key' => $input['key'],
 					'host' => [
-						'hostid' => $this->host['hostid'],
-						'available' => $this->host['available'],
-						'jmx_available' => $this->host['jmx_available']
+						'hostid' => $this->host['hostid']
 					]
 				];
 
 				if ($this->host['status'] != HOST_STATUS_TEMPLATE) {
 					$data['host'] += [
 						'maintenance_status' => $this->host['maintenance_status'],
-						'ipmi_available' => $this->host['ipmi_available'],
-						'snmp_available' => $this->host['snmp_available'],
 						'maintenance_type' => $this->host['maintenance_type']
 					];
 				}
-				break;
-
-			case ITEM_TYPE_AGGREGATE:
-				$data += [
-					'key' => $input['key']
-				];
 				break;
 
 			case ITEM_TYPE_EXTERNAL:
@@ -650,6 +678,15 @@ abstract class CControllerPopupItemTest extends CController {
 					$data['interface']['dns'],  $data['interface']['port']
 				);
 				break;
+
+			case ITEM_TYPE_SCRIPT:
+				$data += [
+					'key' => $input['key'],
+					'parameters' => array_key_exists('parameters', $input) ? $input['parameters'] : [],
+					'script' => array_key_exists('script', $input) ? $input['script'] : null,
+					'timeout' => array_key_exists('timeout', $input) ? $input['timeout'] : null
+				];
+				break;
 		}
 
 		return $data;
@@ -667,43 +704,98 @@ abstract class CControllerPopupItemTest extends CController {
 			'address' => '',
 			'port' => '',
 			'interfaceid' => 0,
+			'type' => INTERFACE_TYPE_UNKNOWN,
 			'ip' => '',
 			'dns' => '',
-			'useip' => INTERFACE_USE_DNS
+			'useip' => INTERFACE_USE_DNS,
+			'details' => [
+				'community' => '',
+				'version' => SNMP_V2C,
+				'securityname' => '',
+				'securitylevel' => ITEM_SNMPV3_SECURITYLEVEL_NOAUTHNOPRIV,
+				'authpassphrase' => '',
+				'privpassphrase' => '',
+				'authprotocol' => ITEM_SNMPV3_AUTHPROTOCOL_MD5,
+				'privprotocol' => ITEM_SNMPV3_PRIVPROTOCOL_DES,
+				'contextname' => ''
+			]
 		];
+
+		if ($this->item_type != ITEM_TYPE_SNMP) {
+			unset($interface_data['details'], $inputs['details']);
+		}
 
 		// Get values from database; resolve macros.
 		if (($this->host['status'] == HOST_STATUS_MONITORED || $this->host['status'] == HOST_STATUS_NOT_MONITORED)
 				&& array_key_exists('interfaceid', $inputs)) {
-			$interfaces = array_key_exists('interfaceid', $inputs)
-				? API::HostInterface()->get([
-					'output' => ['hostid', 'type', 'dns', 'ip', 'port', 'main', 'useip', 'details'],
+			$output = ['hostid', 'type', 'dns', 'ip', 'port', 'main', 'useip'];
+			$interfaces = [];
+
+			if ($this->item_type == ITEM_TYPE_SNMP) {
+				$output[] = 'details';
+			}
+
+			$item_type_interface = itemTypeInterface($this->item_type);
+
+			if ($item_type_interface == INTERFACE_TYPE_OPT && $inputs['interfaceid'] == 0) {
+				$item_type_interface = false;
+			}
+
+			if ($item_type_interface === false) {
+				$host_interfaces = API::HostInterface()->get([
+					'output' => $output,
+					'hostids' => $this->host['hostid'],
+					'filter' => ['main' => INTERFACE_PRIMARY]
+				]);
+				$host_interfaces = zbx_toHash($host_interfaces, 'type');
+
+				foreach (CItem::INTERFACE_TYPES_BY_PRIORITY as $interface_type) {
+					if (array_key_exists($interface_type, $host_interfaces)) {
+						$interfaces[] = $host_interfaces[$interface_type];
+						break;
+					}
+				}
+			}
+			else {
+				$interfaces = API::HostInterface()->get([
+					'output' => $output,
 					'interfaceids' => $inputs['interfaceid'],
 					'hostids' => $this->host['hostid']
-				])
-				: [];
+				]);
+			}
 
-			if (count($interfaces) > 0) {
-				// Macros in interface details are not resolved.
+			if (count($interfaces) != 0) {
 				$interfaces = CMacrosResolverHelper::resolveHostInterfaces($interfaces);
+				$interface_data = ($this->item_type == ITEM_TYPE_SNMP)
+					? ['details' => $interfaces[0]['details'] + $interface_data['details']]
+					: [];
 
-				$interface_data = [
+				$interface_data += [
 					'address' => ($interfaces[0]['useip'] == INTERFACE_USE_IP)
 						? $interfaces[0]['ip']
 						: $interfaces[0]['dns'],
 					'port' => $interfaces[0]['port'],
 					'useip' => $interfaces[0]['useip'],
+					'type' => $interfaces[0]['type'],
 					'ip' => $interfaces[0]['ip'],
 					'dns' => $interfaces[0]['dns'],
-					'interfaceid' => $interfaces[0]['interfaceid'],
-					'details' => $interfaces[0]['details']
+					'interfaceid' => $interfaces[0]['interfaceid']
 				];
 			}
 		}
 
+		if ($this->item_type == ITEM_TYPE_SCRIPT) {
+			return $interface_data;
+		}
+
 		// Apply client side cache.
 		foreach ($inputs as $key => $value) {
-			$interface_data[$key] = $value;
+			if (is_array($value)) {
+				$interface_data[$key] = $value + $interface_data[$key];
+			}
+			else {
+				$interface_data[$key] = $value;
+			}
 		}
 
 		return $interface_data;
@@ -750,11 +842,43 @@ abstract class CControllerPopupItemTest extends CController {
 					unset($data[$key]);
 				}
 			}
-			elseif ($key === 'interface') {
-				continue;
+			elseif ($key === 'interface' && $this->item_type == ITEM_TYPE_SNMP) {
+				if ($data['interface']['details']['version'] == SNMP_V3) {
+					unset($data['interface']['details']['community']);
+
+					if ($data['interface']['details']['securitylevel'] == ITEM_SNMPV3_SECURITYLEVEL_NOAUTHNOPRIV) {
+						unset($data['interface']['details']['authprotocol'],
+							$data['interface']['details']['authpassphrase'],
+							$data['interface']['details']['privprotocol'],
+							$data['interface']['details']['privpassphrase']
+						);
+					}
+					elseif ($data['interface']['details']['securitylevel'] == ITEM_SNMPV3_SECURITYLEVEL_AUTHNOPRIV) {
+						unset($data['interface']['details']['privprotocol'],
+							$data['interface']['details']['privpassphrase']
+						);
+					}
+				}
+				else {
+					unset($data['interface']['details']['contextname'],
+						$data['interface']['details']['securityname'],
+						$data['interface']['details']['securitylevel'],
+						$data['interface']['details']['authprotocol'],
+						$data['interface']['details']['authpassphrase'],
+						$data['interface']['details']['privprotocol'],
+						$data['interface']['details']['privpassphrase']
+					);
+				}
+
+				unset($data['interface']['type']);
 			}
 			elseif ($key === 'query_fields') {
 				if ($value === '[]') {
+					unset($data[$key]);
+				}
+			}
+			elseif ($key === 'parameters') {
+				if (!$value) {
 					unset($data[$key]);
 				}
 			}
@@ -791,9 +915,30 @@ abstract class CControllerPopupItemTest extends CController {
 				'{ITEM.ID}' => (array_key_exists('itemid', $inputs) && $inputs['itemid'])
 					? $inputs['itemid']
 					: UNRESOLVED_MACRO_STRING,
-				'{ITEM.KEY}' => array_key_exists('key', $inputs) ? $inputs['key'] : UNRESOLVED_MACRO_STRING
+				'{ITEM.KEY}' => array_key_exists('key', $inputs) ? $inputs['key'] : UNRESOLVED_MACRO_STRING,
+				'{ITEM.KEY.ORIG}' => array_key_exists('key', $inputs) ? $inputs['key'] : UNRESOLVED_MACRO_STRING
 			]
 		];
+
+		if (array_key_exists('key', $inputs) && strstr($inputs['key'], '{') !== false) {
+			$usermacros = CMacrosResolverHelper::extractItemTestMacros([
+				'steps' => [],
+				'delay' => '',
+				'supported_macros' => array_diff_key($this->macros_by_item_props['key'],
+					['support_user_macros' => true, 'support_lld_macros' => true]
+				),
+				'support_lldmacros' => ($this->preproc_item instanceof CItemPrototype),
+				'texts_support_macros' => [$inputs['key']],
+				'texts_support_lld_macros' => [$inputs['key']],
+				'texts_support_user_macros' => [$inputs['key']],
+				'hostid' => $this->host ? $this->host['hostid'] : 0,
+				'macros_values' => array_intersect_key($macros, $this->macros_by_item_props['key'])
+			]);
+
+			foreach ($usermacros['macros'] as $macro => $value) {
+				$macros['item']['{ITEM.KEY}'] = str_replace($macro, $value, $macros['item']['{ITEM.KEY}']);
+			}
+		}
 
 		return $macros;
 	}
@@ -819,6 +964,30 @@ abstract class CControllerPopupItemTest extends CController {
 		}
 
 		return json_encode($result);
+	}
+
+	/**
+	 * Transform front-end familiar array of parameters fields to the form server is capable to handle. Server expects
+	 * one object where parameter names are keys and parameter values are values. Note that parameter names are unique.
+	 *
+	 * @param array $data
+	 * @param array $data[name]   Indexed array of names.
+	 * @param array $data[value]  Indexed array of values.
+	 *
+	 * @return array
+	 */
+	protected function transformParametersFields(array $data): array {
+		$result = [];
+
+		if (array_key_exists('name', $data) && array_key_exists('value', $data)) {
+			foreach (array_keys($data['name']) as $num) {
+				if (array_key_exists($num, $data['value']) && $data['name'][$num] !== '') {
+					$result += [$data['name'][$num] => $data['value'][$num]];
+				}
+			}
+		}
+
+		return $result;
 	}
 
 	/**
@@ -867,7 +1036,7 @@ abstract class CControllerPopupItemTest extends CController {
 
 			// Resolve macros in parameter fields before send data to Zabbix server.
 			foreach (['params', 'error_handler_params'] as $field) {
-				$matched_macros = (new CMacrosResolverGeneral)->getMacroPositions($step[$field], $macros_types);
+				$matched_macros = CMacrosResolverGeneral::getMacroPositions($step[$field], $macros_types);
 
 				foreach (array_reverse($matched_macros, true) as $pos => $macro) {
 					$macro_value = array_key_exists($macro, $macros_posted)
@@ -896,50 +1065,113 @@ abstract class CControllerPopupItemTest extends CController {
 			return $formula;
 		}
 
-		$expression_data = new CTriggerExpression([
+		$expression_parser = new CExpressionParser([
+			'usermacros' => true,
+			'lldmacros' => ($this->preproc_item instanceof CItemPrototype),
 			'calculated' => true,
-			'lldmacros' => ($this->preproc_item instanceof CItemPrototype)
+			'host_macro' => true,
+			'empty_host' => true
 		]);
 
-		if (($result = $expression_data->parse($formula)) === false) {
+		if ($expression_parser->parse($formula) != CParser::PARSE_SUCCESS) {
 			// Cannot parse a calculated item formula. Return as is.
 			return $formula;
 		}
 
 		$expression = [];
+		$pos_left = 0;
 
-		foreach ($result->getTokens() as $token) {
+		$tokens = $expression_parser->getResult()->getTokensOfTypes([
+			CExpressionParserResult::TOKEN_TYPE_USER_MACRO,
+			CExpressionParserResult::TOKEN_TYPE_LLD_MACRO,
+			CExpressionParserResult::TOKEN_TYPE_STRING,
+			CExpressionParserResult::TOKEN_TYPE_HIST_FUNCTION
+		]);
+
+		foreach ($tokens as $token) {
+			if ($pos_left != $token['pos']) {
+				$expression[] = substr($formula, $pos_left, $token['pos'] - $pos_left);
+			}
+			$pos_left = $token['pos'] + $token['length'];
+
 			switch ($token['type']) {
-				case CTriggerExprParserResult::TOKEN_TYPE_USER_MACRO:
-				case CTriggerExprParserResult::TOKEN_TYPE_LLD_MACRO:
-					$expression[] = array_key_exists($token['value'], $macros_posted)
-						? CTriggerExpression::quoteString($macros_posted[$token['value']], false)
-						: $token['value'];
+				case CExpressionParserResult::TOKEN_TYPE_USER_MACRO:
+				case CExpressionParserResult::TOKEN_TYPE_LLD_MACRO:
+					$expression[] = array_key_exists($token['match'], $macros_posted)
+						? CExpressionParser::quoteString($macros_posted[$token['match']], false)
+						: $token['match'];
 					break;
 
-				case CTriggerExprParserResult::TOKEN_TYPE_STRING:
-					$string = strtr($token['data']['string'], $macros_posted);
-					$expression[] = CTriggerExpression::quoteString($string, false, true);
+				case CExpressionParserResult::TOKEN_TYPE_STRING:
+					$string = strtr(CExpressionParser::unquoteString($token['match']), $macros_posted);
+					$expression[] = CExpressionParser::quoteString($string, false, true);
 					break;
 
-				case CTriggerExprParserResult::TOKEN_TYPE_FUNCTION:
-					$expression[] = $token['data']['functionName'];
-					$expression[] = '(';
-					$expression[] = array_shift($token['data']['functionParams']);
+				case CExpressionParserResult::TOKEN_TYPE_HIST_FUNCTION:
+					$pos_left = $token['pos'];
 
-					foreach ($token['data']['functionParams'] as $param) {
-						$expression[] = ',';
-						$string = strtr($param, $macros_posted) ? : $param;
-						$expression[] = CTriggerExpression::quoteString(trim($string),false,true);
+					foreach ($token['data']['parameters'] as $parameter) {
+						if ($pos_left != $parameter['pos']) {
+							$expression[] = substr($formula, $pos_left, $parameter['pos'] - $pos_left);
+						}
+						$pos_left = $parameter['pos'] + $parameter['length'];
+
+						switch ($parameter['type']) {
+							case CHistFunctionParser::PARAM_TYPE_QUERY:
+								$pos_left = $parameter['pos'];
+
+								foreach ($parameter['data']['filter']['tokens'] as $filter_token) {
+									if ($pos_left != $filter_token['pos']) {
+										$expression[] = substr($formula, $pos_left, $filter_token['pos'] - $pos_left);
+									}
+									$pos_left = $filter_token['pos'] + $filter_token['length'];
+
+									switch ($filter_token['type']) {
+										case CFilterParser::TOKEN_TYPE_USER_MACRO:
+										case CFilterParser::TOKEN_TYPE_LLD_MACRO:
+											$string = strtr($filter_token['match'], $macros_posted);
+											$expression[] = CFilterParser::quoteString($string);
+											break;
+
+										case CFilterParser::TOKEN_TYPE_STRING:
+											$string = strtr(CFilterParser::unquoteString($filter_token['match']),
+												$macros_posted
+											);
+											$expression[] = CFilterParser::quoteString($string);
+											break;
+
+										case CFilterParser::TOKEN_TYPE_KEYWORD:
+										case CFilterParser::TOKEN_TYPE_OPERATOR:
+											$expression[] = $filter_token['match'];
+											break;
+									}
+								}
+								break;
+
+							case CHistFunctionParser::PARAM_TYPE_PERIOD:
+								$string = strtr($parameter['match'], $macros_posted);
+								$expression[] = $string;
+								break;
+
+							case CHistFunctionParser::PARAM_TYPE_QUOTED:
+								$string = strtr(CFilterParser::unquoteString($parameter['match']), $macros_posted);
+								$expression[] = CFilterParser::quoteString($string);
+								break;
+
+							case CHistFunctionParser::PARAM_TYPE_UNQUOTED:
+								$string = strtr($parameter['match'], $macros_posted);
+								$expression[] = CFilterParser::quoteString($string);
+								break;
+						}
 					}
-
-					$expression[] = ')' ;
 					break;
-
-				default:
-					$expression[] = $token['value'];
 			}
 		}
+
+		if ($pos_left != strlen($formula)) {
+			$expression[] = substr($formula, $pos_left);
+		}
+
 		return implode('', $expression);
 	}
 
@@ -982,7 +1214,7 @@ abstract class CControllerPopupItemTest extends CController {
 			}
 
 			// Get strings to resolve and types of supported macros.
-			if ($field === 'query_fields' || $field === 'headers') {
+			if ($field === 'query_fields' || $field === 'headers' || $field === 'parameters') {
 				if (!array_key_exists($field, $inputs) || !$inputs[$field]) {
 					continue;
 				}
@@ -991,7 +1223,7 @@ abstract class CControllerPopupItemTest extends CController {
 					foreach (array_keys($inputs[$field][$key]) as $nr) {
 						$str = &$inputs[$field][$key][$nr];
 						if (strstr($str, '{') !== false) {
-							$matched_macros = (new CMacrosResolverGeneral)->getMacroPositions($str, $types);
+							$matched_macros = CMacrosResolverGeneral::getMacroPositions($str, $types);
 
 							foreach (array_reverse($matched_macros, true) as $pos => $macro) {
 								$macro_value = array_key_exists($macro, $macros_posted)
@@ -1011,7 +1243,7 @@ abstract class CControllerPopupItemTest extends CController {
 					$inputs[$field] = CMacrosResolverGeneral::resolveItemKeyMacros($inputs[$field], $macros_posted, $types);
 				}
 				else {
-					$matched_macros = (new CMacrosResolverGeneral)->getMacroPositions($inputs[$field], $types);
+					$matched_macros = CMacrosResolverGeneral::getMacroPositions($inputs[$field], $types);
 
 					foreach (array_reverse($matched_macros, true) as $pos => $macro) {
 						$macro_value = array_key_exists($macro, $macros_posted)
@@ -1039,12 +1271,13 @@ abstract class CControllerPopupItemTest extends CController {
 		if (array_key_exists('interface', $inputs) && array_key_exists('details', $inputs['interface'])) {
 			foreach ($inputs['interface']['details'] as &$field) {
 				if (strstr($field, '{') !== false) {
-					$matched_macros = (new CMacrosResolverGeneral)->getMacroPositions($field, ['usermacros' => true]);
+					$matched_macros = CMacrosResolverGeneral::getMacroPositions($field, ['usermacros' => true]);
 
 					foreach (array_reverse($matched_macros, true) as $pos => $macro) {
+						// If matching macro is not found, return unresolved macro string.
 						$macro_value = array_key_exists($macro, $macros_posted)
 							? $macros_posted[$macro]
-							: '';
+							: $macro;
 
 						$field = substr_replace($field, $macro_value, $pos, strlen($macro));
 					}
@@ -1072,5 +1305,46 @@ abstract class CControllerPopupItemTest extends CController {
 		}
 
 		return $value;
+	}
+
+
+	/**
+	 * Validates interface object in context of current item type.
+	 *
+	 * @param array  $interface
+	 * @param string $interface['address']               (optional)
+	 * @param string $interface['port']                  (optional)
+	 * @param array  $interface['details']               (optional)
+	 * @param int    $interface['details']['version']
+	 * @param string $interface['details']['community']  (optional)
+	 *
+	 * @return bool
+	 */
+	final protected function validateInterface(array $interface): bool {
+		if ($this->item_type == ITEM_TYPE_SNMP) {
+			if (($interface['details']['version'] == SNMP_V1 || $interface['details']['version'] == SNMP_V2C)
+					&& (!array_key_exists('community', $interface['details'])
+						|| $interface['details']['community'] === '')) {
+				error(_s('Incorrect value for field "%1$s": %2$s.', _('SNMP community'), _('cannot be empty')));
+
+				return false;
+			}
+		}
+
+		if ($this->items_require_interface[$this->item_type]['address']
+				&& (!array_key_exists('address', $interface) || $interface['address'] === '')) {
+			error(_s('Incorrect value for field "%1$s": %2$s.', _('Host address'), _('cannot be empty')));
+
+			return false;
+		}
+
+		if ($this->items_require_interface[$this->item_type]['port']
+				&& (!array_key_exists('port', $interface) || $interface['port'] === '')) {
+			error(_s('Incorrect value for field "%1$s": %2$s.', _('Port'), _('cannot be empty')));
+
+			return false;
+		}
+
+		return true;
 	}
 }

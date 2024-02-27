@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@
 $widget = (new CWidget())->setTitle(_('Host groups'));
 
 $form = (new CForm())
+	->addItem((new CVar('form_refresh', $data['form_refresh'] + 1))->removeId())
 	->setName('hostgroupForm')
 	->setAttribute('aria-labelledby', ZBX_STYLE_PAGE_TITLE)
 	->addVar('groupid', $data['groupid'])
@@ -37,7 +38,7 @@ if ($data['groupid'] != 0 && $data['group']['flags'] == ZBX_FLAG_DISCOVERY_CREAT
 	$name = (new CSpan(_('Inaccessible discovery rule')))->addClass(ZBX_STYLE_GREY);
 
 	if ($data['group']['discoveryRule']) {
-		if ($data['group']['is_discovery_rule_editable']) {
+		if ($data['allowed_ui_conf_hosts'] && $data['group']['is_discovery_rule_editable']) {
 			$name = (new CLink($data['group']['discoveryRule']['name'],
 					(new CUrl('host_prototypes.php'))
 						->setArgument('form', 'update')
@@ -82,8 +83,7 @@ else {
 	$tab->setFooter(makeFormFooter(
 		new CSubmit('update', _('Update')), [
 			(new CSubmit('clone', _('Clone')))->setEnabled(CWebUser::getType() == USER_TYPE_SUPER_ADMIN),
-			(new CButtonDelete(_('Delete selected group?'), url_param('form').url_param('groupid')))
-				->setEnabled(array_key_exists($data['groupid'], $data['deletable_host_groups'])),
+			(new CButtonDelete(_('Delete selected group?'), url_param('form').url_param('groupid'))),
 			new CButtonCancel()
 		]
 	));

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,8 +18,7 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
-
-CSession::start();
+global $page;
 
 if (!isset($page['type'])) {
 	$page['type'] = PAGE_TYPE_HTML;
@@ -43,72 +42,79 @@ if (!defined('ZBX_PAGE_NO_THEME')) {
 switch ($page['type']) {
 	case PAGE_TYPE_IMAGE:
 		set_image_header();
+
 		if (!defined('ZBX_PAGE_NO_MENU')) {
 			define('ZBX_PAGE_NO_MENU', true);
 		}
+
 		break;
+
 	case PAGE_TYPE_JS:
 		header('Content-Type: application/javascript; charset=UTF-8');
+
 		if (!defined('ZBX_PAGE_NO_MENU')) {
 			define('ZBX_PAGE_NO_MENU', true);
 		}
+
 		break;
+
 	case PAGE_TYPE_JSON:
 		header('Content-Type: application/json');
+
 		if (!defined('ZBX_PAGE_NO_MENU')) {
 			define('ZBX_PAGE_NO_MENU', true);
 		}
+
 		break;
+
 	case PAGE_TYPE_JSON_RPC:
 		header('Content-Type: application/json-rpc');
+
 		if(!defined('ZBX_PAGE_NO_MENU')) {
 			define('ZBX_PAGE_NO_MENU', true);
 		}
+
 		break;
+
 	case PAGE_TYPE_CSS:
 		header('Content-Type: text/css; charset=UTF-8');
+
 		if (!defined('ZBX_PAGE_NO_MENU')) {
 			define('ZBX_PAGE_NO_MENU', true);
 		}
+
 		break;
+
 	case PAGE_TYPE_TEXT:
 	case PAGE_TYPE_TEXT_RETURN_JSON:
 	case PAGE_TYPE_HTML_BLOCK:
 		header('Content-Type: text/plain; charset=UTF-8');
+
 		if (!defined('ZBX_PAGE_NO_MENU')) {
 			define('ZBX_PAGE_NO_MENU', true);
 		}
+
 		break;
+
 	case PAGE_TYPE_HTML:
 	default:
 		header('Content-Type: text/html; charset=UTF-8');
 		header('X-Content-Type-Options: nosniff');
 		header('X-XSS-Protection: 1; mode=block');
 
-		if (X_FRAME_OPTIONS !== null) {
-			if (strcasecmp(X_FRAME_OPTIONS, 'SAMEORIGIN') == 0 || strcasecmp(X_FRAME_OPTIONS, 'DENY') == 0) {
-				$x_frame_options = X_FRAME_OPTIONS;
+		if (strcasecmp(CSettingsHelper::getGlobal(CSettingsHelper::X_FRAME_OPTIONS), 'null') != 0) {
+			$x_frame_options = CSettingsHelper::get(CSettingsHelper::X_FRAME_OPTIONS);
+
+			if (strcasecmp($x_frame_options, 'SAMEORIGIN') == 0) {
+				header('X-Frame-Options: SAMEORIGIN');
+			}
+			elseif (strcasecmp($x_frame_options, 'DENY') == 0) {
+				header('X-Frame-Options: DENY');
 			}
 			else {
-				$x_frame_options = 'SAMEORIGIN';
-				$allowed_urls = explode(',', X_FRAME_OPTIONS);
-				$url_to_check = array_key_exists('HTTP_REFERER', $_SERVER)
-					? parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST)
-					: null;
-
-				if ($url_to_check) {
-					foreach ($allowed_urls as $allowed_url) {
-						if (strcasecmp(trim($allowed_url), $url_to_check) == 0) {
-							$x_frame_options = 'ALLOW-FROM '.$allowed_url;
-							break;
-						}
-					}
-				}
+				header('Content-Security-Policy: frame-ancestors '.$x_frame_options);
 			}
-
-			header('X-Frame-Options: '.$x_frame_options);
 		}
-		break;
 }
 
 if ($page['type'] == PAGE_TYPE_HTML) {
@@ -121,7 +127,7 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 	}
 	$pageTitle .= isset($page['title']) ? $page['title'] : _('Zabbix');
 
-	if ((defined('ZBX_PAGE_DO_REFRESH') || defined('ZBX_PAGE_DO_JS_REFRESH')) && CWebUser::getRefresh() != 0) {
+	if (defined('ZBX_PAGE_DO_JS_REFRESH') && CWebUser::getRefresh() != 0) {
 		$pageTitle .= ' ['._s('refreshed every %1$s sec.', CWebUser::getRefresh()).']';
 	}
 
@@ -133,30 +139,31 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 		global $DB;
 
 		if (!empty($DB['DB'])) {
-			$config = select_config();
 			$theme = getUserTheme(CWebUser::$data);
 
-			$pageHeader->addStyle(getTriggerSeverityCss($config));
-			$pageHeader->addStyle(getTriggerStatusCss($config));
+			$pageHeader->addStyle(getTriggerSeverityCss());
+			$pageHeader->addStyle(getTriggerStatusCss());
 
 			// perform Zabbix server check only for standard pages
-			if ($is_standard_page && $config['server_check_interval'] && !empty($ZBX_SERVER) && !empty($ZBX_SERVER_PORT)) {
+			if ($is_standard_page && CSettingsHelper::get(CSettingsHelper::SERVER_CHECK_INTERVAL)) {
 				$page['scripts'][] = 'servercheck.js';
 			}
 		}
 	}
-	$pageHeader->addCssFile('assets/styles/'.CHtml::encode($theme).'.css');
+	$pageHeader->addCssFile('assets/styles/'.$theme.'.css');
 
 	if ($page['file'] == 'sysmap.php') {
 		$pageHeader->addCssFile('imgstore.php?css=1&output=css');
 	}
 
+	$tz_offsets = array_column((new DateTime())->getTimezone()->getTransitions(0, ZBX_MAX_DATE), 'offset', 'ts');
+
 	$pageHeader
 		->addJsFile((new CUrl('js/browsers.js'))->getUrl())
-		->addJsBeforeScripts(
-			'var PHP_TZ_OFFSET = '.date('Z').','.
-				'PHP_ZBX_FULL_DATE_TIME = "'.ZBX_FULL_DATE_TIME.'";'
-		);
+		->addJsBeforeScripts('
+			const PHP_ZBX_FULL_DATE_TIME = "'.ZBX_FULL_DATE_TIME.'";
+			const PHP_TZ_OFFSETS = '.json_encode($tz_offsets).';
+		');
 
 	// Show GUI messages in pages with menus and in fullscreen mode.
 	if (!defined('ZBX_PAGE_NO_JSLOADER')) {
@@ -167,7 +174,7 @@ if ($page['type'] == PAGE_TYPE_HTML) {
 			->getUrl()
 		);
 
-		if ($page['scripts']) {
+		if (array_key_exists('scripts', $page) && $page['scripts']) {
 			$pageHeader->addJsFile((new CUrl('jsLoader.php'))
 				->setArgument('ver', ZABBIX_VERSION)
 				->setArgument('lang', CWebUser::$data['lang'])
@@ -188,7 +195,7 @@ if ($page['type'] != PAGE_TYPE_HTML || defined('ZBX_PAGE_NO_HEADER')) {
 	return null;
 }
 
-if (!defined('ZBX_PAGE_NO_MENU') && $page['web_layout_mode'] == ZBX_LAYOUT_NORMAL) {
+if (!defined('ZBX_PAGE_NO_MENU') && $page['web_layout_mode'] == ZBX_LAYOUT_NORMAL && CWebUser::isLoggedIn()) {
 	echo (new CPartial('layout.htmlpage.aside', [
 		'server_name' => isset($ZBX_SERVER_NAME) ? $ZBX_SERVER_NAME : ''
 	]))->getOutput();
@@ -198,4 +205,6 @@ echo '<div class="'.ZBX_STYLE_LAYOUT_WRAPPER.
 	($page['web_layout_mode'] == ZBX_LAYOUT_KIOSKMODE ? ' '.ZBX_STYLE_LAYOUT_KIOSKMODE : '').'">'."\n";
 
 // Display unexpected messages (if any) generated by the layout.
-echo get_prepared_messages(['with_current_messages' => true]);
+if (CMessageHelper::getType() === CMessageHelper::MESSAGE_TYPE_ERROR) {
+	echo get_prepared_messages(['with_current_messages' => true]);
+}

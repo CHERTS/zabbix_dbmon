@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ require_once dirname(__FILE__).'/include/forms.inc.php';
 
 $page['title'] = _('Host inventory overview');
 $page['file'] = 'hostinventoriesoverview.php';
-$page['scripts'] = ['multiselect.js'];
 
 require_once dirname(__FILE__).'/include/page_header.php';
 
@@ -35,10 +34,10 @@ $fields = [
 	'sort' =>		[T_ZBX_STR, O_OPT, P_SYS, IN('"host_count","inventory_field"'),		null],
 	'sortorder' =>	[T_ZBX_STR, O_OPT, P_SYS, IN('"'.ZBX_SORT_DOWN.'","'.ZBX_SORT_UP.'"'),	null],
 	// filter
-	'filter_set' =>			[T_ZBX_STR, O_OPT, P_SYS,		null,	null],
-	'filter_rst' =>			[T_ZBX_STR, O_OPT, P_SYS,		null,	null],
-	'filter_groups' =>		[T_ZBX_INT, O_OPT, null,		DB_ID,	null],
-	'filter_groupby' =>		[T_ZBX_STR, O_OPT, P_SYS,		null,	null]
+	'filter_set' =>			[T_ZBX_STR, O_OPT, P_SYS,			null,	null],
+	'filter_rst' =>			[T_ZBX_STR, O_OPT, P_SYS,			null,	null],
+	'filter_groups' =>		[T_ZBX_INT, O_OPT, P_ONLY_ARRAY,	DB_ID,	null],
+	'filter_groupby' =>		[T_ZBX_STR, O_OPT, P_SYS,			null,	null]
 ];
 check_fields($fields);
 
@@ -118,17 +117,20 @@ if ($filter['groupby'] !== '') {
 
 	order_result($report, $sortField, $sortOrder);
 
+	$allowed_ui_inventory = CWebUser::checkAccess(CRoleHelper::UI_INVENTORY_HOSTS);
 	foreach ($report as $rep) {
 		$table->addRow([
 			zbx_str2links($rep['inventory_field']),
-			new CLink($rep['host_count'],
-				(new CUrl('hostinventories.php'))
-					->setArgument('filter_set', '1')
-					->setArgument('filter_exact', '1')
-					->setArgument('filter_groups', array_keys($ms_groups))
-					->setArgument('filter_field', $filter['groupby'])
-					->setArgument('filter_field_value', $rep['inventory_field'])
-			)
+			$allowed_ui_inventory
+				? new CLink($rep['host_count'],
+					(new CUrl('hostinventories.php'))
+						->setArgument('filter_set', '1')
+						->setArgument('filter_exact', '1')
+						->setArgument('filter_groups', array_keys($ms_groups))
+						->setArgument('filter_field', $filter['groupby'])
+						->setArgument('filter_field_value', $rep['inventory_field'])
+				)
+				: $rep['host_count']
 		]);
 	}
 }
@@ -143,7 +145,8 @@ $select_groupby = (new CSelect('filter_groupby'))
 (new CWidget())
 	->setTitle(_('Host inventory overview'))
 	->addItem(
-		(new CFilter(new CUrl('hostinventoriesoverview.php')))
+		(new CFilter())
+			->setResetUrl(new CUrl('hostinventoriesoverview.php'))
 			->setProfile('web.hostinventoriesoverview.filter')
 			->setActiveTab(CProfile::get('web.hostinventoriesoverview.filter.active', 1))
 			->addFilterTab(_('Filter'), [

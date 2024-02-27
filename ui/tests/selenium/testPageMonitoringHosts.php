@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,17 +19,31 @@
 **/
 
 require_once dirname(__FILE__).'/../include/CWebTest.php';
-require_once dirname(__FILE__).'/traits/TableTrait.php';
-require_once dirname(__FILE__).'/traits/FilterTrait.php';
+require_once dirname(__FILE__).'/behaviors/CTableBehavior.php';
+require_once dirname(__FILE__).'/behaviors/CTagBehavior.php';
 require_once dirname(__FILE__).'/../include/helpers/CDataHelper.php';
 
 /**
+ * @backup profiles
+ *
  * @dataSource TagFilter
  */
 class testPageMonitoringHosts extends CWebTest {
 
-	use FilterTrait;
-	use TableTrait;
+	/**
+	 * Attach TableBehavior and TagBehavior to the test.
+	 *
+	 * @return array
+	 */
+	public function getBehaviors() {
+		return [
+			CTableBehavior::class,
+			[
+				'class' => CTagBehavior::class,
+				'tag_selector' => 'id:tags_0'
+			]
+		];
+	}
 
 	/**
 	 * Id of host that was updated.
@@ -39,31 +53,39 @@ class testPageMonitoringHosts extends CWebTest {
 	protected static $hostid;
 
 	public function testPageMonitoringHosts_CheckLayout() {
-		$this->page->login()->open('zabbix.php?action=host.view&filter_rst=1');
-		$form = $this->query('name:zbx_filter')->asForm()->one();
+		$this->page->login()->open('zabbix.php?action=host.view')->waitUntilReady();
+		$form = $this->query('name:zbx_filter')->waitUntilPresent()->asForm()->one();
 		$table = $this->query('class:list-table')->asTable()->one();
 
 		// Checking Title, Header and Column names.
 		$this->page->assertTitle('Hosts');
 		$this->page->assertHeader('Hosts');
-		$headers = ['Name', 'Interface', 'Availability', 'Tags', 'Problems', 'Status', 'Latest data', 'Problems',
-			'Graphs', 'Screens', 'Web'];
+		$headers = ['Name', 'Interface', 'Availability', 'Tags', 'Status', 'Latest data', 'Problems','Graphs',
+				'Dashboards', 'Web'];
 		$this->assertSame($headers, ($this->query('class:list-table')->asTable()->one())->getHeadersText());
 
 		// Check filter collapse/expand.
-		foreach (['true', 'false'] as $status) {
-			$filter_tab = $this->query('xpath://a[contains(@class, "filter-trigger")]')->one();
-			$filter_tab->parents('xpath:/li[@aria-expanded="'.$status.'"]')->one()->click();
+		foreach ([true, false] as $status) {
+			$this->assertTrue($this->query('xpath://ul[@class="ui-sortable-container ui-sortable"]//li[contains(@class, "selected")]')
+					->one()->isPresent($status)
+			);
+			$this->query('xpath://a[@aria-label="Home"]')->one()->click();
 		}
 
 		// Check fields maximum length.
-		foreach(['name', 'ip', 'dns', 'port', 'tags_0_tag', 'tags_0_value'] as $field) {
-			$this->assertEquals(255, $form->query('xpath:.//input[@id="filter_'.$field.'"]')
+		foreach(['tags[0][tag]', 'tags[0][value]'] as $field) {
+			$this->assertEquals(255, $form->query('xpath:.//input[@name="'.$field.'"]')
+				->one()->getAttribute('maxlength'));
+		}
+
+		// Check tags maximum length.
+		foreach(['name', 'ip', 'dns', 'port'] as $field) {
+			$this->assertEquals(255, $form->query('xpath:.//input[@id="'.$field.'_0"]')
 				->one()->getAttribute('maxlength'));
 		}
 
 		// Check disabled links.
-		foreach (['Graphs', 'Screens', 'Web'] as $disabled) {
+		foreach (['Graphs', 'Dashboards', 'Web'] as $disabled) {
 			$row = $table->findRow('Name', 'Available host');
 			$this->assertTrue($row->query('xpath://following::td/span[@class="disabled" and text()="'.$disabled.'"]')->exists());
 		}
@@ -222,7 +244,9 @@ class testPageMonitoringHosts extends CWebTest {
 					'filter' => [
 						'Status' => 'Disabled'
 					],
-					'expected' => []
+					'expected' => [
+						'No data found.'
+					]
 				]
 			],
 			[
@@ -343,12 +367,15 @@ class testPageMonitoringHosts extends CWebTest {
 	 * @dataProvider getCheckFilterData
 	 */
 	public function testPageMonitoringHosts_CheckFilter($data) {
-		$this->page->login()->open('zabbix.php?action=host.view&filter_rst=1');
-		$form = $this->query('name:zbx_filter')->asForm()->one();
+		$this->page->login()->open('zabbix.php?action=host.view&filter_reset=1');
+		$form = $this->query('name:zbx_filter')->waitUntilPresent()->asForm()->one();
 		$form->fill($data['filter']);
-		$form->submit();
-		$this->page->waitUntilReady();
+		$table = $this->query('class:list-table')->waitUntilPresent()->asTable()->one();
+		$this->query('button:Apply')->waitUntilClickable()->one()->click();
+		$table->waitUntilReloaded();
 		$this->assertTableDataColumn($data['expected']);
+		$this->query('button:Reset')->waitUntilClickable()->one()->click();
+		$table->waitUntilReloaded();
 	}
 
 	public static function getTagsFilterData() {
@@ -463,6 +490,303 @@ class testPageMonitoringHosts extends CWebTest {
 					],
 					'result' => []
 				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'And/Or',
+						'tags' => [
+							['name' => 'test', 'operator' => 'Exists']
+						]
+					],
+					'result' => [
+						'Host for tags filtering'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'Or',
+						'tags' => [
+							['name' => 'test', 'operator' => 'Exists']
+						]
+					],
+					'result' => [
+						'Host for tags filtering'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'And/Or',
+						'tags' => [
+							['name' => 'tag', 'operator' => 'Exists'],
+							['name' => 'test', 'operator' => 'Exists']
+						]
+					],
+					'result' => [
+						'Host for tags filtering'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'Or',
+						'tags' => [
+							['name' => 'tag', 'operator' => 'Exists'],
+							['name' => 'test', 'operator' => 'Exists']
+						]
+					],
+					'result' => [
+						'Host for tags filtering',
+						'Host for tags filtering - clone',
+						'Host for tags filtering - update'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'And/Or',
+						'tags' => [
+							['name' => 'test', 'operator' => 'Does not exist']
+						]
+					],
+					'result' => [
+						'Host for tags filtering - clone',
+						'Host for tags filtering - update',
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'Or',
+						'tags' => [
+							['name' => 'test', 'operator' => 'Does not exist']
+						]
+					],
+					'result' => [
+						'Host for tags filtering - clone',
+						'Host for tags filtering - update',
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'Or',
+						'tags' => [
+							['name' => 'action', 'operator' => 'Does not exist'],
+							['name' => 'tag', 'operator' => 'Does not exist']
+						]
+					],
+					'result' => [
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'And/Or',
+						'tags' => [
+							['name' => 'action', 'operator' => 'Does not exist'],
+							['name' => 'tag', 'operator' => 'Does not exist']
+						]
+					],
+					'result' => [
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'And/Or',
+						'tags' => [
+							['name' => 'test', 'operator' => 'Does not equal', 'value' => 'test_tag']
+						]
+					],
+					'result' => [
+						'Host for tags filtering - clone',
+						'Host for tags filtering - update',
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'Or',
+						'tags' => [
+							['name' => 'test', 'operator' => 'Does not equal', 'value' => 'test_tag']
+						]
+					],
+					'result' => [
+						'Host for tags filtering - clone',
+						'Host for tags filtering - update',
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'And/Or',
+						'tags' => [
+							['name' => 'test', 'operator' => 'Does not equal', 'value' => 'test_tag'],
+							['name' => 'action', 'operator' => 'Does not equal', 'value' => 'clone']
+						]
+					],
+					'result' => [
+						'Host for tags filtering - update',
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'Or',
+						'tags' => [
+							['name' => 'test', 'operator' => 'Does not equal', 'value' => 'test_tag'],
+							['name' => 'action', 'operator' => 'Does not equal', 'value' => 'clone']
+						]
+					],
+					'result' => [
+						'Host for tags filtering',
+						'Host for tags filtering - clone',
+						'Host for tags filtering - update',
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'And/Or',
+						'tags' => [
+							['name' => 'tag', 'operator' => 'Does not contain', 'value' => 'host']
+						]
+					],
+					'result' => [
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'Or',
+						'tags' => [
+							['name' => 'tag', 'operator' => 'Does not contain', 'value' => 'host']
+						]
+					],
+					'result' => [
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'And/Or',
+						'tags' => [
+							['name' => 'action', 'operator' => 'Does not contain', 'value' => 'clone'],
+							['name' => 'tag', 'operator' => 'Does not contain', 'value' => 'host']
+						]
+					],
+					'result' => [
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'Or',
+						'tags' => [
+							['name' => 'action', 'operator' => 'Does not contain', 'value' => 'clone'],
+							['name' => 'tag', 'operator' => 'Does not contain', 'value' => 'host']
+						]
+					],
+					'result' => [
+						'Host for tags filtering',
+						'Host for tags filtering - update',
+						'Simple form test host',
+						'SLA reports host',
+						'Template inheritance test host',
+						'ЗАББИКС Сервер'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'And/Or',
+						'tags' => [
+							['name' => 'action', 'operator' => 'Does not contain', 'value' => 'clone'],
+							['name' => 'tag', 'operator' => 'Equals', 'value' => 'host']
+						]
+					],
+					'result' => [
+						'Host for tags filtering - update'
+					]
+				]
+			],
+			[
+				[
+					'tag_options' => [
+						'type' => 'And/Or',
+						'tags' => [
+							['name' => 'action', 'operator' => 'Does not contain', 'value' => 'clone'],
+							['name' => 'tag', 'operator' => 'Exists']
+						]
+					],
+					'result' => [
+						'Host for tags filtering',
+						'Host for tags filtering - update'
+					]
+				]
 			]
 		];
 	}
@@ -471,58 +795,63 @@ class testPageMonitoringHosts extends CWebTest {
 	 * @dataProvider getTagsFilterData
 	 */
 	public function testPageMonitoringHosts_TagsFilter($data) {
-		$this->page->login()->open('zabbix.php?action=host.view&filter_rst=1');
+		$this->page->login()->open('zabbix.php?port=10051&action=host.view&groupids%5B%5D=4');
 		$form = $this->query('name:zbx_filter')->waitUntilPresent()->asForm()->one();
-		$form->fill(['id:filter_evaltype' => $data['tag_options']['type']]);
+		$table = $this->query('class:list-table')->waitUntilPresent()->one();
+		$form->fill(['id:evaltype_0' => $data['tag_options']['type']]);
 		$this->setTags($data['tag_options']['tags']);
-		$form->submit();
-		$this->page->waitUntilReady();
+		$this->query('button:Apply')->one()->waitUntilClickable()->click();
+		$table->waitUntilReloaded();
 		$this->assertTableDataColumn(CTestArrayHelper::get($data, 'result', []));
+		$this->query('button:Reset')->one()->waitUntilClickable()->click();
+		$table->waitUntilReloaded();
 	}
 
 	public function testPageMonitoringHosts_ResetButtonCheck() {
-		$this->page->login()->open('zabbix.php?action=host.view&filter_name=&filter_ip=&filter_dns=&filter_port=' .
-				'&filter_status=-1&filter_evaltype=0&filter_tags%5B0%5D%5Btag%5D=&filter_tags%5B0%5D%5Boperator%5D='.
-				'0&filter_tags%5B0%5D%5Bvalue%5D=&filter_maintenance_status=1&filter_show_suppressed=0&filter_set=1');
+		$this->page->login()->open('zabbix.php?action=host.view&filter_reset=1');
 		$form = $this->query('name:zbx_filter')->waitUntilPresent()->asForm()->one();
+		$this->page->waitUntilReady();
 		$table = $this->query('class:list-table')->asTable()->one();
 
 		// Check table contents before filtering.
 		$start_rows_count = $table->getRows()->count();
 		$this->assertTableStats($start_rows_count);
-		$start_contents = $this->getTableResult('Name');
+		$start_contents = $this->getTableColumnData('Name');
 
 		// Filter hosts.
 		$form->fill(['Name' => 'Empty host']);
-		$form->submit();
-		$this->page->waitUntilReady();
+		$this->query('button:Apply')->one()->waitUntilClickable()->click();
+		$table->waitUntilReloaded();
 
 		// Check that filtered count matches expected.
 		$this->assertEquals(1, $table->getRows()->count());
 		$this->assertTableStats(1);
 
 		// After pressing reset button, check that previous hosts are displayed again.
-		$form->query('button:Reset')->one()->click();
+		$this->query('button:Reset')->one()->click();
+		$table->waitUntilReloaded();
 		$reset_rows_count = $table->getRows()->count();
 		$this->assertEquals($start_rows_count, $reset_rows_count);
 		$this->assertTableStats($reset_rows_count);
-		$this->assertEquals($start_contents, $this->getTableResult('Name'));
+		$this->assertEquals($start_contents, $this->getTableColumnData('Name'));
 	}
 
 	// Checking that Show suppressed problems filter works.
 	public function testPageMonitoringHosts_ShowSuppresed() {
-		$this->page->login()->open('zabbix.php?action=host.view&filter_rst=1');
+		$this->page->login()->open('zabbix.php?action=host.view&filter_reset=1');
 		$form = $this->query('name:zbx_filter')->waitUntilPresent()->asForm()->one();
+		$this->page->waitUntilReady();
 		$table = $this->query('class:list-table')->asTable()->one();
 		$form->fill(['Severity' => ['Not classified', 'Information', 'Warning', 'Average', 'High', 'Disaster']]);
-		$form->submit();
-		$this->page->waitUntilReady();
+		$this->query('button:Apply')->one()->waitUntilClickable()->click();
+		$table->waitUntilReloaded();
 		foreach ([true, false] as $show) {
-			$form->query('id:filter_show_suppressed')->asCheckbox()->one()->fill($show);
-			$form->submit();
-			$this->page->waitUntilReady();
+			$form->query('id:show_suppressed_0')->asCheckbox()->one()->fill($show);
+			$this->query('button:Apply')->one()->waitUntilClickable()->click();
+			$table->waitUntilReloaded();
 			$this->assertTrue($table->findRow('Name', 'Host for suppression')->isPresent($show));
 		}
+		$this->query('button:Reset')->one()->click();
 	}
 
 	public static function getEnabledLinksData() {
@@ -544,8 +873,8 @@ class testPageMonitoringHosts extends CWebTest {
 			[
 				[
 					'name' => 'ЗАББИКС Сервер',
-					'link_name' => 'Screens',
-					'page_header' => 'Network interfaces on ЗАББИКС Сервер'
+					'link_name' => 'Dashboards',
+					'page_header' => 'Network interfaces'
 				]
 			],
 			[
@@ -571,27 +900,29 @@ class testPageMonitoringHosts extends CWebTest {
 	 * Check enabled links and that correct host is displayed.
 	 */
 	public function testPageMonitoringHosts_EnabledLinks($data) {
-		$this->page->login()->open('zabbix.php?action=host.view&filter_rst=1');
+		$this->page->login()->open('zabbix.php?action=host.view&filter_reset=1');
 		$form = $this->query('name:zbx_filter')->waitUntilPresent()->asForm()->one();
 		switch ($data['name']) {
 			case 'Dynamic widgets H1':
 			case 'Host ZBX6663':
 			case 'Available host':
-				$field = ($data['name'] == 'Dynamic widgets H1') ? 'Host' : 'Hosts';
 				$this->selectLink($data['name'], $data['link_name'], $data['page_header']);
-				$form->checkValue([$field => $data['name']]);
-				$form->query('button:Reset')->one()->click();
+				$this->page->waitUntilReady();
+				$filter_form = $this->query('name:zbx_filter')->waitUntilPresent()->asForm()->one();
+				$filter_form->checkValue(['Hosts' => $data['name']]);
+				$this->query('button:Reset')->one()->click();
 				break;
 			case 'ЗАББИКС Сервер':
 				$this->selectLink($data['name'], $data['link_name'], $data['page_header']);
 				break;
 			case 'Empty host':
+				$this->page->waitUntilReady();
 				$this->query('xpath://td/a[text()="'.$data['name'].'"]/following::td/a[text()="'.$data['link_name'].'"]')
 					->one()->click();
 				$this->page->waitUntilReady();
 				$this->page->assertHeader($data['page_header']);
 				$form->checkValue(['Hosts' => $data['name']]);
-				$form->query('button:Reset')->one()->click();
+				$this->query('button:Reset')->one()->click();
 				break;
 		}
 	}
@@ -607,13 +938,11 @@ class testPageMonitoringHosts extends CWebTest {
 						'Latest data',
 						'Problems',
 						'Graphs',
-						'Screens',
+						'Dashboards',
 						'Web',
 						'Configuration',
 						'Detect operating system',
 						'Ping',
-						'Reboot',
-						'Selenium script',
 						'Traceroute'
 					]
 				]
@@ -621,18 +950,17 @@ class testPageMonitoringHosts extends CWebTest {
 			[
 				[
 					'name' => 'Available host',
-					'disabled' => ['Web', 'Graphs', 'Screens'],
+					'disabled' => ['Web', 'Graphs', 'Dashboards'],
 					'titles' => [
 						'Inventory',
 						'Latest data',
 						'Problems',
 						'Graphs',
-						'Screens',
+						'Dashboards',
 						'Web',
 						'Configuration',
 						'Detect operating system',
 						'Ping',
-						'Selenium script',
 						'Traceroute'
 					]
 				]
@@ -640,18 +968,17 @@ class testPageMonitoringHosts extends CWebTest {
 			[
 				[
 					'name' => 'Dynamic widgets H1',
-					'disabled' => ['Screens', 'Web'],
+					'disabled' => ['Dashboards', 'Web'],
 					'titles' => [
 						'Inventory',
 						'Latest data',
 						'Problems',
 						'Graphs',
-						'Screens',
+						'Dashboards',
 						'Web',
 						'Configuration',
 						'Detect operating system',
 						'Ping',
-						'Selenium script',
 						'Traceroute'
 					]
 				]
@@ -659,19 +986,17 @@ class testPageMonitoringHosts extends CWebTest {
 			[
 				[
 					'name' => 'Host ZBX6663',
-					'disabled' => ['Screens'],
+					'disabled' => ['Dashboards'],
 					'titles' => [
 						'Inventory',
 						'Latest data',
 						'Problems',
 						'Graphs',
-						'Screens',
+						'Dashboards',
 						'Web',
 						'Configuration',
 						'Detect operating system',
 						'Ping',
-						'Reboot',
-						'Selenium script',
 						'Traceroute'
 					]
 				]
@@ -685,7 +1010,7 @@ class testPageMonitoringHosts extends CWebTest {
 	 * Click on host name from the table and check displayed popup context.
 	 */
 	public function testPageMonitoringHosts_HostContextMenu($data) {
-		$this->page->login()->open('zabbix.php?action=host.view&filter_rst=1');
+		$this->page->login()->open('zabbix.php?action=host.view&filter_reset=1')->waitUntilReady();
 		$row = $this->query('class:list-table')->asTable()->one()->findRow('Name', $data['name']);
 		$row->query('link', $data['name'])->one()->click();
 		$this->page->waitUntilReady();
@@ -694,7 +1019,54 @@ class testPageMonitoringHosts extends CWebTest {
 		$this->assertTrue($popup->hasItems($data['titles']));
 		foreach ($data['disabled'] as $disabled) {
 			$this->assertTrue($popup->query('xpath://a[@aria-label="Host, '.
-					$disabled.'" and @class="menu-popup-item-disabled"]')->one()->isPresent());
+					$disabled.'" and @class="menu-popup-item disabled"]')->one()->isPresent());
+		}
+	}
+
+	/**
+	 * Check number of problems displayed on Hosts and Problems page.
+	 */
+	public function testPageMonitoringHosts_CountProblems() {
+		$this->page->login();
+		$hosts_names = ['1_Host_to_check_Monitoring_Overview', 'ЗАББИКС Сервер', 'Host for tag permissions', 'Empty host'];
+		foreach ($hosts_names as $host) {
+			$this->page->open('zabbix.php?action=host.view&name='.$host)->waitUntilReady();
+			$table = $this->query('class:list-table')->asTable()->one();
+
+			// Get number of problems displayed on icon and it severity level.
+			if ($host !== 'Empty host') {
+				$icons = $table->query('xpath:.//*[contains(@class, "problem-icon-list-item")]')->all();
+				$results = [];
+
+				foreach ($icons as $icon) {
+					$amount = $icon->getText();
+					$severity = $icon->getAttribute('title');
+					$results[$severity] = $amount;
+				}
+			}
+			else {
+				$this->assertEquals('Problems', $table->getRow(0)->getColumn('Problems')->getText());
+			}
+
+			// Navigate to Problems page from Hosts.
+			$table->getRow(0)->getColumn('Problems')->query('xpath:.//a')->one()->click();
+			$this->page->waitUntilReady();
+			$this->page->assertTitle('Problems');
+			$this->query('name:zbx_filter')->waitUntilPresent()->asForm()->one()->checkValue(['Hosts' => $host]);
+
+			// Count problems of each severity and compare it with problems count from Hosts page.
+			if ($host !== 'Empty host') {
+				foreach ($results as $severity => $count) {
+					$problem_count = $table->query('xpath:.//td[contains(@class, "-bg") and text()="'.$severity.'"]')
+							->all()->count();
+					$this->assertEquals(strval($problem_count), $count);
+				}
+			}
+
+			// Check that table is empty and No data found displayed.
+			else {
+				$this->assertTableData();
+			}
 		}
 	}
 
@@ -711,63 +1083,16 @@ class testPageMonitoringHosts extends CWebTest {
 	 */
 	public function testPageMonitoringHosts_TableSorting() {
 		// Sort by name and status.
-		$this->page->login()->open('zabbix.php?action=host.view&filter_rst=1');
+		$this->page->login()->open('zabbix.php?action=host.view&filter_reset=1')->waitUntilReady();
 		foreach (['Name', 'Status'] as $listing) {
 			$query = $this->query('xpath://a[@href and text()="'.$listing.'"]');
 			$query->one()->click();
 			$this->page->waitUntilReady();
-			$after_listing = $this->getTableResult($listing);
+			$after_listing = $this->getTableColumnData($listing);
 			$query->one()->click();
 			$this->page->waitUntilReady();
-			$this->assertEquals(array_reverse($after_listing), $this->getTableResult($listing));
+			$this->assertEquals(array_reverse($after_listing), $this->getTableColumnData($listing));
 		}
-	}
-
-	/**
-	 * Сount problems amount from first column and compare with displayed problems from another Problems column.
-	 */
-	public function testPageMonitoringHosts_CountProblems() {
-		$this->page->login()->open('zabbix.php?action=host.view&filter_rst=1');
-		$table = $this->query('class:list-table')->asTable()->one();
-		$form = $this->query('name:zbx_filter')->waitUntilPresent()->asForm()->one();
-		$hosts = [
-			'1_Host_to_check_Monitoring_Overview',
-			'3_Host_to_check_Monitoring_Overview',
-			'4_Host_to_check_Monitoring_Overview',
-			'Host for tag permissions',
-			'Host for triggers filtering',
-			'ЗАББИКС Сервер'
-		];
-		foreach ($hosts as $host) {
-			$form->fill(['Name' => $host]);
-			$form->submit();
-			$this->page->waitUntilReady();
-
-			$row = $table->findRow('Name', $host);
-			$icons = $row->query('xpath://td/div[@class="problem-icon-list"]/span')->all();
-			$result = 0;
-			foreach ($icons as $icon) {
-				$result += intval($icon->getText());
-			}
-
-			// Getting problems amount from second Problems column and then comparing with summarized first column.
-			$problems = $row->query('xpath://td/a[text()="Problems"]/following::sup')->one()->getText();
-			$this->assertEquals((int)$problems, $result);
-		}
-	}
-
-	/**
-	 * Get data from chosen column.
-	 *
-	 * @param string $column		Column name, where value should be checked
-	 */
-	private function getTableResult($column) {
-		$table = $this->query('class:list-table')->asTable()->one();
-		$result = [];
-		foreach ($table->getRows() as $row) {
-			$result[] = $row->getColumn($column)->getText();
-		}
-		return $result;
 	}
 
 	/**
@@ -778,7 +1103,8 @@ class testPageMonitoringHosts extends CWebTest {
 	 * @param string $page_header	Page header name
 	 */
 	private function selectLink($host_name, $column, $page_header) {
-		$this->query('class:list-table')->asTable()->one()->findRow('Name', $host_name)->getColumn($column)->click();
+		$this->page->waitUntilReady();
+		$this->query('class:list-table')->asTable()->one()->findRow('Name', $host_name)->query('link', $column)->one()->click();
 		$this->page->waitUntilReady();
 		if ($page_header !== null) {
 			$this->page->assertHeader($page_header);
@@ -786,6 +1112,72 @@ class testPageMonitoringHosts extends CWebTest {
 		if ($host_name === 'Dynamic widgets H1' && $this->query('xpath://li[@aria-labelledby="ui-id-2"'.
 				' and @aria-selected="false"]')->exists()) {
 			$this->query('id:ui-id-2')->one()->click();
+		}
+		if ($host_name === 'ЗАББИКС Сервер' && $column === 'Dashboards') {
+			$this->assertEquals('ЗАББИКС Сервер', $this->query('xpath://ul[@class="breadcrumbs"]/li[2]')->one()->getText());
+		}
+	}
+
+	public static function getCheckCountersData() {
+		return [
+			[
+				[
+					'host' => 'Host ZBX6663',
+					'counters' => [
+						[
+							'column' => 'Latest data',
+							'counter' => 14
+						],
+						[
+							'column' => 'Problems',
+							'counter' => null
+						],
+						[
+							'column' => 'Graphs',
+							'counter' => 2
+						],
+						[
+							'column' => 'Web',
+							'counter' => 2
+						]
+					]
+				]
+			],
+			[
+				[
+					'host' => 'ЗАББИКС Сервер',
+					'counters' => [
+						[
+							'column' => 'Dashboards',
+							'counter' => 4
+						],
+						[
+							'column' => 'Problems',
+							'counter' => "1\n5"
+						]
+					]
+				]
+			]
+		];
+	}
+
+	/**
+	 * @dataProvider getCheckCountersData
+	 */
+	public function testPageMonitoringHosts_CheckCounters($data) {
+		$this->page->login()->open('zabbix.php?action=host.view')->waitUntilReady();
+		$row = $this->query('class:list-table')->asTable()->one()->findRow('Name', $data['host']);
+
+		foreach ($data['counters'] as $counter) {
+			if ($counter['column'] === 'Problems') {
+				$text = ($counter['counter'] === null) ? $counter['column'] : $counter['counter'];
+				$this->assertEquals($text, $row->getColumn($counter['column'])->getText());
+			}
+			else {
+				$this->assertEquals($counter['column'].' '.$counter['counter'],
+						$row->getColumn($counter['column'])->getText()
+				);
+			}
 		}
 	}
 }

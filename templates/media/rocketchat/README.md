@@ -1,6 +1,6 @@
 # Rocket.Chat webhook
 
-This guide describes how to integrate Zabbix 5.0 installation with Rocket.Chat using the Zabbix webhook feature. This guide provides instructions on setting up a media type, a user and an action in Zabbix.<br>
+This guide describes how to integrate Zabbix 6.0 installation with Rocket.Chat using the Zabbix webhook feature. This guide provides instructions on setting up a media type, a user and an action in Zabbix.<br>
 By default, all new alerts will be posted as messages with an attachment card. Event updates and resolve messages will be added to the thread of the first message.
 
 ## Setting up Rocket.Chat
@@ -12,7 +12,7 @@ By default, all new alerts will be posted as messages with an attachment card. E
 
 
 ## Setting up the webhook in Zabbix
-1\. In the *Administration > Media types* section, import [media_rocketchat.xml](media_rocketchat.xml).
+1\. In the *Administration > Media types* section, import [media_rocketchat.yaml](media_rocketchat.yaml).
 
 2\. Open the newly added **Rocket.Chat** media type and replace all *&lt;PLACEHOLDERS&gt;* with your values.<br>
 The following parameters should be filled:<br>
@@ -32,14 +32,14 @@ Format explanation:<br>
 - *p* - optional. Used if the field should be sent only on problem/recovery operation. Possible values:
     - *p* - problem
     - *r* - recovery
-- *Host* - the title of the field. There can be any text including whitespaces or symbols.
+- *Host* - the title of the field. There can be any text including whitespaces or symbols.aces or symbols.
 
 4\. Create a **Zabbix user** and add **Media** with the **Rocket.Chat** media type.
 "Send to" field should be filled as `#channel_name` or `@username`.<br>
 Note, that "Send to" field cannot be empty. If the channel is already specified in the **rc_send_to** parameter, you can put any symbol in this field to comply with frontend requirements.
 Make sure this user has access to all hosts, for which you would like problem notifications to be converted into Rocket.Chat tasks.
 
-For more information see [Zabbix](https://www.zabbix.com/documentation/5.0/manual/config/notifications) and [Rocket.Chat](https://docs.rocket.chat/) documentations.
+For more information see [Zabbix](https://www.zabbix.com/documentation/6.0/manual/config/notifications) and [Rocket.Chat](https://docs.rocket.chat/) documentations.
 
 ## Supported versions
-Zabbix 5.0 and higher
+Zabbix 6.0 and higher

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -34,6 +34,16 @@ require_once dirname(__FILE__).'/helpers/CDateTimeHelper.php';
 define('USER_ACTION_ADD', 'add');
 define('USER_ACTION_UPDATE', 'update');
 define('USER_ACTION_REMOVE', 'remove');
+
+define('STRING_6000', str_repeat('long_string_', 500));
+define('STRING_2200', substr(STRING_6000, 0, 2200));
+define('STRING_2048', substr(STRING_6000, 0, 2048));
+define('STRING_2000', substr(STRING_6000, 0, 2000));
+define('STRING_1024', substr(STRING_6000, 0, 1024));
+define('STRING_512', substr(STRING_6000, 0, 512));
+define('STRING_255', substr(STRING_6000, 0, 255));
+define('STRING_128', substr(STRING_6000, 0, 128));
+define('STRING_64', substr(STRING_6000, 0, 64));
 
 /**
  * Base class of php unit tests.
@@ -171,7 +181,12 @@ class CTest extends TestCase {
 		}
 
 		foreach ($callbacks as $callback) {
-			$method = $class->getMethod($callback);
+			try {
+				$method = $class->getMethod($callback);
+			}
+			catch (ReflectionException $exception) {
+				$method = null;
+			}
 
 			if (!$method) {
 				$error = 'Callback "'.$callback.'" is not defined in requested context.';
@@ -181,6 +196,8 @@ class CTest extends TestCase {
 				else {
 					throw new Exception($error);
 				}
+
+				continue;
 			}
 
 			try {
@@ -315,7 +332,7 @@ class CTest extends TestCase {
 
 			if (self::$last_test_case !== $case_name) {
 				if (array_key_exists($case_name, self::$test_data_sets)) {
-					// Check for data data set limit.
+					// Check for data set limit.
 					$limit = $this->getAnnotationTokensByName($method_annotations, 'dataLimit');
 
 					if (count($limit) === 1 && is_numeric($limit[0]) && $limit[0] >= 1

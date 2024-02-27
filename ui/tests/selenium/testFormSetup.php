@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -19,8 +19,8 @@
 **/
 
 require_once dirname(__FILE__) . '/../include/CWebTest.php';
-require_once dirname(__FILE__).'/traits/TableTrait.php';
 require_once dirname(__FILE__).'/behaviors/CMessageBehavior.php';
+require_once dirname(__FILE__).'/behaviors/CTableBehavior.php';
 
 /**
  * @backup sessions
@@ -29,28 +29,44 @@ require_once dirname(__FILE__).'/behaviors/CMessageBehavior.php';
  */
 class testFormSetup extends CWebTest {
 
-	use TableTrait;
-
 	/**
-	 * Attach MessageBehavior to the test.
+	 * Attach MessageBehavior and TableBehavior to the test.
 	 *
 	 * @return array
 	 */
 	public function getBehaviors() {
 		return [
-			'class' => CMessageBehavior::class
+			CMessageBehavior::class,
+			CTableBehavior::class
 		];
 	}
 
+	/**
+	 * @backup config
+	 */
 	public function testFormSetup_welcomeSectionLayout() {
 		$this->page->login()->open('setup.php')->waitUntilReady();
 
 		// Check Welcome section.
-		$this->assertEquals("Welcome to\nZabbix 5.0", $this->query('xpath://div[@class="setup-title"]')->one()->getText());
+		$this->assertEquals("Welcome to\nZabbix 6.0", $this->query('xpath://div[@class="setup-title"]')->one()->getText());
 		$this->checkSections('Welcome');
+		$form = $this->query('xpath://form')->asForm()->one();
+		$language_field = $form->getField('Default language');
+		$this->assertEquals('English (en_US)', $language_field->getValue());
+		$hint_text = 'You are not able to choose some of the languages, because locales for them are not installed '.
+				'on the web server.';
+		$this->assertEquals($hint_text, $this->query('class:hint-box')->one()->getText());
 		$this->checkButtons('first section');
 
-		$this->assertScreenshot($this->query('xpath://form')->one(), 'Welcome');
+		$this->assertScreenshot($form, 'Welcome_En');
+
+		// Check that default language can be changed.
+		$language_field->fill('Russian (ru_RU)');
+		$this->page->refresh()->waitUntilReady();
+		$this->assertEquals("Добро пожаловать в\nZabbix 6.0", $this->query('xpath://div[@class="setup-title"]')->one()->getText());
+
+		$this->checkButtons('russian');
+		$this->assertScreenshotExcept($form, $this->query('id:default-lang')->one(), 'Welcome_Rus');
 	}
 
 	public function testFormSetup_prerequisitesSectionLayout() {
@@ -69,7 +85,6 @@ class testFormSetup extends CWebTest {
 			'PHP option "upload_max_filesize"',
 			'PHP option "max_execution_time"',
 			'PHP option "max_input_time"',
-			'PHP option "date.timezone"',
 			'PHP databases support',
 			'PHP bcmath',
 			'PHP mbstring',
@@ -158,44 +173,122 @@ class testFormSetup extends CWebTest {
 				$field = $form->getField($field_name);
 				$this->assertEquals($field_value, $field->getValue());
 				$this->assertEquals($maxlength, $field->getAttribute('maxlength'));
+
+			}
+			// Array of fields to be skipped by the screenshot check.
+			$skip_db_fields = [];
+			foreach(['Database host', 'Database name', 'Store credentials in'] as $skip_field) {
+				$skip_db_fields[] = $form->getField($skip_field);
+			}
+			// Check screenshot for "Store credentials in" = Plain text.
+			$this->assertScreenshotExcept($form, $skip_db_fields, 'ConfigureDB_plainText_'.$db_type);
+
+			// Check 'Store credentials in' field, switch to Vault and check Vault rellated fields.
+			$credentials_field = $form->getField('Store credentials in');
+			$this->assertEquals('Plain text', $credentials_field->getSelected());
+
+			$vault_fields = [
+				'Vault API endpoint',
+				'Vault secret path',
+				'Vault authentication token'
+			];
+			foreach ($vault_fields as $field_name) {
+				$this->assertFalse($form->getField($field_name)->isVisible());
+			}
+
+			// Check layout when "Store credentials in" is set to "HashiCorp Vault".
+			$credentials_field->select('HashiCorp Vault');
+			$form->invalidate();
+			foreach (['User', 'Password'] as $field_name) {
+				$this->assertFalse($form->getField($field_name)->isVisible());
+			}
+
+			foreach ($vault_fields as $field_name) {
+				$vault_maxlength = ($field_name === 'Vault authentication token') ? 2048 : 255;
+				$field = $form->getField($field_name);
+				$this->assertEquals($vault_maxlength, $field->getAttribute('maxlength'));
+				if ($field_name === 'Vault API endpoint') {
+					$this->assertEquals('https://localhost:8200', $field->getValue());
+				}
+				elseif ($field_name === 'Vault secret path') {
+					$this->assertEquals('path/to/secret', $field->getAttribute('placeholder'));
+				}
 			}
 
 			// Array of fields to be skipped by the screenshot check.
-			$skip_db_fields = [];
-			foreach(['Database host', 'Database name'] as $skip_field) {
-				$skip_db_fields[] = $form->getField($skip_field);
+			$skip_fields_vault = [];
+			foreach(['Database host', 'Database name', 'Store credentials in'] as $skip_field) {
+				$skip_fields_vault[] = $form->getField($skip_field);
 			}
-			$this->assertScreenshotExcept($form, $skip_db_fields, 'ConfigureDB_'.$db_type);
+			// Check screenshot for "Store credentials in" = Vault.
+			$this->assertScreenshotExcept($form, $skip_fields_vault, 'ConfigureDB_Vault_'.$db_type);
+
+			$credentials_field->select('Plain text');
 		}
 	}
 
-	public function testFormSetup_zabbixServerSectionLayout() {
-		$this->openSpecifiedSection('Zabbix server details');
-
-		// Check Zabbix server details section.
-		$server_params = [
-			'Host' => 'localhost',
-			'Port' => '10051',
-			'Name' => ''
-		];
-		$text = 'Please enter the host name or host IP address and port number of the Zabbix server, as well as the '.
-				'name of the installation (optional).';
-		$this->checkPageTextElements('Zabbix server details', $text);
-
-		$form = $this->query('xpath://form')->asForm()->one();
-		foreach ($server_params as $field_name => $value) {
-			$maxlength = ($field_name === 'Port') ? 5 : 255;
-			$field = $form->getField($field_name);
-			$this->assertEquals($maxlength, $field->getAttribute('maxlength'));
-			$this->assertEquals($value, $field->getValue());
-		}
-
+	/**
+	 * @backup config
+	 */
+	public function testFormSetup_settingsSection() {
+		// Open the Pre-installation summary section.
+		$this->openSpecifiedSection('Settings');
+		// Check GUI settings section.
+		$this->checkPageTextElements('Settings');
 		$this->checkButtons();
-		$this->assertScreenshot($form, 'ZabbixServerDetails');
+		$form = $this->query('xpath://form')->asForm()->one();
+		// Check layout via screenshot for default theme.
+		$this->assertScreenshotExcept($form, $this->query('id:label-default-timezone')->one(), 'GUISettings_Default');
+
+		// Check Zabbix server name field.
+		$server_name = $form->getField('Zabbix server name');
+		$this->assertEquals(255, $server_name->getAttribute('maxlength'));
+		$this->assertEquals('', $server_name->getValue());
+
+		// Check timezone field.
+		$timezones_field = $form->getField('Default time zone');
+		$timezones = $timezones_field->getOptions()->asText();
+
+		// Note that count of available timezones may differ based on the local environment configuration.
+		$this->assertEquals(420, count($timezones));
+
+		foreach (['System', 'Europe/Riga'] as $timezone_value) {
+			$timezone = CDateTimeHelper::getTimeZoneFormat($timezone_value);
+			$this->assertContains($timezone, $timezones);
+		}
+		// Select a certain timezone.
+		$form->getField('Default time zone')->select(CDateTimeHelper::getTimeZoneFormat('Europe/Riga'));
+
+		// Check Default theme field.
+		$themes = $form->getField('Default theme');
+		$this->assertEquals(['Blue', 'Dark', 'High-contrast light', 'High-contrast dark'], $themes->getOptions()->asText());
+		// Select Dark theme.
+		$form->getField('Default theme')->select('Dark');
+
+		// Check that default theme has changed.
+		$stylesheet = $this->query('xpath://link[@rel="stylesheet"]')->one();
+		$parts = explode('/', $stylesheet->getAttribute('href'));
+		$this->assertContains('dark-theme.css', explode('?', end($parts)));
+		// Check layout via screenshot for dark theme.
+		$this->assertScreenshotExcept($form, $this->query('id:label-default-timezone')->one(), 'GUISettings_Dark');
+
+		// Complete the setup and check in DB that the default timezone was applied.
+		$this->query('button:Next step')->one()->click();
+		$this->query('button:Next step')->one()->click();
+		$this->query('button:Finish')->one()->click();
+		$db_values = CDBHelper::getRow('SELECT default_theme, default_timezone FROM config');
+		$this->assertEquals(['dark-theme', 'Europe/Riga'], array_values($db_values));
 	}
 
 	public function testFormSetup_summarySection() {
 		$this->openSpecifiedSection('Pre-installation summary');
+
+		// Check that Zabbix server name field is not displayed if it is not populated.
+		$this->assertFalse($this->query('xpath://span[text()="Zabbix server name"]')->one(false)->isValid());
+		$this->query('button:Back')->one()->click();
+		// Fill in the Zabbix server name field and proceed with checking Pre-installation summary.
+		$this->query('id:setup-form')->asForm()->one()->getField('Zabbix server name')->fill('Zabbix server name');
+		$this->query('button:Next step')->one()->click();
 		$db_parameters = $this->getDbParameters();
 		$text = 'Please check configuration parameters. If all is correct, press "Next step" button, or "Back" button '.
 				'to change configuration parameters.';
@@ -206,9 +299,7 @@ class testFormSetup extends CWebTest {
 			'Database name' => $db_parameters['Database name'],
 			'Database user' => $db_parameters['User'],
 			'Database password' => '******',
-			'Zabbix server' => 'localhost',
-			'Zabbix server port' => '10051',
-			'Zabbix server name' => ''
+			'Zabbix server name' => 'Zabbix server name'
 		];
 
 		if ($db_parameters['Database type'] === 'PostgreSQL') {
@@ -254,11 +345,11 @@ class testFormSetup extends CWebTest {
 		// Check that Dashboard view is opened after completing the form.
 		$this->query('button:Finish')->one()->click();
 		$this->page->waitUntilReady();
-		$this->assertStringContainsString('zabbix.php?action=dashboard.view', $this->page->getCurrentURL());
+		$this->assertStringContainsString('index.php', $this->page->getCurrentURL());
 	}
 
 	public function getDbConnectionDetails() {
-		return [
+		$provider = [
 			// Incorrect DB host.
 			[
 				[
@@ -370,7 +461,7 @@ class testFormSetup extends CWebTest {
 						'value' => '/etc/apache2/magic'
 					],
 					'tls_encryption' => true,
-					'mysql_error' => 'Database error code 2002'
+					'mysql_error' => 'Error connecting to database. Empty cipher.'
 				]
 			],
 			// Wrong "Database TLS key file" field format.
@@ -396,7 +487,7 @@ class testFormSetup extends CWebTest {
 					],
 					'tls_encryption' => true,
 					'fill_ca_file' => true,
-					'mysql_error' => 'Database error code 2002'
+					'mysql_error' => 'Error connecting to database. Empty cipher.'
 				]
 			],
 			// Wrong "Database TLS certificate file" field format.
@@ -422,7 +513,7 @@ class testFormSetup extends CWebTest {
 					],
 					'tls_encryption' => true,
 					'fill_ca_file' => true,
-					'mysql_error' => 'Database error code 2002'
+					'mysql_error' => 'Error connecting to database. Empty cipher.'
 				]
 			],
 			// With "Database TLS encryption" set.
@@ -455,6 +546,31 @@ class testFormSetup extends CWebTest {
 				]
 			]
 		];
+
+		// MySQL database error depends on php version.
+		$mapping = [
+			'Error connecting to database. Empty cipher.' => [
+				'8.1.0' => 'Cannot connect to MySQL using SSL'
+			],
+			'php_network_getaddresses: getaddrinfo failed: Name or service not known' => [
+				'8.1.0' => 'php_network_getaddresses: getaddrinfo for incorrect_DB_host failed: Name or service not known'
+			]
+		];
+
+		foreach ($provider as &$data) {
+			if (array_key_exists('mysql_error', $data[0]) && array_key_exists($data[0]['mysql_error'], $mapping)) {
+				foreach ($mapping[$data[0]['mysql_error']] as $version => $map) {
+					if (version_compare(phpversion(), $version, '<')) {
+						continue;
+					}
+
+					$data[0]['mysql_error'] = $map;
+				}
+			}
+		}
+		unset($data);
+
+		return $provider;
 	}
 
 	/**
@@ -486,7 +602,7 @@ class testFormSetup extends CWebTest {
 			if (($db_parameters['Database type'] === 'MySQL' && $db_parameters['Database host'] === 'localhost')) {
 				$tls_text = 'Connection will not be encrypted because it uses a socket file (on Unix) or shared memory (Windows).';
 				$this->assertEquals($tls_text, $form->query('id:tls_encryption_hint')->one()->getText());
-				// Skip data provider as TLS encryption firlds are not visible.
+				// Skip data provider as TLS encryption fields are not visible.
 
 				return;
 			}
@@ -526,7 +642,7 @@ class testFormSetup extends CWebTest {
 			$this->assertMessage(TEST_BAD, 'Cannot connect to the database.', $error_details);
 		}
 		else {
-			$this->assertEquals('Zabbix server details', $this->query('xpath://h1')->one()->getText());
+			$this->assertEquals('Settings', $this->query('xpath://h1')->one()->getText());
 		}
 	}
 
@@ -696,72 +812,23 @@ class testFormSetup extends CWebTest {
 		}
 	}
 
-	public function testFormSetup_zabbixServerSectionParameters() {
-		// Open Zabbix server configuration section.
-		$this->openSpecifiedSection('Zabbix server details');
-
-		$server_parameters = [
-			'Host' => 'Zabbix_server_imaginary_host',
-			'Port' => '65535',
-			'Name' => 'Zabbix_server_imaginary_name'
-		];
-		$form = $this->query('xpath://form')->asForm()->one();
-
-		// Check that port number was trimmed after removing focus and now is set to 0.
-		$form->getField('Port')->fill('a999');
-		$this->page->removeFocus();
-		$this->assertEquals(0, $form->getField('Port')->getValue());
-
-		// Check that port number higher than 65535 is not accepted.
-		// Uncomment the below section once ZBX-18627 is merged.
-//		$form->getField('Port')->fill('65536');
-//		$this->query('button:Next step')->one()->click();
-//		$this->assertMessage(TEST_BAD, 'Cannot connect to the database.', 'Incorrect value "99999" for "Database port" '.
-//				'field: must be between 0 and 65535.');
-
-		$form->fill($server_parameters);
-		$this->query('button:Next step')->one()->click();
-
-		// Check that the fields are filled correctly in the Pre-installation summary section.
-		$summary_fields = [
-			'Zabbix server' => $server_parameters['Host'],
-			'Zabbix server port' => $server_parameters['Port'],
-			'Zabbix server name' => $server_parameters['Name']
-		];
-
-		foreach ($summary_fields as $field_name => $value) {
-			$xpath = 'xpath://span[text()='.CXPathHelper::escapeQuotes($field_name).']/../../div[@class="table-forms-td-right"]';
-			$this->assertEquals($value, $this->query($xpath)->one()->getText());
-		}
-		$this->query('button:Next step')->one()->click();
-
-		// Need to wait for 3s for php cache to reload and for zabbix server parameter the changes to take place.
-		sleep(3);
-		$this->query('button:Finish')->one()->click();
-
-		// Check Zabbix server params.
-		$this->assertEquals($server_parameters['Name'].': Dashboard', $this->page->getTitle());
-		$system_info = CDashboardElement::find()->one()->getWidget('System information')->getContent();
-		$this->assertStringContainsString($server_parameters['Host'].':'.$server_parameters['Port'], $system_info->getText());
-	}
-
 	public function testFormSetup_backButtons() {
 		// Open the Pre-installation summary section.
 		$this->openSpecifiedSection('Pre-installation summary');
 
-		// Proceed back to the 1st section of the setup form
+		// Proceed back to the 1st section of the setup form.
 		$this->query('button:Back')->one()->click();
-		$this->assertEquals('Zabbix server details', $this->query('xpath://h1')->one()->getText());
+		$this->assertEquals('Settings', $this->query('xpath://h1')->one()->getText());
 		$this->query('button:Back')->one()->click();
 		$this->assertEquals('Configure DB connection', $this->query('xpath://h1')->one()->getText());
 		$this->query('button:Back')->one()->click();
 		$this->assertEquals('Check of pre-requisites', $this->query('xpath://h1')->one()->getText());
 		$this->query('button:Back')->one()->click();
-		$this->assertEquals("Welcome to\nZabbix 5.0", $this->query('xpath://div[@class="setup-title"]')->one()->getText());
+		$this->assertEquals("Welcome to\nZabbix 6.0", $this->query('xpath://div[@class="setup-title"]')->one()->getText());
 		$this->checkSections('Welcome');
 		$this->checkButtons('first section');
 
-		// Cancel setup form update
+		// Cancel setup form update.
 		$this->query('button:Cancel')->one()->click();
 		$this->assertStringContainsString('zabbix.php?action=dashboard.view', $this->page->getCurrentURL());
 	}
@@ -810,6 +877,14 @@ class testFormSetup extends CWebTest {
 					'Next step' => true
 				];
 				break;
+
+			case 'russian':
+				$buttons = [
+					'Отмена' => true,
+					'Назад' => false,
+					'Далее' => true
+				];
+				break;
 		}
 
 		foreach ($buttons as $button => $clickable) {
@@ -828,7 +903,7 @@ class testFormSetup extends CWebTest {
 			'Welcome',
 			'Check of pre-requisites',
 			'Configure DB connection',
-			'Zabbix server details',
+			'Settings',
 			'Pre-installation summary',
 			'Install'
 		];
@@ -858,7 +933,7 @@ class testFormSetup extends CWebTest {
 		}
 		// Define the number of clicks on the Next step button depending on the name of the desired section.
 		$skip_sections = [
-			'Zabbix server details' => 1,
+			'Settings' => 1,
 			'Pre-installation summary' => 2,
 			'Install' => 3
 		];

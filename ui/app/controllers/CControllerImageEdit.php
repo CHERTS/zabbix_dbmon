@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,11 @@
 
 class CControllerImageEdit extends CController {
 
+	/**
+	 * @var array
+	 */
+	private $image = [];
+
 	protected function init() {
 		$this->disableSIDValidation();
 	}
@@ -28,7 +33,7 @@ class CControllerImageEdit extends CController {
 	protected function checkInput() {
 		$fields = [
 			'imageid'   => 'db images.imageid',
-			'imagetype' => 'db images.imagetype | in '.IMAGE_TYPE_ICON.','.IMAGE_TYPE_BACKGROUND,
+			'imagetype' => 'db images.imagetype|in '.IMAGE_TYPE_ICON.','.IMAGE_TYPE_BACKGROUND,
 			'name'      => 'db images.name'
 		];
 
@@ -46,7 +51,7 @@ class CControllerImageEdit extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_GENERAL)) {
 			return false;
 		}
 
@@ -60,7 +65,7 @@ class CControllerImageEdit extends CController {
 			return true;
 		}
 
-		$images = API::Image()->get(['imageids' => (array) $this->getInput('imageid')]);
+		$images = API::Image()->get(['imageids' => $this->getInput('imageid')]);
 		if (!$images) {
 			return false;
 		}

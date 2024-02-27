@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,15 +20,16 @@
 
 require_once dirname(__FILE__).'/../include/CIntegrationTest.php';
 
-define('COMPARE_AVERAGE', 0);
-define('COMPARE_LAST', 1);
-
 /**
  * Test suite for agent2 (GO agent) metric collection.
  *
  * @backup history
  */
 class testGoAgentDataCollection extends CIntegrationTest {
+
+	const COMPARE_AVERAGE = 0;
+	const COMPARE_LAST = 1;
+	const OFFSET_MAX = 20;
 
 	private static $hostids = [];
 	private static $itemids = [];
@@ -219,100 +220,111 @@ class testGoAgentDataCollection extends CIntegrationTest {
 			'key' => 'system.cpu.util[,,avg1]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_FLOAT,
-			'threshold' => 0.5
+			'threshold' => 0.9
 		],
 		[
 			'key' => 'system.cpu.load[,avg1]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_FLOAT,
-			'threshold' => 0.5
+			'threshold' => 0.9
 		],
 		[
 			'key' => 'vfs.dev.read[,operations]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_UINT64,
-			'threshold' => 10
+			'threshold' => 1000
 		],
 		[
 			'key' => 'vfs.dev.write[,operations]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_UINT64,
-			'threshold' => 500
+			'threshold' => 10000
 		],
 		[
 			'key' => 'proc.cpu.util[,,,,avg1]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_FLOAT,
-			'threshold' => 10.0,
-			'compareType' => COMPARE_AVERAGE
+			'threshold' => 90.0,
+			'compareType' => self::COMPARE_AVERAGE
 		],
 		[
 			'key' => 'system.swap.in[,pages]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_UINT64,
-			'threshold' => 100
+			'threshold' => 100,
+			'compareType' => self::COMPARE_AVERAGE
 		],
 		[
 			'key' => 'system.swap.out[,pages]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_UINT64,
-			'threshold' => 100
+			'threshold' => 10000,
+			'compareType' => self::COMPARE_AVERAGE
 		],
 		[
 			'key' => 'proc.mem[zabbix_server,zabbix,avg]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_FLOAT,
-			'threshold' => 100.0
+			'threshold' => 10000.0
 		],
 		[
 			'key' => 'web.page.perf[http://localhost]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_FLOAT,
-			'threshold' => 1.0,
-			'compareType' => COMPARE_AVERAGE
+			'threshold' => 100.0,
+			'compareType' => self::COMPARE_AVERAGE
 		],
 		[
 			'key' => 'net.tcp.service.perf[ssh]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_FLOAT,
-			'threshold' => 0.05
+			'threshold' => 5.00
 		],
 		[
 			'key' => 'net.udp.service.perf[ntp]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_FLOAT,
-			'threshold' => 0.05
+			'threshold' => 5.00
 		],
 		[
 			'key' => 'system.swap.size[,total]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_UINT64,
-			'threshold' => 100
+			'threshold' => 10000,
+			'compareType' => self::COMPARE_AVERAGE
 		],
 		[
 			'key' => 'vfs.fs.inode[/,pfree]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_FLOAT,
-			'threshold' => 0.1
+			'threshold' => 0.9,
+			'compareType' => self::COMPARE_AVERAGE
 		],
 		[
 			'key' => 'vfs.fs.size[/tmp,free]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_UINT64,
-			'threshold' => 262144
+			'threshold' => 100000000,
+			'compareType' => self::COMPARE_AVERAGE
 		],
 		[
 			'key' => 'vm.memory.size[free]',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_UINT64,
-			'threshold' => 10000000
+			'threshold' => 100000000,
+			'compareType' => self::COMPARE_AVERAGE
 		],
 		[// Should be treated as a special case, since this metric returns JSON object.
 			// Maybe, it should e pulled to separate test suite. At this point we just compare it as string.
 			'key' => 'zabbix.stats[127.0.0.1,'.PHPUNIT_PORT_PREFIX.self::SERVER_PORT_SUFFIX.']',
 			'type' => ITEM_TYPE_ZABBIX,
 			'valueType' => ITEM_VALUE_TYPE_TEXT,
-			'threshold' => 50
+			'threshold' => 500,
+			// Removing initial block ->
+			// {"response":"success","data":{"boottime":1683011633,"uptime":113,<- ,
+			// since uptime is flaky (e.g. values "113" and "114" on agent 1 and 2 can appear)
+			// Assuming the uptime takes 3 digits. Update threshold if uptime number of digits changes.
+			'threshold_before' => 65
 		]
 	];
 
@@ -322,7 +334,8 @@ class testGoAgentDataCollection extends CIntegrationTest {
 	public function prepareData() {
 		// Create host "agentd" and "agent2".
 		$hosts = [];
-		foreach ([self::COMPONENT_AGENT => self::AGENT_PORT_SUFFIX, self::COMPONENT_AGENT2 => self::AGENT2_PORT_SUFFIX] as $component => $port) {
+		foreach ([self::COMPONENT_AGENT => self::AGENT_PORT_SUFFIX, self::COMPONENT_AGENT2 =>
+			self::AGENT2_PORT_SUFFIX] as $component => $port) {
 			$hosts[] = [
 				'host' => $component,
 				'interfaces' => [
@@ -435,13 +448,13 @@ class testGoAgentDataCollection extends CIntegrationTest {
 	 */
 	public function testGoAgentDataCollection_checkDataCollection() {
 		foreach ([self::COMPONENT_AGENT, self::COMPONENT_AGENT2] as $component) {
-			$this->waitForLogLineToBePresent(self::COMPONENT_SERVER, 'enabling Zabbix agent checks on host "'.
-					$component.'": host became available', false
+			$this->waitForLogLineToBePresent(self::COMPONENT_SERVER,
+				'enabling Zabbix agent checks on host "'.$component.'": interface became available', false
 			);
 		}
 
 		// Delay to ensure that all metrics were collected.
-		sleep(90);
+		sleep(110);
 	}
 
 	/**
@@ -537,8 +550,15 @@ class testGoAgentDataCollection extends CIntegrationTest {
 				$b = end($values[self::COMPONENT_AGENT2]);
 
 				if (array_key_exists('threshold', $item) && $item['threshold'] !== 0) {
+
 					$a = substr($a, 0, $item['threshold']);
 					$b = substr($b, 0, $item['threshold']);
+				}
+
+				if (array_key_exists('threshold_before', $item) && $item['threshold_before'] !== 0) {
+
+					$a = substr($a, $item['threshold_before']);
+					$b = substr($b, $item['threshold_before']);
 				}
 
 				$this->assertEquals($a, $b, 'Strings do not match for '.$item['key']);
@@ -546,26 +566,54 @@ class testGoAgentDataCollection extends CIntegrationTest {
 
 			case ITEM_VALUE_TYPE_FLOAT:
 			case ITEM_VALUE_TYPE_UINT64:
-				if (CTestArrayHelper::get($item, 'compareType', COMPARE_LAST) === COMPARE_AVERAGE) {
-					$value = [];
-					foreach ([self::COMPONENT_AGENT, self::COMPONENT_AGENT2] as $component) {
-						$value[$component] = 0;
-						$records = count($values[$component]);
+				$diff_values = [];
 
-						if ($records > 0) {
-							$value[$component] = array_sum($values[$component]) / $records;
+				if (CTestArrayHelper::get($item, 'compareType', self::COMPARE_LAST) === self::COMPARE_AVERAGE) {
+					$value = [];
+
+					foreach ([self::COMPONENT_AGENT, self::COMPONENT_AGENT2] as $component) {
+						// Calculate offset between Agent and Agent2 result arrays
+						for ($i = 0; $i < self::OFFSET_MAX; $i++) {
+							$value[$component][$i] = 0;
+
+							if (self::COMPONENT_AGENT == $component) {
+								$j = $i;
+							} else {
+								$j = 0;
+							}
+							$slice = array_slice($values[$component], $j);
+							$records = count($slice);
+
+							if ($records > 0) {
+								$value[$component][$i] = array_sum($slice) / $records;
+							}
 						}
 					}
 
-					$a = $value[self::COMPONENT_AGENT];
-					$b = $value[self::COMPONENT_AGENT2];
+					for ($i = 0; $i < self::OFFSET_MAX; $i++) {
+						$a = $value[self::COMPONENT_AGENT][$i];
+						$b = $value[self::COMPONENT_AGENT2][$i];
+						$diff_values[$i] = abs($a - $b);
+					}
+					$offset = array_search(min($diff_values), $diff_values);
+
+					$a = $value[self::COMPONENT_AGENT][$offset];
+					$b = $value[self::COMPONENT_AGENT2][$offset];
+
+					$diff = abs($a - $b);
 				}
 				else {
-					$a = end($values[self::COMPONENT_AGENT]);
-					$b = end($values[self::COMPONENT_AGENT2]);
+					$records = count($values[self::COMPONENT_AGENT]);
+					for ($i = 0; $i < self::OFFSET_MAX; $i++) {
+						$slice = array_slice($values[self::COMPONENT_AGENT], 0, $records - $i);
+						$a = end($slice);
+						$b = end($values[self::COMPONENT_AGENT2]);
+						$diff_values[$i] = abs($a - $b);
+					}
+
+					$diff = min($diff_values);
 				}
 
-				$diff = abs(abs($a) - abs($b));
 				$this->assertTrue($diff < $item['threshold'], 'Difference for '.$item['key'].
 						' is more than defined threshold '.$diff.' > '.$item['threshold']
 				);

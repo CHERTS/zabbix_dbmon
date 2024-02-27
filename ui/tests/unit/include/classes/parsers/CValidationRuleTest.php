@@ -1,7 +1,7 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 0);
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -63,6 +63,11 @@ class CValidationRuleTest extends TestCase {
 			['int32', '',
 				[
 					'int32' => true
+				]
+			],
+			['uint64', '',
+				[
+					'uint64' => true
 				]
 			],
 			['db hosts.name', '',
@@ -141,6 +146,65 @@ class CValidationRuleTest extends TestCase {
 					'range_time' => true
 				]
 			],
+			['abs_date', '',
+				[
+					'abs_date' => true
+				]
+			],
+			['abs_time', '',
+				[
+					'abs_time' => true
+				]
+			],
+			['time_unit', '',
+				[
+					'time_unit' => []
+				]
+			],
+			['time_unit 60:3600', '',
+				[
+					'time_unit' => [
+						'ranges' => [['from' => '60', 'to' => '3600']]
+					]
+				]
+			],
+			['time_unit 0,60:3600', '',
+				[
+					'time_unit' => [
+						'ranges' => [
+							['from' => '0', 'to' => '0'],
+							['from' => '60', 'to' => '3600']
+						]
+					]
+				]
+			],
+			['time_unit_year', '',
+				[
+					'time_unit' => [
+						'with_year' => true
+					]
+				]
+			],
+			['time_unit_year 60:3600', '',
+				[
+					'time_unit' => [
+						'with_year' => true,
+						'ranges' => [['from' => '60', 'to' => '3600']]
+					]
+				]
+			],
+			['time_unit_year 0,60:3600,7200:9800', '',
+				[
+					'time_unit' => [
+						'with_year' => true,
+						'ranges' => [
+							['from' => '0', 'to' => '0'],
+							['from' => '60', 'to' => '3600'],
+							['from' => '7200', 'to' => '9800']
+						]
+					]
+				]
+			],
 			['array_id', '',
 				[
 					'array_id' => true
@@ -151,11 +215,24 @@ class CValidationRuleTest extends TestCase {
 					'id' => true
 				]
 			],
-			['in graphid,itemid,screenid,slideshowid,sysmapid|fatal|required', '',
+			['in graphid,itemid,sysmapid|fatal|required', '',
 				[
-					'in' => ['graphid', 'itemid', 'screenid', 'slideshowid', 'sysmapid'],
+					'in' => ['graphid', 'itemid', 'sysmapid'],
 					'fatal' => true,
 					'required' => true
+				]
+			],
+			['cuid', '',
+				[
+					'cuid' => true
+				]
+			],
+			['fatal|required|json|cuid', '',
+				[
+					'fatal' => true,
+					'required' => true,
+					'json' => true,
+					'cuid' => true
 				]
 			],
 			['in', 'Cannot parse validation rules "in" at position 0.', false],

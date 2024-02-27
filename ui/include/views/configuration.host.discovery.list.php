@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,21 +35,30 @@ $widget = (new CWidget())
 						(new CUrl('host_discovery.php'))
 							->setArgument('form', 'create')
 							->setArgument('hostid', $data['hostid'])
+							->setArgument('context', $data['context'])
 							->getUrl()
 					)
-					: (new CButton('form', _('Create discovery rule (select host first)')))->setEnabled(false)
+					: (new CButton('form',
+						($data['context'] === 'host')
+							? _('Create discovery rule (select host first)')
+							: _('Create discovery rule (select template first)')
+					))->setEnabled(false)
 			)
 		))->setAttribute('aria-label', _('Content controls'))
 	);
 
 if ($data['hostid'] != 0) {
-	$widget->addItem(get_header_host_table('discoveries', $data['hostid']));
+	$widget->setNavigation(getHostNavigation('discoveries', $data['hostid']));
 }
 
 // Add filter tab.
-$filter = (new CFilter(new CUrl('host_discovery.php')))
+$filter = (new CFilter())
+	->setResetUrl((new CUrl('host_discovery.php'))->setArgument('context', $data['context']))
 	->setProfile($data['profileIdx'])
-	->setActiveTab($data['active_tab']);
+	->setActiveTab($data['active_tab'])
+	->addvar('context', $data['context']);
+
+$hg_ms_params = ($data['context'] === 'host') ? ['real_hosts' => 1] : ['templated_hosts' => 1];
 
 $filter_column1 = (new CFormList())
 	->addRow((new CLabel(_('Host groups'), 'filter_groupids__ms')),
@@ -61,26 +70,27 @@ $filter_column1 = (new CFormList())
 				'parameters' => [
 					'srctbl' => 'host_groups',
 					'srcfld1' => 'groupid',
-					'dstfrm' => $filter->getName(),
+					'dstfrm' => 'zbx_filter',
 					'dstfld1' => 'filter_groupids_',
-					'editable' => true
-				]
+					'editable' => true,
+					'enrich_parent_groups' => true
+				] + $hg_ms_params
 			]
 		]))->setWidth(ZBX_TEXTAREA_FILTER_STANDARD_WIDTH)
 	)
-	->addRow((new CLabel(_('Hosts'), 'filter_hostids__ms')),
+	->addRow((new CLabel(($data['context'] === 'host') ? _('Hosts') : _('Templates'), 'filter_hostids__ms')),
 		(new CMultiSelect([
 			'name' => 'filter_hostids[]',
-			'object_name' => 'host_templates',
+			'object_name' => ($data['context'] === 'host') ? 'hosts' : 'templates',
 			'data' => $data['filter']['hosts'],
 			'popup' => [
 				'filter_preselect_fields' => [
 					'hostgroups' => 'filter_groupids_'
 				],
 				'parameters' => [
-					'srctbl' => 'host_templates',
+					'srctbl' => ($data['context'] === 'host') ? 'hosts' : 'templates',
 					'srcfld1' => 'hostid',
-					'dstfrm' => $filter->getName(),
+					'dstfrm' => 'zbx_filter',
 					'dstfld1' => 'filter_hostids_',
 					'editable' => true
 				]
@@ -103,17 +113,17 @@ $type_select = (new CSelect('filter_type'))
 	->setValue($data['filter']['type']);
 
 zbx_subarray_push($filter_type_visibility, -1, 'filter_delay_row');
+zbx_subarray_push($filter_type_visibility, -1, 'filter_delay');
 
 $lld_types = item_type2str();
-unset($lld_types[ITEM_TYPE_AGGREGATE], $lld_types[ITEM_TYPE_HTTPTEST], $lld_types[ITEM_TYPE_CALCULATED],
-	$lld_types[ITEM_TYPE_SNMPTRAP]
-);
+unset($lld_types[ITEM_TYPE_HTTPTEST], $lld_types[ITEM_TYPE_CALCULATED], $lld_types[ITEM_TYPE_SNMPTRAP]);
 
 $type_select->addOptions(CSelect::createOptionsFromArray($lld_types));
 
 foreach ($lld_types as $type => $name) {
 	if ($type != ITEM_TYPE_TRAPPER) {
 		zbx_subarray_push($filter_type_visibility, $type, 'filter_delay_row');
+		zbx_subarray_push($filter_type_visibility, $type, 'filter_delay');
 	}
 	if ($type == ITEM_TYPE_SNMP) {
 		zbx_subarray_push($filter_type_visibility, $type, 'filter_snmp_oid_row');
@@ -138,42 +148,40 @@ $filter_column2 = (new CFormList())
 		'filter_snmp_oid_row'
 	);
 
-$filter_column3 = (new CFormList())
-	->addRow(new CLabel(_('State'), 'label-state'),
-		(new CSelect('filter_state'))
-			->setId('filter_state')
-			->setValue($data['filter']['state'])
-			->setFocusableElementId('label-state')
-			->addOptions(CSelect::createOptionsFromArray([
-				-1 => _('all'),
-				ITEM_STATE_NORMAL => itemState(ITEM_STATE_NORMAL),
-				ITEM_STATE_NOTSUPPORTED => itemState(ITEM_STATE_NOTSUPPORTED)
-			]))
-	)
-	->addRow(new CLabel(_('Status'), 'label-status'),
-		(new CSelect('filter_status'))
-			->setId('filter_status')
-			->setFocusableElementId('label-status')
-			->setValue($data['filter']['status'])
-			->addOptions(CSelect::createOptionsFromArray([
-				-1 => _('all'),
-				ITEM_STATUS_ACTIVE => item_status2str(ITEM_STATUS_ACTIVE),
-				ITEM_STATUS_DISABLED => item_status2str(ITEM_STATUS_DISABLED)
-			]))
+$filter_column3 = (new CFormList());
+
+if ($data['context'] === 'host') {
+	$filter_column3->addRow(_('State'),
+		(new CRadioButtonList('filter_state', (int) $data['filter']['state']))
+			->addValue(_('all'), -1)
+			->addValue(_('Normal'), ITEM_STATE_NORMAL)
+			->addValue(_('Not supported'), ITEM_STATE_NOTSUPPORTED)
+			->setModern(true)
 	);
+}
+
+$filter_column3->addRow(_('Status'),
+	(new CRadioButtonList('filter_status', (int) $data['filter']['status']))
+		->addValue(_('all'), -1)
+		->addValue(_('Enabled'), ITEM_STATUS_ACTIVE)
+		->addValue(_('Disabled'), ITEM_STATUS_DISABLED)
+		->setModern(true)
+);
 
 $filter->addFilterTab(_('Filter'), [$filter_column1, $filter_column2, $filter_column3]);
 
 $widget->addItem($filter);
 
+$url = (new CUrl('host_discovery.php'))
+	->setArgument('context', $data['context'])
+	->getUrl();
+
 // create form
-$discoveryForm = (new CForm())->setName('discovery');
+$discoveryForm = (new CForm('post', $url))->setName('discovery');
 
 if ($data['hostid'] != 0) {
 	$discoveryForm->addVar('hostid', $data['hostid']);
 }
-
-$url = (new CUrl('host_discovery.php'))->getUrl();
 
 // create table
 $discoveryTable = (new CTableInfo())
@@ -181,7 +189,7 @@ $discoveryTable = (new CTableInfo())
 		(new CColHeader(
 			(new CCheckBox('all_items'))->onClick("checkAll('".$discoveryForm->getName()."', 'all_items', 'g_hostdruleid');")
 		))->addClass(ZBX_STYLE_CELL_WIDTH),
-		_('Host'),
+		($data['context'] === 'host') ? _('Host') : _('Template'),
 		make_sorting_header(_('Name'), 'name', $data['sort'], $data['sortorder'], $url),
 		_('Items'),
 		_('Triggers'),
@@ -191,7 +199,7 @@ $discoveryTable = (new CTableInfo())
 		make_sorting_header(_('Interval'), 'delay', $data['sort'], $data['sortorder'], $url),
 		make_sorting_header(_('Type'), 'type', $data['sort'], $data['sortorder'], $url),
 		make_sorting_header(_('Status'), 'status', $data['sort'], $data['sortorder'], $url),
-		_('Info')
+		($data['context'] === 'host') ? _('Info') : null
 	]);
 
 $update_interval_parser = new CUpdateIntervalParser(['usermacros' => true]);
@@ -199,17 +207,20 @@ $update_interval_parser = new CUpdateIntervalParser(['usermacros' => true]);
 foreach ($data['discoveries'] as $discovery) {
 	// description
 	$description = [];
-	$description[] = makeItemTemplatePrefix($discovery['itemid'], $data['parent_templates'], ZBX_FLAG_DISCOVERY_RULE);
+	$description[] = makeItemTemplatePrefix($discovery['itemid'], $data['parent_templates'], ZBX_FLAG_DISCOVERY_RULE,
+		$data['allowed_ui_conf_templates']
+	);
 
 	if ($discovery['type'] == ITEM_TYPE_DEPENDENT) {
 		if ($discovery['master_item']['type'] == ITEM_TYPE_HTTPTEST) {
-			$description[] = CHtml::encode($discovery['master_item']['name_expanded']);
+			$description[] = $discovery['master_item']['name'];
 		}
 		else {
-			$description[] = (new CLink(CHtml::encode($discovery['master_item']['name_expanded']),
+			$description[] = (new CLink($discovery['master_item']['name'],
 				(new CUrl('items.php'))
 					->setArgument('form', 'update')
 					->setArgument('itemid', $discovery['master_item']['itemid'])
+					->setArgument('context', $data['context'])
 					->getUrl()
 			))
 				->addClass(ZBX_STYLE_LINK_ALT)
@@ -219,36 +230,48 @@ foreach ($data['discoveries'] as $discovery) {
 		$description[] = NAME_DELIMITER;
 	}
 
-	$description[] = new CLink($discovery['name_expanded'], '?form=update&itemid='.$discovery['itemid']);
+	$description[] = new CLink(
+		$discovery['name'],
+		(new CUrl('host_discovery.php'))
+			->setArgument('form', 'update')
+			->setArgument('itemid', $discovery['itemid'])
+			->setArgument('context', $data['context'])
+	);
 
 	// status
 	$status = (new CLink(
 		itemIndicator($discovery['status'], $discovery['state']),
-		'?hostid='.$discovery['hostid'].
-			'&g_hostdruleid[]='.$discovery['itemid'].
-			'&action='.($discovery['status'] == ITEM_STATUS_DISABLED
+		(new CUrl('host_discovery.php'))
+			->setArgument('hostid', $discovery['hostid'])
+			->setArgument('g_hostdruleid[]', $discovery['itemid'])
+			->setArgument('action', ($discovery['status'] == ITEM_STATUS_DISABLED)
 				? 'discoveryrule.massenable'
 				: 'discoveryrule.massdisable'
-			))
-		)
+			)
+			->setArgument('context', $data['context'])
+			->getUrl()
+		))
 			->addClass(ZBX_STYLE_LINK_ACTION)
 			->addClass(itemIndicatorStyle($discovery['status'], $discovery['state']))
 			->addSID();
 
-	// info
-	$info_icons = [];
-
-	if ($discovery['status'] == ITEM_STATUS_ACTIVE && $discovery['error'] !== '') {
-		$info_icons[] = makeErrorIcon($discovery['error']);
-	}
-
 	// Hide zeros for trapper, SNMP trap and dependent items.
 	if ($discovery['type'] == ITEM_TYPE_TRAPPER || $discovery['type'] == ITEM_TYPE_SNMPTRAP
-			|| $discovery['type'] == ITEM_TYPE_DEPENDENT) {
+			|| $discovery['type'] == ITEM_TYPE_DEPENDENT || ($discovery['type'] == ITEM_TYPE_ZABBIX_ACTIVE
+				&& strncmp($discovery['key_'], 'mqtt.get', 8) === 0)) {
 		$discovery['delay'] = '';
 	}
 	elseif ($update_interval_parser->parse($discovery['delay']) == CParser::PARSE_SUCCESS) {
 		$discovery['delay'] = $update_interval_parser->getDelay();
+	}
+
+	// info
+	if ($data['context'] === 'host') {
+		$info_icons = [];
+
+		if ($discovery['status'] == ITEM_STATUS_ACTIVE && $discovery['error'] !== '') {
+			$info_icons[] = makeErrorIcon($discovery['error']);
+		}
 	}
 
 	$discoveryTable->addRow([
@@ -256,64 +279,70 @@ foreach ($data['discoveries'] as $discovery) {
 		$discovery['hosts'][0]['name'],
 		$description,
 		[
-			new CLink(
-				_('Item prototypes'),
-				'disc_prototypes.php?parent_discoveryid='.$discovery['itemid']
+			new CLink(_('Item prototypes'),
+				(new CUrl('disc_prototypes.php'))
+					->setArgument('parent_discoveryid', $discovery['itemid'])
+					->setArgument('context', $data['context'])
 			),
 			CViewHelper::showNum($discovery['items'])
 		],
 		[
-			new CLink(
-				_('Trigger prototypes'),
-				'trigger_prototypes.php?parent_discoveryid='.$discovery['itemid']
+			new CLink(_('Trigger prototypes'),
+				(new CUrl('trigger_prototypes.php'))
+					->setArgument('parent_discoveryid', $discovery['itemid'])
+					->setArgument('context', $data['context'])
 			),
 			CViewHelper::showNum($discovery['triggers'])
 		],
 		[
-			new CLink(
-				_('Graph prototypes'),
-				(new CUrl('graphs.php'))->setArgument('parent_discoveryid', $discovery['itemid'])
+			new CLink(_('Graph prototypes'),
+				(new CUrl('graphs.php'))
+					->setArgument('parent_discoveryid', $discovery['itemid'])
+					->setArgument('context', $data['context'])
 			),
 			CViewHelper::showNum($discovery['graphs'])
 		],
 		($discovery['hosts'][0]['flags'] == ZBX_FLAG_DISCOVERY_NORMAL)
 			? [
 				new CLink(_('Host prototypes'),
-					(new CUrl('host_prototypes.php'))->setArgument('parent_discoveryid', $discovery['itemid'])
+					(new CUrl('host_prototypes.php'))
+						->setArgument('parent_discoveryid', $discovery['itemid'])
+						->setArgument('context', $data['context'])
 				),
 				CViewHelper::showNum($discovery['hostPrototypes'])
 			]
 			: '',
-		(new CDiv(CHtml::encode($discovery['key_'])))->addClass(ZBX_STYLE_WORDWRAP),
+		(new CDiv($discovery['key_']))->addClass(ZBX_STYLE_WORDWRAP),
 		$discovery['delay'],
 		item_type2str($discovery['type']),
 		$status,
-		makeInformationList($info_icons)
+		($data['context'] === 'host') ? makeInformationList($info_icons) : null
 	]);
 }
 
-// append table to form
-$discoveryForm->addItem([
-	$discoveryTable,
-	$data['paging'],
-	new CActionButtonList('action', 'g_hostdruleid',
-		[
-			'discoveryrule.massenable' => ['name' => _('Enable'),
-				'confirm' =>_('Enable selected discovery rules?')
-			],
-			'discoveryrule.massdisable' => ['name' => _('Disable'),
-				'confirm' =>_('Disable selected discovery rules?')
-			],
-			'discoveryrule.masscheck_now' => ['name' => _('Execute now'), 'disabled' => $data['is_template']],
-			'discoveryrule.massdelete' => ['name' => _('Delete'),
-				'confirm' =>_('Delete selected discovery rules?')
-			]
-		],
-		$data['checkbox_hash']
-	)
-]);
+$button_list = [
+	'discoveryrule.massenable' => ['name' => _('Enable'), 'confirm' =>_('Enable selected discovery rules?')],
+	'discoveryrule.massdisable' => ['name' => _('Disable'), 'confirm' =>_('Disable selected discovery rules?')]
+];
 
-// append form to widget
+if ($data['context'] === 'host') {
+	$button_list += ['discoveryrule.masscheck_now' => ['name' => _('Execute now'), 'disabled' => $data['is_template']]];
+}
+
+$button_list += [
+	'discoveryrule.massdelete' => ['name' => _('Delete'), 'confirm' =>_('Delete selected discovery rules?')]
+];
+
+// Append table to form.
+$discoveryForm->addItem([$discoveryTable, $data['paging'], new CActionButtonList('action', 'g_hostdruleid',
+	$button_list, $data['checkbox_hash']
+)]);
+
+// Append form to widget.
 $widget->addItem($discoveryForm);
 
 $widget->show();
+
+(new CScriptTag('view.init();'))
+	->setOnDocumentReady()
+	->show();

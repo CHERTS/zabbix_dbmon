@@ -3,7 +3,7 @@
 
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -30,10 +30,13 @@ import (
 	"strings"
 	"time"
 
-	"zabbix.com/pkg/plugin"
+	"git.zabbix.com/ap/plugin-support/errs"
+	"git.zabbix.com/ap/plugin-support/plugin"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 	"zabbix.com/pkg/zbxcmd"
-	"zabbix.com/pkg/zbxerr"
 )
+
+var impl Plugin
 
 // Plugin -
 type Plugin struct {
@@ -43,7 +46,8 @@ type Plugin struct {
 
 // Options -
 type Options struct {
-	Timeout int
+	plugin.SystemOptions `conf:"optional,name=System"`
+	Timeout              int
 }
 
 type manager struct {
@@ -53,7 +57,15 @@ type manager struct {
 	parser  func(in []string, regex string) ([]string, error)
 }
 
-var impl Plugin
+func init() {
+	err := plugin.RegisterMetrics(
+		&impl, "Sw",
+		"system.sw.packages", "Lists installed packages whose name matches the given package regular expression.",
+	)
+	if err != nil {
+		panic(errs.Wrap(err, "failed to register metrics"))
+	}
+}
 
 // Configure -
 func (p *Plugin) Configure(global *plugin.GlobalOptions, options interface{}) {
@@ -107,12 +119,12 @@ func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider)
 			continue
 		}
 
-		test, err := zbxcmd.Execute(m.testCmd, time.Second*time.Duration(p.options.Timeout))
+		test, err := zbxcmd.Execute(m.testCmd, time.Second*time.Duration(p.options.Timeout), "")
 		if err != nil || test == "" {
 			continue
 		}
 
-		tmp, err := zbxcmd.Execute(m.cmd, time.Second*time.Duration(p.options.Timeout))
+		tmp, err := zbxcmd.Execute(m.cmd, time.Second*time.Duration(p.options.Timeout), "")
 		if err != nil {
 			p.Errf("Failed to execute command '%s', err: %s", m.cmd, err.Error())
 
@@ -212,10 +224,4 @@ func parseDpkg(in []string, regex string) (out []string, err error) {
 	}
 
 	return
-}
-
-func init() {
-	plugin.RegisterMetrics(&impl, "Sw",
-		"system.sw.packages", "Lists installed packages whose name matches the given package regular expression.",
-	)
 }

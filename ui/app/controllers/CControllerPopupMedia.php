@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,15 +25,14 @@ class CControllerPopupMedia extends CController {
 	protected function init() {
 		$this->disableSIDvalidation();
 
-		$config = select_config();
 		for ($severity = TRIGGER_SEVERITY_NOT_CLASSIFIED; $severity < TRIGGER_SEVERITY_COUNT; $severity++) {
-			$this->severities[$severity] = getSeverityName($severity, $config);
+			$this->severities[$severity] = CSeverityHelper::getName($severity);
 		}
 	}
 
 	protected function checkInput() {
 		$fields = [
-			'dstfrm' =>			'string|fatal',
+			'dstfrm' =>			'required|string',
 			'media' =>			'int32',
 			'mediatypeid' =>	'db media_type.mediatypeid',
 			'sendto' =>			'string',

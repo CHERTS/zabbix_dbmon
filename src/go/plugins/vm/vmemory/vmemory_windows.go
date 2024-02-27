@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -20,19 +20,29 @@
 package vmemory
 
 import (
-	"zabbix.com/pkg/plugin"
+	"git.zabbix.com/ap/plugin-support/plugin"
+	"git.zabbix.com/ap/plugin-support/zbxerr"
 	"zabbix.com/pkg/win32"
-	"zabbix.com/pkg/zbxerr"
 )
+
+const percent = 100
+
+var impl Plugin
 
 // Plugin -
 type Plugin struct {
 	plugin.Base
 }
 
-const percent = 100
-
-var impl Plugin
+func init() {
+	err := plugin.RegisterMetrics(
+		&impl, "VMemory",
+		"vm.vmemory.size", "Returns virtual memory size in bytes or in percentage.",
+	)
+	if err != nil {
+		panic(zbxerr.New("failed to register metrics").Wrap(err))
+	}
+}
 
 // Export -
 func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider) (result interface{}, err error) {
@@ -51,12 +61,6 @@ func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider)
 	default:
 		return nil, plugin.UnsupportedMetricError
 	}
-}
-
-func init() {
-	plugin.RegisterMetrics(&impl, "VMemory",
-		"vm.vmemory.size", "Returns virtual memory size in bytes or in percentage.",
-	)
 }
 
 func (p *Plugin) exportVMVMemorySize(mode string) (result interface{}, err error) {

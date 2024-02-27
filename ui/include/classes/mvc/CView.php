@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -41,6 +41,13 @@ class CView {
 	private $layout_modes_enabled = false;
 
 	/**
+	 * Explicitly set layout mode.
+	 *
+	 * @var int
+	 */
+	private $layout_mode;
+
+	/**
 	 * View name.
 	 *
 	 * @var string
@@ -67,6 +74,13 @@ class CView {
 	 * @var array
 	 */
 	private $js_files = [];
+
+	/**
+	 * List of CSS files for inclusion into a HTML page using <link rel="stylesheet" type="text/css" src="...">.
+	 *
+	 * @var array
+	 */
+	private $css_files = [];
 
 	/**
 	 * Create a view based on view name and data.
@@ -191,6 +205,24 @@ class CView {
 	}
 
 	/**
+	 * Add a CSS file to this view.
+	 *
+	 * @param string $src
+	 */
+	public function addCssFile($src) {
+		$this->css_files[] = $src;
+	}
+
+	/**
+	 * Get list of CSS files added to this view.
+	 *
+	 * @return array
+	 */
+	public function getCssFiles() {
+		return $this->css_files;
+	}
+
+	/**
 	 * Enable support of web layout modes.
 	 */
 	public function enableLayoutModes() {
@@ -198,12 +230,25 @@ class CView {
 	}
 
 	/**
-	 * Get current layout mode if layout modes were enabled for this view, or ZBX_LAYOUT_NORMAL otherwise.
+	 * Set layout mode explicitly.
+	 *
+	 * @param int $layout_mode  ZBX_LAYOUT_NORMAL | ZBX_LAYOUT_KIOSKMODE
+	 */
+	public function setLayoutMode(int $layout_mode): void {
+		$this->layout_mode = $layout_mode;
+	}
+
+	/**
+	 * Get current layout mode.
 	 *
 	 * @return int  ZBX_LAYOUT_NORMAL | ZBX_LAYOUT_KIOSKMODE
 	 */
 	public function getLayoutMode() {
-		return $this->layout_modes_enabled ? CViewHelper::loadLayoutMode() : ZBX_LAYOUT_NORMAL;
+		if ($this->layout_modes_enabled) {
+			return ($this->layout_mode !== null) ? $this->layout_mode : CViewHelper::loadLayoutMode();
+		}
+
+		return ZBX_LAYOUT_NORMAL;
 	}
 
 	/**

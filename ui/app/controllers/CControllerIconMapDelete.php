@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ class CControllerIconMapDelete extends CController {
 
 	protected function checkInput() {
 		$fields = [
-			'iconmapid' => 'required | db icon_map.iconmapid'
+			'iconmapid' => 'required|db icon_map.iconmapid'
 		];
 
 		$ret = $this->validateInput($fields);
@@ -36,32 +36,33 @@ class CControllerIconMapDelete extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_GENERAL)) {
 			return false;
 		}
 
 		return (bool) API::IconMap()->get([
 			'output' => [],
-			'iconmapids' => (array) $this->getInput('iconmapid'),
+			'iconmapids' => $this->getInput('iconmapid'),
 			'editable' => true
 		]);
 	}
 
 	protected function doAction() {
-		$result = (bool) API::IconMap()->delete((array) $this->getInput('iconmapid'));
+		$result = (bool) API::IconMap()->delete([$this->getInput('iconmapid')]);
 
 		if ($result) {
-			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))
-				->setArgument('action', 'iconmap.list')
+			$response = new CControllerResponseRedirect(
+				(new CUrl('zabbix.php'))->setArgument('action', 'iconmap.list')
 			);
-			$response->setMessageOk(_('Icon map deleted'));
+			CMessageHelper::setSuccessTitle(_('Icon map deleted'));
 		}
 		else {
-			$response = new CControllerResponseRedirect((new CUrl('zabbix.php'))
-				->setArgument('action', 'iconmap.edit')
-				->setArgument('iconmapid', $this->getInput('iconmapid'))
+			$response = new CControllerResponseRedirect(
+				(new CUrl('zabbix.php'))
+					->setArgument('action', 'iconmap.edit')
+					->setArgument('iconmapid', $this->getInput('iconmapid'))
 			);
-			$response->setMessageError(_('Cannot delete icon map'));
+			CMessageHelper::setErrorTitle(_('Cannot delete icon map'));
 		}
 
 		$this->setResponse($response);

@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,15 +21,16 @@ package scheduler
 
 import (
 	"errors"
+	"fmt"
 	"hash/fnv"
 	"sync/atomic"
 	"time"
 	"unsafe"
 
+	"git.zabbix.com/ap/plugin-support/log"
+	"git.zabbix.com/ap/plugin-support/plugin"
 	"zabbix.com/internal/agent"
 	"zabbix.com/pkg/glexpr"
-	"zabbix.com/pkg/log"
-	"zabbix.com/pkg/plugin"
 	"zabbix.com/pkg/zbxlib"
 )
 
@@ -60,8 +61,6 @@ type client struct {
 	exporters map[uint64]exporterTaskAccessor
 	// plugins used by client
 	pluginsInfo map[*pluginAgent]*pluginInfo
-	// server refresh unsupported value
-	refreshUnsupported int
 	// server global regular expression bundle
 	globalRegexp unsafe.Pointer
 	// plugin result sink, can be nil for bulk passive checks (in future)
@@ -70,16 +69,9 @@ type client struct {
 
 // ClientAccessor interface exports client data required for scheduler tasks.
 type ClientAccessor interface {
-	RefreshUnsupported() int
 	Output() plugin.ResultWriter
 	GlobalRegexp() *glexpr.Bundle
 	ID() uint64
-}
-
-// RefreshUnsupported returns scheduling interval for unsupported items.
-// This function is used only by scheduler, no synchronization is required.
-func (c *client) RefreshUnsupported() int {
-	return c.refreshUnsupported
 }
 
 // GlobalRegexp returns global regular expression bundle.
@@ -107,7 +99,8 @@ func (c *client) Output() plugin.ResultWriter {
 
 // addRequest requests client to start monitoring/update item described by request 'r' using plugin 'p' (*pluginAgent)
 // with output writer 'sink'
-func (c *client) addRequest(p *pluginAgent, r *plugin.Request, sink plugin.ResultWriter, now time.Time) (err error) {
+func (c *client) addRequest(p *pluginAgent, r *plugin.Request, sink plugin.ResultWriter, now time.Time,
+	firstActiveChecksRefreshed bool) (err error) {
 	var info *pluginInfo
 	var ok bool
 
@@ -144,8 +137,9 @@ func (c *client) addRequest(p *pluginAgent, r *plugin.Request, sink plugin.Resul
 
 		if c.id > agent.MaxBuiltinClientID {
 			var task *exporterTask
+			var scheduling bool
 
-			if _, err = zbxlib.GetNextcheck(r.Itemid, r.Delay, now, false, c.refreshUnsupported); err != nil {
+			if _, scheduling, err = zbxlib.GetNextcheck(r.Itemid, r.Delay, now); err != nil {
 				return err
 			}
 			if tacc, ok = c.exporters[r.Itemid]; ok {
@@ -170,7 +164,10 @@ func (c *client) addRequest(p *pluginAgent, r *plugin.Request, sink plugin.Resul
 					client:   c,
 					output:   sink,
 				}
-				if err = task.reschedule(now); err != nil {
+
+				if scheduling == false && firstActiveChecksRefreshed == false && p.forceActiveChecksOnStart != 0 {
+					task.scheduled = time.Unix(now.Unix(), priorityExporterTaskNs)
+				} else if err = task.reschedule(now); err != nil {
 					return
 				}
 				c.exporters[r.Itemid] = task
@@ -211,6 +208,8 @@ func (c *client) addRequest(p *pluginAgent, r *plugin.Request, sink plugin.Resul
 			log.Debugf("[%d] created direct exporter task for plugin '%s' itemid:%d key '%s'",
 				c.id, p.name(), task.item.itemid, task.item.key)
 		}
+	} else if c.id <= agent.MaxBuiltinClientID {
+		return fmt.Errorf(`The "%s" key is not supported in test or single passive check mode`, r.Key)
 	}
 
 	// handle runner interface for inactive plugins

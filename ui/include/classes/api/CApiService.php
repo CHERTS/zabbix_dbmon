@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +21,14 @@
 
 class CApiService {
 
+	/**
+	 * Authorized user data.
+	 *
+	 * @var array
+	 */
 	public static $userData;
+
+	public const ACCESS_RULES = [];
 
 	/**
 	 * The name of the table.
@@ -155,10 +162,6 @@ class CApiService {
 		if ($tableName) {
 			$schema = $this->getTableSchema($tableName);
 
-			if (strpos($schema['key'], ',') !== false) {
-				throw new Exception('Composite private keys are not supported in this API version.');
-			}
-
 			return $schema['key'];
 		}
 
@@ -166,7 +169,7 @@ class CApiService {
 	}
 
 	/**
-	 * Returns the name of the option that refers the PK column. If the $tableName parameter
+	 * Returns the name of the option that refers to the PK column. If the $tableName parameter
 	 * is not given, the Pk option of the current table will be returned.
 	 *
 	 * @param string $tableName
@@ -264,15 +267,15 @@ class CApiService {
 	}
 
 	/**
-	 * Unsets fields $fields from the given objects if they are not requested in $output.
+	 * Unset those fields of the objects, which are not requested for the $output.
 	 *
 	 * @param array        $objects
 	 * @param array        $fields
-	 * @param string|array $output		desired output
+	 * @param string|array $output   requested output
 	 *
 	 * @return array
 	 */
-	protected function unsetExtraFields(array $objects, array $fields, $output) {
+	protected function unsetExtraFields(array $objects, array $fields, $output = []) {
 		// find the fields that have not been requested
 		$extraFields = [];
 		foreach ($fields as $field) {
@@ -411,13 +414,17 @@ class CApiService {
 	}
 
 	/**
-	 * Returns DISTINCT modifier for sql statements with multiple joins.
+	 * Returns DISTINCT modifier for sql statements with multiple joins and without aggregations.
 	 *
 	 * @param array $sql_parts  An SQL parts array.
 	 *
 	 * @return string
 	 */
-	private static function dbDistinct(array $sql_parts) {
+	protected static function dbDistinct(array $sql_parts) {
+		if (preg_grep('/^COUNT\(/', $sql_parts['select'])) {
+			return '';
+		}
+
 		$count = count($sql_parts['from']);
 
 		if ($count == 1 && array_key_exists('left_join', $sql_parts)) {
@@ -484,18 +491,24 @@ class CApiService {
 	 * @return array		The resulting SQL parts array
 	 */
 	protected function applyQueryOutputOptions($tableName, $tableAlias, array $options, array $sqlParts) {
-		// If table do not have a primary key, use COUNT(*) to select number of rows.
 		$pk = $this->pk($tableName);
-		$pkFieldId = $this->fieldId($pk, $tableAlias);
+		$pk_composite = (strpos($pk, ',') !== false);
 
-		// count
 		if (array_key_exists('countOutput', $options) && $options['countOutput']
 				&& !$this->requiresPostSqlFiltering($options)) {
-			$sqlParts['select'] = ($pk !== '')
-				? ['COUNT(DISTINCT '.$pkFieldId.') AS rowscount']
+
+			$has_joins = (count($sqlParts['from']) > 1
+					|| (array_key_exists('left_join', $sqlParts) && $sqlParts['left_join']));
+
+			if ($pk_composite && $has_joins) {
+				throw new Exception('Joins with composite primary keys are not supported in this API version.');
+			}
+
+			$sqlParts['select'] = $has_joins
+				? ['COUNT(DISTINCT '.$this->fieldId($pk, $tableAlias).') AS rowscount']
 				: ['COUNT(*) AS rowscount'];
 
-			// select columns used by group count
+			// Select columns used by group count.
 			if (array_key_exists('groupCount', $options) && $options['groupCount']) {
 				foreach ($sqlParts['group'] as $fields) {
 					$sqlParts['select'][] = $fields;
@@ -504,8 +517,8 @@ class CApiService {
 		}
 		// custom output
 		elseif (is_array($options['output'])) {
-			// the pk field must always be included for the API to work properly
-			$sqlParts['select'] = ($pk !== '') ? [$pkFieldId] : [];
+			$sqlParts['select'] = $pk_composite ? [] : [$this->fieldId($pk, $tableAlias)];
+
 			foreach ($options['output'] as $field) {
 				if ($this->hasField($field, $tableName)) {
 					$sqlParts['select'][] = $this->fieldId($field, $tableAlias);
@@ -908,21 +921,78 @@ class CApiService {
 				continue;
 			}
 
-			zbx_value2array($value);
+			$values = [];
+
+			switch ($tableSchema['fields'][$field]['type']) {
+				case DB::FIELD_TYPE_INT:
+					foreach ((array) $value as $val) {
+						if (!is_int($val) && (!is_string($val) || !preg_match('/^'.ZBX_PREG_INT.'$/', $val))) {
+							continue;
+						}
+
+						if ($val < ZBX_MIN_INT32 || $val > ZBX_MAX_INT32) {
+							continue;
+						}
+
+						$values[] = $val;
+					}
+					break;
+
+				case DB::FIELD_TYPE_ID:
+					foreach ((array) $value as $val) {
+						if (!is_int($val) && (!is_string($val) || !ctype_digit($val))) {
+							continue;
+						}
+
+						if ($val < 0 || bccomp((string) $val, ZBX_DB_MAX_ID) > 0) {
+							continue;
+						}
+
+						$values[] = $val;
+					}
+					break;
+
+				case DB::FIELD_TYPE_UINT:
+					foreach ((array) $value as $val) {
+						if (!is_int($val) && (!is_string($val) || !ctype_digit($val))) {
+							continue;
+						}
+
+						if (bccomp((string) $val, ZBX_MIN_INT64) < 0 || bccomp((string) $val, ZBX_MAX_INT64) > 0) {
+							continue;
+						}
+
+						$values[] = $val;
+					}
+					break;
+
+				case DB::FIELD_TYPE_FLOAT:
+					foreach ((array) $value as $val) {
+						if (!is_numeric($val)) {
+							continue;
+						}
+
+						$values[] = $val;
+					}
+					break;
+
+				default:
+					$values = (array) $value;
+			}
 
 			$fieldName = $this->fieldId($field, $tableShort);
 			switch ($tableSchema['fields'][$field]['type']) {
 				case DB::FIELD_TYPE_ID:
-					$filter[$field] = dbConditionId($fieldName, $value);
+					$filter[$field] = dbConditionId($fieldName, $values);
 					break;
 
 				case DB::FIELD_TYPE_INT:
 				case DB::FIELD_TYPE_UINT:
-					$filter[$field] = dbConditionInt($fieldName, $value);
+					$filter[$field] = dbConditionInt($fieldName, $values);
 					break;
 
 				default:
-					$filter[$field] = dbConditionString($fieldName, $value);
+					$filter[$field] = dbConditionString($fieldName, $values);
 			}
 		}
 
@@ -1127,34 +1197,62 @@ class CApiService {
 	}
 
 	/**
-	 * Add simple audit record.
+	 * Legacy method to add audit log records.
 	 *
-	 * @param int    $action        AUDIT_ACTION_*
-	 * @param int    $resourcetype  AUDIT_RESOURCE_*
-	 * @param string $details
-	 * @param string $userid
-	 * @param string $ip
+	 * @param int   $action        CAudit::ACTION_*
+	 * @param int   $resourcetype  CAudit::RESOURCE_*
+	 * @param array $objects
+	 * @param array $objects_old
 	 */
-	protected function addAuditDetails($action, $resourcetype, $details = '', $userid = null, $ip = null) {
-		if ($userid === null) {
-			$userid = self::$userData['userid'];
-			$ip = self::$userData['userip'];
-		}
-
-		CAudit::addDetails($userid, $ip, $action, $resourcetype, $details);
+	protected function addAuditBulk($action, $resourcetype, array $objects, array $objects_old = null) {
+		CAuditOld::addBulk(self::$userData['userid'], self::$userData['userip'], self::$userData['username'], $action,
+			$resourcetype, $objects, $objects_old
+		);
 	}
 
 	/**
-	 * Add audit records.
+	 * Add audit log records.
 	 *
-	 * @param int    $action        AUDIT_ACTION_*
-	 * @param int    $resourcetype  AUDIT_RESOURCE_*
-	 * @param array  $objects
-	 * @param array  $objects_old
+	 * @param int   $action       CAudit::ACTION_*
+	 * @param int   $resource     CAudit::RESOURCE_*
+	 * @param array $objects      (optional)
+	 * @param array $objects_old  (optional)
 	 */
-	protected function addAuditBulk($action, $resourcetype, array $objects, array $objects_old = null) {
-		CAudit::addBulk(self::$userData['userid'], self::$userData['userip'], $action, $resourcetype, $objects,
-			$objects_old
+	protected static function addAuditLog(int $action, int $resource, array $objects = [],
+			array $objects_old = []): void {
+		CAudit::log(self::$userData['userid'], self::$userData['userip'], self::$userData['username'], $action,
+			$resource, $objects, $objects_old
 		);
+	}
+
+	/**
+	 * Add audit log records on behalf of the given user.
+	 *
+	 * @param string|null $userid
+	 * @param string      $ip
+	 * @param string      $username
+	 * @param int         $action       CAudit::ACTION_*
+	 * @param int         $resource     CAudit::RESOURCE_*
+	 * @param array       $objects      (optional)
+	 * @param array       $objects_old  (optional)
+	 */
+	protected static function addAuditLogByUser(?string $userid, string $ip, string $username, int $action,
+			int $resource, array $objects = [], array $objects_old = []): void {
+		CAudit::log($userid, $ip, $username, $action, $resource, $objects, $objects_old);
+	}
+
+	/**
+	 * Check access to specific access rule.
+	 *
+	 * @static
+	 *
+	 * @param string $rule_name  Rule name.
+	 *
+	 * @return bool  Returns true if user has access to specified rule, and false otherwise.
+	 *
+	 * @throws Exception
+	 */
+	protected static function checkAccess(string $rule_name): bool {
+		return (self::$userData && CRoleHelper::checkAccess($rule_name, self::$userData['roleid']));
 	}
 }

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -25,30 +25,21 @@
 ?>
 
 <script type="text/x-jquery-tmpl" id="filter-tag-row-tmpl">
-	<?= (new CRow([
-			(new CTextBox('filter_tags[#{rowNum}][tag]'))
-				->setAttribute('placeholder', _('tag'))
-				->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
-			(new CRadioButtonList('filter_tags[#{rowNum}][operator]', TAG_OPERATOR_LIKE))
-				->addValue(_('Contains'), TAG_OPERATOR_LIKE)
-				->addValue(_('Equals'), TAG_OPERATOR_EQUAL)
-				->setModern(true),
-			(new CTextBox('filter_tags[#{rowNum}][value]'))
-				->setAttribute('placeholder', _('value'))
-				->setWidth(ZBX_TEXTAREA_FILTER_SMALL_WIDTH),
-			(new CCol(
-				(new CButton('filter_tags[#{rowNum}][remove]', _('Remove')))
-					->addClass(ZBX_STYLE_BTN_LINK)
-					->addClass('element-table-remove')
-			))->addClass(ZBX_STYLE_NOWRAP)
-		]))
-			->addClass('form_row')
-			->toString()
-	?>
+	<?= CTagFilterFieldHelper::getTemplate(); ?>
 </script>
 
 <script type="text/javascript">
 	jQuery(function($) {
-		$('#filter-tags').dynamicRows({template: '#filter-tag-row-tmpl'});
+		$('#filter-tags')
+			.dynamicRows({template: '#filter-tag-row-tmpl'})
+			.on('afteradd.dynamicRows', function() {
+				var rows = this.querySelectorAll('.form_row');
+				new CTagFilterItem(rows[rows.length - 1]);
+			});
+
+		// Init existing fields once loaded.
+		document.querySelectorAll('#filter-tags .form_row').forEach(row => {
+			new CTagFilterItem(row);
+		});
 	});
 </script>

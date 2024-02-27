@@ -24,7 +24,7 @@ PROGNAME = $(TARGETDIR)\$(TARGETNAME).$(TARGETEXT)
 PDBS = $(TARGETDIR)\$(TARGETNAME).pdb $(TARGETNAME).$(TARGETEXT).pdb
 
 ADD_CFLAGS = $(ADD_CFLAGS) /D WITH_AGENT_METRICS /D WITH_COMMON_METRICS \
-	/D WITH_SPECIFIC_METRICS /D WITH_HOSTNAME_METRIC /D WITH_SIMPLE_METRICS \
+	/D WITH_SPECIFIC_METRICS /D WITH_HOSTNAME_METRIC /D WITH_SIMPLE_METRICS /D WITH_HTTP_METRICS \
 	/Zi /D DEFAULT_CONFIG_FILE="\"C:\\zabbix_agentd.conf\"" \
 	/Fd$(TARGETNAME).$(TARGETEXT).pdb
 
@@ -38,6 +38,7 @@ OBJS = \
 	..\..\..\src\libs\zbxalgo\algodefs.o \
 	..\..\..\src\libs\zbxalgo\vector.o \
 	..\..\..\src\libs\zbxcommon\alias.o \
+	..\..\..\src\libs\zbxalgo\hashset.o \
 	..\..\..\src\libs\zbxcommon\comms.o \
 	..\..\..\src\libs\zbxcommon\iprange.o \
 	..\..\..\src\libs\zbxcommon\misc.o \
@@ -46,15 +47,20 @@ OBJS = \
 	..\..\..\src\libs\zbxcommon\xml.o \
 	..\..\..\src\libs\zbxcommon\zbxgetopt.o \
 	..\..\..\src\libs\zbxcommon\file.o \
+	..\..\..\src\libs\zbxcommon\time.o \
+	..\..\..\src\libs\zbxcommshigh\comms.o \
 	..\..\..\src\libs\zbxcomms\comms.o \
 	..\..\..\src\libs\zbxcomms\telnet.o \
 	..\..\..\src\libs\zbxcompress\compress.o \
 	..\..\..\src\libs\zbxconf\cfg.o \
 	..\..\..\src\libs\zbxcrypto\base64.o \
 	..\..\..\src\libs\zbxcrypto\md5.o \
+	..\..\..\src\libs\zbxcrypto\crypto.o \
+	..\..\..\src\libs\zbxcrypto\sha256crypt.o \
 	..\..\..\src\libs\zbxjson\json.o \
 	..\..\..\src\libs\zbxjson\json_parser.o \
 	..\..\..\src\libs\zbxjson\jsonpath.o \
+	..\..\..\src\libs\zbxjson\jsonobj.o \
 	..\..\..\src\libs\zbxlog\log.o \
 	..\..\..\src\libs\zbxsys\mutexs.o \
 	..\..\..\src\libs\zbxsys\symbols.o \
@@ -63,12 +69,15 @@ OBJS = \
 	..\..\..\src\libs\zbxhttp\http.o \
 	..\..\..\src\libs\zbxhttp\punycode.o \
 	..\..\..\src\libs\zbxhttp\urlencode.o \
+	..\..\..\src\libs\zbxhttp\charset.o \
 	..\..\..\src\libs\zbxsysinfo\agent\agent.o \
-	..\..\..\src\libs\zbxsysinfo\common\common.o \
+	..\..\..\src\libs\zbxsysinfo\agent\modbus.o \
+	..\..\..\src\libs\zbxsysinfo\common\zbxsysinfo_common.o \
 	..\..\..\src\libs\zbxsysinfo\common\cpu.o \
 	..\..\..\src\libs\zbxsysinfo\common\dir.o \
 	..\..\..\src\libs\zbxsysinfo\common\file.o \
 	..\..\..\src\libs\zbxsysinfo\common\http.o \
+	..\..\..\src\libs\zbxsysinfo\common\http_metrics.o \
 	..\..\..\src\libs\zbxsysinfo\common\net.o \
 	..\..\..\src\libs\zbxsysinfo\common\dns.o \
 	..\..\..\src\libs\zbxsysinfo\common\system.o \
@@ -107,9 +116,10 @@ OBJS = \
 	..\..\..\src\libs\zbxwin32\fatal.o \
 	..\..\..\src\libs\zbxwin32\disk.o
 
-LIBS = ws2_32.lib psapi.lib pdh.lib Wldap32.lib advapi32.lib uuid.lib Iphlpapi.lib delayimp.lib wevtapi.lib $(LIBS)
+LIBS = ws2_32.lib psapi.lib pdh.lib Wldap32.lib advapi32.lib uuid.lib Iphlpapi.lib delayimp.lib wevtapi.lib shlwapi.lib $(LIBS)
 
 !INCLUDE Makefile_pcre.inc
 !INCLUDE Makefile_tls.inc
+!INCLUDE Makefile_modbus.inc
 !INCLUDE Makefile_dbmon.inc
 !INCLUDE Makefile_targets.inc

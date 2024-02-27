@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,6 +21,9 @@
 
 require_once dirname(__FILE__).'/../include/CAPITest.php';
 
+/**
+ * @backup hosts, hstgrp
+ */
 class testHostImport extends CAPITest {
 
 	public function testDiscoveredHostGroupsAfterImportParentHost() {
@@ -50,11 +53,16 @@ class testHostImport extends CAPITest {
 			'rules' => $rules
 		], null);
 
-		$query = 'SELECT * FROM hstgrp WHERE name='.zbx_dbstr('host group discovered').' AND groupid='.zbx_dbstr(50026);
-		$this->assertEquals(1, CDBHelper::getCount($query));
+		$this->assertEquals(2, CDBHelper::getCount(
+			'SELECT NULL'.
+			' FROM hstgrp'.
+			' WHERE name IN (\'Master group\', \'12345\')'
+		));
 
-		$query = 'SELECT * FROM hosts_groups WHERE hostgroupid='.zbx_dbstr(50022).' AND hostid='.zbx_dbstr(99012).
-			' AND groupid='.zbx_dbstr(50026);
-		$this->assertEquals(1, CDBHelper::getCount($query));
+		$this->assertEquals(2, CDBHelper::getCount(
+			'SELECT NULL'.
+			' FROM hosts'.
+			' WHERE host IN (\'Host having discovered hosts\', \'12345\')'
+		));
 	}
 }

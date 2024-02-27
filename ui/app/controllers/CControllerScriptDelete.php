@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ class CControllerScriptDelete extends CController {
 	}
 
 	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_SCRIPTS)) {
 			return false;
 		}
 
@@ -63,10 +63,10 @@ class CControllerScriptDelete extends CController {
 
 		if ($result) {
 			$response->setFormData(['uncheck' => '1']);
-			$response->setMessageOk(_n('Script deleted', 'Scripts deleted', $deleted));
+			CMessageHelper::setSuccessTitle(_n('Script deleted', 'Scripts deleted', $deleted));
 		}
 		else {
-			$response->setMessageError(_n('Cannot delete script', 'Cannot delete scripts', $deleted));
+			CMessageHelper::setErrorTitle(_n('Cannot delete script', 'Cannot delete scripts', $deleted));
 		}
 
 		$this->setResponse($response);

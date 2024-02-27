@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -18,11 +18,11 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+
 require_once dirname(__FILE__).'/../../include/CWebTest.php';
 
 /**
- * @backup widget
- * @backup profiles
+ * @backup widget, profiles
  */
 class testDashboardHostAvailabilityWidget extends CWebTest {
 
@@ -31,7 +31,7 @@ class testDashboardHostAvailabilityWidget extends CWebTest {
 	 * because it can change.
 	 */
 	private $sql = 'SELECT wf.widgetid, wf.type, wf.name, wf.value_int, wf.value_str, wf.value_groupid, wf.value_hostid,'.
-			' wf.value_itemid, wf.value_graphid, wf.value_sysmapid, w.widgetid, w.dashboardid, w.type, w.name, w.x, w.y,'.
+			' wf.value_itemid, wf.value_graphid, wf.value_sysmapid, w.widgetid, w.dashboard_pageid, w.type, w.name, w.x, w.y,'.
 			' w.width, w.height'.
 			' FROM widget_field wf'.
 			' INNER JOIN widget w'.
@@ -267,18 +267,15 @@ class testDashboardHostAvailabilityWidget extends CWebTest {
 	 * @dataProvider getCreateWidgetData
 	 */
 	public function testDashboardHostAvailabilityWidget_Create($data) {
-		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=101');
+		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=10110');
 		$dashboard = CDashboardElement::find()->one();
 		$old_widget_count = $dashboard->getWidgets()->count();
 
 		// Add a widget.
 		$dialogue = $dashboard->edit()->addWidget();
-		$form = $dialogue->asForm()->waitUntilVisible();
-		$type = $form->getField('Type')->getValue();
+		$form = $dialogue->asForm();
 		$form->fill($data['fields']);
-		if ($type !== 'Host availability') {
-			$form->waitUntilReloaded();
-		}
+		COverlayDialogElement::find()->waitUntilReady()->one();
 		$form->submit();
 		$this->page->waitUntilReady();
 
@@ -382,7 +379,7 @@ class testDashboardHostAvailabilityWidget extends CWebTest {
 				[
 					'fields' => [
 						'Type' => 'Host availability',
-						'Name' => 'Show completely all hosts for Zabbixagent and SNMP',
+						'Name' => 'Show completely all hosts for Zabbix agent and SNMP',
 						'Refresh interval' => '10 seconds',
 						'Interface type' => ['Zabbix agent', 'SNMP'],
 						'Show hosts in maintenance' => true
@@ -459,7 +456,7 @@ class testDashboardHostAvailabilityWidget extends CWebTest {
 	 * @dataProvider getUpdateWidgetData
 	 */
 	public function testDashboardHostAvailabilityWidget_Update($data) {
-		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=101');
+		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=10110');
 		$dashboard = CDashboardElement::find()->one();
 		$form = $dashboard->getWidget('Reference HA widget')->edit();
 
@@ -485,7 +482,7 @@ class testDashboardHostAvailabilityWidget extends CWebTest {
 		$initial_values = CDBHelper::getHash($this->sql);
 
 		// Open a dashboard widget and then save it without applying any changes
-		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=101');
+		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=10110');
 		$dashboard = CDashboardElement::find()->one();
 		$form = $dashboard->getWidget('Reference HA widget')->edit();
 		$form->submit();
@@ -539,7 +536,7 @@ class testDashboardHostAvailabilityWidget extends CWebTest {
 	public function testDashboardHostAvailabilityWidget_Cancel($data) {
 		$old_hash = CDBHelper::getHash($this->sql);
 
-		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=101');
+		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=10110');
 		$dashboard = CDashboardElement::find()->one();
 
 		// Start updating or creating a widget.
@@ -594,7 +591,7 @@ class testDashboardHostAvailabilityWidget extends CWebTest {
 	public function testDashboardHostAvailabilityWidget_Delete() {
 		$name = 'Reference HA widget to delete';
 
-		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=101');
+		$this->page->login()->open('zabbix.php?action=dashboard.view&dashboardid=10110');
 		$dashboard = CDashboardElement::find()->one()->edit();
 		$widget = $dashboard->getWidget($name);
 		$dashboard->deleteWidget($name);
@@ -717,16 +714,10 @@ class testDashboardHostAvailabilityWidget extends CWebTest {
 	private function checkRefreshInterval($data, $header) {
 		$dashboard = CDashboardElement::find()->one();
 		$widget = $dashboard->getWidget($header);
-		$refresh = CTestArrayHelper::get($data['fields'], 'Refresh interval', 'Default (15 minutes)');
-		$mapping = [
-			'Default (15 minutes)' => 900,
-			'No refresh' => 0,
-			'10 seconds' => 10,
-			'1 minute' => 60,
-			'2 minutes' => 120,
-			'10 minutes' => 600
-		];
-		$this->assertEquals($widget->getRefreshInterval(), $mapping[$refresh]);
+		$refresh = (CTestArrayHelper::get($data['fields'], 'Refresh interval') === 'Default (15 minutes)')
+			? '15 minutes'
+			: (CTestArrayHelper::get($data['fields'], 'Refresh interval', '15 minutes'));
+		$this->assertEquals($refresh, $widget->getRefreshInterval());
 	}
 
 	/*
@@ -743,9 +734,9 @@ class testDashboardHostAvailabilityWidget extends CWebTest {
 			],
 			'interface' => [
 				'Zabbix agent' => 'available',
-				'SNMP' => 'snmp_available',
-				'IPMI' => 'ipmi_available',
-				'JMX' => 'jmx_available'
+				'SNMP' => 'available',
+				'IPMI' => 'available',
+				'JMX' => 'available'
 			],
 			'status' => [
 				'Unknown' => 0,
@@ -790,14 +781,14 @@ class testDashboardHostAvailabilityWidget extends CWebTest {
 			else {
 				// Add interface status flag based on interface type.
 				$db_values = [
-					'Zabbix agent' => CDBHelper::getCount($interfaces_sql.'1 AND hostid IN ('.$hosts_sql.' AND available='.
-							$db_interfaces['status'][$header].')'),
-					'SNMP' => CDBHelper::getCount($interfaces_sql.'2 AND hostid IN ('.$hosts_sql.' AND snmp_available='.
-							$db_interfaces['status'][$header].')'),
-					'IPMI' => CDBHelper::getCount($interfaces_sql.'3 AND hostid IN ('.$hosts_sql.' AND ipmi_available='.
-							$db_interfaces['status'][$header].')'),
-					'JMX' => CDBHelper::getCount($interfaces_sql.'4 AND hostid IN ('.$hosts_sql.' AND jmx_available='.
-							$db_interfaces['status'][$header].')')
+					'Zabbix agent' => CDBHelper::getCount($interfaces_sql.'1 AND available='.
+							$db_interfaces['status'][$header].' AND hostid IN ('.$hosts_sql.')'),
+					'SNMP' => CDBHelper::getCount($interfaces_sql.'2 AND available='.
+							$db_interfaces['status'][$header].' AND hostid IN ('.$hosts_sql.')'),
+					'IPMI' => CDBHelper::getCount($interfaces_sql.'3 AND available='.
+							$db_interfaces['status'][$header].' AND hostid IN ('.$hosts_sql.')'),
+					'JMX' => CDBHelper::getCount($interfaces_sql.'4 AND available='.
+							$db_interfaces['status'][$header].' AND hostid IN ('.$hosts_sql.')')
 				];
 			}
 		}

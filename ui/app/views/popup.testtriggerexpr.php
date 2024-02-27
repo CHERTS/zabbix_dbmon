@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 $data_table = (new CTable())
 	->addStyle('width: 100%;')
 	->setHeader([
-		_('Expression Variable Elements'),
+		_('Expression variable elements'),
 		_('Result type'),
 		_('Value')
 	]);
@@ -116,7 +116,7 @@ $output = [
 			->addItem((new CVar('test_expression', 1))->removeId())
 			->addItem([
 				$form_list,
-				(new CInput('submit', 'submit'))->addStyle('display: none;')
+				(new CSubmitButton(null))->addClass(ZBX_STYLE_FORM_SUBMIT_HIDDEN)
 			])
 		]))->toString(),
 	'buttons' => [

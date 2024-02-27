@@ -1,9 +1,8 @@
-//go:build linux && amd64
-// +build linux,amd64
+//go:build linux && (amd64 || arm64)
 
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -27,7 +26,7 @@ import (
 	"reflect"
 	"testing"
 
-	"zabbix.com/pkg/std"
+	"git.zabbix.com/ap/plugin-support/std"
 )
 
 var testSets = []testSet{
@@ -86,6 +85,30 @@ var testSets = []testSet{
 			{1, "maxfiles_no_params", "kernel.maxfiles", []string{}, true, uint64(18446744073709551615), reflect.Uint64},
 		},
 		"/proc/sys/fs/file-max",
+		"",
+	}, {
+		"testKernel08_file-nr",
+		[]testCase{
+			{1, "openfiles_no_params", "kernel.openfiles", []string{}, false, uint64(18446744073709551615), reflect.Uint64},
+			{2, "openfiles_empty_pram_value", "kernel.openfiles", []string{""}, true, uint64(18446744073709551615), reflect.Uint64},
+			{3, "openfiles_with_params", "kernel.openfiles", []string{"param"}, true, uint64(18446744073709551615), reflect.Uint64},
+			{4, "wrong_key", "wrong.key", []string{}, true, uint64(18446744073709551615), reflect.Uint64},
+		},
+		"/proc/sys/fs/file-nr",
+		"18446744073709551615\n",
+	}, {
+		"testKernel09_file-nr_no_new_line",
+		[]testCase{
+			{1, "openfiles_no_params", "kernel.openfiles", []string{}, true, uint64(18446744073709551615), reflect.Uint64},
+		},
+		"/proc/sys/fs/file-nr",
+		"18446744073709551616",
+	}, {
+		"testKernel10_file-nr_empty_file",
+		[]testCase{
+			{1, "openfiles_no_params", "kernel.openfiles", []string{}, true, uint64(18446744073709551615), reflect.Uint64},
+		},
+		"/proc/sys/fs/file-nr",
 		"",
 	},
 }

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -35,8 +35,6 @@ class CControllerWidgetProblemHostsView extends CControllerWidget {
 
 	protected function doAction() {
 		$fields = $this->getForm()->getFieldsData();
-
-		$config = select_config();
 
 		$filter_groupids = $fields['groupids'] ? getSubGroups($fields['groupids']) : null;
 		$filter_hostids = $fields['hostids'] ? $fields['hostids'] : null;
@@ -234,7 +232,7 @@ class CControllerWidgetProblemHostsView extends CControllerWidget {
 
 		// Pass results to view.
 		$this->setResponse(new CControllerResponseData([
-			'name' => $this->getInput('name', $this->getDefaultHeader()),
+			'name' => $this->getInput('name', $this->getDefaultName()),
 			'filter' => [
 				'hostids' => $fields['hostids'],
 				'problem' => $fields['problem'],
@@ -243,19 +241,12 @@ class CControllerWidgetProblemHostsView extends CControllerWidget {
 				'hide_empty_groups' => $fields['hide_empty_groups'],
 				'ext_ack' => $fields['ext_ack']
 			],
-			'config' => [
-				'severity_name_0' => $config['severity_name_0'],
-				'severity_name_1' => $config['severity_name_1'],
-				'severity_name_2' => $config['severity_name_2'],
-				'severity_name_3' => $config['severity_name_3'],
-				'severity_name_4' => $config['severity_name_4'],
-				'severity_name_5' => $config['severity_name_5']
-			],
 			'hosts_data' => $hosts_data,
 			'groups' => $groups,
 			'user' => [
 				'debug_mode' => $this->getDebugMode()
-			]
+			],
+			'allowed_ui_problems' => $this->checkAccess(CRoleHelper::UI_MONITORING_PROBLEMS)
 		]));
 	}
 }

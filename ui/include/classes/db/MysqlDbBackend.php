@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -156,34 +156,39 @@ class MysqlDbBackend extends DbBackend {
 	 * @param string $dbname       Database name.
 	 * @param string $schema       DB schema.
 	 *
-	 * @param
-	 * @return resource|null
+	 * @return mysqli|null
 	 */
-	public function connect($host, $port, $user, $password, $dbname, $schema) {
+	public function connect($host, $port, $user, $password, $dbname, $schema): ?mysqli {
+		mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
 		$resource = mysqli_init();
-		$tls_mode = null;
+
+		if ($resource === false) {
+			return null;
+		}
 
 		if ($this->tls_encryption) {
-			$cipher_suit = ($this->tls_cipher_list === '') ? null : $this->tls_cipher_list;
+			$cipher_suit = $this->tls_cipher_list !== '' ? $this->tls_cipher_list : null;
 			$resource->ssl_set($this->tls_key_file, $this->tls_cert_file, $this->tls_ca_file, null, $cipher_suit);
 
 			$tls_mode = MYSQLI_CLIENT_SSL;
 		}
-
-		@$resource->real_connect($host, $user, $password, $dbname, $port, null, $tls_mode);
-
-		if ($resource->error) {
-			$this->setError($resource->error);
-			return null;
+		else {
+			$tls_mode = 0;
 		}
 
-		if ($resource->errno) {
-			$this->setError('Database error code '.$resource->errno);
+		try {
+			@$resource->real_connect($host, $user, $password, $dbname, $port, null, $tls_mode);
+		}
+		catch (mysqli_sql_exception $e) {
+			$this->setError($e->getMessage());
+
 			return null;
 		}
 
 		if ($resource->autocommit(true) === false) {
 			$this->setError('Error setting auto commit.');
+
 			return null;
 		}
 
@@ -196,6 +201,24 @@ class MysqlDbBackend extends DbBackend {
 	 * @return bool
 	 */
 	public function init() {
+		$db_encoding = DBselect('SHOW VARIABLES LIKE "character_set_database"');
+		$charset = $db_encoding ? DBfetch($db_encoding) : false;
+		if ($charset && strtoupper($charset['Value']) === 'UTF8MB4') {
+			DBexecute('SET NAMES utf8mb4');
+			return;
+		}
+
 		DBexecute('SET NAMES utf8');
+	}
+
+	/**
+	 * @inheritdoc
+	 */
+	public function dbFieldExists(string $table_name, string $field_name): bool {
+		return (bool) DBFetch(DBselect(
+			'SHOW COLUMNS'.
+			' FROM '.$table_name.
+			' LIKE '.zbx_dbstr($field_name)
+		));
 	}
 }

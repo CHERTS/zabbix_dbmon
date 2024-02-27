@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -36,11 +36,10 @@ $overrides_popup_form = (new CForm())
 	->addItem((new CVar('templated', $options['templated']))->removeId())
 	->addVar('old_name', $options['old_name'])
 	->addVar('overrides_names', $options['overrides_names'])
-	->addItem((new CVar('action', 'popup.lldoverride'))->removeId())
-	->addItem((new CInput('submit', 'submit'))
-		->addStyle('display: none;')
-		->removeId()
-	);
+	->addItem((new CVar('action', 'popup.lldoverride'))->removeId());
+
+// Enable form submitting on Enter.
+$overrides_popup_form->addItem((new CSubmitButton(null))->addClass(ZBX_STYLE_FORM_SUBMIT_HIDDEN));
 
 $overrides_popup_form_list = (new CFormList())
 	->addRow(
@@ -89,31 +88,27 @@ $override_evaltype = (new CDiv([
 				DB::getFieldLength('lld_override', 'formula')))
 			->setWidth(ZBX_TEXTAREA_STANDARD_WIDTH)
 			->setId('overrides_formula')
-			->setAttribute('placeholder', 'A or (B and C) &hellip;')
-	]))->addClass(ZBX_STYLE_CELL)
+			->setAttribute('placeholder', 'A or (B and C) ...')
+	]))
+		->addClass(ZBX_STYLE_CELL)
+		->addClass(ZBX_STYLE_CELL_EXPRESSION)
 ]))
 	->addClass(ZBX_STYLE_ROW)
 	->setId('overrideRow');
 
 $filter_table = (new CTable())
 	->setId('overrides_filters')
-	->setAttribute('style', 'width: 100%;')
-	->setHeader([_('Label'), _('Macro'), '', _('Regular expression'), (new CColHeader('Action'))->setWidth('100%')]);
+	->addStyle('width: 100%;')
+	->setHeader([_('Label'), _('Macro'), '', _('Regular expression'), (new CColHeader(_('Action')))->setWidth('100%')]);
 
-$overrides_filters = $options['overrides_filters'];
-if (!$overrides_filters) {
-	$overrides_filters = [[
-		'macro' => '',
-		'operator' => CONDITION_OPERATOR_REGEXP,
-		'value' => '',
-		'formulaid' => num2letter(0)
-	]];
-}
-else {
-	$overrides_filters = CConditionHelper::sortConditionsByFormulaId($overrides_filters);
-}
+$operators = CSelect::createOptionsFromArray([
+	CONDITION_OPERATOR_REGEXP => _('matches'),
+	CONDITION_OPERATOR_NOT_REGEXP => _('does not match'),
+	CONDITION_OPERATOR_EXISTS => _('exists'),
+	CONDITION_OPERATOR_NOT_EXISTS => _('does not exist')
+]);
 
-foreach ($overrides_filters as $i => $overrides_filter) {
+foreach ($options['overrides_filters'] as $i => $overrides_filter) {
 	$formulaid = [
 		new CSpan($overrides_filter['formulaid']),
 		new CVar('overrides_filters['.$i.'][formulaid]', $overrides_filter['formulaid'])
@@ -127,10 +122,25 @@ foreach ($overrides_filters as $i => $overrides_filter) {
 		->setAttribute('placeholder', '{#MACRO}')
 		->setAttribute('data-formulaid', $overrides_filter['formulaid']);
 
+	$operator_select = (new CSelect('overrides_filters['.$i.'][operator]'))
+		->setValue($overrides_filter['operator'])
+		->addClass('js-operator')
+		->addOptions($operators);
+
+	if ($options['templated']) {
+		$operator_select->setReadonly();
+	}
+
 	$value = (new CTextBox('overrides_filters['.$i.'][value]', $overrides_filter['value'],$options['templated'],
 			DB::getFieldLength('lld_override_condition', 'value')))
+		->addClass('js-value')
 		->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH)
 		->setAttribute('placeholder', _('regular expression'));
+
+	if ($overrides_filter['operator'] == CONDITION_OPERATOR_EXISTS
+			|| $overrides_filter['operator'] == CONDITION_OPERATOR_NOT_EXISTS) {
+		$value->addClass(ZBX_STYLE_DISPLAY_NONE);
+	}
 
 	$delete_button_cell = [
 		(new CButton('overrides_filters_'.$i.'_remove', _('Remove')))
@@ -139,16 +149,14 @@ foreach ($overrides_filters as $i => $overrides_filter) {
 			->setEnabled(!$options['templated'])
 	];
 
-	$operator_select = (new CSelect('overrides_filters['.$i.'][operator]'))
-		->setValue($overrides_filter['operator'])
-		->addOption(new CSelectOption(CONDITION_OPERATOR_REGEXP, _('matches')))
-		->addOption(new CSelectOption(CONDITION_OPERATOR_NOT_REGEXP, _('does not match')));
+	$row = [
+		$formulaid,
+		$macro,
+		$operator_select,
+		(new CDiv($value))->setWidth(ZBX_TEXTAREA_MACRO_VALUE_WIDTH),
+		(new CCol($delete_button_cell))->addClass(ZBX_STYLE_NOWRAP)
+	];
 
-	if ($options['templated']) {
-		$operator_select->setReadonly();
-	}
-
-	$row = [$formulaid, $macro, $operator_select, $value, (new CCol($delete_button_cell))->addClass(ZBX_STYLE_NOWRAP)];
 	$filter_table->addRow($row, 'form_row');
 }
 
@@ -192,7 +200,7 @@ $overrides_popup_form_list->addRow(_('Operations'),
 		->addClass(ZBX_STYLE_TABLE_FORMS_SEPARATOR)
 		->addStyle('min-width: '.ZBX_TEXTAREA_BIG_WIDTH.'px;')
 		->addStyle('width: 100%;')
-		->addStyle('max-width: 775px;')
+		->addStyle('max-width: 788px;')
 );
 
 $output['buttons'] = [

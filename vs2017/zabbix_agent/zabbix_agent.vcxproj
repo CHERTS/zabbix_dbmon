@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\libs\zbxalgo\algodefs.c" />
+    <ClCompile Include="..\..\src\libs\zbxalgo\hashset.c" />
     <ClCompile Include="..\..\src\libs\zbxalgo\vector.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\alias.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\comms.c">
@@ -30,9 +31,11 @@
     <ClCompile Include="..\..\src\libs\zbxcommon\iprange.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\misc.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\str.c" />
+    <ClCompile Include="..\..\src\libs\zbxcommon\time.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\variant.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\xml.c" />
     <ClCompile Include="..\..\src\libs\zbxcommon\zbxgetopt.c" />
+    <ClCompile Include="..\..\src\libs\zbxcommshigh\comms.c" />
     <ClCompile Include="..\..\src\libs\zbxcomms\comms.c">
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)zbxcomms_comms.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)zbxcomms_comms.obj</ObjectFileName>
@@ -41,7 +44,9 @@
     <ClCompile Include="..\..\src\libs\zbxcompress\compress.c" />
     <ClCompile Include="..\..\src\libs\zbxconf\cfg.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\base64.c" />
+    <ClCompile Include="..\..\src\libs\zbxcrypto\crypto.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\md5.c" />
+    <ClCompile Include="..\..\src\libs\zbxcrypto\sha256crypt.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\tls.c" />
     <ClCompile Include="..\..\src\libs\zbxcrypto\tls_version.c" />
     <ClCompile Include="..\..\src\libs\zbxdbmon\dbmon.c" />
@@ -54,15 +59,13 @@
     <ClCompile Include="..\..\src\libs\zbxhttp\punycode.c" />
     <ClCompile Include="..\..\src\libs\zbxhttp\urlencode.c" />
     <ClCompile Include="..\..\src\libs\zbxjson\json.c" />
+    <ClCompile Include="..\..\src\libs\zbxjson\jsonobj.c" />
     <ClCompile Include="..\..\src\libs\zbxjson\jsonpath.c" />
     <ClCompile Include="..\..\src\libs\zbxjson\json_parser.c" />
     <ClCompile Include="..\..\src\libs\zbxlog\log.c" />
     <ClCompile Include="..\..\src\libs\zbxregexp\zbxregexp.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\agent\agent.c" />
-    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\common.c">
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)zbxsysinfo_common_common.obj</ObjectFileName>
-      <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)zbxsysinfo_common_common.obj</ObjectFileName>
-    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\agent\modbus.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\cpu.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\dir.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\dns.c" />
@@ -78,6 +81,7 @@
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\net.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\system.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\zabbix_stats.c" />
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\zbxsysinfo_common.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\dbmon_common.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\dbmon_config.c" />
     <ClCompile Include="..\..\src\libs\zbxsysinfo\dbmon\dbmon_params.c" />
@@ -147,19 +151,19 @@
     <ProjectGuid>{CF0C802C-D347-4585-A3CC-4151ED7373AE}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>zabbixagent</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
@@ -168,13 +172,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
@@ -281,7 +285,7 @@
       </OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x86;$(ProjectDir)..\openssl\lib\x86;$(ProjectDir)..\$(MYSQL_VENDOR)\lib\x86;$(ProjectDir)..\oracle_$(ORACLE_VER)\lib\x86;$(ProjectDir)..\postgresql_$(PG_VER)\lib\x86;$(ProjectDir)..\freetds\lib\x86;$(ProjectDir)..\pthreads4w\lib\x86;$(ProjectDir)..\libconfig\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVC3.lib;libconfig.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;shlwapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVC3.lib;libconfig.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>true</EnableUAC>
       <TargetMachine>MachineX86</TargetMachine>
       <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
@@ -303,7 +307,7 @@ copy $(SolutionDir)..\include\version.h.win $(SolutionDir)..\include\version.h /
 </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
+      <Command>rem signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)..\bin\win64\$(TargetName)d$(TargetExt) /Y
 copy $(SolutionDir)openssl\bin\x86\libeay32.dll $(SolutionDir)..\bin\win32
 copy $(SolutionDir)openssl\bin\x86\libssl32.dll $(SolutionDir)..\bin\win32
@@ -361,7 +365,7 @@ del /F /Q $(SolutionDir)..\include\version.h.orig
       </OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\pcre\lib\x64;$(ProjectDir)..\openssl\lib\x64;$(ProjectDir)..\$(MYSQL_VENDOR)\lib\x64;$(ProjectDir)..\oracle_$(ORACLE_VER)\lib\x64;$(ProjectDir)..\postgresql_$(PG_VER)\lib\x64;$(ProjectDir)..\freetds\lib\x64;$(ProjectDir)..\pthreads4w\lib\x64;$(ProjectDir)..\libconfig\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVC3.lib;libconfig.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;psapi.lib;pdh.lib;Wldap32.lib;uuid.lib;Iphlpapi.lib;delayimp.lib;wevtapi.lib;shlwapi.lib;pcre.lib;ssleay32MT.lib;libeay32MT.lib;lib$(MYSQL_VENDOR).lib;oci.lib;oraocci$(ORACLE_VER).lib;libpq.lib;libpthreadVC3.lib;libconfig.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EnableUAC>true</EnableUAC>
       <TargetMachine>MachineX64</TargetMachine>
       <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).manifest</ManifestFile>
@@ -393,7 +397,7 @@ copy $(SolutionDir)..\include\version.h.win $(SolutionDir)..\include\version.h /
 </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
+      <Command>rem signtool.exe sign /sha1 "$(CERT_THUMBPRINT)" /tr "$(CERT_TIMESTAMP_SERVER)" /fd sha256 /v "$(OutDir)$(TargetName)$(TargetExt)"
 copy $(OutDir)$(TargetName)$(TargetExt) $(SolutionDir)..\bin\win64\$(TargetName)d$(TargetExt) /Y
 copy $(SolutionDir)openssl\bin\x64\libeay32.dll $(SolutionDir)..\bin\win64
 copy $(SolutionDir)openssl\bin\x64\libssl32.dll $(SolutionDir)..\bin\win64

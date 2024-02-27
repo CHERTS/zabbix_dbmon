@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -22,12 +22,10 @@
 class CHtmlUrlValidator {
 
 	/**
-	 * URL is validated if schema validation is enabled (see VALIDATE_URI_SCHEMES).
+	 * URL is validated if schema validation is enabled by CSettingsHelper::VALIDATE_URI_SCHEMES parameter.
 	 *
 	 * Relative URL should start with .php file name.
-	 * Absolute URL schema must match schemes mentioned in ZBX_URL_VALID_SCHEMES comma separated list.
-	 *
-	 * @static
+	 * Absolute URL schema must match the URI schemes comma separated list stored in the DB.
 	 *
 	 * @param string $url                              URL string to validate.
 	 * @param array  $options
@@ -40,17 +38,17 @@ class CHtmlUrlValidator {
 	 *                                                    set to INVENTORY_URL_MACRO_HOST;
 	 * @param bool   $options[allow_event_tags_macro]  If set to be true, URLs containing {EVENT.TAGS.<ref>} macros will
 	 *                                                 be considered as valid.
-	 * @param bool   $options[validate_uri_schemes]    Parameter allows to overwrite global switch VALIDATE_URI_SCHEMES
-	 *                                                 for specific uses.
+	 * @param bool   $options[validate_uri_schemes]    Parameter allows to overwrite global switch
+	 *                                                 CSettingsHelper::VALIDATE_URI_SCHEMES for specific uses.
 	 *
 	 * @return bool
 	 */
-	public static function validate($url, array $options = []) {
+	public static function validate(string $url, array $options = []): bool {
 		$options += [
 			'allow_user_macro' => true,
 			'allow_event_tags_macro' => false,
 			'allow_inventory_macro' => INVENTORY_URL_MACRO_NONE,
-			'validate_uri_schemes' => VALIDATE_URI_SCHEMES
+			'validate_uri_schemes' => (bool) CSettingsHelper::get(CSettingsHelper::VALIDATE_URI_SCHEMES)
 		];
 
 		if ($options['validate_uri_schemes'] === false) {
@@ -58,7 +56,8 @@ class CHtmlUrlValidator {
 		}
 
 		if ($options['allow_inventory_macro'] != INVENTORY_URL_MACRO_NONE) {
-			$macro_parser = new CMacroParser(['{INVENTORY.URL.A}', '{INVENTORY.URL.B}', '{INVENTORY.URL.C}'], [
+			$macro_parser = new CMacroParser([
+				'macros' => ['{INVENTORY.URL.A}', '{INVENTORY.URL.B}', '{INVENTORY.URL.C}'],
 				'ref_type' => ($options['allow_inventory_macro'] == INVENTORY_URL_MACRO_TRIGGER)
 					? CMacroParser::REFERENCE_NUMERIC
 					: CMacroParser::REFERENCE_NONE
@@ -71,7 +70,10 @@ class CHtmlUrlValidator {
 		}
 
 		if ($options['allow_event_tags_macro'] === true) {
-			$macro_parser = new CMacroParser(['{EVENT.TAGS}'], ['ref_type' => CMacroParser::REFERENCE_ALPHANUMERIC]);
+			$macro_parser = new CMacroParser([
+				'macros' => ['{EVENT.TAGS}'],
+				'ref_type' => CMacroParser::REFERENCE_ALPHANUMERIC
+			]);
 
 			for ($pos = strpos($url, '{'); $pos !== false; $pos = strpos($url, '{', $pos + 1)) {
 				if ($macro_parser->parse($url, $pos) != CParser::PARSE_FAIL) {
@@ -90,25 +92,39 @@ class CHtmlUrlValidator {
 			}
 		}
 
-		$url_parts = parse_url($url);
+		$url_parts = parse_url(preg_replace('/[\r\n\t]/', '', trim($url, "\x00..\x1F\x20")));
 		if (!$url_parts) {
 			return false;
 		}
 
 		if (array_key_exists('scheme', $url_parts)) {
-			if (!in_array(strtolower($url_parts['scheme']), explode(',', strtolower(ZBX_URI_VALID_SCHEMES)))) {
+			if (!in_array(strtolower($url_parts['scheme']), explode(',', strtolower(CSettingsHelper::get(
+					CSettingsHelper::URI_VALID_SCHEMES
+			))))) {
 				return false;
 			}
 
 			if (array_key_exists('host', $url_parts)) {
 				return true;
 			}
-			else {
-				return (array_key_exists('path', $url_parts) && $url_parts['path'] !== '/');
-			}
+
+			return array_key_exists('path', $url_parts) && $url_parts['path'] !== '/';
 		}
-		else {
-			return (array_key_exists('path', $url_parts) && $url_parts['path'] !== '');
-		}
+
+		return array_key_exists('path', $url_parts) && $url_parts['path'] !== '';
+	}
+
+	/**
+	 * Verifies that URL will not lead to third party pages.
+	 *
+	 * @param string $url
+	 *
+	 * @return bool
+	 */
+	public static function validateSameSite(string $url): bool {
+		$root_path = __DIR__.'/../../../';
+		preg_match('/^\/?(?<filename>[a-z0-9_.]+\.php)(\?.*)?$/i', $url, $url_parts);
+
+		return array_key_exists('filename', $url_parts) && file_exists($root_path.$url_parts['filename']);
 	}
 }

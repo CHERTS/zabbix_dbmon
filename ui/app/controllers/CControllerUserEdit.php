@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -26,12 +26,13 @@ class CControllerUserEdit extends CControllerUserEditGeneral {
 
 	protected function checkInput() {
 		$locales = array_keys(getLocales());
+		$locales[] = LANG_DEFAULT;
 		$themes = array_keys(APP::getThemes());
 		$themes[] = THEME_DEFAULT;
 
 		$fields = [
 			'userid' =>				'db users.userid',
-			'alias' =>				'db users.alias',
+			'username' =>			'db users.username',
 			'name' =>				'db users.name',
 			'surname' =>			'db users.surname',
 			'user_groups' =>		'array_id|not_empty',
@@ -39,17 +40,18 @@ class CControllerUserEdit extends CControllerUserEditGeneral {
 			'password1' =>			'string',
 			'password2' =>			'string',
 			'lang' =>				'db users.lang|in '.implode(',', $locales),
+			'timezone' =>			'db users.timezone|in '.implode(',', array_keys($this->timezones)),
 			'theme' =>				'db users.theme|in '.implode(',', $themes),
 			'autologin' =>			'db users.autologin|in 0,1',
 			'autologout' =>			'db users.autologout',
 			'refresh' =>			'db users.refresh',
 			'rows_per_page' =>		'db users.rows_per_page',
 			'url' =>				'db users.url',
-			'user_medias' =>		'array',
+			'medias' =>				'array',
 			'new_media' =>			'array',
 			'enable_media' =>		'int32',
 			'disable_media' =>		'int32',
-			'type' =>				'db users.type|in '.USER_TYPE_ZABBIX_USER.','.USER_TYPE_ZABBIX_ADMIN.','.USER_TYPE_SUPER_ADMIN,
+			'roleid' =>				'db users.roleid',
 			'form_refresh' =>		'int32'
 		];
 
@@ -62,15 +64,15 @@ class CControllerUserEdit extends CControllerUserEditGeneral {
 		return $ret;
 	}
 
-	protected function checkPermissions() {
-		if ($this->getUserType() != USER_TYPE_SUPER_ADMIN) {
+	protected function checkPermissions(): bool {
+		if (!$this->checkAccess(CRoleHelper::UI_ADMINISTRATION_USERS)) {
 			return false;
 		}
 
 		if ($this->getInput('userid', 0) != 0) {
 			$users = API::User()->get([
-				'output' => ['alias', 'name', 'surname', 'lang', 'theme', 'autologin', 'autologout', 'refresh',
-					'rows_per_page', 'url', 'type'
+				'output' => ['username', 'name', 'surname', 'lang', 'theme', 'autologin', 'autologout', 'refresh',
+					'rows_per_page', 'url', 'roleid', 'timezone'
 				],
 				'selectMedias' => ['mediatypeid', 'period', 'sendto', 'severity', 'active'],
 				'selectUsrgrps' => ['usrgrpid'],
@@ -88,45 +90,40 @@ class CControllerUserEdit extends CControllerUserEditGeneral {
 		return true;
 	}
 
-	protected function doAction() {
+	protected function doAction(): void {
 		$db_defaults = DB::getDefaults('users');
-		$config = select_config();
 
 		$data = [
 			'userid' => 0,
-			'alias' => '',
+			'username' => '',
 			'name' => '',
 			'surname' => '',
 			'password1' => '',
 			'password2' => '',
 			'lang' => $db_defaults['lang'],
+			'timezone' => $db_defaults['timezone'],
+			'timezones' => $this->timezones,
 			'theme' => $db_defaults['theme'],
 			'autologin' => $db_defaults['autologin'],
 			'autologout' => '0',
 			'refresh' => $db_defaults['refresh'],
 			'rows_per_page' => $db_defaults['rows_per_page'],
 			'url' => '',
-			'user_medias' => [],
+			'medias' => [],
 			'new_media' => [],
-			'type' => $db_defaults['type'],
-			'config' => [
-				'severity_name_0' => $config['severity_name_0'],
-				'severity_name_1' => $config['severity_name_1'],
-				'severity_name_2' => $config['severity_name_2'],
-				'severity_name_3' => $config['severity_name_3'],
-				'severity_name_4' => $config['severity_name_4'],
-				'severity_name_5' => $config['severity_name_5']
-			],
+			'roleid' => '',
+			'role' => [],
+			'user_type' => '',
 			'sid' => $this->getUserSID(),
 			'form_refresh' => 0,
 			'action' => $this->getAction(),
-			'db_user' => ['alias' => '']
+			'db_user' => ['username' => '']
 		];
 		$user_groups = [];
 
 		if ($this->getInput('userid', 0) != 0) {
 			$data['userid'] = $this->getInput('userid');
-			$data['alias'] = $this->user['alias'];
+			$data['username'] = $this->user['username'];
 			$data['name'] = $this->user['name'];
 			$data['surname'] = $this->user['surname'];
 			$user_groups = zbx_objectValues($this->user['usrgrps'], 'usrgrpid');
@@ -134,29 +131,35 @@ class CControllerUserEdit extends CControllerUserEditGeneral {
 			$data['password1'] = '';
 			$data['password2'] = '';
 			$data['lang'] = $this->user['lang'];
+			$data['timezone'] = $this->user['timezone'];
 			$data['theme'] = $this->user['theme'];
 			$data['autologin'] = $this->user['autologin'];
 			$data['autologout'] = $this->user['autologout'];
 			$data['refresh'] = $this->user['refresh'];
 			$data['rows_per_page'] = $this->user['rows_per_page'];
 			$data['url'] = $this->user['url'];
-			$data['user_medias'] = $this->user['medias'];
-			$data['type'] = $this->user['type'];
-			$data['db_user']['alias'] = $this->user['alias'];
+			$data['medias'] = $this->user['medias'];
+			$data['db_user']['username'] = $this->user['username'];
+
+			if (!$this->getInput('form_refresh', 0)) {
+				$data['roleid'] = $this->user['roleid'];
+			}
 		}
 		else {
 			$data['change_password'] = true;
+			$data['roleid'] = $this->getInput('roleid', '');
 		}
 
 		// Overwrite with input variables.
-		$this->getInputs($data, ['alias', 'name', 'surname', 'password1', 'password2', 'lang', 'theme', 'autologin',
-			'autologout', 'refresh', 'rows_per_page', 'url', 'form_refresh', 'type'
+		$this->getInputs($data, ['username', 'name', 'surname', 'password1', 'password2', 'lang', 'timezone', 'theme',
+			'autologin', 'autologout', 'refresh', 'rows_per_page', 'url', 'form_refresh', 'roleid'
 		]);
 		if ($data['form_refresh'] != 0) {
 			$user_groups = $this->getInput('user_groups', []);
-			$data['user_medias'] = $this->getInput('user_medias', []);
+			$data['medias'] = $this->getInput('medias', []);
 		}
 
+		$data['password_requirements'] = $this->getPasswordRequirements();
 		$data = $this->setUserMedias($data);
 
 		$data['groups'] = $user_groups
@@ -168,7 +171,56 @@ class CControllerUserEdit extends CControllerUserEditGeneral {
 		CArrayHelper::sort($data['groups'], ['name']);
 		$data['groups'] = CArrayHelper::renameObjectsKeys($data['groups'], ['usrgrpid' => 'id']);
 
-		if ($data['type'] == USER_TYPE_SUPER_ADMIN) {
+		if ($data['roleid']) {
+			$roles = API::Role()->get([
+				'output' => ['name', 'type'],
+				'selectRules' => ['services.read.mode', 'services.read.list', 'services.read.tag',
+					'services.write.mode', 'services.write.list', 'services.write.tag'
+				],
+				'roleids' => $data['roleid']
+			]);
+
+			if ($roles) {
+				$role = $roles[0];
+
+				$data['role'] = [['id' => $data['roleid'], 'name' => $role['name']]];
+				$data['user_type'] = $role['type'];
+
+				if ($role['rules']['services.read.mode'] == ZBX_ROLE_RULE_SERVICES_ACCESS_ALL) {
+					$data['service_read_access'] = CRoleHelper::SERVICES_ACCESS_ALL;
+				}
+				elseif ($role['rules']['services.read.list'] || $role['rules']['services.read.tag']['tag'] !== '') {
+					$data['service_read_access'] = CRoleHelper::SERVICES_ACCESS_LIST;
+				}
+				else {
+					$data['service_read_access'] = CRoleHelper::SERVICES_ACCESS_NONE;
+				}
+
+				$data['service_read_list'] = API::Service()->get([
+					'output' => ['serviceid', 'name'],
+					'serviceids' => array_column($role['rules']['services.read.list'], 'serviceid')
+				]);
+				$data['service_read_tag'] = $role['rules']['services.read.tag'];
+
+				if ($role['rules']['services.write.mode'] == ZBX_ROLE_RULE_SERVICES_ACCESS_ALL) {
+					$data['service_write_access'] = CRoleHelper::SERVICES_ACCESS_ALL;
+				}
+				elseif ($role['rules']['services.write.list'] || $role['rules']['services.write.tag']['tag'] !== '') {
+					$data['service_write_access'] = CRoleHelper::SERVICES_ACCESS_LIST;
+				}
+				else {
+					$data['service_write_access'] = CRoleHelper::SERVICES_ACCESS_NONE;
+				}
+
+				$data['service_write_list'] = API::Service()->get([
+					'output' => ['serviceid', 'name'],
+					'serviceids' => array_column($role['rules']['services.write.list'], 'serviceid')
+				]);
+				$data['service_write_tag'] = $role['rules']['services.write.tag'];
+			}
+		}
+
+		if ($data['user_type'] == USER_TYPE_SUPER_ADMIN) {
 			$data['groups_rights'] = [
 				'0' => [
 					'permission' => PERM_READ_WRITE,
@@ -180,6 +232,12 @@ class CControllerUserEdit extends CControllerUserEditGeneral {
 		else {
 			$data['groups_rights'] = collapseHostGroupRights(getHostGroupsRights($user_groups));
 		}
+
+		$data['modules'] = API::Module()->get([
+			'output' => ['id'],
+			'filter' => ['status' => MODULE_STATUS_ENABLED],
+			'preservekeys' => true
+		]);
 
 		$response = new CControllerResponseData($data);
 		$response->setTitle(_('Configuration of users'));

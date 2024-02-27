@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -17,17 +17,17 @@
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
 
+#include "zbx_vc_common.h"
+
 #include "zbxmocktest.h"
-#include "zbxmockdata.h"
 #include "zbxmockassert.h"
 #include "zbxmockutil.h"
 
 #include "common.h"
+#include "mutexs.h"
 #include "valuecache.h"
 #include "valuecache_test.h"
 #include "mocks/valuecache/valuecache_mock.h"
-
-#include "zbx_vc_common.h"
 
 extern zbx_uint64_t	CONFIG_VALUE_CACHE_SIZE;
 
@@ -94,9 +94,10 @@ void	zbx_vc_common_test_func(
 
 	if (NULL != add_values_cb)
 	{
+		int			ret_flush;
 		zbx_vector_ptr_t	history;
 
-		add_values_cb(&handle, &history, &err, &data);
+		add_values_cb(&handle, &history, &err, &data, &ret_flush);
 	}
 	else if (NULL != get_value_cb)
 	{

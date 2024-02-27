@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -23,6 +23,10 @@
  * Class containing methods for operations with problems.
  */
 class CProblem extends CApiService {
+
+	public const ACCESS_RULES = [
+		'get' => ['min_user_type' => USER_TYPE_ZABBIX_USER]
+	];
 
 	protected $tableName = 'problem';
 	protected $tableAlias = 'p';
@@ -52,7 +56,6 @@ class CProblem extends CApiService {
 			'eventids'					=> null,
 			'groupids'					=> null,
 			'hostids'					=> null,
-			'applicationids'			=> null,
 			'objectids'					=> null,
 
 			'editable'					=> false,
@@ -68,7 +71,7 @@ class CProblem extends CApiService {
 			'acknowledged'				=> null,
 			'suppressed'				=> null,
 			'recent'					=> null,
-			'any'						=> null,	// (internal) true if need not filtred by r_eventid
+			'any'						=> null,	// (internal) true if need not filtered by r_eventid
 			'evaltype'					=> TAG_EVAL_TYPE_AND_OR,
 			'tags'						=> null,
 			'filter'					=> null,
@@ -231,31 +234,10 @@ class CProblem extends CApiService {
 			}
 		}
 
-		// applicationids
-		if ($options['applicationids'] !== null) {
-			zbx_value2array($options['applicationids']);
-
-			// triggers
-			if ($options['object'] == EVENT_OBJECT_TRIGGER) {
-				$sqlParts['from']['f'] = 'functions f';
-				$sqlParts['from']['ia'] = 'items_applications ia';
-				$sqlParts['where']['p-f'] = 'p.objectid=f.triggerid';
-				$sqlParts['where']['f-ia'] = 'f.itemid=ia.itemid';
-				$sqlParts['where']['ia'] = dbConditionInt('ia.applicationid', $options['applicationids']);
-			}
-			// items
-			elseif ($options['object'] == EVENT_OBJECT_ITEM) {
-				$sqlParts['from']['ia'] = 'items_applications ia';
-				$sqlParts['where']['p-ia'] = 'p.objectid=ia.itemid';
-				$sqlParts['where']['ia'] = dbConditionInt('ia.applicationid', $options['applicationids']);
-			}
-			// ignore this filter for lld rules
-		}
-
 		// severities
 		if ($options['severities'] !== null) {
 			// triggers
-			if ($options['object'] == EVENT_OBJECT_TRIGGER) {
+			if ($options['object'] == EVENT_OBJECT_TRIGGER || $options['object'] == EVENT_OBJECT_SERVICE) {
 				zbx_value2array($options['severities']);
 				$sqlParts['where'][] = dbConditionInt('p.severity', $options['severities']);
 			}
@@ -287,8 +269,7 @@ class CProblem extends CApiService {
 
 		// recent
 		if ($options['recent'] !== null && $options['recent']) {
-			$config = select_config();
-			$ok_events_from = time() - timeUnitToSeconds($config['ok_period']);
+			$ok_events_from = time() - timeUnitToSeconds(CSettingsHelper::get(CSettingsHelper::OK_PERIOD));
 
 			$sqlParts['where'][] = '(p.r_eventid IS NULL OR p.r_clock>'.$ok_events_from.')';
 		}
@@ -369,14 +350,14 @@ class CProblem extends CApiService {
 	 */
 	protected function validateGet(array $options) {
 		$sourceValidator = new CLimitedSetValidator([
-			'values' => [EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_INTERNAL]
+			'values' => [EVENT_SOURCE_TRIGGERS, EVENT_SOURCE_INTERNAL, EVENT_SOURCE_SERVICE]
 		]);
 		if (!$sourceValidator->validate($options['source'])) {
 			self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect source value.'));
 		}
 
 		$objectValidator = new CLimitedSetValidator([
-			'values' => [EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE]
+			'values' => [EVENT_OBJECT_TRIGGER, EVENT_OBJECT_ITEM, EVENT_OBJECT_LLDRULE, EVENT_OBJECT_SERVICE]
 		]);
 		if (!$objectValidator->validate($options['object'])) {
 			self::exception(ZBX_API_ERROR_PARAMETERS, _('Incorrect object value.'));

@@ -1,7 +1,7 @@
 <?php
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -183,13 +183,26 @@ class CPrometheusPatternParser extends CParser {
 		self::skipWhitespaces($source, $p);
 
 		// Parse operator.
-		if (!isset($source[$p]) || $source[$p] !== '=') {
+		if (!isset($source[$p]) || !isset($source[$p + 1])) {
+			// Even if $p + 1 is not part of the operator, we still must have a character there
 			return false;
 		}
-		$p++;
 
-		if (isset($source[$p]) && $source[$p] === '~') {
-			$p++;
+		if ($source[$p] === '=') {
+			if ($source[$p + 1] === '~') {
+				$p += 2; // =~
+			} else {
+				$p += 1; // =
+			}
+		}
+		elseif ($source[$p] === '!') {
+			if ($source[$p + 1] !== '=' && $source[$p + 1] !== '~') {
+				return false;
+			}
+			$p += 2; // != or !~
+		}
+		else {
+			return false;
 		}
 
 		self::skipWhitespaces($source, $p);

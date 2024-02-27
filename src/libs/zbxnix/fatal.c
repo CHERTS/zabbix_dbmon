@@ -1,6 +1,6 @@
 /*
 ** Zabbix
-** Copyright (C) 2001-2022 Zabbix SIA
+** Copyright (C) 2001-2024 Zabbix SIA
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -16,6 +16,8 @@
 ** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 **/
+
+#include "fatal.h"
 
 #include "config.h"
 
@@ -39,8 +41,6 @@
 
 #include "common.h"
 #include "log.h"
-
-#include "fatal.h"
 
 const char	*get_signal_name(int sig)
 {
@@ -267,11 +267,13 @@ void	zbx_log_fatal_info(void *context, unsigned int flags)
 #	endif
 
 #endif	/* HAVE_SYS_UCONTEXT_H */
+
 	zabbix_log(LOG_LEVEL_CRIT, "====== Fatal information: ======");
 
 	if (0 != (flags & ZBX_FATAL_LOG_PC_REG_SF))
 	{
 #ifdef	HAVE_SYS_UCONTEXT_H
+
 #ifdef	ZBX_GET_PC
 		int	i;
 		/* On 64-bit GNU/Linux ZBX_GET_PC() returns 'greg_t' defined as 'long long int' (8 bytes). */
