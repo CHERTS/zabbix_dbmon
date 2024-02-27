@@ -14,9 +14,9 @@ set MYSQL_PATH=%SDK_DIR%\mariadb
 
 title Build zabbix-agent-dbmon %ZBX_ARCH%...
 
-rem -- Visual Studio 2017 Community --
-echo Set Visual Studio 2017 enviroment...
-call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %VS_ARCH% >nul 2>&1
+rem -- Visual Studio 2022 --
+echo Set Visual Studio 2022 enviroment...
+call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" %VS_ARCH% >nul 2>&1
 
 if not exist "%PCRE_PATH%\lib\%VS_ARCH%" (
   echo ERROR: PCRE %VS_ARCH% not found.

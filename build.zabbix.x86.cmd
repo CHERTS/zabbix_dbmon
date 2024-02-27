@@ -20,9 +20,9 @@ title Build zabbix-agent %ZBX_ARCH%...
 rem https://support.zabbix.com/browse/ZBXNEXT-3047
 rem -- Visual Studio 2015 Pro --
 rem call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" %VS_ARCH% >nul 2>&1
-rem -- Visual Studio 2017 Community --
-echo Set Visual Studio 2017 enviroment...
-call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %VS_ARCH% >nul 2>&1
+rem -- Visual Studio 2022 --
+echo Set Visual Studio 2022 enviroment...
+call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvarsall.bat" %VS_ARCH% >nul 2>&1
 
 if not exist "%PCRE_PATH%\lib\%VS_ARCH%" (
   echo ERROR: PCRE %VS_ARCH% not found.
@@ -45,29 +45,29 @@ echo Build Zabbix Agent %ZBX_ARCH%...
 rem nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIBDIR="%OPENSSL_PATH%\lib" PCREINCDIR="%PCRE_PATH%\pcre-%PCRE_VER%-%VS_ARCH%\include" PCRELIBDIR="%PCRE_PATH%\pcre-%PCRE_VER%-%VS_ARCH%\lib" /f Makefile_agent
 nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" /f Makefile_agent
 
-if exist "%ZBX_AGENTD_BIN%" (
-  signtool_x86.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_AGENTD_BIN%"
-) else (
-  echo "ERROR! %ZBX_AGENTD_BIN% not found."
-)
+rem if exist "%ZBX_AGENTD_BIN%" (
+rem   signtool_x86.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_AGENTD_BIN%"
+rem ) else (
+rem   echo "ERROR! %ZBX_AGENTD_BIN% not found."
+rem )
 
 echo Build Zabbix Sender %ZBX_ARCH%...
 nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" /f Makefile_sender
 
-if exist "%ZBX_SENDER_BIN%" (
-  signtool_x86.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_SENDER_BIN%"
-) else (
-  echo "ERROR! %ZBX_SENDER_BIN% not found."
-)
+rem if exist "%ZBX_SENDER_BIN%" (
+rem   signtool_x86.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_SENDER_BIN%"
+rem ) else (
+rem   echo "ERROR! %ZBX_SENDER_BIN% not found."
+rem )
 
 echo Build Zabbix Get %ZBX_ARCH%...
 nmake CPU=%ZBX_ARCH% TLS=openssl TLSINCDIR="%OPENSSL_PATH%\include" TLSLIB="%OPENSSL_PATH%\lib\%VS_ARCH%\ssleay32MT.lib" TLSLIB2="%OPENSSL_PATH%\lib\%VS_ARCH%\libeay32MT.lib" PCREINCDIR="%PCRE_PATH%\include" PCRELIBDIR="%PCRE_PATH%\lib\%VS_ARCH%" /f Makefile_get
 
-if exist "%ZBX_GET_BIN%" (
-  signtool_x86.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_GET_BIN%"
-) else (
-  echo "ERROR! %ZBX_GET_BIN% not found."
-)
+rem if exist "%ZBX_GET_BIN%" (
+rem   signtool_x86.exe sign /sha1 "%cert_thumbprint%" /tr "%cert_timestamp_server%" /fd sha256 /v "%ZBX_GET_BIN%"
+rem ) else (
+rem   echo "ERROR! %ZBX_GET_BIN% not found."
+rem )
 
 echo Done, press Enter to exit.
 pause >nul
