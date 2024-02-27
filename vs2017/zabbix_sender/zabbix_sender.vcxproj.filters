@@ -46,6 +46,9 @@
     <Filter Include="Исходные файлы\zbxregexp">
       <UniqueIdentifier>{839fb68f-00f4-41ab-a7d1-d0c742d1be9d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\zbxcommshigh">
+      <UniqueIdentifier>{d09f85a9-41f5-4f54-816f-e4cc5c60f595}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\libs\zbxcomms\comms.c">
@@ -125,6 +128,21 @@
     </ClCompile>
     <ClCompile Include="..\..\src\libs\zbxcrypto\tls_version.c">
       <Filter>Исходные файлы\zbxcrypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommshigh\comms.c">
+      <Filter>Исходные файлы\zbxcommshigh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxalgo\hashset.c">
+      <Filter>Исходные файлы\zbxalgo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxjson\jsonobj.c">
+      <Filter>Исходные файлы\zbxjson</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcrypto\crypto.c">
+      <Filter>Исходные файлы\zbxcrypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\time.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

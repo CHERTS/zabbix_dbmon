@@ -73,6 +73,9 @@
     <Filter Include="Исходные файлы\zbxsysinfo\dbmon">
       <UniqueIdentifier>{48a43915-b86f-40cb-b9f3-295ce38313f6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\zbxcommshigh">
+      <UniqueIdentifier>{5c380fe4-91ab-4fc9-a9c4-62b2e7477295}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\libs\zbxcomms\comms.c">
@@ -276,9 +279,6 @@
     <ClCompile Include="..\..\src\libs\zbxsysinfo\common\http.c">
       <Filter>Исходные файлы\zbxsysinfo\common</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\common.c">
-      <Filter>Исходные файлы\zbxsysinfo\common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\libs\zbxsysinfo\win32\cpu.c">
       <Filter>Исходные файлы\zbxsysinfo\win32</Filter>
     </ClCompile>
@@ -335,6 +335,30 @@
     </ClCompile>
     <ClCompile Include="..\..\src\zabbix_agent\logfiles\persistent_state.c">
       <Filter>Исходные файлы\zbxlog</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommshigh\comms.c">
+      <Filter>Исходные файлы\zbxcommshigh</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxalgo\hashset.c">
+      <Filter>Исходные файлы\zbxalgo</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcommon\time.c">
+      <Filter>Исходные файлы\zbxcommon</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcrypto\crypto.c">
+      <Filter>Исходные файлы\zbxcrypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxcrypto\sha256crypt.c">
+      <Filter>Исходные файлы\zbxcrypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxjson\jsonobj.c">
+      <Filter>Исходные файлы\zbxjson</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\common\zbxsysinfo_common.c">
+      <Filter>Исходные файлы\zbxsysinfo\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\libs\zbxsysinfo\agent\modbus.c">
+      <Filter>Исходные файлы\zbxsysinfo\agent</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
