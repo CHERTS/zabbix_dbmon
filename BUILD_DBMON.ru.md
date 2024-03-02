@@ -6,9 +6,9 @@
 
 [Сборка на Red Hat Enterprise Linux 8 с поддержкой MySQL (MariaDB) и PostgreSQL](#red-hat-enterprise-linux-8)
 
-[Сборка на Ubuntu 18.04 LTS (Bionic Beaver) с поддержкой MySQL (MariaDB) и PostgreSQL](#ubuntu)
+[Сборка на Ubuntu 22.04 LTS ((Jammy Jellyfish) с поддержкой MySQL (MariaDB) и PostgreSQL](#ubuntu)
 
-[Сборка на Debian 10 (buster) с поддержкой MySQL (MariaDB) и PostgreSQL](#debian)
+[Сборка на Debian 12 (bookworm) с поддержкой MySQL (MariaDB) и PostgreSQL](#debian)
 
 # Oracle Linux 7
 ## Сборка на Oracle Linux 7 с поддержкой MySQL (MariaDB) и PostgreSQL
@@ -118,7 +118,7 @@ systemctl start zabbix-agent
 ~~~~
 
 # Ubuntu
-## Сборка на Ubuntu 18.04 LTS (Bionic Beaver) с поддержкой MariaDB и PostgreSQL
+## Сборка на Ubuntu 22.04 LTS (Jammy Jellyfish) с поддержкой MariaDB и PostgreSQL
 
 ### 1. Для подготовки к сборки на Ubuntu 18.04 нужно установить дополнительные пакеты:
 
@@ -166,7 +166,7 @@ make
 
 ~~~~
 ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
--rwxr-xr-x  1 root       root        2021176 Feb 19 21:17 zabbix_agentd
+-rwxrwxr-x 1 root root 2468704 Mar  2 17:17 zabbix_agentd
 ~~~~
 
 ### 5. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
@@ -189,7 +189,7 @@ systemctl start zabbix-agent
 ~~~~
 
 # Debian
-## Сборка на Debian 10 (buster) с поддержкой MariaDB и PostgreSQL
+## Сборка на Debian 12 (bookworm) с поддержкой MariaDB и PostgreSQL
 
 ### 1. Для подготовки к сборки на Debian 10 нужно установить дополнительные пакеты:
 
@@ -237,7 +237,7 @@ make
 
 ~~~~
 ls -l src/zabbix_agent | grep -E 'zabbix_agentd$'
--rwxr-xr-x 1 root root 2387320 Mar 12 18:52 zabbix_agentd
+-rwxrwxr-x 1 root root 2468704 Mar  2 17:17 zabbix_agentd
 ~~~~
 
 ### 5. Теперь Вы можете остановить zabbix-agent и заменить его данной сборкой, как правило это 2 команды:
