@@ -35,7 +35,7 @@ cd zabbix-6.0.27
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:
 
 ~~~~
-./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+./configure --with-openssl --with-libpthread --with-libpcre2 --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
 make
 ~~~~
 
@@ -87,7 +87,7 @@ cd zabbix-6.0.27
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:
 
 ~~~~
-./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+./configure --with-openssl --with-libpthread --with-libpcre2 --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
 make
 ~~~~
 
@@ -158,7 +158,7 @@ cd zabbix-6.0.27
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:
 
 ~~~~
-./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+./configure --with-openssl --with-libpthread --with-libpcre2 --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
 make
 ~~~~
 
@@ -229,7 +229,7 @@ cd zabbix-6.0.27
 ### 3. Сборка zabbix-agent с поддержкой (MariaDB) MySQL и PostgreSQL:
 
 ~~~~
-./configure --with-openssl --with-libpthread --with-libpcre --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
+./configure --with-openssl --with-libpthread --with-libpcre2 --with-libcurl --enable-dbmon --enable-dbmon-mysql --enable-dbmon-postgresql --with-mysql --with-postgresql --enable-ipv6 --enable-agent --sysconfdir=/etc/zabbix
 make
 ~~~~
 

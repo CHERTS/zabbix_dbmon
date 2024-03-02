@@ -19,6 +19,7 @@ on:
       - "templates/**"
       - "tests/**"
       - "frontends/**"
+      - "*.md"
   workflow_dispatch:
     inputs:
       reason:
