@@ -1067,6 +1067,7 @@ static int	pgsql_make_result(AGENT_REQUEST *request, AGENT_RESULT *result, const
 		pg_conn_string_new = zbx_dsprintf(NULL, "dbname=%s", pg_database);
 		tmp = string_replace(pg_conn_string, "dbname=postgres", pg_conn_string_new);
 		zbx_free(tmp);
+		zbx_free(pg_conn_string_new);
 	}
 
 	pgsql_conn = zbx_db_connect_pgsql(pg_conn_string);
