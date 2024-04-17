@@ -231,6 +231,7 @@ int make_multirow_twocoll_json_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 	SET_STR_RESULT(result, strdup(json.buffer));
 	zbx_json_free(&json);
 	ret = SYSINFO_RET_OK;
+	zbx_free(value_str);
 
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 
@@ -406,6 +407,7 @@ int make_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct zbx_db_resu
 	}
 
 out:
+	zbx_free(value_str);
 	zabbix_log(LOG_LEVEL_DEBUG, "End of %s(%s): %s", __func__, request->key, zbx_sysinfo_ret_string(ret));
 
 	return ret;
