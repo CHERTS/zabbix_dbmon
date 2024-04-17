@@ -14,13 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.repository_owner == 'CHERTS' }}
     steps:
-    - uses: actions/checkout@v4
+    - name: Code checkout
+      uses: actions/checkout@v4
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y autoconf automake gcc make wget unzip gettext libxml2-dev libssl-dev libcurl4-openssl-dev libpcre2-dev libconfig-dev libsnmp-dev libsqlite3-dev libopenipmi-dev libssh2-1-dev unixodbc-dev libevent-dev
         sudo apt-get install -y dpkg-dev devscripts git dh-make build-essential autoconf autotools-dev quilt pkg-config tar xz-utils curl
         sudo apt-get install -y libmysqlclient-dev libpq-dev
+        sudo wget https://github.com/sass/dart-sass/releases/download/1.71.1/dart-sass-1.71.1-linux-x64.tar.gz -O /tmp/dart-sass-linux-x64.tar.gz
+        sudo tar -zxf /tmp/dart-sass-linux-x64.tar.gz -C /tmp && yes | sudo cp /tmp/dart-sass/sass /usr/local/sbin && sudo cp -r /tmp/dart-sass/src /usr/local/sbin && sudo rm -rf /tmp/dart-sass dart-sass-linux-x64.tar.gz
     - name: Download Coverity build tool
       run: |
         wget -c -N https://scan.coverity.com/download/linux64 --post-data "token=${{ secrets.COVERITY_SCAN_TOKEN }}&project=zabbix_dbmon" -O coverity_tool.tar.gz
@@ -37,7 +40,7 @@ jobs:
       run: |
         tar czvf cov.tar.gz cov-int
         curl --form token=${{ secrets.COVERITY_SCAN_TOKEN }} \
-          --form email=chipitsine@gmail.com \
+          --form email=${{ secrets.COVERITY_SCAN_EMAIL }} \
           --form file=@cov.tar.gz \
           --form version="Commit $GITHUB_SHA" \
           --form description="Build submitted via CI" \
