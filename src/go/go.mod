@@ -25,9 +25,9 @@ require (
 	github.com/miekg/dns v1.1.43
 	github.com/omeid/go-yarn v0.0.1
 	github.com/sokurenko/go-netstat v1.0.0
-	golang.org/x/net v0.17.0
-	golang.org/x/sys v0.13.0
-	golang.org/x/text v0.13.0
+	golang.org/x/net v0.23.0
+	golang.org/x/sys v0.18.0
+	golang.org/x/text v0.14.0
 )
 
 require (
