@@ -1,4 +1,4 @@
-# Zabbix для мониторинга баз данных без внешних скриптов и т.п. (MySQL, PgSQl, Oracle)
+# Zabbix для мониторинга баз данных без внешних скриптов и т.п. (MySQL, PostgreSQL, Oracle)
 
 ![Release](https://github.com/CHERTS/zabbix_dbmon/workflows/Release/badge.svg)
 [![coverity scan](https://scan.coverity.com/projects/30077/badge.svg)](https://scan.coverity.com/projects/zabbix_dbmon)
