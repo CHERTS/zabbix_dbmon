@@ -1,4 +1,4 @@
-# Zabbix for databases monitoring without externals scrips and etc (MySQL, PgSQl, Oracle)
+# Zabbix for databases monitoring without externals scrips and etc (MySQL, PostgreSQL, Oracle)
 
 ![Release](https://github.com/CHERTS/zabbix_dbmon/workflows/Release/badge.svg)
 [![coverity scan](https://scan.coverity.com/projects/30077/badge.svg)](https://scan.coverity.com/projects/zabbix_dbmon)
