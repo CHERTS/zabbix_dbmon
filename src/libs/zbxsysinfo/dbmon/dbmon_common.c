@@ -462,6 +462,7 @@ unsigned int get_int_one_result(AGENT_REQUEST *request, AGENT_RESULT *result, co
 	const unsigned int col, struct zbx_db_result db_result)
 {
 	unsigned int ret = 0;
+	char *tmp;
 
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s)", __func__, request->key);
 	zabbix_log(LOG_LEVEL_DEBUG, "In %s(%s): Rows: %u, Cols: %u", __func__, request->key, db_result.nb_rows, db_result.nb_columns);
@@ -480,7 +481,9 @@ unsigned int get_int_one_result(AGENT_REQUEST *request, AGENT_RESULT *result, co
 			{
 				case ZBX_COL_TYPE_TEXT:
 					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(TEXT): %s", __func__, request->key, row, col, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value);
-					ret = atoi(zbx_strdup(NULL, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value));
+					tmp = zbx_strdup(NULL, ((struct zbx_db_type_text *)db_result.data[row][col].t_data)->value);
+					ret = atoi(tmp);
+					zbx_free(tmp);
 					break;
 				case ZBX_COL_TYPE_INT:
 					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col: %d, Value(INT): %lld", __func__, request->key, row, col, ((struct zbx_db_type_int *)db_result.data[row][col].t_data)->value);
