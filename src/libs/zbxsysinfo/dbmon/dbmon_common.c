@@ -138,7 +138,9 @@ int make_onerow_json_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct
 				case ZBX_COL_TYPE_DATE:
 					strftime(date_buf, sizeof(date_buf), "%Y-%m-%d %H:%M:%S", &((struct zbx_db_type_datetime *)db_result.data[row][col].t_data)->value);
 					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(DATE): %d, Value: %s", __func__, request->key, row, col, date_buf);
-					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, date_buf), ZBX_JSON_TYPE_STRING);
+					value_str = zbx_strdup(NULL, date_buf);
+					zbx_json_addstring(&json, buffer, value_str, ZBX_JSON_TYPE_STRING);
+					zbx_free(value_str);
 					break;
 				case ZBX_COL_TYPE_BLOB:
 					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(BLOB): %d, Value: BLOB", __func__, request->key, row, col);
