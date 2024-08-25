@@ -203,7 +203,9 @@ int make_multirow_twocoll_json_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 			case ZBX_COL_TYPE_INT:
 				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(INT): %d, Value: %lld", __func__, request->key, row, 1, ((struct zbx_db_type_int *)db_result.data[row][1].t_data)->value);
 				value_str = zbx_dsprintf(NULL, "%lld", (((struct zbx_db_type_int *)db_result.data[row][1].t_data)->value));
-				zbx_json_addstring(&json, buffer, zbx_strdup(NULL, value_str), ZBX_JSON_TYPE_STRING);
+				char *tmp = zbx_strdup(NULL, value_str);
+				zbx_json_addstring(&json, buffer, tmp, ZBX_JSON_TYPE_STRING);
+				zbx_free(tmp);
 				zbx_free(value_str);
 				break;
 			case ZBX_COL_TYPE_DOUBLE:
