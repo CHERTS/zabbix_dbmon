@@ -148,7 +148,9 @@ int make_onerow_json_result(AGENT_REQUEST *request, AGENT_RESULT *result, struct
 					break;
 				case ZBX_COL_TYPE_NULL:
 					zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(NULL): %d, Value: NULL", __func__, request->key, row, col);
-					zbx_json_addstring(&json, buffer, zbx_strdup(NULL, "NULL"), ZBX_JSON_TYPE_STRING);
+					value_str = zbx_strdup(NULL, "NULL");
+					zbx_json_addstring(&json, buffer, value_str, ZBX_JSON_TYPE_STRING);
+					zbx_free(value_str);
 					break;
 			}
 		}
@@ -183,10 +185,14 @@ int make_multirow_twocoll_json_result(AGENT_REQUEST *request, AGENT_RESULT *resu
 		{
 			case ZBX_COL_TYPE_TEXT:
 				zabbix_log(LOG_LEVEL_TRACE, "In %s(%s): Row: %d, Col(TEXT): %d, Value: %s", __func__, request->key, row, 0, ((struct zbx_db_type_text *)db_result.data[row][0].t_data)->value);
-				zbx_snprintf(buffer, sizeof(buffer), "%s", zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.data[row][0].t_data)->value)));
+				value_str = zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.data[row][0].t_data)->value));
+				zbx_snprintf(buffer, sizeof(buffer), "%s", value_str);
+				zbx_free(value_str);
 				break;
 			default:
-				zbx_snprintf(buffer, sizeof(buffer), "%s", zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.fields[0][0].t_data)->value)));
+				value_str = zbx_strdup(NULL, (((struct zbx_db_type_text *)db_result.fields[0][0].t_data)->value));
+				zbx_snprintf(buffer, sizeof(buffer), "%s", value_str);
+				zbx_free(value_str);
 				break;
 		}
 
