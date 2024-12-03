@@ -876,6 +876,7 @@ int zbx_db_query_select(const struct zbx_db_connection *conn, struct zbx_db_resu
 		rc = ZBX_DB_ERROR_PARAMS;
 	}
 
+	zbx_free(sql);
 	va_end(args);
 
 	return rc;

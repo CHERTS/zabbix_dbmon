@@ -3,7 +3,7 @@ name: Coverity
 
 on:
   schedule:
-  - cron: "0 0 * * *"
+    - cron: '32 5 * * 1'
   workflow_dispatch:
 
 permissions:
