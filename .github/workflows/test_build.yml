@@ -19,6 +19,20 @@ on:
 #      - "tests/**"
 #      - "ui/**"
 #      - "vs2017/**"
+  push:
+    paths:
+      - "src/**"
+      - "include/**"
+      - "m4/**"
+      - "configure.ac"
+      - "Makefile.am"
+  pull_request:
+    paths:
+      - "src/**"
+      - "include/**"
+      - "m4/**"
+      - "configure.ac"
+      - "Makefile.am"
   workflow_dispatch:
     inputs:
       reason:
