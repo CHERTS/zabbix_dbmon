@@ -327,10 +327,12 @@ int zbx_db_clean_fields(struct zbx_db_fields *e_data)
 {
 	if (NULL != e_data)
 	{
-		zbx_db_free(((struct zbx_db_type_text *)e_data->t_data)->value);
-
 		if (NULL != e_data->t_data)
 		{
+			if (NULL != ((struct zbx_db_type_text *)e_data->t_data)->value)
+			{
+				zbx_db_free(((struct zbx_db_type_text *)e_data->t_data)->value);
+			}
 			zbx_db_free(e_data->t_data);
 		}
 
